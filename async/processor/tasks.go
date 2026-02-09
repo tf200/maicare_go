@@ -381,3 +381,19 @@ func (c *AsynqServer) ProcessContractRemiderTask(ctx context.Context, t *asynq.T
 	log.Println("All contract reminders processed successfully")
 	return nil
 }
+
+func (c *AsynqServer) ProcessClientCareStatusSyncTask(ctx context.Context, t *asynq.Task) error {
+	activatedClientIDs, err := c.store.ActivateDueScheduledInCareClients(ctx)
+	if err != nil {
+		log.Printf("Failed to activate due scheduled-in-care clients: %v", err)
+		return fmt.Errorf("failed to activate due scheduled-in-care clients: %v: %w", err, asynq.SkipRetry)
+	}
+
+	if len(activatedClientIDs) == 0 {
+		log.Println("No scheduled_in_care clients due for activation")
+		return nil
+	}
+
+	log.Printf("Activated %d scheduled_in_care clients", len(activatedClientIDs))
+	return nil
+}

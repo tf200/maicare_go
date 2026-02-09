@@ -34,7 +34,7 @@ func (s *ecrService) DischargeOverview(ctx *gin.Context, req DischargeOverviewRe
 			FirstName:          item.FirstName,
 			LastName:           item.LastName,
 			CurrentStatus:      string(item.CurrentStatus),
-			ScheduledStatus:    item.ScheduledStatus,
+			ScheduledStatus:    db.ClientStatusPtrFromEnum(item.ScheduledStatus),
 			StatusChangeReason: item.StatusChangeReason,
 			StatusChangeDate:   item.StatusChangeDate.Time,
 			ContractEndDate:    item.ContractEndDate.Time,

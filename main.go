@@ -13,6 +13,7 @@ import (
 	"maicare_go/api"
 	"maicare_go/async/aclient"
 	"maicare_go/async/processor"
+	"maicare_go/async/scheduler"
 	"maicare_go/bucket"
 	db "maicare_go/db/sqlc"
 	"maicare_go/email"
@@ -142,6 +143,7 @@ func main() {
 
 	// Initialize Asynq server
 	var asynqServer *processor.AsynqServer
+	var asynqScheduler *scheduler.Scheduler
 
 	grpcClient, err := grpclient.NewGrpcClient(config.GrpcUrl)
 	if err != nil {
@@ -158,9 +160,14 @@ func main() {
 	}
 
 	// move this to services
-	logger, err := logger.SetupLogger(config.Environment)
+	appLogger, err := logger.SetupLogger(config.Environment)
 	if err != nil {
 		log.Fatalf("cannot setup logger: %v", err)
+	}
+	if sharedLogger, ok := appLogger.(*logger.LoggerImpl); ok {
+		defer func() {
+			_ = sharedLogger.Sync()
+		}()
 	}
 
 	// Init AI Service
@@ -170,7 +177,7 @@ func main() {
 	}
 
 	// Init the buisness service
-	businessService := service.NewBusinessService(store, tokenMaker, logger, &config, b2Client, grpcClient, hubInstance, asynqClient, aiService)
+	businessService := service.NewBusinessService(store, tokenMaker, appLogger, &config, b2Client, grpcClient, hubInstance, asynqClient, aiService)
 
 	if !config.Remote {
 		redisClient := redis.NewClient(&redis.Options{
@@ -205,6 +212,7 @@ func main() {
 			log.Fatalf("❌ Failed to connect to Redis after %d attempts: %v", maxAttempts, pingErr)
 		}
 		asynqServer = processor.NewAsynqServer(config.RedisHost, "", config.RedisPassword, store, nil, brevoConf, b2Client, businessService)
+		asynqScheduler = scheduler.NewScheduler(config.RedisHost, "", config.RedisPassword, nil)
 	} else {
 		redisClient := redis.NewClient(&redis.Options{
 			Addr:      config.RedisHost, // e.g., "frankfurt-keyvalue.render.com:6379"
@@ -238,6 +246,7 @@ func main() {
 			log.Fatalf("❌ Failed to connect to Redis after %d attempts: %v", maxAttempts, pingErr)
 		}
 		asynqServer = processor.NewAsynqServer(config.RedisHost, "", config.RedisPassword, store, nil, brevoConf, b2Client, businessService)
+		asynqScheduler = scheduler.NewScheduler(config.RedisHost, "", config.RedisPassword, nil)
 	}
 
 	// Start the Asynq server in a goroutine
@@ -251,6 +260,16 @@ func main() {
 	}()
 
 	log.Println("Asynq server started successfully in background")
+
+	go func() {
+		log.Println("Starting Asynq scheduler...")
+		if err := asynqScheduler.Start(); err != nil {
+			log.Printf("FATAL: Asynq scheduler error: %v", err)
+			errChan <- fmt.Errorf("asynq scheduler error: %v", err)
+		}
+	}()
+
+	log.Println("Asynq scheduler started successfully in background")
 
 	// Start your main server
 	server, err := api.NewServer(hubInstance,
@@ -283,9 +302,9 @@ func main() {
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer shutdownCancel()
 
-	// Shutdown both servers with timeout
+	// Shutdown all servers with timeout
 	var wg sync.WaitGroup
-	wg.Add(2)
+	wg.Add(3)
 
 	go func() {
 		defer wg.Done()
@@ -297,6 +316,11 @@ func main() {
 		if err := server.Shutdown(shutdownCtx); err != nil {
 			log.Printf("HTTP server shutdown error: %v", err)
 		}
+	}()
+
+	go func() {
+		defer wg.Done()
+		asynqScheduler.Shutdown()
 	}()
 
 	// Wait for both servers to shutdown or timeout

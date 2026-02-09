@@ -9,7 +9,8 @@ import (
 )
 
 const (
-	TypeContractReminder = "contract:reminder"
+	TypeContractReminder     = "contract:reminder"
+	TypeClientCareStatusSync = "client:care_status_sync"
 )
 
 type Scheduler struct {
@@ -43,10 +44,25 @@ func (s *Scheduler) ScheduleContractReminder() error {
 	return nil
 }
 
+func (s *Scheduler) ScheduleClientCareStatusSync() error {
+	task := asynq.NewTask(TypeClientCareStatusSync, nil)
+
+	entryID, err := s.Scheduler.Register("0 * * * *", task)
+	if err != nil {
+		return err
+	}
+	log.Printf("Scheduled client care status sync with entry ID: %s", entryID)
+
+	return nil
+}
+
 // func (s *)
 
 func (s *Scheduler) Start() error {
 	if err := s.ScheduleContractReminder(); err != nil {
+		return err
+	}
+	if err := s.ScheduleClientCareStatusSync(); err != nil {
 		return err
 	}
 
@@ -54,4 +70,11 @@ func (s *Scheduler) Start() error {
 		return err
 	}
 	return nil
+}
+
+func (s *Scheduler) Shutdown() {
+	if s == nil || s.Scheduler == nil {
+		return
+	}
+	s.Scheduler.Shutdown()
 }

@@ -46,7 +46,7 @@ type CreateRegistrationFormRequest struct {
 	EducationMentorEmail          *string    `json:"education_mentor_email"`
 	EducationCurrentlyEnrolled    bool       `json:"education_currently_enrolled"`
 	EducationAdditionalNotes      *string    `json:"education_additional_notes"`
-	EducationLevel                *string    `json:"education_level"`
+	EducationLevel                string     `json:"education_level"`
 	WorkCurrentEmployer           *string    `json:"work_current_employer"`
 	WorkEmployerPhone             *string    `json:"work_employer_phone"`
 	WorkEmployerEmail             *string    `json:"work_employer_email"`
@@ -239,7 +239,7 @@ type GetRegistrationFormResponse struct {
 	EducationMentorEmail          *string           `json:"education_mentor_email"`
 	EducationCurrentlyEnrolled    bool              `json:"education_currently_enrolled"`
 	EducationAdditionalNotes      string            `json:"education_additional_notes"`
-	EducationLevel                *string           `json:"education_level"`
+	EducationLevel                string            `json:"education_level"`
 	WorkCurrentEmployer           *string           `json:"work_current_employer"`
 	WorkEmployerPhone             *string           `json:"work_employer_phone"`
 	WorkEmployerEmail             *string           `json:"work_employer_email"`
@@ -283,7 +283,7 @@ type GetRegistrationFormResponse struct {
 	ProcessedByEmployeeName       *string           `json:"processed_by_employee_name"`
 	IntakeAppointmentDate         time.Time         `json:"intake_appointment_date,omitempty"`
 	IntakeAppointmentLocation     *string           `json:"intake_appointment_location"`
-	AddmissionType                *string           `json:"admission_type"` // "crisis_admission" or "regular_placement"
+	AddmissionType                string            `json:"admission_type"` // "crisis_admission" or "regular_placement"
 	IntakeOptions                 []string          `json:"intake_options"`
 	IntakeFormID                  *uuid.UUID        `json:"intake_form_id"`
 	RejectionReason               *string           `json:"rejection_reason"`

@@ -100,6 +100,35 @@ LEFT JOIN
     location l ON cl.location_id = l.id; -- Join to get the client location name
 
 
+-- name: UpsertMainCoordinator :one
+WITH upserted_assignment AS (
+    INSERT INTO assigned_employee (
+        client_id,
+        employee_id,
+        start_date,
+        role
+    ) VALUES (
+        $1, $2, $3, 'coordinator'
+    )
+    ON CONFLICT (client_id) WHERE role = 'coordinator'
+    DO UPDATE SET
+        employee_id = EXCLUDED.employee_id,
+        start_date = EXCLUDED.start_date,
+        role = EXCLUDED.role
+    RETURNING *
+)
+SELECT
+    ua.*,
+    ep.user_id,
+    cl.first_name AS client_first_name,
+    cl.last_name AS client_last_name,
+    l.name AS client_location_name
+FROM upserted_assignment ua
+JOIN employee_profile ep ON ua.employee_id = ep.id
+JOIN client_details cl ON ua.client_id = cl.id
+LEFT JOIN location l ON cl.location_id = l.id;
+
+
 
 
 -- name: ListAssignedEmployees :many

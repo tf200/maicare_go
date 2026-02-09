@@ -11,7 +11,7 @@ INSERT INTO client_details (
     email,
     phone_number,
     gender,
-    filenumber,
+    care_type,
     sender_id,
     location_id,
     street,
@@ -45,12 +45,13 @@ INSERT INTO client_details (
     risk_day_night_rhythm,
     risk_other,
     risk_other_description,
-    risk_additional_notes
+    risk_additional_notes,
+    evaluation_intarvals_weeks
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16,
     $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30,
     $31, $32, $33, $34, $35, $36, $37, $38, $39, $40, $41, $42, $43, $44,
-    $45, $46
+    $45, $46, $47
 ) RETURNING *;
 
 
@@ -82,10 +83,44 @@ LIMIT sqlc.arg('limit') OFFSET sqlc.arg('offset');
 -- name: GetClientCounts :one
 SELECT
     COUNT(*) AS total_clients,
-    COUNT(*) FILTER (WHERE status = 'In Care') AS clients_in_care,
-    COUNT(*) FILTER (WHERE status = 'On Waiting List') AS clients_on_waiting_list,
-    COUNT(*) FILTER (WHERE status = 'Out Of Care') AS clients_out_of_care
+    COUNT(*) FILTER (WHERE status = 'in_care') AS clients_in_care,
+    COUNT(*) FILTER (WHERE status = 'on_waiting_list') AS clients_on_waiting_list,
+    COUNT(*) FILTER (WHERE status = 'out_of_care') AS clients_out_of_care
 FROM client_details;
+
+
+-- name: ListWaitingListClients :many
+SELECT
+    c.id,
+    c.first_name,
+    c.last_name,
+    c.care_type,
+    c.bsn,
+    s.name AS sender_name,
+    (CURRENT_DATE - c.created_at::date)::int4 AS days_in_waitlist,
+    rf.addmission_type AS admission_type,
+    COUNT(*) OVER() AS total_count
+FROM client_details c
+LEFT JOIN sender s ON c.sender_id = s.id
+LEFT JOIN registration_form rf ON c.registration_form_id = rf.id
+WHERE
+    c.status = 'on_waiting_list'
+    AND (
+        sqlc.narg('search')::text IS NULL
+        OR sqlc.narg('search')::text = ''
+        OR c.first_name ILIKE '%' || sqlc.narg('search') || '%'
+        OR c.last_name ILIKE '%' || sqlc.narg('search') || '%'
+        OR s.name ILIKE '%' || sqlc.narg('search') || '%'
+    )
+    AND (
+        sqlc.narg('placement')::intake_care_type_enum IS NULL
+        OR c.care_type = sqlc.narg('placement')::intake_care_type_enum
+    )
+ORDER BY
+    CASE WHEN sqlc.arg('sort_days')::text = 'asc' THEN (CURRENT_DATE - c.created_at::date) END ASC,
+    CASE WHEN sqlc.arg('sort_days')::text = 'desc' THEN (CURRENT_DATE - c.created_at::date) END DESC,
+    c.created_at ASC
+LIMIT sqlc.arg('limit') OFFSET sqlc.arg('offset');
 
 
 -- name: GetAllClientsIDs :many
@@ -149,6 +184,21 @@ SET status = $2
 WHERE id = $1
 RETURNING *;
 
+-- name: PutClientInCare :one
+UPDATE client_details
+SET
+    status = $2,
+    placed_in_care_at = COALESCE(sqlc.narg('placed_in_care_at'), CURRENT_TIMESTAMP),
+    care_start_date = $3
+WHERE id = $1
+RETURNING *;
+
+-- name: CountActiveGoalsByClientID :one
+SELECT COUNT(*)
+FROM client_goals
+WHERE client_id = $1
+  AND status = 'active';
+
 -- name: CreateClientStatusHistory :one
 INSERT INTO client_status_history (
     client_id,
@@ -174,6 +224,37 @@ INSERT INTO scheduled_status_changes (
 ) VALUES (
     $1, $2, $3, $4
 ) RETURNING *;
+
+-- name: ActivateDueScheduledInCareClients :many
+WITH due_clients AS (
+    SELECT id
+    FROM client_details
+    WHERE status = 'scheduled_in_care'
+      AND care_start_date IS NOT NULL
+      AND care_start_date <= CURRENT_DATE
+),
+updated AS (
+    UPDATE client_details cd
+    SET status = 'in_care'
+    FROM due_clients dc
+    WHERE cd.id = dc.id
+    RETURNING cd.id
+),
+history AS (
+    INSERT INTO client_status_history (
+        client_id,
+        old_status,
+        new_status,
+        reason
+    )
+    SELECT
+        u.id,
+        'scheduled_in_care',
+        'in_care',
+        'auto_transition_care_start_date_reached'
+    FROM updated u
+)
+SELECT id FROM updated;
 
 
 

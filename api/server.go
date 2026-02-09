@@ -25,6 +25,7 @@ import (
 	"maicare_go/docs"
 	grpclient "maicare_go/grpclient/proto"
 	"maicare_go/hub"
+	applogger "maicare_go/logger"
 	"maicare_go/service"
 	"maicare_go/token"
 	"maicare_go/util"
@@ -54,7 +55,7 @@ func NewServer(hubInstance *hub.Hub,
 	grpcClient grpclient.GrpcClientInterface,
 	tokenMaker token.Maker, config util.Config, service *service.BusinessService,
 ) (*Server, error) {
-	logger, err := setupLogger(config.Environment)
+	logger, err := resolveServerLogger(config.Environment, service)
 	if err != nil {
 		return nil, fmt.Errorf("cannot create logger %v", err)
 	}
@@ -80,6 +81,18 @@ func NewServer(hubInstance *hub.Hub,
 	return server, nil
 }
 
+func resolveServerLogger(environment string, businessService *service.BusinessService) (*zap.Logger, error) {
+	if businessService != nil && businessService.ServiceDependencies != nil && businessService.ServiceDependencies.Logger != nil {
+		if sharedLogger, ok := businessService.ServiceDependencies.Logger.(*applogger.LoggerImpl); ok {
+			if zapLogger := sharedLogger.ZapLogger(); zapLogger != nil {
+				return zapLogger, nil
+			}
+		}
+	}
+
+	return setupLogger(environment)
+}
+
 func (server *Server) setupRoutes() {
 	gin.SetMode(func() string {
 		if server.config.Environment == "production" {
@@ -93,7 +106,7 @@ func (server *Server) setupRoutes() {
 	corsConf.AllowOrigins = []string{"*"}
 	corsConf.AllowCredentials = true
 	corsConf.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization"}
-	corsConf.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
+	corsConf.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"}
 
 	router.Use(cors.New(corsConf))
 	router.Use(server.recoveryLogger())
@@ -217,19 +230,12 @@ func setupLogger(environment string) (*zap.Logger, error) {
 
 	if environment == "production" {
 		config = zap.NewProductionConfig()
-
 		config.DisableCaller = true
 		config.DisableStacktrace = true
-
-		config.OutputPaths = []string{
-			"stdout",
-			"/var/log/maicare/app.log",
-		}
+		config.OutputPaths = []string{"stderr"}
 	} else {
 		config = zap.NewDevelopmentConfig()
-		config.OutputPaths = []string{
-			"stdout",
-		}
+		config.OutputPaths = []string{"stderr"}
 	}
 
 	logger, err := config.Build()
@@ -240,10 +246,10 @@ func setupLogger(environment string) (*zap.Logger, error) {
 	if environment == "production" {
 		fileWritter := &lumberjack.Logger{
 			Filename:   "/var/log/maicare/app.log",
-			MaxSize:    100, // megabytes
+			MaxSize:    100,
 			MaxBackups: 3,
-			MaxAge:     28,   // days
-			Compress:   true, // compress log files
+			MaxAge:     28,
+			Compress:   true,
 		}
 
 		core := zapcore.NewTee(

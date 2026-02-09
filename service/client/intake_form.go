@@ -9,6 +9,7 @@ import (
 	"maicare_go/logger"
 	"maicare_go/pagination"
 	"maicare_go/util"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -135,7 +136,7 @@ func (s *clientService) GetIntakeForm(ctx context.Context, intakeFormID uuid.UUI
 		return nil, err
 	}
 
-	assessments, err := s.Store.GetIntakeMaturityAssessments(ctx, intakeFormID)
+	assessments, err := s.Store.GetIntakeTopicsAssessments(ctx, intakeFormID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetIntakeForm", "Failed to get intake assessments", zap.Error(err))
 		return nil, err
@@ -195,6 +196,7 @@ func (s *clientService) GetIntakeForm(ctx context.Context, intakeFormID uuid.UUI
 		SenderName:               intakeForm.SenderName,
 		Location:                 location,
 		IntakeGoalsAssigned:      intakeGoalsAssigned,
+		HasClient:                intakeForm.HasClient,
 	}
 
 	return res, nil
@@ -211,7 +213,7 @@ func (s *clientService) CreateIntakeFormGoals(ctx context.Context, intakeFormID 
 		return nil, err
 	}
 
-	rows, err := s.Store.CreateIntakeMaturityAssessmentsBatch(ctx, db.CreateIntakeMaturityAssessmentsBatchParams{
+	rows, err := s.Store.CreateIntakeTopicAssessmentsBatch(ctx, db.CreateIntakeTopicAssessmentsBatchParams{
 		IntakeFormID: intakeFormID,
 		Items:        itemsJSON,
 	})
@@ -240,4 +242,35 @@ func (s *clientService) CreateIntakeFormGoals(ctx context.Context, intakeFormID 
 	}
 
 	return &CreateIntakeFormGoalsResponse{Assessments: assessments}, nil
+}
+
+func (s *clientService) UpdateIntakeConclusion(ctx context.Context, intakeFormID uuid.UUID, req *UpdateIntakeConclusionRequest) (*UpdateIntakeConclusionResponse, error) {
+	decision := strings.ToLower(strings.TrimSpace(req.Decision))
+
+	var conclusion db.IntakeConclusionEnum
+	switch decision {
+	case "accept":
+		conclusion = db.IntakeConclusionEnumSuitable
+	case "refuse":
+		conclusion = db.IntakeConclusionEnumUnsuitable
+	default:
+		return nil, fmt.Errorf("invalid decision: %s", req.Decision)
+	}
+
+	updated, err := s.Store.UpdateIntakeConclusion(ctx, db.UpdateIntakeConclusionParams{
+		ID:                    intakeFormID,
+		IntakeConclusion:      conclusion,
+		IntakeConclusionNotes: req.IntakeConclusionNotes,
+	})
+	if err != nil {
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateIntakeConclusion", "Failed to update intake conclusion", zap.Error(err))
+		return nil, err
+	}
+
+	return &UpdateIntakeConclusionResponse{
+		ID:                    updated.ID,
+		IntakeConclusion:      updated.IntakeConclusion,
+		IntakeConclusionNotes: updated.IntakeConclusionNotes,
+		UpdatedAt:             updated.UpdatedAt.Time,
+	}, nil
 }

@@ -25,7 +25,7 @@ func (s *clientService) CreateRegistrationForm(ctx context.Context, req *CreateR
 		ClientLastName:                req.ClientLastName,
 		ClientDateOfBirth:             pgtype.Date{Valid: false},
 		ClientBsnNumber:               req.ClientBsnNumber,
-		ClientGender:                  db.ClientGenderEnum(req.ClientGender),
+		ClientGender:                  db.GenderEnum(req.ClientGender),
 		ClientNationality:             req.ClientNationality,
 		ClientPhoneNumber:             req.ClientPhoneNumber,
 		ClientEmail:                   req.ClientEmail,
@@ -56,7 +56,7 @@ func (s *clientService) CreateRegistrationForm(ctx context.Context, req *CreateR
 		EducationMentorEmail:          req.EducationMentorEmail,
 		EducationCurrentlyEnrolled:    req.EducationCurrentlyEnrolled,
 		EducationAdditionalNotes:      req.EducationAdditionalNotes,
-		EducationLevel:                db.NullClientEducationLevelFromPtr(req.EducationLevel),
+		EducationLevel:                db.EducationLevelEnum(req.EducationLevel),
 		WorkCurrentEmployer:           req.WorkCurrentEmployer,
 		WorkEmployerPhone:             req.WorkEmployerPhone,
 		WorkEmployerEmail:             req.WorkEmployerEmail,
@@ -373,7 +373,7 @@ func (s *clientService) GetRegistrationFormB(ctx context.Context, formID uuid.UU
 		EducationMentorEmail:          registrationForm.EducationMentorEmail,
 		EducationCurrentlyEnrolled:    registrationForm.EducationCurrentlyEnrolled,
 		EducationAdditionalNotes:      util.DerefString(registrationForm.EducationAdditionalNotes),
-		EducationLevel:                db.ClientEducationLevelPtrFromEnum(registrationForm.EducationLevel),
+		EducationLevel:                string(registrationForm.EducationLevel),
 		WorkCurrentEmployer:           registrationForm.WorkCurrentEmployer,
 		WorkEmployerPhone:             registrationForm.WorkEmployerPhone,
 		WorkEmployerEmail:             registrationForm.WorkEmployerEmail,
@@ -415,7 +415,7 @@ func (s *clientService) GetRegistrationFormB(ctx context.Context, formID uuid.UU
 		ProcessedAt:                   registrationForm.ProcessedAt.Time,
 		ProcessedByEmployeeID:         registrationForm.ProcessedByEmployeeID,
 		IntakeAppointmentDate:         registrationForm.IntakeAppointmentDatetime.Time,
-		AddmissionType:                registrationForm.AddmissionType,
+		AddmissionType:                string(registrationForm.AddmissionType),
 		ProcessedByEmployeeName:       processedByEmployeeName,
 		IntakeOptions:                 intakeOptions,
 		IntakeAppointmentLocation:     registrationForm.IntakeAppointmentLocation,
@@ -437,7 +437,7 @@ func (s *clientService) UpdateRegistrationForm(ctx context.Context, req *UpdateR
 			return pgtype.Date{Valid: false}
 		}(),
 		ClientBsnNumber:            req.ClientBsnNumber,
-		ClientGender:               db.NullClientGenderFromPtr(req.ClientGender),
+		ClientGender:               db.NullGenderEnum{GenderEnum: db.GenderEnum(*req.ClientGender), Valid: true},
 		ClientNationality:          req.ClientNationality,
 		ClientPhoneNumber:          req.ClientPhoneNumber,
 		ClientEmail:                req.ClientEmail,
@@ -467,12 +467,12 @@ func (s *clientService) UpdateRegistrationForm(ctx context.Context, req *UpdateR
 		EducationMentorEmail:       req.EducationMentorEmail,
 		EducationCurrentlyEnrolled: req.EducationCurrentlyEnrolled,
 		EducationAdditionalNotes:   req.EducationAdditionalNotes,
-		EducationLevel:             db.NullClientEducationLevelFromPtr(req.EducationLevel),
-		WorkCurrentEmployer:        req.WorkCurrentEmployer,
-		WorkEmployerPhone:          req.WorkEmployerPhone,
-		WorkEmployerEmail:          req.WorkEmployerEmail,
-		WorkCurrentPosition:        req.WorkCurrentPosition,
-		WorkCurrentlyEmployed:      req.WorkCurrentlyEmployed,
+		// EducationLevel:             db.NullClientEducationLevelFromPtr(req.EducationLevel),
+		WorkCurrentEmployer:   req.WorkCurrentEmployer,
+		WorkEmployerPhone:     req.WorkEmployerPhone,
+		WorkEmployerEmail:     req.WorkEmployerEmail,
+		WorkCurrentPosition:   req.WorkCurrentPosition,
+		WorkCurrentlyEmployed: req.WorkCurrentlyEmployed,
 
 		CareProtectedLiving:           req.CareProtectedLiving,
 		CareAssistedIndependentLiving: req.CareAssistedIndependentLiving,
@@ -601,8 +601,19 @@ func (s *clientService) UpdateRegistrationFormStatus(ctx context.Context, req *U
 		FormStatus:                db.FormStatusEnum(req.Status),
 		ProcessedByEmployeeID:     &employeeID,
 		IntakeAppointmentLocation: req.IntakeAppointmentLocation,
-		AddmissionType:            req.AddmissionType,
-		RejectionReason:           req.RejectionReason,
+		AddmissionType: func() db.NullAdmissionTypeEnum {
+			if req.AddmissionType != nil {
+				return db.NullAdmissionTypeEnum{
+					AdmissionTypeEnum: db.AdmissionTypeEnum(*req.AddmissionType),
+					Valid:             true,
+				}
+			} else {
+				return db.NullAdmissionTypeEnum{
+					Valid: false,
+				}
+			}
+		}(),
+		RejectionReason: req.RejectionReason,
 	}
 	_, err := s.Store.UpdateRegistrationFormStatus(ctx, arg)
 	if err != nil {
@@ -625,7 +636,7 @@ func (s *clientService) ProcessRegistrationForm(ctx context.Context, req *Proces
 		FormStatus:                db.FormStatusEnum("processed"),
 		ProcessedByEmployeeID:     &employeeID,
 		IntakeAppointmentLocation: &req.IntakeAppointmentLocation,
-		AddmissionType:            &req.AddmissionType,
+		AddmissionType:            db.NullAdmissionTypeEnum{AdmissionTypeEnum: db.AdmissionTypeEnum(req.AddmissionType), Valid: true},
 		IntakeOptions:             optionsJSON,
 		IntakeToken:               &token,
 	}

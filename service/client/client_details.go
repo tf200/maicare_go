@@ -2,7 +2,6 @@ package clientp
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -24,12 +23,6 @@ func (s *clientService) CreateClientDetails(req CreateClientDetailsRequest, ctx 
 			"Failed to parse date of birth", zap.Error(err))
 		return nil, fmt.Errorf("failed to parse date of birth")
 	}
-	AddressesJSON, err := json.Marshal(req.Addresses)
-	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateClientDetails",
-			"Failed to marshal addresses", zap.Error(err))
-		return nil, fmt.Errorf("failed to marshal addresses")
-	}
 
 	client, err := s.Store.CreateClientDetails(ctx, db.CreateClientDetailsParams{
 		FirstName:                  req.FirstName,
@@ -38,52 +31,29 @@ func (s *clientService) CreateClientDetails(req CreateClientDetailsRequest, ctx 
 		Identity:                   true,
 		Bsn:                        req.Bsn,
 		BsnVerifiedBy:              req.BsnVerifiedBy,
-		Source:                     req.Source,
-		Birthplace:                 req.Birthplace,
 		Email:                      req.Email,
 		PhoneNumber:                req.PhoneNumber,
-		OrganizationID:             req.OrganizationID,
-		Departement:                req.Departement,
-		Infix:                      req.Infix,
-		Gender:                     db.ClientGenderEnum(req.Gender),
-		Filenumber:                 req.Filenumber,
+		CareType:                   db.NullIntakeCareTypeFromPtr(req.CareType),
 		SenderID:                   req.SenderID,
 		LocationID:                 req.LocationID,
-		Addresses:                  AddressesJSON,
-		LegalMeasure:               req.LegalMeasure,
 		EducationCurrentlyEnrolled: req.EducationCurrentlyEnrolled,
 		EducationInstitution:       req.EducationInstitution,
 		EducationMentorName:        req.EducationMentorName,
 		EducationMentorPhone:       req.EducationMentorPhone,
 		EducationMentorEmail:       req.EducationMentorEmail,
 		EducationAdditionalNotes:   req.EducationAdditionalNotes,
-		EducationLevel: func() db.ClientEducationLevelEnum {
-			if req.EducationLevel == nil {
-				return ""
-			}
-			return db.ClientEducationLevelEnum(*req.EducationLevel)
-		}(),
-		WorkCurrentlyEmployed:    req.WorkCurrentlyEmployed,
-		WorkCurrentEmployer:      req.WorkCurrentEmployer,
-		WorkCurrentEmployerPhone: req.WorkCurrentEmployerPhone,
-		WorkCurrentEmployerEmail: req.WorkCurrentEmployerEmail,
-		WorkCurrentPosition:      req.WorkCurrentPosition,
-		WorkStartDate:            pgtype.Date{Time: req.WorkStartDate, Valid: true},
-		WorkAdditionalNotes:      req.WorkAdditionalNotes,
-		LivingSituation:          db.NullClientLivingSituationFromPtr(req.LivingSituation),
+		WorkCurrentlyEmployed:      req.WorkCurrentlyEmployed,
+		WorkCurrentEmployer:        req.WorkCurrentEmployer,
+		WorkCurrentEmployerPhone:   req.WorkCurrentEmployerPhone,
+		WorkCurrentEmployerEmail:   req.WorkCurrentEmployerEmail,
+		WorkCurrentPosition:        req.WorkCurrentPosition,
+		WorkStartDate:              pgtype.Date{Time: req.WorkStartDate, Valid: true},
+		WorkAdditionalNotes:        req.WorkAdditionalNotes,
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateClientDetails",
 			"Failed to create client details", zap.Error(err))
 		return nil, fmt.Errorf("failed to create client details")
-	}
-
-	var addresses []Address
-	err = json.Unmarshal(client.Addresses, &addresses)
-	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateClientDetails",
-			"Failed to unmarshal addresses", zap.Error(err))
-		return nil, fmt.Errorf("failed to unmarshal addresses")
 	}
 
 	result := &CreateClientDetailsResponse{
@@ -94,23 +64,13 @@ func (s *clientService) CreateClientDetails(req CreateClientDetailsRequest, ctx 
 		Identity:                   client.Identity,
 		Status:                     string(client.Status),
 		Bsn:                        client.Bsn,
-		Source:                     client.Source,
-		Birthplace:                 client.Birthplace,
 		Email:                      client.Email,
 		PhoneNumber:                client.PhoneNumber,
-		OrganizationID:             client.OrganizationID,
-		Departement:                client.Departement,
 		Gender:                     string(client.Gender),
 		Filenumber:                 client.Filenumber,
-		ProfilePicture:             client.ProfilePicture,
-		Infix:                      client.Infix,
 		Created:                    client.CreatedAt.Time,
 		SenderID:                   client.SenderID,
 		LocationID:                 client.LocationID,
-		DepartureReason:            client.DepartureReason,
-		DepartureReport:            client.DepartureReport,
-		Addresses:                  addresses,
-		LegalMeasure:               client.LegalMeasure,
 		EducationCurrentlyEnrolled: client.EducationCurrentlyEnrolled,
 		EducationInstitution:       client.EducationInstitution,
 		EducationMentorName:        client.EducationMentorName,
@@ -125,8 +85,6 @@ func (s *clientService) CreateClientDetails(req CreateClientDetailsRequest, ctx 
 		WorkCurrentPosition:        client.WorkCurrentPosition,
 		WorkStartDate:              client.WorkStartDate.Time,
 		WorkAdditionalNotes:        client.WorkAdditionalNotes,
-		LivingSituation:            db.ClientLivingSituationPtrFromEnum(client.LivingSituation),
-		LivingSituationNotes:       client.LivingSituationNotes,
 	}
 
 	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "CreateClientDetails",
@@ -165,43 +123,80 @@ func (s *clientService) ListClientDetails(ctx *gin.Context, req ListClientsApiPa
 
 	clientList := make([]ListClientsApiResponse, len(clients))
 	for i, client := range clients {
-		var addresses []Address
-		err = json.Unmarshal(client.Addresses, &addresses)
-		if err != nil {
-			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListClientDetails",
-				"Failed to unmarshal addresses", zap.Error(err))
-			return nil, fmt.Errorf("failed to unmarshal addresses")
-		}
 		clientList[i] = ListClientsApiResponse{
-			ID:                    client.ID,
-			FirstName:             client.FirstName,
-			LastName:              client.LastName,
-			DateOfBirth:           client.DateOfBirth.Time,
-			Identity:              client.Identity,
-			Status:                string(client.Status),
-			Bsn:                   client.Bsn,
-			Source:                client.Source,
-			Birthplace:            client.Birthplace,
-			Email:                 client.Email,
-			PhoneNumber:           client.PhoneNumber,
-			OrganizationID:        client.OrganizationID,
-			Departement:           client.Departement,
-			Gender:                string(client.Gender),
-			Filenumber:            client.Filenumber,
-			ProfilePicture:        s.GenerateResponsePresignedURL(client.ProfilePicture, ctx),
-			Infix:                 client.Infix,
-			CreatedAt:             client.CreatedAt.Time,
-			SenderID:              client.SenderID,
-			LocationID:            client.LocationID,
-			LocationName:          client.LocationName,
-			DepartureReason:       client.DepartureReason,
-			DepartureReport:       client.DepartureReport,
-			Addresses:             addresses,
-			LegalMeasure:          client.LegalMeasure,
-			HasUntakenMedications: client.HasUntakenMedications,
+			ID:           client.ID,
+			FirstName:    client.FirstName,
+			LastName:     client.LastName,
+			DateOfBirth:  client.DateOfBirth.Time,
+			Identity:     client.Identity,
+			Status:       string(client.Status),
+			Bsn:          client.Bsn,
+			Email:        client.Email,
+			PhoneNumber:  client.PhoneNumber,
+			Gender:       string(client.Gender),
+			Filenumber:   client.Filenumber,
+			CreatedAt:    client.CreatedAt.Time,
+			SenderID:     client.SenderID,
+			LocationID:   client.LocationID,
+			LocationName: client.LocationName,
 		}
 	}
 	pagObj := pagination.NewResponse(ctx, req.Request, clientList, totalCount)
+	return &pagObj, nil
+}
+
+func (s *clientService) ListWaitingListClients(ctx *gin.Context, req ListWaitingListClientsParams) (*pagination.Response[ListWaitingListClientsResponse], error) {
+	params := req.GetParams()
+	sortDays := "desc"
+	if req.SortDays != nil {
+		sortDays = *req.SortDays
+	}
+
+	var clients []db.ListWaitingListClientsRow
+	err := s.Store.ExecTx(ctx, func(q *db.Queries) error {
+		var err error
+		clients, err = q.ListWaitingListClients(ctx, db.ListWaitingListClientsParams{
+			Search:    req.Search,
+			Placement: db.NullIntakeCareTypeFromPtr(req.Placement),
+			SortDays:  sortDays,
+			Offset:    params.Offset,
+			Limit:     params.Limit,
+		})
+		return err
+	})
+	if err != nil {
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListWaitingListClients",
+			"Failed to list waiting list clients", zap.Error(err))
+		return nil, fmt.Errorf("failed to list waiting list clients")
+	}
+
+	if len(clients) == 0 {
+		pagObj := pagination.NewResponse(ctx, req.Request, []ListWaitingListClientsResponse{}, 0)
+		return &pagObj, nil
+	}
+
+	totalCount := clients[0].TotalCount
+	response := make([]ListWaitingListClientsResponse, len(clients))
+	for i, client := range clients {
+		var admissionType *string
+		if client.AdmissionType.Valid {
+			value := string(client.AdmissionType.AdmissionTypeEnum)
+			admissionType = &value
+		}
+
+		response[i] = ListWaitingListClientsResponse{
+			ID:             client.ID,
+			FirstName:      client.FirstName,
+			LastName:       client.LastName,
+			CareType:       db.IntakeCareTypePtrFromEnum(client.CareType),
+			SenderName:     client.SenderName,
+			DaysInWaitlist: client.DaysInWaitlist,
+			AdmissionType:  admissionType,
+			Bsn:            client.Bsn,
+		}
+	}
+
+	pagObj := pagination.NewResponse(ctx, req.Request, response, totalCount)
 	return &pagObj, nil
 }
 
@@ -251,23 +246,13 @@ func (s *clientService) GetClientDetails(ctx context.Context, clientID uuid.UUID
 		BsnVerifiedBy:              client.BsnVerifiedBy,
 		BsnVerifiedByFirstName:     client.BsnVerifiedByFirstName,
 		BsnVerifiedByLastName:      client.BsnVerifiedByLastName,
-		Source:                     client.Source,
-		Birthplace:                 client.Birthplace,
 		Email:                      client.Email,
 		PhoneNumber:                client.PhoneNumber,
-		OrganizationID:             client.OrganizationID,
-		Departement:                client.Departement,
 		Gender:                     string(client.Gender),
 		Filenumber:                 client.Filenumber,
-		ProfilePicture:             s.GenerateResponsePresignedURL(client.ProfilePicture, ctx),
-		Infix:                      client.Infix,
 		CreatedAt:                  client.CreatedAt.Time,
 		SenderID:                   client.SenderID,
 		LocationID:                 client.LocationID,
-		DepartureReason:            client.DepartureReason,
-		DepartureReport:            client.DepartureReport,
-		LegalMeasure:               client.LegalMeasure,
-		HasUntakenMedications:      client.HasUntakenMedications,
 		EducationCurrentlyEnrolled: client.EducationCurrentlyEnrolled,
 		EducationInstitution:       client.EducationInstitution,
 		EducationMentorName:        client.EducationMentorName,
@@ -282,126 +267,17 @@ func (s *clientService) GetClientDetails(ctx context.Context, clientID uuid.UUID
 		WorkCurrentPosition:        client.WorkCurrentPosition,
 		WorkStartDate:              client.WorkStartDate.Time,
 		WorkAdditionalNotes:        client.WorkAdditionalNotes,
-		LivingSituation:            db.ClientLivingSituationPtrFromEnum(client.LivingSituation),
-		LivingSituationNotes:       client.LivingSituationNotes,
 	}, nil
 }
 
 func (s *clientService) GetClientAddresses(ctx context.Context, clientID uuid.UUID) (*GetClientAddressesApiResponse, error) {
-	var address []byte
-	err := s.Store.ExecTx(ctx, func(q *db.Queries) error {
-		var err error
-		address, err = q.GetClientAddresses(ctx, clientID)
-		return err
-	})
-	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetClientAddresses",
-			"Failed to get client addresses", zap.Error(err), zap.String("ClientID", clientID.String()))
-		return nil, fmt.Errorf("failed to get client addresses")
-	}
 
-	var addresses []Address
-	err = json.Unmarshal(address, &addresses)
-	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetClientAddresses",
-			"Failed to unmarshal addresses", zap.Error(err), zap.String("ClientID", clientID.String()))
-		return nil, fmt.Errorf("failed to unmarshal addresses")
-	}
-
-	return &GetClientAddressesApiResponse{
-		Addresses: addresses,
-	}, nil
+	return &GetClientAddressesApiResponse{}, nil
 }
 
 func (s *clientService) UpdateClientDetails(ctx context.Context, req UpdateClientDetailsRequest, clientID uuid.UUID) (*UpdateClientDetailsResponse, error) {
-	var client db.ClientDetail
-	err := s.Store.ExecTx(ctx, func(q *db.Queries) error {
-		var err error
-		client, err = q.UpdateClientDetails(ctx, db.UpdateClientDetailsParams{
-			ID:                         clientID,
-			FirstName:                  req.FirstName,
-			LastName:                   req.LastName,
-			DateOfBirth:                pgtype.Date{Time: req.DateOfBirth, Valid: true},
-			Identity:                   req.Identity,
-			Bsn:                        req.Bsn,
-			BsnVerifiedBy:              req.BsnVerifiedBy,
-			Source:                     req.Source,
-			Birthplace:                 req.Birthplace,
-			Email:                      req.Email,
-			PhoneNumber:                req.PhoneNumber,
-			OrganizationID:             req.OrganizationID,
-			Departement:                req.Departement,
-			Gender:                     db.NullClientGenderFromPtr(req.Gender),
-			Filenumber:                 req.Filenumber,
-			ProfilePicture:             req.ProfilePicture,
-			Infix:                      req.Infix,
-			SenderID:                   req.SenderID,
-			LocationID:                 req.LocationID,
-			DepartureReason:            req.DepartureReason,
-			DepartureReport:            req.DepartureReport,
-			LegalMeasure:               req.LegalMeasure,
-			EducationCurrentlyEnrolled: req.EducationCurrentlyEnrolled,
-			EducationInstitution:       req.EducationInstitution,
-			EducationMentorName:        req.EducationMentorName,
-			EducationMentorPhone:       req.EducationMentorPhone,
-			EducationMentorEmail:       req.EducationMentorEmail,
-			EducationAdditionalNotes:   req.EducationAdditionalNotes,
-			EducationLevel:             db.NullClientEducationLevelFromPtr(req.EducationLevel),
-			WorkCurrentlyEmployed:      req.WorkCurrentlyEmployed,
-			WorkCurrentEmployer:        req.WorkCurrentEmployer,
-			WorkCurrentEmployerPhone:   req.WorkCurrentEmployerPhone,
-			WorkCurrentEmployerEmail:   req.WorkCurrentEmployerEmail,
-			WorkCurrentPosition:        req.WorkCurrentPosition,
-			WorkStartDate:              pgtype.Date{Time: req.WorkStartDate, Valid: true},
-			WorkAdditionalNotes:        req.WorkAdditionalNotes,
-			LivingSituation:            db.NullClientLivingSituationFromPtr(req.LivingSituation),
-			LivingSituationNotes:       req.LivingSituationNotes,
-		})
-		return err
-	})
-	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateClientDetails",
-			"Failed to update client details", zap.Error(err), zap.String("ClientID", clientID.String()))
-		return nil, fmt.Errorf("failed to update client details")
-	}
 
-	var addresses []Address
-	err = json.Unmarshal(client.Addresses, &addresses)
-	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateClientDetails",
-			"Failed to unmarshal addresses", zap.Error(err), zap.String("ClientID", clientID.String()))
-		return nil, fmt.Errorf("failed to unmarshal addresses")
-	}
-
-	result := &UpdateClientDetailsResponse{
-		ID:                    client.ID,
-		FirstName:             client.FirstName,
-		LastName:              client.LastName,
-		DateOfBirth:           client.DateOfBirth.Time,
-		Identity:              client.Identity,
-		Status:                string(client.Status),
-		Bsn:                   client.Bsn,
-		BsnVerifiedBy:         client.BsnVerifiedBy,
-		Source:                client.Source,
-		Birthplace:            client.Birthplace,
-		Email:                 client.Email,
-		PhoneNumber:           client.PhoneNumber,
-		OrganizationID:        client.OrganizationID,
-		Departement:           client.Departement,
-		Gender:                string(client.Gender),
-		Filenumber:            client.Filenumber,
-		ProfilePicture:        client.ProfilePicture,
-		Infix:                 client.Infix,
-		SenderID:              client.SenderID,
-		LocationID:            client.LocationID,
-		DepartureReason:       client.DepartureReason,
-		DepartureReport:       client.DepartureReport,
-		Addresses:             addresses,
-		LegalMeasure:          client.LegalMeasure,
-		HasUntakenMedications: client.HasUntakenMedications,
-	}
-	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "UpdateClientDetails",
-		"Successfully updated client details", zap.String("ClientID", client.ID.String()))
+	result := &UpdateClientDetailsResponse{}
 	return result, nil
 }
 
@@ -426,7 +302,7 @@ func (s *clientService) handleSchedueledStatusUpdates(ctx context.Context, req U
 		var err error
 		schedueledChange, err = q.CreateSchedueledClientStatusChange(ctx, db.CreateSchedueledClientStatusChangeParams{
 			ClientID:      clientID,
-			NewStatus:     &req.Status,
+			NewStatus:     db.NullClientStatusFromPtr(&req.Status),
 			Reason:        &req.Reason,
 			ScheduledDate: pgtype.Date{Time: req.SchedueledFor, Valid: true},
 		})
@@ -442,13 +318,13 @@ func (s *clientService) handleSchedueledStatusUpdates(ctx context.Context, req U
 		"Successfully created scheduled status change", zap.String("ClientID", clientID.String()),
 		zap.String("NewStatus", req.Status), zap.Time("ScheduledFor", req.SchedueledFor))
 
-	if schedueledChange.NewStatus == nil {
+	if !schedueledChange.NewStatus.Valid {
 		return nil, fmt.Errorf("scheduled status change not created properly")
 	}
 
 	return &UpdateClientStatusResponse{
 		ID:     clientID,
-		Status: *schedueledChange.NewStatus,
+		Status: string(schedueledChange.NewStatus.ClientStatusEnum),
 	}, nil
 }
 
@@ -532,27 +408,6 @@ func (s *clientService) handleNormalStatusUpdates(ctx context.Context, req Updat
 		"Successfully updated client status", zap.String("ClientID", clientID.String()),
 		zap.String("NewStatus", req.Status))
 	return result, nil
-}
-
-func (s *clientService) SetClientProfilePicture(ctx context.Context, req SetClientProfilePictureRequest, clientID uuid.UUID) (*SetClientProfilePictureResponse, error) {
-	arg := db.SetClientProfilePictureTxParams{
-		ClientID:     clientID,
-		AttachmentID: req.AttachmentID,
-	}
-	client, err := s.Store.SetClientProfilePictureTx(ctx, arg)
-	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "SetClientProfilePicture",
-			"Failed to set client profile picture", zap.Error(err), zap.String("ClientID", clientID.String()))
-		return nil, fmt.Errorf("failed to set client profile picture")
-	}
-
-	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "SetClientProfilePicture",
-		"Successfully set client profile picture", zap.String("ClientID", client.User.ID.String()))
-
-	return &SetClientProfilePictureResponse{
-		ID:             client.User.ID,
-		ProfilePicture: client.User.ProfilePicture,
-	}, nil
 }
 
 func (s *clientService) AddClientDocument(ctx context.Context, req AddClientDocumentApiRequest, clientID uuid.UUID) (*AddClientDocumentApiResponse, error) {

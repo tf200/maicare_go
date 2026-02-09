@@ -12,6 +12,58 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const activateDueScheduledInCareClients = `-- name: ActivateDueScheduledInCareClients :many
+WITH due_clients AS (
+    SELECT id
+    FROM client_details
+    WHERE status = 'scheduled_in_care'
+      AND care_start_date IS NOT NULL
+      AND care_start_date <= CURRENT_DATE
+),
+updated AS (
+    UPDATE client_details cd
+    SET status = 'in_care'
+    FROM due_clients dc
+    WHERE cd.id = dc.id
+    RETURNING cd.id
+),
+history AS (
+    INSERT INTO client_status_history (
+        client_id,
+        old_status,
+        new_status,
+        reason
+    )
+    SELECT
+        u.id,
+        'scheduled_in_care',
+        'in_care',
+        'auto_transition_care_start_date_reached'
+    FROM updated u
+)
+SELECT id FROM updated
+`
+
+func (q *Queries) ActivateDueScheduledInCareClients(ctx context.Context) ([]uuid.UUID, error) {
+	rows, err := q.db.Query(ctx, activateDueScheduledInCareClients)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []uuid.UUID{}
+	for rows.Next() {
+		var id uuid.UUID
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const approveOrRejectClientLocationTransfer = `-- name: ApproveOrRejectClientLocationTransfer :exec
 UPDATE client_location_transfer
 SET
@@ -32,6 +84,20 @@ func (q *Queries) ApproveOrRejectClientLocationTransfer(ctx context.Context, arg
 	return err
 }
 
+const countActiveGoalsByClientID = `-- name: CountActiveGoalsByClientID :one
+SELECT COUNT(*)
+FROM client_goals
+WHERE client_id = $1
+  AND status = 'active'
+`
+
+func (q *Queries) CountActiveGoalsByClientID(ctx context.Context, clientID uuid.UUID) (int64, error) {
+	row := q.db.QueryRow(ctx, countActiveGoalsByClientID, clientID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createClientDetails = `-- name: CreateClientDetails :one
 INSERT INTO client_details (
     intake_form_id,
@@ -45,7 +111,7 @@ INSERT INTO client_details (
     email,
     phone_number,
     gender,
-    filenumber,
+    care_type,
     sender_id,
     location_id,
     street,
@@ -79,62 +145,64 @@ INSERT INTO client_details (
     risk_day_night_rhythm,
     risk_other,
     risk_other_description,
-    risk_additional_notes
+    risk_additional_notes,
+    evaluation_intarvals_weeks
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16,
     $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30,
     $31, $32, $33, $34, $35, $36, $37, $38, $39, $40, $41, $42, $43, $44,
-    $45, $46
-) RETURNING id, intake_form_id, registration_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, email, phone_number, gender, filenumber, created_at, sender_id, location_id, street, house_number, house_number_addition, postal_code, city, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, nationality, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes
+    $45, $46, $47
+) RETURNING id, intake_form_id, registration_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, evaluation_intarvals_weeks, care_type, email, phone_number, gender, filenumber, created_at, placed_in_care_at, care_start_date, next_evaluation_date, sender_id, location_id, street, house_number, house_number_addition, postal_code, city, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, nationality, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes
 `
 
 type CreateClientDetailsParams struct {
-	IntakeFormID               *uuid.UUID               `json:"intake_form_id"`
-	RegistrationFormID         *uuid.UUID               `json:"registration_form_id"`
-	FirstName                  string                   `json:"first_name"`
-	LastName                   string                   `json:"last_name"`
-	DateOfBirth                pgtype.Date              `json:"date_of_birth"`
-	Identity                   bool                     `json:"identity"`
-	Bsn                        *string                  `json:"bsn"`
-	BsnVerifiedBy              *uuid.UUID               `json:"bsn_verified_by"`
-	Email                      string                   `json:"email"`
-	PhoneNumber                *string                  `json:"phone_number"`
-	Gender                     ClientGenderEnum         `json:"gender"`
-	Filenumber                 string                   `json:"filenumber"`
-	SenderID                   *uuid.UUID               `json:"sender_id"`
-	LocationID                 *uuid.UUID               `json:"location_id"`
-	Street                     string                   `json:"street"`
-	HouseNumber                string                   `json:"house_number"`
-	HouseNumberAddition        *string                  `json:"house_number_addition"`
-	PostalCode                 string                   `json:"postal_code"`
-	City                       string                   `json:"city"`
-	EducationCurrentlyEnrolled bool                     `json:"education_currently_enrolled"`
-	EducationInstitution       *string                  `json:"education_institution"`
-	EducationMentorName        *string                  `json:"education_mentor_name"`
-	EducationMentorPhone       *string                  `json:"education_mentor_phone"`
-	EducationMentorEmail       *string                  `json:"education_mentor_email"`
-	EducationAdditionalNotes   *string                  `json:"education_additional_notes"`
-	EducationLevel             ClientEducationLevelEnum `json:"education_level"`
-	Nationality                *string                  `json:"nationality"`
-	WorkCurrentlyEmployed      bool                     `json:"work_currently_employed"`
-	WorkCurrentEmployer        *string                  `json:"work_current_employer"`
-	WorkCurrentEmployerPhone   *string                  `json:"work_current_employer_phone"`
-	WorkCurrentEmployerEmail   *string                  `json:"work_current_employer_email"`
-	WorkCurrentPosition        *string                  `json:"work_current_position"`
-	WorkStartDate              pgtype.Date              `json:"work_start_date"`
-	WorkAdditionalNotes        *string                  `json:"work_additional_notes"`
-	RiskAggressiveBehavior     *bool                    `json:"risk_aggressive_behavior"`
-	RiskSuicidalSelfharm       *bool                    `json:"risk_suicidal_selfharm"`
-	RiskSubstanceAbuse         *bool                    `json:"risk_substance_abuse"`
-	RiskPsychiatricIssues      *bool                    `json:"risk_psychiatric_issues"`
-	RiskCriminalHistory        *bool                    `json:"risk_criminal_history"`
-	RiskFlightBehavior         *bool                    `json:"risk_flight_behavior"`
-	RiskWeaponPossession       *bool                    `json:"risk_weapon_possession"`
-	RiskSexualBehavior         *bool                    `json:"risk_sexual_behavior"`
-	RiskDayNightRhythm         *bool                    `json:"risk_day_night_rhythm"`
-	RiskOther                  *bool                    `json:"risk_other"`
-	RiskOtherDescription       *string                  `json:"risk_other_description"`
-	RiskAdditionalNotes        *string                  `json:"risk_additional_notes"`
+	IntakeFormID               *uuid.UUID             `json:"intake_form_id"`
+	RegistrationFormID         *uuid.UUID             `json:"registration_form_id"`
+	FirstName                  string                 `json:"first_name"`
+	LastName                   string                 `json:"last_name"`
+	DateOfBirth                pgtype.Date            `json:"date_of_birth"`
+	Identity                   bool                   `json:"identity"`
+	Bsn                        *string                `json:"bsn"`
+	BsnVerifiedBy              *uuid.UUID             `json:"bsn_verified_by"`
+	Email                      string                 `json:"email"`
+	PhoneNumber                *string                `json:"phone_number"`
+	Gender                     GenderEnum             `json:"gender"`
+	CareType                   NullIntakeCareTypeEnum `json:"care_type"`
+	SenderID                   *uuid.UUID             `json:"sender_id"`
+	LocationID                 *uuid.UUID             `json:"location_id"`
+	Street                     string                 `json:"street"`
+	HouseNumber                string                 `json:"house_number"`
+	HouseNumberAddition        *string                `json:"house_number_addition"`
+	PostalCode                 string                 `json:"postal_code"`
+	City                       string                 `json:"city"`
+	EducationCurrentlyEnrolled bool                   `json:"education_currently_enrolled"`
+	EducationInstitution       *string                `json:"education_institution"`
+	EducationMentorName        *string                `json:"education_mentor_name"`
+	EducationMentorPhone       *string                `json:"education_mentor_phone"`
+	EducationMentorEmail       *string                `json:"education_mentor_email"`
+	EducationAdditionalNotes   *string                `json:"education_additional_notes"`
+	EducationLevel             EducationLevelEnum     `json:"education_level"`
+	Nationality                *string                `json:"nationality"`
+	WorkCurrentlyEmployed      bool                   `json:"work_currently_employed"`
+	WorkCurrentEmployer        *string                `json:"work_current_employer"`
+	WorkCurrentEmployerPhone   *string                `json:"work_current_employer_phone"`
+	WorkCurrentEmployerEmail   *string                `json:"work_current_employer_email"`
+	WorkCurrentPosition        *string                `json:"work_current_position"`
+	WorkStartDate              pgtype.Date            `json:"work_start_date"`
+	WorkAdditionalNotes        *string                `json:"work_additional_notes"`
+	RiskAggressiveBehavior     *bool                  `json:"risk_aggressive_behavior"`
+	RiskSuicidalSelfharm       *bool                  `json:"risk_suicidal_selfharm"`
+	RiskSubstanceAbuse         *bool                  `json:"risk_substance_abuse"`
+	RiskPsychiatricIssues      *bool                  `json:"risk_psychiatric_issues"`
+	RiskCriminalHistory        *bool                  `json:"risk_criminal_history"`
+	RiskFlightBehavior         *bool                  `json:"risk_flight_behavior"`
+	RiskWeaponPossession       *bool                  `json:"risk_weapon_possession"`
+	RiskSexualBehavior         *bool                  `json:"risk_sexual_behavior"`
+	RiskDayNightRhythm         *bool                  `json:"risk_day_night_rhythm"`
+	RiskOther                  *bool                  `json:"risk_other"`
+	RiskOtherDescription       *string                `json:"risk_other_description"`
+	RiskAdditionalNotes        *string                `json:"risk_additional_notes"`
+	EvaluationIntarvalsWeeks   int32                  `json:"evaluation_intarvals_weeks"`
 }
 
 func (q *Queries) CreateClientDetails(ctx context.Context, arg CreateClientDetailsParams) (ClientDetail, error) {
@@ -150,7 +218,7 @@ func (q *Queries) CreateClientDetails(ctx context.Context, arg CreateClientDetai
 		arg.Email,
 		arg.PhoneNumber,
 		arg.Gender,
-		arg.Filenumber,
+		arg.CareType,
 		arg.SenderID,
 		arg.LocationID,
 		arg.Street,
@@ -185,6 +253,7 @@ func (q *Queries) CreateClientDetails(ctx context.Context, arg CreateClientDetai
 		arg.RiskOther,
 		arg.RiskOtherDescription,
 		arg.RiskAdditionalNotes,
+		arg.EvaluationIntarvalsWeeks,
 	)
 	var i ClientDetail
 	err := row.Scan(
@@ -198,11 +267,16 @@ func (q *Queries) CreateClientDetails(ctx context.Context, arg CreateClientDetai
 		&i.Status,
 		&i.Bsn,
 		&i.BsnVerifiedBy,
+		&i.EvaluationIntarvalsWeeks,
+		&i.CareType,
 		&i.Email,
 		&i.PhoneNumber,
 		&i.Gender,
 		&i.Filenumber,
 		&i.CreatedAt,
+		&i.PlacedInCareAt,
+		&i.CareStartDate,
+		&i.NextEvaluationDate,
 		&i.SenderID,
 		&i.LocationID,
 		&i.Street,
@@ -353,10 +427,10 @@ INSERT INTO scheduled_status_changes (
 `
 
 type CreateSchedueledClientStatusChangeParams struct {
-	ClientID      uuid.UUID   `json:"client_id"`
-	NewStatus     *string     `json:"new_status"`
-	Reason        *string     `json:"reason"`
-	ScheduledDate pgtype.Date `json:"scheduled_date"`
+	ClientID      uuid.UUID            `json:"client_id"`
+	NewStatus     NullClientStatusEnum `json:"new_status"`
+	Reason        *string              `json:"reason"`
+	ScheduledDate pgtype.Date          `json:"scheduled_date"`
 }
 
 func (q *Queries) CreateSchedueledClientStatusChange(ctx context.Context, arg CreateSchedueledClientStatusChangeParams) (ScheduledStatusChange, error) {
@@ -421,7 +495,7 @@ func (q *Queries) GetAllClientsIDs(ctx context.Context) ([]uuid.UUID, error) {
 }
 
 const getClientByIntakeFormID = `-- name: GetClientByIntakeFormID :one
-SELECT id, intake_form_id, registration_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, email, phone_number, gender, filenumber, created_at, sender_id, location_id, street, house_number, house_number_addition, postal_code, city, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, nationality, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes FROM client_details
+SELECT id, intake_form_id, registration_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, evaluation_intarvals_weeks, care_type, email, phone_number, gender, filenumber, created_at, placed_in_care_at, care_start_date, next_evaluation_date, sender_id, location_id, street, house_number, house_number_addition, postal_code, city, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, nationality, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes FROM client_details
 WHERE intake_form_id = $1
 LIMIT 1
 `
@@ -440,11 +514,16 @@ func (q *Queries) GetClientByIntakeFormID(ctx context.Context, intakeFormID *uui
 		&i.Status,
 		&i.Bsn,
 		&i.BsnVerifiedBy,
+		&i.EvaluationIntarvalsWeeks,
+		&i.CareType,
 		&i.Email,
 		&i.PhoneNumber,
 		&i.Gender,
 		&i.Filenumber,
 		&i.CreatedAt,
+		&i.PlacedInCareAt,
+		&i.CareStartDate,
+		&i.NextEvaluationDate,
 		&i.SenderID,
 		&i.LocationID,
 		&i.Street,
@@ -486,9 +565,9 @@ func (q *Queries) GetClientByIntakeFormID(ctx context.Context, intakeFormID *uui
 const getClientCounts = `-- name: GetClientCounts :one
 SELECT
     COUNT(*) AS total_clients,
-    COUNT(*) FILTER (WHERE status = 'In Care') AS clients_in_care,
-    COUNT(*) FILTER (WHERE status = 'On Waiting List') AS clients_on_waiting_list,
-    COUNT(*) FILTER (WHERE status = 'Out Of Care') AS clients_out_of_care
+    COUNT(*) FILTER (WHERE status = 'in_care') AS clients_in_care,
+    COUNT(*) FILTER (WHERE status = 'on_waiting_list') AS clients_on_waiting_list,
+    COUNT(*) FILTER (WHERE status = 'out_of_care') AS clients_out_of_care
 FROM client_details
 `
 
@@ -512,7 +591,7 @@ func (q *Queries) GetClientCounts(ctx context.Context) (GetClientCountsRow, erro
 }
 
 const getClientDetails = `-- name: GetClientDetails :one
-SELECT c.id, c.intake_form_id, c.registration_form_id, c.first_name, c.last_name, c.date_of_birth, c.identity, c.status, c.bsn, c.bsn_verified_by, c.email, c.phone_number, c.gender, c.filenumber, c.created_at, c.sender_id, c.location_id, c.street, c.house_number, c.house_number_addition, c.postal_code, c.city, c.education_currently_enrolled, c.education_institution, c.education_mentor_name, c.education_mentor_phone, c.education_mentor_email, c.education_additional_notes, c.education_level, c.work_currently_employed, c.work_current_employer, c.work_current_employer_phone, c.work_current_employer_email, c.work_current_position, c.work_start_date, c.work_additional_notes, c.nationality, c.risk_aggressive_behavior, c.risk_suicidal_selfharm, c.risk_substance_abuse, c.risk_psychiatric_issues, c.risk_criminal_history, c.risk_flight_behavior, c.risk_weapon_possession, c.risk_sexual_behavior, c.risk_day_night_rhythm, c.risk_other, c.risk_other_description, c.risk_additional_notes,
+SELECT c.id, c.intake_form_id, c.registration_form_id, c.first_name, c.last_name, c.date_of_birth, c.identity, c.status, c.bsn, c.bsn_verified_by, c.evaluation_intarvals_weeks, c.care_type, c.email, c.phone_number, c.gender, c.filenumber, c.created_at, c.placed_in_care_at, c.care_start_date, c.next_evaluation_date, c.sender_id, c.location_id, c.street, c.house_number, c.house_number_addition, c.postal_code, c.city, c.education_currently_enrolled, c.education_institution, c.education_mentor_name, c.education_mentor_phone, c.education_mentor_email, c.education_additional_notes, c.education_level, c.work_currently_employed, c.work_current_employer, c.work_current_employer_phone, c.work_current_employer_email, c.work_current_position, c.work_start_date, c.work_additional_notes, c.nationality, c.risk_aggressive_behavior, c.risk_suicidal_selfharm, c.risk_substance_abuse, c.risk_psychiatric_issues, c.risk_criminal_history, c.risk_flight_behavior, c.risk_weapon_possession, c.risk_sexual_behavior, c.risk_day_night_rhythm, c.risk_other, c.risk_other_description, c.risk_additional_notes,
        ep.first_name AS bsn_verified_by_first_name,
        ep.last_name AS bsn_verified_by_last_name
 FROM client_details c
@@ -521,57 +600,62 @@ WHERE c.id = $1 LIMIT 1
 `
 
 type GetClientDetailsRow struct {
-	ID                         uuid.UUID                `json:"id"`
-	IntakeFormID               *uuid.UUID               `json:"intake_form_id"`
-	RegistrationFormID         *uuid.UUID               `json:"registration_form_id"`
-	FirstName                  string                   `json:"first_name"`
-	LastName                   string                   `json:"last_name"`
-	DateOfBirth                pgtype.Date              `json:"date_of_birth"`
-	Identity                   bool                     `json:"identity"`
-	Status                     ClientStatusEnum         `json:"status"`
-	Bsn                        *string                  `json:"bsn"`
-	BsnVerifiedBy              *uuid.UUID               `json:"bsn_verified_by"`
-	Email                      string                   `json:"email"`
-	PhoneNumber                *string                  `json:"phone_number"`
-	Gender                     ClientGenderEnum         `json:"gender"`
-	Filenumber                 string                   `json:"filenumber"`
-	CreatedAt                  pgtype.Timestamptz       `json:"created_at"`
-	SenderID                   *uuid.UUID               `json:"sender_id"`
-	LocationID                 *uuid.UUID               `json:"location_id"`
-	Street                     string                   `json:"street"`
-	HouseNumber                string                   `json:"house_number"`
-	HouseNumberAddition        *string                  `json:"house_number_addition"`
-	PostalCode                 string                   `json:"postal_code"`
-	City                       string                   `json:"city"`
-	EducationCurrentlyEnrolled bool                     `json:"education_currently_enrolled"`
-	EducationInstitution       *string                  `json:"education_institution"`
-	EducationMentorName        *string                  `json:"education_mentor_name"`
-	EducationMentorPhone       *string                  `json:"education_mentor_phone"`
-	EducationMentorEmail       *string                  `json:"education_mentor_email"`
-	EducationAdditionalNotes   *string                  `json:"education_additional_notes"`
-	EducationLevel             ClientEducationLevelEnum `json:"education_level"`
-	WorkCurrentlyEmployed      bool                     `json:"work_currently_employed"`
-	WorkCurrentEmployer        *string                  `json:"work_current_employer"`
-	WorkCurrentEmployerPhone   *string                  `json:"work_current_employer_phone"`
-	WorkCurrentEmployerEmail   *string                  `json:"work_current_employer_email"`
-	WorkCurrentPosition        *string                  `json:"work_current_position"`
-	WorkStartDate              pgtype.Date              `json:"work_start_date"`
-	WorkAdditionalNotes        *string                  `json:"work_additional_notes"`
-	Nationality                *string                  `json:"nationality"`
-	RiskAggressiveBehavior     *bool                    `json:"risk_aggressive_behavior"`
-	RiskSuicidalSelfharm       *bool                    `json:"risk_suicidal_selfharm"`
-	RiskSubstanceAbuse         *bool                    `json:"risk_substance_abuse"`
-	RiskPsychiatricIssues      *bool                    `json:"risk_psychiatric_issues"`
-	RiskCriminalHistory        *bool                    `json:"risk_criminal_history"`
-	RiskFlightBehavior         *bool                    `json:"risk_flight_behavior"`
-	RiskWeaponPossession       *bool                    `json:"risk_weapon_possession"`
-	RiskSexualBehavior         *bool                    `json:"risk_sexual_behavior"`
-	RiskDayNightRhythm         *bool                    `json:"risk_day_night_rhythm"`
-	RiskOther                  *bool                    `json:"risk_other"`
-	RiskOtherDescription       *string                  `json:"risk_other_description"`
-	RiskAdditionalNotes        *string                  `json:"risk_additional_notes"`
-	BsnVerifiedByFirstName     *string                  `json:"bsn_verified_by_first_name"`
-	BsnVerifiedByLastName      *string                  `json:"bsn_verified_by_last_name"`
+	ID                         uuid.UUID              `json:"id"`
+	IntakeFormID               *uuid.UUID             `json:"intake_form_id"`
+	RegistrationFormID         *uuid.UUID             `json:"registration_form_id"`
+	FirstName                  string                 `json:"first_name"`
+	LastName                   string                 `json:"last_name"`
+	DateOfBirth                pgtype.Date            `json:"date_of_birth"`
+	Identity                   bool                   `json:"identity"`
+	Status                     ClientStatusEnum       `json:"status"`
+	Bsn                        *string                `json:"bsn"`
+	BsnVerifiedBy              *uuid.UUID             `json:"bsn_verified_by"`
+	EvaluationIntarvalsWeeks   int32                  `json:"evaluation_intarvals_weeks"`
+	CareType                   NullIntakeCareTypeEnum `json:"care_type"`
+	Email                      string                 `json:"email"`
+	PhoneNumber                *string                `json:"phone_number"`
+	Gender                     GenderEnum             `json:"gender"`
+	Filenumber                 string                 `json:"filenumber"`
+	CreatedAt                  pgtype.Timestamptz     `json:"created_at"`
+	PlacedInCareAt             pgtype.Timestamptz     `json:"placed_in_care_at"`
+	CareStartDate              pgtype.Date            `json:"care_start_date"`
+	NextEvaluationDate         pgtype.Date            `json:"next_evaluation_date"`
+	SenderID                   *uuid.UUID             `json:"sender_id"`
+	LocationID                 *uuid.UUID             `json:"location_id"`
+	Street                     string                 `json:"street"`
+	HouseNumber                string                 `json:"house_number"`
+	HouseNumberAddition        *string                `json:"house_number_addition"`
+	PostalCode                 string                 `json:"postal_code"`
+	City                       string                 `json:"city"`
+	EducationCurrentlyEnrolled bool                   `json:"education_currently_enrolled"`
+	EducationInstitution       *string                `json:"education_institution"`
+	EducationMentorName        *string                `json:"education_mentor_name"`
+	EducationMentorPhone       *string                `json:"education_mentor_phone"`
+	EducationMentorEmail       *string                `json:"education_mentor_email"`
+	EducationAdditionalNotes   *string                `json:"education_additional_notes"`
+	EducationLevel             EducationLevelEnum     `json:"education_level"`
+	WorkCurrentlyEmployed      bool                   `json:"work_currently_employed"`
+	WorkCurrentEmployer        *string                `json:"work_current_employer"`
+	WorkCurrentEmployerPhone   *string                `json:"work_current_employer_phone"`
+	WorkCurrentEmployerEmail   *string                `json:"work_current_employer_email"`
+	WorkCurrentPosition        *string                `json:"work_current_position"`
+	WorkStartDate              pgtype.Date            `json:"work_start_date"`
+	WorkAdditionalNotes        *string                `json:"work_additional_notes"`
+	Nationality                *string                `json:"nationality"`
+	RiskAggressiveBehavior     *bool                  `json:"risk_aggressive_behavior"`
+	RiskSuicidalSelfharm       *bool                  `json:"risk_suicidal_selfharm"`
+	RiskSubstanceAbuse         *bool                  `json:"risk_substance_abuse"`
+	RiskPsychiatricIssues      *bool                  `json:"risk_psychiatric_issues"`
+	RiskCriminalHistory        *bool                  `json:"risk_criminal_history"`
+	RiskFlightBehavior         *bool                  `json:"risk_flight_behavior"`
+	RiskWeaponPossession       *bool                  `json:"risk_weapon_possession"`
+	RiskSexualBehavior         *bool                  `json:"risk_sexual_behavior"`
+	RiskDayNightRhythm         *bool                  `json:"risk_day_night_rhythm"`
+	RiskOther                  *bool                  `json:"risk_other"`
+	RiskOtherDescription       *string                `json:"risk_other_description"`
+	RiskAdditionalNotes        *string                `json:"risk_additional_notes"`
+	BsnVerifiedByFirstName     *string                `json:"bsn_verified_by_first_name"`
+	BsnVerifiedByLastName      *string                `json:"bsn_verified_by_last_name"`
 }
 
 func (q *Queries) GetClientDetails(ctx context.Context, id uuid.UUID) (GetClientDetailsRow, error) {
@@ -588,11 +672,16 @@ func (q *Queries) GetClientDetails(ctx context.Context, id uuid.UUID) (GetClient
 		&i.Status,
 		&i.Bsn,
 		&i.BsnVerifiedBy,
+		&i.EvaluationIntarvalsWeeks,
+		&i.CareType,
 		&i.Email,
 		&i.PhoneNumber,
 		&i.Gender,
 		&i.Filenumber,
 		&i.CreatedAt,
+		&i.PlacedInCareAt,
+		&i.CareStartDate,
+		&i.NextEvaluationDate,
 		&i.SenderID,
 		&i.LocationID,
 		&i.Street,
@@ -674,7 +763,7 @@ func (q *Queries) GetMissingClientDocuments(ctx context.Context, clientID uuid.U
 
 const listClientDetails = `-- name: ListClientDetails :many
 SELECT
-    c.id, intake_form_id, registration_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, email, phone_number, gender, filenumber, c.created_at, sender_id, location_id, c.street, c.house_number, c.house_number_addition, c.postal_code, c.city, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, nationality, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes, location.id, organisation_id, name, location.street, location.house_number, location.house_number_addition, location.postal_code, location.city, capacity, location_type, location.created_at, updated_at,
+    c.id, intake_form_id, registration_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, evaluation_intarvals_weeks, care_type, email, phone_number, gender, filenumber, c.created_at, placed_in_care_at, care_start_date, next_evaluation_date, sender_id, location_id, c.street, c.house_number, c.house_number_addition, c.postal_code, c.city, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, nationality, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes, location.id, organisation_id, name, location.street, location.house_number, location.house_number_addition, location.postal_code, location.city, capacity, location_type, location.created_at, updated_at,
     location.name AS location_name,
     COUNT(*) OVER() AS total_count
 FROM client_details c
@@ -701,69 +790,74 @@ type ListClientDetailsParams struct {
 }
 
 type ListClientDetailsRow struct {
-	ID                         uuid.UUID                `json:"id"`
-	IntakeFormID               *uuid.UUID               `json:"intake_form_id"`
-	RegistrationFormID         *uuid.UUID               `json:"registration_form_id"`
-	FirstName                  string                   `json:"first_name"`
-	LastName                   string                   `json:"last_name"`
-	DateOfBirth                pgtype.Date              `json:"date_of_birth"`
-	Identity                   bool                     `json:"identity"`
-	Status                     ClientStatusEnum         `json:"status"`
-	Bsn                        *string                  `json:"bsn"`
-	BsnVerifiedBy              *uuid.UUID               `json:"bsn_verified_by"`
-	Email                      string                   `json:"email"`
-	PhoneNumber                *string                  `json:"phone_number"`
-	Gender                     ClientGenderEnum         `json:"gender"`
-	Filenumber                 string                   `json:"filenumber"`
-	CreatedAt                  pgtype.Timestamptz       `json:"created_at"`
-	SenderID                   *uuid.UUID               `json:"sender_id"`
-	LocationID                 *uuid.UUID               `json:"location_id"`
-	Street                     string                   `json:"street"`
-	HouseNumber                string                   `json:"house_number"`
-	HouseNumberAddition        *string                  `json:"house_number_addition"`
-	PostalCode                 string                   `json:"postal_code"`
-	City                       string                   `json:"city"`
-	EducationCurrentlyEnrolled bool                     `json:"education_currently_enrolled"`
-	EducationInstitution       *string                  `json:"education_institution"`
-	EducationMentorName        *string                  `json:"education_mentor_name"`
-	EducationMentorPhone       *string                  `json:"education_mentor_phone"`
-	EducationMentorEmail       *string                  `json:"education_mentor_email"`
-	EducationAdditionalNotes   *string                  `json:"education_additional_notes"`
-	EducationLevel             ClientEducationLevelEnum `json:"education_level"`
-	WorkCurrentlyEmployed      bool                     `json:"work_currently_employed"`
-	WorkCurrentEmployer        *string                  `json:"work_current_employer"`
-	WorkCurrentEmployerPhone   *string                  `json:"work_current_employer_phone"`
-	WorkCurrentEmployerEmail   *string                  `json:"work_current_employer_email"`
-	WorkCurrentPosition        *string                  `json:"work_current_position"`
-	WorkStartDate              pgtype.Date              `json:"work_start_date"`
-	WorkAdditionalNotes        *string                  `json:"work_additional_notes"`
-	Nationality                *string                  `json:"nationality"`
-	RiskAggressiveBehavior     *bool                    `json:"risk_aggressive_behavior"`
-	RiskSuicidalSelfharm       *bool                    `json:"risk_suicidal_selfharm"`
-	RiskSubstanceAbuse         *bool                    `json:"risk_substance_abuse"`
-	RiskPsychiatricIssues      *bool                    `json:"risk_psychiatric_issues"`
-	RiskCriminalHistory        *bool                    `json:"risk_criminal_history"`
-	RiskFlightBehavior         *bool                    `json:"risk_flight_behavior"`
-	RiskWeaponPossession       *bool                    `json:"risk_weapon_possession"`
-	RiskSexualBehavior         *bool                    `json:"risk_sexual_behavior"`
-	RiskDayNightRhythm         *bool                    `json:"risk_day_night_rhythm"`
-	RiskOther                  *bool                    `json:"risk_other"`
-	RiskOtherDescription       *string                  `json:"risk_other_description"`
-	RiskAdditionalNotes        *string                  `json:"risk_additional_notes"`
-	ID_2                       *uuid.UUID               `json:"id_2"`
-	OrganisationID             *uuid.UUID               `json:"organisation_id"`
-	Name                       *string                  `json:"name"`
-	Street_2                   *string                  `json:"street_2"`
-	HouseNumber_2              *string                  `json:"house_number_2"`
-	HouseNumberAddition_2      *string                  `json:"house_number_addition_2"`
-	PostalCode_2               *string                  `json:"postal_code_2"`
-	City_2                     *string                  `json:"city_2"`
-	Capacity                   *int32                   `json:"capacity"`
-	LocationType               NullLocationTypeEnum     `json:"location_type"`
-	CreatedAt_2                pgtype.Timestamptz       `json:"created_at_2"`
-	UpdatedAt                  pgtype.Timestamptz       `json:"updated_at"`
-	LocationName               *string                  `json:"location_name"`
-	TotalCount                 int64                    `json:"total_count"`
+	ID                         uuid.UUID              `json:"id"`
+	IntakeFormID               *uuid.UUID             `json:"intake_form_id"`
+	RegistrationFormID         *uuid.UUID             `json:"registration_form_id"`
+	FirstName                  string                 `json:"first_name"`
+	LastName                   string                 `json:"last_name"`
+	DateOfBirth                pgtype.Date            `json:"date_of_birth"`
+	Identity                   bool                   `json:"identity"`
+	Status                     ClientStatusEnum       `json:"status"`
+	Bsn                        *string                `json:"bsn"`
+	BsnVerifiedBy              *uuid.UUID             `json:"bsn_verified_by"`
+	EvaluationIntarvalsWeeks   int32                  `json:"evaluation_intarvals_weeks"`
+	CareType                   NullIntakeCareTypeEnum `json:"care_type"`
+	Email                      string                 `json:"email"`
+	PhoneNumber                *string                `json:"phone_number"`
+	Gender                     GenderEnum             `json:"gender"`
+	Filenumber                 string                 `json:"filenumber"`
+	CreatedAt                  pgtype.Timestamptz     `json:"created_at"`
+	PlacedInCareAt             pgtype.Timestamptz     `json:"placed_in_care_at"`
+	CareStartDate              pgtype.Date            `json:"care_start_date"`
+	NextEvaluationDate         pgtype.Date            `json:"next_evaluation_date"`
+	SenderID                   *uuid.UUID             `json:"sender_id"`
+	LocationID                 *uuid.UUID             `json:"location_id"`
+	Street                     string                 `json:"street"`
+	HouseNumber                string                 `json:"house_number"`
+	HouseNumberAddition        *string                `json:"house_number_addition"`
+	PostalCode                 string                 `json:"postal_code"`
+	City                       string                 `json:"city"`
+	EducationCurrentlyEnrolled bool                   `json:"education_currently_enrolled"`
+	EducationInstitution       *string                `json:"education_institution"`
+	EducationMentorName        *string                `json:"education_mentor_name"`
+	EducationMentorPhone       *string                `json:"education_mentor_phone"`
+	EducationMentorEmail       *string                `json:"education_mentor_email"`
+	EducationAdditionalNotes   *string                `json:"education_additional_notes"`
+	EducationLevel             EducationLevelEnum     `json:"education_level"`
+	WorkCurrentlyEmployed      bool                   `json:"work_currently_employed"`
+	WorkCurrentEmployer        *string                `json:"work_current_employer"`
+	WorkCurrentEmployerPhone   *string                `json:"work_current_employer_phone"`
+	WorkCurrentEmployerEmail   *string                `json:"work_current_employer_email"`
+	WorkCurrentPosition        *string                `json:"work_current_position"`
+	WorkStartDate              pgtype.Date            `json:"work_start_date"`
+	WorkAdditionalNotes        *string                `json:"work_additional_notes"`
+	Nationality                *string                `json:"nationality"`
+	RiskAggressiveBehavior     *bool                  `json:"risk_aggressive_behavior"`
+	RiskSuicidalSelfharm       *bool                  `json:"risk_suicidal_selfharm"`
+	RiskSubstanceAbuse         *bool                  `json:"risk_substance_abuse"`
+	RiskPsychiatricIssues      *bool                  `json:"risk_psychiatric_issues"`
+	RiskCriminalHistory        *bool                  `json:"risk_criminal_history"`
+	RiskFlightBehavior         *bool                  `json:"risk_flight_behavior"`
+	RiskWeaponPossession       *bool                  `json:"risk_weapon_possession"`
+	RiskSexualBehavior         *bool                  `json:"risk_sexual_behavior"`
+	RiskDayNightRhythm         *bool                  `json:"risk_day_night_rhythm"`
+	RiskOther                  *bool                  `json:"risk_other"`
+	RiskOtherDescription       *string                `json:"risk_other_description"`
+	RiskAdditionalNotes        *string                `json:"risk_additional_notes"`
+	ID_2                       *uuid.UUID             `json:"id_2"`
+	OrganisationID             *uuid.UUID             `json:"organisation_id"`
+	Name                       *string                `json:"name"`
+	Street_2                   *string                `json:"street_2"`
+	HouseNumber_2              *string                `json:"house_number_2"`
+	HouseNumberAddition_2      *string                `json:"house_number_addition_2"`
+	PostalCode_2               *string                `json:"postal_code_2"`
+	City_2                     *string                `json:"city_2"`
+	Capacity                   *int32                 `json:"capacity"`
+	LocationType               NullLocationTypeEnum   `json:"location_type"`
+	CreatedAt_2                pgtype.Timestamptz     `json:"created_at_2"`
+	UpdatedAt                  pgtype.Timestamptz     `json:"updated_at"`
+	LocationName               *string                `json:"location_name"`
+	TotalCount                 int64                  `json:"total_count"`
 }
 
 func (q *Queries) ListClientDetails(ctx context.Context, arg ListClientDetailsParams) ([]ListClientDetailsRow, error) {
@@ -792,11 +886,16 @@ func (q *Queries) ListClientDetails(ctx context.Context, arg ListClientDetailsPa
 			&i.Status,
 			&i.Bsn,
 			&i.BsnVerifiedBy,
+			&i.EvaluationIntarvalsWeeks,
+			&i.CareType,
 			&i.Email,
 			&i.PhoneNumber,
 			&i.Gender,
 			&i.Filenumber,
 			&i.CreatedAt,
+			&i.PlacedInCareAt,
+			&i.CareStartDate,
+			&i.NextEvaluationDate,
 			&i.SenderID,
 			&i.LocationID,
 			&i.Street,
@@ -1031,13 +1130,187 @@ func (q *Queries) ListClientStatusHistory(ctx context.Context, arg ListClientSta
 	return items, nil
 }
 
+const listWaitingListClients = `-- name: ListWaitingListClients :many
+SELECT
+    c.id,
+    c.first_name,
+    c.last_name,
+    c.care_type,
+    c.bsn,
+    s.name AS sender_name,
+    (CURRENT_DATE - c.created_at::date)::int4 AS days_in_waitlist,
+    rf.addmission_type AS admission_type,
+    COUNT(*) OVER() AS total_count
+FROM client_details c
+LEFT JOIN sender s ON c.sender_id = s.id
+LEFT JOIN registration_form rf ON c.registration_form_id = rf.id
+WHERE
+    c.status = 'on_waiting_list'
+    AND (
+        $1::text IS NULL
+        OR $1::text = ''
+        OR c.first_name ILIKE '%' || $1 || '%'
+        OR c.last_name ILIKE '%' || $1 || '%'
+        OR s.name ILIKE '%' || $1 || '%'
+    )
+    AND (
+        $2::intake_care_type_enum IS NULL
+        OR c.care_type = $2::intake_care_type_enum
+    )
+ORDER BY
+    CASE WHEN $3::text = 'asc' THEN (CURRENT_DATE - c.created_at::date) END ASC,
+    CASE WHEN $3::text = 'desc' THEN (CURRENT_DATE - c.created_at::date) END DESC,
+    c.created_at ASC
+LIMIT $5 OFFSET $4
+`
+
+type ListWaitingListClientsParams struct {
+	Search    *string                `json:"search"`
+	Placement NullIntakeCareTypeEnum `json:"placement"`
+	SortDays  string                 `json:"sort_days"`
+	Offset    int32                  `json:"offset"`
+	Limit     int32                  `json:"limit"`
+}
+
+type ListWaitingListClientsRow struct {
+	ID             uuid.UUID              `json:"id"`
+	FirstName      string                 `json:"first_name"`
+	LastName       string                 `json:"last_name"`
+	CareType       NullIntakeCareTypeEnum `json:"care_type"`
+	Bsn            *string                `json:"bsn"`
+	SenderName     *string                `json:"sender_name"`
+	DaysInWaitlist int32                  `json:"days_in_waitlist"`
+	AdmissionType  NullAdmissionTypeEnum  `json:"admission_type"`
+	TotalCount     int64                  `json:"total_count"`
+}
+
+func (q *Queries) ListWaitingListClients(ctx context.Context, arg ListWaitingListClientsParams) ([]ListWaitingListClientsRow, error) {
+	rows, err := q.db.Query(ctx, listWaitingListClients,
+		arg.Search,
+		arg.Placement,
+		arg.SortDays,
+		arg.Offset,
+		arg.Limit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListWaitingListClientsRow{}
+	for rows.Next() {
+		var i ListWaitingListClientsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.FirstName,
+			&i.LastName,
+			&i.CareType,
+			&i.Bsn,
+			&i.SenderName,
+			&i.DaysInWaitlist,
+			&i.AdmissionType,
+			&i.TotalCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const putClientInCare = `-- name: PutClientInCare :one
+UPDATE client_details
+SET
+    status = $2,
+    placed_in_care_at = COALESCE($4, CURRENT_TIMESTAMP),
+    care_start_date = $3
+WHERE id = $1
+RETURNING id, intake_form_id, registration_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, evaluation_intarvals_weeks, care_type, email, phone_number, gender, filenumber, created_at, placed_in_care_at, care_start_date, next_evaluation_date, sender_id, location_id, street, house_number, house_number_addition, postal_code, city, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, nationality, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes
+`
+
+type PutClientInCareParams struct {
+	ID             uuid.UUID          `json:"id"`
+	Status         ClientStatusEnum   `json:"status"`
+	CareStartDate  pgtype.Date        `json:"care_start_date"`
+	PlacedInCareAt pgtype.Timestamptz `json:"placed_in_care_at"`
+}
+
+func (q *Queries) PutClientInCare(ctx context.Context, arg PutClientInCareParams) (ClientDetail, error) {
+	row := q.db.QueryRow(ctx, putClientInCare,
+		arg.ID,
+		arg.Status,
+		arg.CareStartDate,
+		arg.PlacedInCareAt,
+	)
+	var i ClientDetail
+	err := row.Scan(
+		&i.ID,
+		&i.IntakeFormID,
+		&i.RegistrationFormID,
+		&i.FirstName,
+		&i.LastName,
+		&i.DateOfBirth,
+		&i.Identity,
+		&i.Status,
+		&i.Bsn,
+		&i.BsnVerifiedBy,
+		&i.EvaluationIntarvalsWeeks,
+		&i.CareType,
+		&i.Email,
+		&i.PhoneNumber,
+		&i.Gender,
+		&i.Filenumber,
+		&i.CreatedAt,
+		&i.PlacedInCareAt,
+		&i.CareStartDate,
+		&i.NextEvaluationDate,
+		&i.SenderID,
+		&i.LocationID,
+		&i.Street,
+		&i.HouseNumber,
+		&i.HouseNumberAddition,
+		&i.PostalCode,
+		&i.City,
+		&i.EducationCurrentlyEnrolled,
+		&i.EducationInstitution,
+		&i.EducationMentorName,
+		&i.EducationMentorPhone,
+		&i.EducationMentorEmail,
+		&i.EducationAdditionalNotes,
+		&i.EducationLevel,
+		&i.WorkCurrentlyEmployed,
+		&i.WorkCurrentEmployer,
+		&i.WorkCurrentEmployerPhone,
+		&i.WorkCurrentEmployerEmail,
+		&i.WorkCurrentPosition,
+		&i.WorkStartDate,
+		&i.WorkAdditionalNotes,
+		&i.Nationality,
+		&i.RiskAggressiveBehavior,
+		&i.RiskSuicidalSelfharm,
+		&i.RiskSubstanceAbuse,
+		&i.RiskPsychiatricIssues,
+		&i.RiskCriminalHistory,
+		&i.RiskFlightBehavior,
+		&i.RiskWeaponPossession,
+		&i.RiskSexualBehavior,
+		&i.RiskDayNightRhythm,
+		&i.RiskOther,
+		&i.RiskOtherDescription,
+		&i.RiskAdditionalNotes,
+	)
+	return i, err
+}
+
 const updateClientStatus = `-- name: UpdateClientStatus :one
 
 
 UPDATE client_details
 SET status = $2
 WHERE id = $1
-RETURNING id, intake_form_id, registration_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, email, phone_number, gender, filenumber, created_at, sender_id, location_id, street, house_number, house_number_addition, postal_code, city, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, nationality, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes
+RETURNING id, intake_form_id, registration_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, evaluation_intarvals_weeks, care_type, email, phone_number, gender, filenumber, created_at, placed_in_care_at, care_start_date, next_evaluation_date, sender_id, location_id, street, house_number, house_number_addition, postal_code, city, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, nationality, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes
 `
 
 type UpdateClientStatusParams struct {
@@ -1098,11 +1371,16 @@ func (q *Queries) UpdateClientStatus(ctx context.Context, arg UpdateClientStatus
 		&i.Status,
 		&i.Bsn,
 		&i.BsnVerifiedBy,
+		&i.EvaluationIntarvalsWeeks,
+		&i.CareType,
 		&i.Email,
 		&i.PhoneNumber,
 		&i.Gender,
 		&i.Filenumber,
 		&i.CreatedAt,
+		&i.PlacedInCareAt,
+		&i.CareStartDate,
+		&i.NextEvaluationDate,
 		&i.SenderID,
 		&i.LocationID,
 		&i.Street,

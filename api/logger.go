@@ -5,19 +5,21 @@ import (
 	"runtime/debug"
 	"time"
 
+	applogger "maicare_go/logger"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
-type LogLevel string
+type LogLevel = applogger.LogLevel
 
 const (
-	LogLevelInfo  LogLevel = "info"
-	LogLevelWarn  LogLevel = "warn"
-	LogLevelError LogLevel = "error"
-	requestIDKey = "request_id"
+	LogLevelInfo  LogLevel = applogger.LogLevelInfo
+	LogLevelWarn  LogLevel = applogger.LogLevelWarn
+	LogLevelError LogLevel = applogger.LogLevelError
+	requestIDKey           = "request_id"
 )
 
 func (server *Server) requestLogger() gin.HandlerFunc {
@@ -155,5 +157,7 @@ func (server *Server) logBusinessEvent(level LogLevel, operation, message string
 		server.logger.Warn(message, allFields...)
 	case LogLevelInfo:
 		server.logger.Info(message, allFields...)
+	default:
+		server.logger.Info(message, append(allFields, zap.String("unexpected_log_level", string(level)))...)
 	}
 }

@@ -11,7 +11,7 @@ import (
 )
 
 func (s *carePlanService) ListCarePlanTopics(ctx context.Context) ([]ListCarePlanTopics, error) {
-	topics, err := s.Store.ListMaturityMatrix(ctx)
+	topics, err := s.Store.ListCarePlanTopics(ctx)
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListCarePlanTopics", "Failed to list care plan topics", zap.Error(err))
 		return nil, fmt.Errorf("failed to list care plan topics")

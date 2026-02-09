@@ -13,6 +13,48 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type AdmissionTypeEnum string
+
+const (
+	AdmissionTypeEnumCrisisAdmission  AdmissionTypeEnum = "crisis_admission"
+	AdmissionTypeEnumRegularPlacement AdmissionTypeEnum = "regular_placement"
+)
+
+func (e *AdmissionTypeEnum) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = AdmissionTypeEnum(s)
+	case string:
+		*e = AdmissionTypeEnum(s)
+	default:
+		return fmt.Errorf("unsupported scan type for AdmissionTypeEnum: %T", src)
+	}
+	return nil
+}
+
+type NullAdmissionTypeEnum struct {
+	AdmissionTypeEnum AdmissionTypeEnum `json:"admission_type_enum"`
+	Valid             bool              `json:"valid"` // Valid is true if AdmissionTypeEnum is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullAdmissionTypeEnum) Scan(value interface{}) error {
+	if value == nil {
+		ns.AdmissionTypeEnum, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.AdmissionTypeEnum.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullAdmissionTypeEnum) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.AdmissionTypeEnum), nil
+}
+
 type AppointmentStatusEnum string
 
 const (
@@ -54,270 +96,6 @@ func (ns NullAppointmentStatusEnum) Value() (driver.Value, error) {
 		return nil, nil
 	}
 	return string(ns.AppointmentStatusEnum), nil
-}
-
-type CarePlanInterventionFrequencyEnum string
-
-const (
-	CarePlanInterventionFrequencyEnumDaily   CarePlanInterventionFrequencyEnum = "daily"
-	CarePlanInterventionFrequencyEnumWeekly  CarePlanInterventionFrequencyEnum = "weekly"
-	CarePlanInterventionFrequencyEnumMonthly CarePlanInterventionFrequencyEnum = "monthly"
-)
-
-func (e *CarePlanInterventionFrequencyEnum) Scan(src interface{}) error {
-	switch s := src.(type) {
-	case []byte:
-		*e = CarePlanInterventionFrequencyEnum(s)
-	case string:
-		*e = CarePlanInterventionFrequencyEnum(s)
-	default:
-		return fmt.Errorf("unsupported scan type for CarePlanInterventionFrequencyEnum: %T", src)
-	}
-	return nil
-}
-
-type NullCarePlanInterventionFrequencyEnum struct {
-	CarePlanInterventionFrequencyEnum CarePlanInterventionFrequencyEnum `json:"care_plan_intervention_frequency_enum"`
-	Valid                             bool                              `json:"valid"` // Valid is true if CarePlanInterventionFrequencyEnum is not NULL
-}
-
-// Scan implements the Scanner interface.
-func (ns *NullCarePlanInterventionFrequencyEnum) Scan(value interface{}) error {
-	if value == nil {
-		ns.CarePlanInterventionFrequencyEnum, ns.Valid = "", false
-		return nil
-	}
-	ns.Valid = true
-	return ns.CarePlanInterventionFrequencyEnum.Scan(value)
-}
-
-// Value implements the driver Valuer interface.
-func (ns NullCarePlanInterventionFrequencyEnum) Value() (driver.Value, error) {
-	if !ns.Valid {
-		return nil, nil
-	}
-	return string(ns.CarePlanInterventionFrequencyEnum), nil
-}
-
-type CarePlanObjectiveStatusEnum string
-
-const (
-	CarePlanObjectiveStatusEnumNotStarted   CarePlanObjectiveStatusEnum = "not_started"
-	CarePlanObjectiveStatusEnumInProgress   CarePlanObjectiveStatusEnum = "in_progress"
-	CarePlanObjectiveStatusEnumCompleted    CarePlanObjectiveStatusEnum = "completed"
-	CarePlanObjectiveStatusEnumDiscontinued CarePlanObjectiveStatusEnum = "discontinued"
-	CarePlanObjectiveStatusEnumDraft        CarePlanObjectiveStatusEnum = "draft"
-)
-
-func (e *CarePlanObjectiveStatusEnum) Scan(src interface{}) error {
-	switch s := src.(type) {
-	case []byte:
-		*e = CarePlanObjectiveStatusEnum(s)
-	case string:
-		*e = CarePlanObjectiveStatusEnum(s)
-	default:
-		return fmt.Errorf("unsupported scan type for CarePlanObjectiveStatusEnum: %T", src)
-	}
-	return nil
-}
-
-type NullCarePlanObjectiveStatusEnum struct {
-	CarePlanObjectiveStatusEnum CarePlanObjectiveStatusEnum `json:"care_plan_objective_status_enum"`
-	Valid                       bool                        `json:"valid"` // Valid is true if CarePlanObjectiveStatusEnum is not NULL
-}
-
-// Scan implements the Scanner interface.
-func (ns *NullCarePlanObjectiveStatusEnum) Scan(value interface{}) error {
-	if value == nil {
-		ns.CarePlanObjectiveStatusEnum, ns.Valid = "", false
-		return nil
-	}
-	ns.Valid = true
-	return ns.CarePlanObjectiveStatusEnum.Scan(value)
-}
-
-// Value implements the driver Valuer interface.
-func (ns NullCarePlanObjectiveStatusEnum) Value() (driver.Value, error) {
-	if !ns.Valid {
-		return nil, nil
-	}
-	return string(ns.CarePlanObjectiveStatusEnum), nil
-}
-
-type CarePlanReportTypeEnum string
-
-const (
-	CarePlanReportTypeEnumProgress     CarePlanReportTypeEnum = "progress"
-	CarePlanReportTypeEnumConcern      CarePlanReportTypeEnum = "concern"
-	CarePlanReportTypeEnumAchievement  CarePlanReportTypeEnum = "achievement"
-	CarePlanReportTypeEnumModification CarePlanReportTypeEnum = "modification"
-)
-
-func (e *CarePlanReportTypeEnum) Scan(src interface{}) error {
-	switch s := src.(type) {
-	case []byte:
-		*e = CarePlanReportTypeEnum(s)
-	case string:
-		*e = CarePlanReportTypeEnum(s)
-	default:
-		return fmt.Errorf("unsupported scan type for CarePlanReportTypeEnum: %T", src)
-	}
-	return nil
-}
-
-type NullCarePlanReportTypeEnum struct {
-	CarePlanReportTypeEnum CarePlanReportTypeEnum `json:"care_plan_report_type_enum"`
-	Valid                  bool                   `json:"valid"` // Valid is true if CarePlanReportTypeEnum is not NULL
-}
-
-// Scan implements the Scanner interface.
-func (ns *NullCarePlanReportTypeEnum) Scan(value interface{}) error {
-	if value == nil {
-		ns.CarePlanReportTypeEnum, ns.Valid = "", false
-		return nil
-	}
-	ns.Valid = true
-	return ns.CarePlanReportTypeEnum.Scan(value)
-}
-
-// Value implements the driver Valuer interface.
-func (ns NullCarePlanReportTypeEnum) Value() (driver.Value, error) {
-	if !ns.Valid {
-		return nil, nil
-	}
-	return string(ns.CarePlanReportTypeEnum), nil
-}
-
-type CarePlanRiskLevelEnum string
-
-const (
-	CarePlanRiskLevelEnumLow    CarePlanRiskLevelEnum = "low"
-	CarePlanRiskLevelEnumMedium CarePlanRiskLevelEnum = "medium"
-	CarePlanRiskLevelEnumHigh   CarePlanRiskLevelEnum = "high"
-)
-
-func (e *CarePlanRiskLevelEnum) Scan(src interface{}) error {
-	switch s := src.(type) {
-	case []byte:
-		*e = CarePlanRiskLevelEnum(s)
-	case string:
-		*e = CarePlanRiskLevelEnum(s)
-	default:
-		return fmt.Errorf("unsupported scan type for CarePlanRiskLevelEnum: %T", src)
-	}
-	return nil
-}
-
-type NullCarePlanRiskLevelEnum struct {
-	CarePlanRiskLevelEnum CarePlanRiskLevelEnum `json:"care_plan_risk_level_enum"`
-	Valid                 bool                  `json:"valid"` // Valid is true if CarePlanRiskLevelEnum is not NULL
-}
-
-// Scan implements the Scanner interface.
-func (ns *NullCarePlanRiskLevelEnum) Scan(value interface{}) error {
-	if value == nil {
-		ns.CarePlanRiskLevelEnum, ns.Valid = "", false
-		return nil
-	}
-	ns.Valid = true
-	return ns.CarePlanRiskLevelEnum.Scan(value)
-}
-
-// Value implements the driver Valuer interface.
-func (ns NullCarePlanRiskLevelEnum) Value() (driver.Value, error) {
-	if !ns.Valid {
-		return nil, nil
-	}
-	return string(ns.CarePlanRiskLevelEnum), nil
-}
-
-type CarePlanStatusEnum string
-
-const (
-	CarePlanStatusEnumPending      CarePlanStatusEnum = "pending"
-	CarePlanStatusEnumGenerated    CarePlanStatusEnum = "generated"
-	CarePlanStatusEnumApproved     CarePlanStatusEnum = "approved"
-	CarePlanStatusEnumActive       CarePlanStatusEnum = "active"
-	CarePlanStatusEnumCompleted    CarePlanStatusEnum = "completed"
-	CarePlanStatusEnumDiscontinued CarePlanStatusEnum = "discontinued"
-)
-
-func (e *CarePlanStatusEnum) Scan(src interface{}) error {
-	switch s := src.(type) {
-	case []byte:
-		*e = CarePlanStatusEnum(s)
-	case string:
-		*e = CarePlanStatusEnum(s)
-	default:
-		return fmt.Errorf("unsupported scan type for CarePlanStatusEnum: %T", src)
-	}
-	return nil
-}
-
-type NullCarePlanStatusEnum struct {
-	CarePlanStatusEnum CarePlanStatusEnum `json:"care_plan_status_enum"`
-	Valid              bool               `json:"valid"` // Valid is true if CarePlanStatusEnum is not NULL
-}
-
-// Scan implements the Scanner interface.
-func (ns *NullCarePlanStatusEnum) Scan(value interface{}) error {
-	if value == nil {
-		ns.CarePlanStatusEnum, ns.Valid = "", false
-		return nil
-	}
-	ns.Valid = true
-	return ns.CarePlanStatusEnum.Scan(value)
-}
-
-// Value implements the driver Valuer interface.
-func (ns NullCarePlanStatusEnum) Value() (driver.Value, error) {
-	if !ns.Valid {
-		return nil, nil
-	}
-	return string(ns.CarePlanStatusEnum), nil
-}
-
-type CarePlanTimeframeEnum string
-
-const (
-	CarePlanTimeframeEnumShortTerm  CarePlanTimeframeEnum = "short_term"
-	CarePlanTimeframeEnumMediumTerm CarePlanTimeframeEnum = "medium_term"
-	CarePlanTimeframeEnumLongTerm   CarePlanTimeframeEnum = "long_term"
-)
-
-func (e *CarePlanTimeframeEnum) Scan(src interface{}) error {
-	switch s := src.(type) {
-	case []byte:
-		*e = CarePlanTimeframeEnum(s)
-	case string:
-		*e = CarePlanTimeframeEnum(s)
-	default:
-		return fmt.Errorf("unsupported scan type for CarePlanTimeframeEnum: %T", src)
-	}
-	return nil
-}
-
-type NullCarePlanTimeframeEnum struct {
-	CarePlanTimeframeEnum CarePlanTimeframeEnum `json:"care_plan_timeframe_enum"`
-	Valid                 bool                  `json:"valid"` // Valid is true if CarePlanTimeframeEnum is not NULL
-}
-
-// Scan implements the Scanner interface.
-func (ns *NullCarePlanTimeframeEnum) Scan(value interface{}) error {
-	if value == nil {
-		ns.CarePlanTimeframeEnum, ns.Valid = "", false
-		return nil
-	}
-	ns.Valid = true
-	return ns.CarePlanTimeframeEnum.Scan(value)
-}
-
-// Value implements the driver Valuer interface.
-func (ns NullCarePlanTimeframeEnum) Value() (driver.Value, error) {
-	if !ns.Valid {
-		return nil, nil
-	}
-	return string(ns.CarePlanTimeframeEnum), nil
 }
 
 type CareTypeEnum string
@@ -412,91 +190,179 @@ func (ns NullClientDocumentLabelEnum) Value() (driver.Value, error) {
 	return string(ns.ClientDocumentLabelEnum), nil
 }
 
-type ClientEducationLevelEnum string
+type ClientGoalPriorityEnum string
 
 const (
-	ClientEducationLevelEnumPrimary   ClientEducationLevelEnum = "primary"
-	ClientEducationLevelEnumSecondary ClientEducationLevelEnum = "secondary"
-	ClientEducationLevelEnumHigher    ClientEducationLevelEnum = "higher"
-	ClientEducationLevelEnumNone      ClientEducationLevelEnum = "none"
+	ClientGoalPriorityEnumLow    ClientGoalPriorityEnum = "low"
+	ClientGoalPriorityEnumMedium ClientGoalPriorityEnum = "medium"
+	ClientGoalPriorityEnumHigh   ClientGoalPriorityEnum = "high"
 )
 
-func (e *ClientEducationLevelEnum) Scan(src interface{}) error {
+func (e *ClientGoalPriorityEnum) Scan(src interface{}) error {
 	switch s := src.(type) {
 	case []byte:
-		*e = ClientEducationLevelEnum(s)
+		*e = ClientGoalPriorityEnum(s)
 	case string:
-		*e = ClientEducationLevelEnum(s)
+		*e = ClientGoalPriorityEnum(s)
 	default:
-		return fmt.Errorf("unsupported scan type for ClientEducationLevelEnum: %T", src)
+		return fmt.Errorf("unsupported scan type for ClientGoalPriorityEnum: %T", src)
 	}
 	return nil
 }
 
-type NullClientEducationLevelEnum struct {
-	ClientEducationLevelEnum ClientEducationLevelEnum `json:"client_education_level_enum"`
-	Valid                    bool                     `json:"valid"` // Valid is true if ClientEducationLevelEnum is not NULL
+type NullClientGoalPriorityEnum struct {
+	ClientGoalPriorityEnum ClientGoalPriorityEnum `json:"client_goal_priority_enum"`
+	Valid                  bool                   `json:"valid"` // Valid is true if ClientGoalPriorityEnum is not NULL
 }
 
 // Scan implements the Scanner interface.
-func (ns *NullClientEducationLevelEnum) Scan(value interface{}) error {
+func (ns *NullClientGoalPriorityEnum) Scan(value interface{}) error {
 	if value == nil {
-		ns.ClientEducationLevelEnum, ns.Valid = "", false
+		ns.ClientGoalPriorityEnum, ns.Valid = "", false
 		return nil
 	}
 	ns.Valid = true
-	return ns.ClientEducationLevelEnum.Scan(value)
+	return ns.ClientGoalPriorityEnum.Scan(value)
 }
 
 // Value implements the driver Valuer interface.
-func (ns NullClientEducationLevelEnum) Value() (driver.Value, error) {
+func (ns NullClientGoalPriorityEnum) Value() (driver.Value, error) {
 	if !ns.Valid {
 		return nil, nil
 	}
-	return string(ns.ClientEducationLevelEnum), nil
+	return string(ns.ClientGoalPriorityEnum), nil
 }
 
-type ClientGenderEnum string
+type ClientGoalProgressEnum string
 
 const (
-	ClientGenderEnumMale   ClientGenderEnum = "male"
-	ClientGenderEnumFemale ClientGenderEnum = "female"
-	ClientGenderEnumOther  ClientGenderEnum = "other"
+	ClientGoalProgressEnumNoProgress      ClientGoalProgressEnum = "no_progress"
+	ClientGoalProgressEnumRegression      ClientGoalProgressEnum = "regression"
+	ClientGoalProgressEnumLimitedProgress ClientGoalProgressEnum = "limited_progress"
+	ClientGoalProgressEnumGoodProgress    ClientGoalProgressEnum = "good_progress"
+	ClientGoalProgressEnumAchieved        ClientGoalProgressEnum = "achieved"
+	ClientGoalProgressEnumBlocked         ClientGoalProgressEnum = "blocked"
 )
 
-func (e *ClientGenderEnum) Scan(src interface{}) error {
+func (e *ClientGoalProgressEnum) Scan(src interface{}) error {
 	switch s := src.(type) {
 	case []byte:
-		*e = ClientGenderEnum(s)
+		*e = ClientGoalProgressEnum(s)
 	case string:
-		*e = ClientGenderEnum(s)
+		*e = ClientGoalProgressEnum(s)
 	default:
-		return fmt.Errorf("unsupported scan type for ClientGenderEnum: %T", src)
+		return fmt.Errorf("unsupported scan type for ClientGoalProgressEnum: %T", src)
 	}
 	return nil
 }
 
-type NullClientGenderEnum struct {
-	ClientGenderEnum ClientGenderEnum `json:"client_gender_enum"`
-	Valid            bool             `json:"valid"` // Valid is true if ClientGenderEnum is not NULL
+type NullClientGoalProgressEnum struct {
+	ClientGoalProgressEnum ClientGoalProgressEnum `json:"client_goal_progress_enum"`
+	Valid                  bool                   `json:"valid"` // Valid is true if ClientGoalProgressEnum is not NULL
 }
 
 // Scan implements the Scanner interface.
-func (ns *NullClientGenderEnum) Scan(value interface{}) error {
+func (ns *NullClientGoalProgressEnum) Scan(value interface{}) error {
 	if value == nil {
-		ns.ClientGenderEnum, ns.Valid = "", false
+		ns.ClientGoalProgressEnum, ns.Valid = "", false
 		return nil
 	}
 	ns.Valid = true
-	return ns.ClientGenderEnum.Scan(value)
+	return ns.ClientGoalProgressEnum.Scan(value)
 }
 
 // Value implements the driver Valuer interface.
-func (ns NullClientGenderEnum) Value() (driver.Value, error) {
+func (ns NullClientGoalProgressEnum) Value() (driver.Value, error) {
 	if !ns.Valid {
 		return nil, nil
 	}
-	return string(ns.ClientGenderEnum), nil
+	return string(ns.ClientGoalProgressEnum), nil
+}
+
+type ClientGoalSourceEnum string
+
+const (
+	ClientGoalSourceEnumIntake       ClientGoalSourceEnum = "intake"
+	ClientGoalSourceEnumManual       ClientGoalSourceEnum = "manual"
+	ClientGoalSourceEnumReviewUpdate ClientGoalSourceEnum = "review_update"
+)
+
+func (e *ClientGoalSourceEnum) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = ClientGoalSourceEnum(s)
+	case string:
+		*e = ClientGoalSourceEnum(s)
+	default:
+		return fmt.Errorf("unsupported scan type for ClientGoalSourceEnum: %T", src)
+	}
+	return nil
+}
+
+type NullClientGoalSourceEnum struct {
+	ClientGoalSourceEnum ClientGoalSourceEnum `json:"client_goal_source_enum"`
+	Valid                bool                 `json:"valid"` // Valid is true if ClientGoalSourceEnum is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullClientGoalSourceEnum) Scan(value interface{}) error {
+	if value == nil {
+		ns.ClientGoalSourceEnum, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.ClientGoalSourceEnum.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullClientGoalSourceEnum) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.ClientGoalSourceEnum), nil
+}
+
+type ClientGoalStatusEnum string
+
+const (
+	ClientGoalStatusEnumActive    ClientGoalStatusEnum = "active"
+	ClientGoalStatusEnumAchieved  ClientGoalStatusEnum = "achieved"
+	ClientGoalStatusEnumCancelled ClientGoalStatusEnum = "cancelled"
+)
+
+func (e *ClientGoalStatusEnum) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = ClientGoalStatusEnum(s)
+	case string:
+		*e = ClientGoalStatusEnum(s)
+	default:
+		return fmt.Errorf("unsupported scan type for ClientGoalStatusEnum: %T", src)
+	}
+	return nil
+}
+
+type NullClientGoalStatusEnum struct {
+	ClientGoalStatusEnum ClientGoalStatusEnum `json:"client_goal_status_enum"`
+	Valid                bool                 `json:"valid"` // Valid is true if ClientGoalStatusEnum is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullClientGoalStatusEnum) Scan(value interface{}) error {
+	if value == nil {
+		ns.ClientGoalStatusEnum, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.ClientGoalStatusEnum.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullClientGoalStatusEnum) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.ClientGoalStatusEnum), nil
 }
 
 type ClientLivingSituationEnum string
@@ -589,9 +455,11 @@ func (ns NullClientLocationTransferStatusEnum) Value() (driver.Value, error) {
 type ClientStatusEnum string
 
 const (
-	ClientStatusEnumInCare        ClientStatusEnum = "In Care"
-	ClientStatusEnumOnWaitingList ClientStatusEnum = "On Waiting List"
-	ClientStatusEnumOutOfCare     ClientStatusEnum = "Out Of Care"
+	ClientStatusEnumInCare             ClientStatusEnum = "in_care"
+	ClientStatusEnumOnWaitingList      ClientStatusEnum = "on_waiting_list"
+	ClientStatusEnumScheduledInCare    ClientStatusEnum = "scheduled_in_care"
+	ClientStatusEnumScheduledOutOfCare ClientStatusEnum = "scheduled_out_of_care"
+	ClientStatusEnumOutOfCare          ClientStatusEnum = "out_of_care"
 )
 
 func (e *ClientStatusEnum) Scan(src interface{}) error {
@@ -760,6 +628,50 @@ func (ns NullContractStatusEnum) Value() (driver.Value, error) {
 	return string(ns.ContractStatusEnum), nil
 }
 
+type EducationLevelEnum string
+
+const (
+	EducationLevelEnumPrimary   EducationLevelEnum = "primary"
+	EducationLevelEnumSecondary EducationLevelEnum = "secondary"
+	EducationLevelEnumHigher    EducationLevelEnum = "higher"
+	EducationLevelEnumNone      EducationLevelEnum = "none"
+)
+
+func (e *EducationLevelEnum) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = EducationLevelEnum(s)
+	case string:
+		*e = EducationLevelEnum(s)
+	default:
+		return fmt.Errorf("unsupported scan type for EducationLevelEnum: %T", src)
+	}
+	return nil
+}
+
+type NullEducationLevelEnum struct {
+	EducationLevelEnum EducationLevelEnum `json:"education_level_enum"`
+	Valid              bool               `json:"valid"` // Valid is true if EducationLevelEnum is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullEducationLevelEnum) Scan(value interface{}) error {
+	if value == nil {
+		ns.EducationLevelEnum, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.EducationLevelEnum.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullEducationLevelEnum) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.EducationLevelEnum), nil
+}
+
 type EmotionalStateEnum string
 
 const (
@@ -848,49 +760,6 @@ func (ns NullEmployeeContractTypeEnum) Value() (driver.Value, error) {
 		return nil, nil
 	}
 	return string(ns.EmployeeContractTypeEnum), nil
-}
-
-type EmployeeGenderEnum string
-
-const (
-	EmployeeGenderEnumMale         EmployeeGenderEnum = "male"
-	EmployeeGenderEnumFemale       EmployeeGenderEnum = "female"
-	EmployeeGenderEnumNotSpecified EmployeeGenderEnum = "not_specified"
-)
-
-func (e *EmployeeGenderEnum) Scan(src interface{}) error {
-	switch s := src.(type) {
-	case []byte:
-		*e = EmployeeGenderEnum(s)
-	case string:
-		*e = EmployeeGenderEnum(s)
-	default:
-		return fmt.Errorf("unsupported scan type for EmployeeGenderEnum: %T", src)
-	}
-	return nil
-}
-
-type NullEmployeeGenderEnum struct {
-	EmployeeGenderEnum EmployeeGenderEnum `json:"employee_gender_enum"`
-	Valid              bool               `json:"valid"` // Valid is true if EmployeeGenderEnum is not NULL
-}
-
-// Scan implements the Scanner interface.
-func (ns *NullEmployeeGenderEnum) Scan(value interface{}) error {
-	if value == nil {
-		ns.EmployeeGenderEnum, ns.Valid = "", false
-		return nil
-	}
-	ns.Valid = true
-	return ns.EmployeeGenderEnum.Scan(value)
-}
-
-// Value implements the driver Valuer interface.
-func (ns NullEmployeeGenderEnum) Value() (driver.Value, error) {
-	if !ns.Valid {
-		return nil, nil
-	}
-	return string(ns.EmployeeGenderEnum), nil
 }
 
 type FinancingActEnum string
@@ -1021,6 +890,50 @@ func (ns NullFormStatusEnum) Value() (driver.Value, error) {
 		return nil, nil
 	}
 	return string(ns.FormStatusEnum), nil
+}
+
+type GenderEnum string
+
+const (
+	GenderEnumMale    GenderEnum = "male"
+	GenderEnumFemale  GenderEnum = "female"
+	GenderEnumOther   GenderEnum = "other"
+	GenderEnumUnknown GenderEnum = "unknown"
+)
+
+func (e *GenderEnum) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = GenderEnum(s)
+	case string:
+		*e = GenderEnum(s)
+	default:
+		return fmt.Errorf("unsupported scan type for GenderEnum: %T", src)
+	}
+	return nil
+}
+
+type NullGenderEnum struct {
+	GenderEnum GenderEnum `json:"gender_enum"`
+	Valid      bool       `json:"valid"` // Valid is true if GenderEnum is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullGenderEnum) Scan(value interface{}) error {
+	if value == nil {
+		ns.GenderEnum, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.GenderEnum.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullGenderEnum) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.GenderEnum), nil
 }
 
 type HoursTypeEnum string
@@ -2111,118 +2024,6 @@ type Audit struct {
 	HashSelf     string             `json:"hash_self"`
 }
 
-type CarePlan struct {
-	ID                    uuid.UUID          `json:"id"`
-	AssessmentID          uuid.UUID          `json:"assessment_id"`
-	GeneratedAt           pgtype.Timestamp   `json:"generated_at"`
-	GeneratedByEmployeeID *uuid.UUID         `json:"generated_by_employee_id"`
-	ApprovedByEmployeeID  *uuid.UUID         `json:"approved_by_employee_id"`
-	ApprovedAt            pgtype.Timestamp   `json:"approved_at"`
-	Status                CarePlanStatusEnum `json:"status"`
-	AssessmentSummary     string             `json:"assessment_summary"`
-	RawLlmResponse        []byte             `json:"raw_llm_response"`
-	CreatedAt             pgtype.Timestamp   `json:"created_at"`
-	UpdatedAt             pgtype.Timestamp   `json:"updated_at"`
-	Version               int32              `json:"version"`
-}
-
-type CarePlanAction struct {
-	ID                    uuid.UUID        `json:"id"`
-	ObjectiveID           uuid.UUID        `json:"objective_id"`
-	ActionDescription     string           `json:"action_description"`
-	IsCompleted           bool             `json:"is_completed"`
-	CompletedAt           pgtype.Timestamp `json:"completed_at"`
-	CompletedByEmployeeID *uuid.UUID       `json:"completed_by_employee_id"`
-	Notes                 *string          `json:"notes"`
-	SortOrder             int32            `json:"sort_order"`
-}
-
-type CarePlanIntervention struct {
-	ID                      uuid.UUID                         `json:"id"`
-	CarePlanID              uuid.UUID                         `json:"care_plan_id"`
-	Frequency               CarePlanInterventionFrequencyEnum `json:"frequency"`
-	InterventionDescription string                            `json:"intervention_description"`
-	IsActive                bool                              `json:"is_active"`
-	LastCompletedDate       pgtype.Date                       `json:"last_completed_date"`
-	TotalCompletions        int32                             `json:"total_completions"`
-	CreatedAt               pgtype.Timestamp                  `json:"created_at"`
-	UpdatedAt               pgtype.Timestamp                  `json:"updated_at"`
-}
-
-type CarePlanMetric struct {
-	ID                uuid.UUID        `json:"id"`
-	CarePlanID        uuid.UUID        `json:"care_plan_id"`
-	MetricName        string           `json:"metric_name"`
-	TargetValue       string           `json:"target_value"`
-	MeasurementMethod string           `json:"measurement_method"`
-	CurrentValue      *string          `json:"current_value"`
-	LastMeasuredDate  pgtype.Date      `json:"last_measured_date"`
-	IsAchieved        bool             `json:"is_achieved"`
-	CreatedAt         pgtype.Timestamp `json:"created_at"`
-	UpdatedAt         pgtype.Timestamp `json:"updated_at"`
-}
-
-type CarePlanObjective struct {
-	ID              uuid.UUID                   `json:"id"`
-	CarePlanID      uuid.UUID                   `json:"care_plan_id"`
-	Timeframe       CarePlanTimeframeEnum       `json:"timeframe"`
-	GoalTitle       string                      `json:"goal_title"`
-	Description     string                      `json:"description"`
-	Priority        string                      `json:"priority"`
-	TargetDate      pgtype.Date                 `json:"target_date"`
-	Status          CarePlanObjectiveStatusEnum `json:"status"`
-	CompletionDate  pgtype.Date                 `json:"completion_date"`
-	CompletionNotes *string                     `json:"completion_notes"`
-	CreatedAt       pgtype.Timestamp            `json:"created_at"`
-	UpdatedAt       pgtype.Timestamp            `json:"updated_at"`
-}
-
-type CarePlanReport struct {
-	ID                  uuid.UUID              `json:"id"`
-	CarePlanID          uuid.UUID              `json:"care_plan_id"`
-	ReportType          CarePlanReportTypeEnum `json:"report_type"`
-	ReportContent       string                 `json:"report_content"`
-	CreatedByEmployeeID uuid.UUID              `json:"created_by_employee_id"`
-	IsCritical          bool                   `json:"is_critical"`
-	CreatedAt           pgtype.Timestamp       `json:"created_at"`
-	UpdatedAt           pgtype.Timestamptz     `json:"updated_at"`
-}
-
-type CarePlanResource struct {
-	ID                  uuid.UUID        `json:"id"`
-	CarePlanID          uuid.UUID        `json:"care_plan_id"`
-	ResourceDescription string           `json:"resource_description"`
-	IsObtained          bool             `json:"is_obtained"`
-	ObtainedDate        pgtype.Date      `json:"obtained_date"`
-	CostEstimate        *float64         `json:"cost_estimate"`
-	Notes               *string          `json:"notes"`
-	CreatedAt           pgtype.Timestamp `json:"created_at"`
-	UpdatedAt           pgtype.Timestamp `json:"updated_at"`
-}
-
-type CarePlanRisk struct {
-	ID                 uuid.UUID             `json:"id"`
-	CarePlanID         uuid.UUID             `json:"care_plan_id"`
-	RiskDescription    string                `json:"risk_description"`
-	MitigationStrategy string                `json:"mitigation_strategy"`
-	RiskLevel          CarePlanRiskLevelEnum `json:"risk_level"`
-	IsActive           bool                  `json:"is_active"`
-	CreatedAt          pgtype.Timestamp      `json:"created_at"`
-	UpdatedAt          pgtype.Timestamp      `json:"updated_at"`
-}
-
-type CarePlanSupportNetwork struct {
-	ID                        uuid.UUID        `json:"id"`
-	CarePlanID                uuid.UUID        `json:"care_plan_id"`
-	RoleTitle                 string           `json:"role_title"`
-	ResponsibilityDescription string           `json:"responsibility_description"`
-	ContactPerson             *string          `json:"contact_person"`
-	ContactDetails            *string          `json:"contact_details"`
-	IsActive                  bool             `json:"is_active"`
-	CreatedAt                 pgtype.Timestamp `json:"created_at"`
-	UpdatedAt                 pgtype.Timestamp `json:"updated_at"`
-}
-
 type Certification struct {
 	ID         uuid.UUID          `json:"id"`
 	EmployeeID uuid.UUID          `json:"employee_id"`
@@ -2240,55 +2041,60 @@ type ClientAgreement struct {
 }
 
 type ClientDetail struct {
-	ID                         uuid.UUID                `json:"id"`
-	IntakeFormID               *uuid.UUID               `json:"intake_form_id"`
-	RegistrationFormID         *uuid.UUID               `json:"registration_form_id"`
-	FirstName                  string                   `json:"first_name"`
-	LastName                   string                   `json:"last_name"`
-	DateOfBirth                pgtype.Date              `json:"date_of_birth"`
-	Identity                   bool                     `json:"identity"`
-	Status                     ClientStatusEnum         `json:"status"`
-	Bsn                        *string                  `json:"bsn"`
-	BsnVerifiedBy              *uuid.UUID               `json:"bsn_verified_by"`
-	Email                      string                   `json:"email"`
-	PhoneNumber                *string                  `json:"phone_number"`
-	Gender                     ClientGenderEnum         `json:"gender"`
-	Filenumber                 string                   `json:"filenumber"`
-	CreatedAt                  pgtype.Timestamptz       `json:"created_at"`
-	SenderID                   *uuid.UUID               `json:"sender_id"`
-	LocationID                 *uuid.UUID               `json:"location_id"`
-	Street                     string                   `json:"street"`
-	HouseNumber                string                   `json:"house_number"`
-	HouseNumberAddition        *string                  `json:"house_number_addition"`
-	PostalCode                 string                   `json:"postal_code"`
-	City                       string                   `json:"city"`
-	EducationCurrentlyEnrolled bool                     `json:"education_currently_enrolled"`
-	EducationInstitution       *string                  `json:"education_institution"`
-	EducationMentorName        *string                  `json:"education_mentor_name"`
-	EducationMentorPhone       *string                  `json:"education_mentor_phone"`
-	EducationMentorEmail       *string                  `json:"education_mentor_email"`
-	EducationAdditionalNotes   *string                  `json:"education_additional_notes"`
-	EducationLevel             ClientEducationLevelEnum `json:"education_level"`
-	WorkCurrentlyEmployed      bool                     `json:"work_currently_employed"`
-	WorkCurrentEmployer        *string                  `json:"work_current_employer"`
-	WorkCurrentEmployerPhone   *string                  `json:"work_current_employer_phone"`
-	WorkCurrentEmployerEmail   *string                  `json:"work_current_employer_email"`
-	WorkCurrentPosition        *string                  `json:"work_current_position"`
-	WorkStartDate              pgtype.Date              `json:"work_start_date"`
-	WorkAdditionalNotes        *string                  `json:"work_additional_notes"`
-	Nationality                *string                  `json:"nationality"`
-	RiskAggressiveBehavior     *bool                    `json:"risk_aggressive_behavior"`
-	RiskSuicidalSelfharm       *bool                    `json:"risk_suicidal_selfharm"`
-	RiskSubstanceAbuse         *bool                    `json:"risk_substance_abuse"`
-	RiskPsychiatricIssues      *bool                    `json:"risk_psychiatric_issues"`
-	RiskCriminalHistory        *bool                    `json:"risk_criminal_history"`
-	RiskFlightBehavior         *bool                    `json:"risk_flight_behavior"`
-	RiskWeaponPossession       *bool                    `json:"risk_weapon_possession"`
-	RiskSexualBehavior         *bool                    `json:"risk_sexual_behavior"`
-	RiskDayNightRhythm         *bool                    `json:"risk_day_night_rhythm"`
-	RiskOther                  *bool                    `json:"risk_other"`
-	RiskOtherDescription       *string                  `json:"risk_other_description"`
-	RiskAdditionalNotes        *string                  `json:"risk_additional_notes"`
+	ID                         uuid.UUID              `json:"id"`
+	IntakeFormID               *uuid.UUID             `json:"intake_form_id"`
+	RegistrationFormID         *uuid.UUID             `json:"registration_form_id"`
+	FirstName                  string                 `json:"first_name"`
+	LastName                   string                 `json:"last_name"`
+	DateOfBirth                pgtype.Date            `json:"date_of_birth"`
+	Identity                   bool                   `json:"identity"`
+	Status                     ClientStatusEnum       `json:"status"`
+	Bsn                        *string                `json:"bsn"`
+	BsnVerifiedBy              *uuid.UUID             `json:"bsn_verified_by"`
+	EvaluationIntarvalsWeeks   int32                  `json:"evaluation_intarvals_weeks"`
+	CareType                   NullIntakeCareTypeEnum `json:"care_type"`
+	Email                      string                 `json:"email"`
+	PhoneNumber                *string                `json:"phone_number"`
+	Gender                     GenderEnum             `json:"gender"`
+	Filenumber                 string                 `json:"filenumber"`
+	CreatedAt                  pgtype.Timestamptz     `json:"created_at"`
+	PlacedInCareAt             pgtype.Timestamptz     `json:"placed_in_care_at"`
+	CareStartDate              pgtype.Date            `json:"care_start_date"`
+	NextEvaluationDate         pgtype.Date            `json:"next_evaluation_date"`
+	SenderID                   *uuid.UUID             `json:"sender_id"`
+	LocationID                 *uuid.UUID             `json:"location_id"`
+	Street                     string                 `json:"street"`
+	HouseNumber                string                 `json:"house_number"`
+	HouseNumberAddition        *string                `json:"house_number_addition"`
+	PostalCode                 string                 `json:"postal_code"`
+	City                       string                 `json:"city"`
+	EducationCurrentlyEnrolled bool                   `json:"education_currently_enrolled"`
+	EducationInstitution       *string                `json:"education_institution"`
+	EducationMentorName        *string                `json:"education_mentor_name"`
+	EducationMentorPhone       *string                `json:"education_mentor_phone"`
+	EducationMentorEmail       *string                `json:"education_mentor_email"`
+	EducationAdditionalNotes   *string                `json:"education_additional_notes"`
+	EducationLevel             EducationLevelEnum     `json:"education_level"`
+	WorkCurrentlyEmployed      bool                   `json:"work_currently_employed"`
+	WorkCurrentEmployer        *string                `json:"work_current_employer"`
+	WorkCurrentEmployerPhone   *string                `json:"work_current_employer_phone"`
+	WorkCurrentEmployerEmail   *string                `json:"work_current_employer_email"`
+	WorkCurrentPosition        *string                `json:"work_current_position"`
+	WorkStartDate              pgtype.Date            `json:"work_start_date"`
+	WorkAdditionalNotes        *string                `json:"work_additional_notes"`
+	Nationality                *string                `json:"nationality"`
+	RiskAggressiveBehavior     *bool                  `json:"risk_aggressive_behavior"`
+	RiskSuicidalSelfharm       *bool                  `json:"risk_suicidal_selfharm"`
+	RiskSubstanceAbuse         *bool                  `json:"risk_substance_abuse"`
+	RiskPsychiatricIssues      *bool                  `json:"risk_psychiatric_issues"`
+	RiskCriminalHistory        *bool                  `json:"risk_criminal_history"`
+	RiskFlightBehavior         *bool                  `json:"risk_flight_behavior"`
+	RiskWeaponPossession       *bool                  `json:"risk_weapon_possession"`
+	RiskSexualBehavior         *bool                  `json:"risk_sexual_behavior"`
+	RiskDayNightRhythm         *bool                  `json:"risk_day_night_rhythm"`
+	RiskOther                  *bool                  `json:"risk_other"`
+	RiskOtherDescription       *string                `json:"risk_other_description"`
+	RiskAdditionalNotes        *string                `json:"risk_additional_notes"`
 }
 
 type ClientDiagnosis struct {
@@ -2328,6 +2134,46 @@ type ClientEmergencyContact struct {
 	GoalsReports     bool                   `json:"goals_reports"`
 }
 
+type ClientGoal struct {
+	ID                       uuid.UUID              `json:"id"`
+	ClientID                 uuid.UUID              `json:"client_id"`
+	Title                    string                 `json:"title"`
+	Description              *string                `json:"description"`
+	Priority                 ClientGoalPriorityEnum `json:"priority"`
+	Status                   ClientGoalStatusEnum   `json:"status"`
+	TopicID                  *uuid.UUID             `json:"topic_id"`
+	TopicNameSnapshot        *string                `json:"topic_name_snapshot"`
+	Source                   ClientGoalSourceEnum   `json:"source"`
+	OriginIntakeAssessmentID *uuid.UUID             `json:"origin_intake_assessment_id"`
+	SortOrder                int32                  `json:"sort_order"`
+	CreatedAt                pgtype.Timestamptz     `json:"created_at"`
+	UpdatedAt                pgtype.Timestamptz     `json:"updated_at"`
+	ArchivedAt               pgtype.Timestamptz     `json:"archived_at"`
+}
+
+type ClientGoalEvaluation struct {
+	ID                      uuid.UUID          `json:"id"`
+	ClientID                uuid.UUID          `json:"client_id"`
+	EvaluationDate          pgtype.Date        `json:"evaluation_date"`
+	PeriodStart             pgtype.Date        `json:"period_start"`
+	PeriodEnd               pgtype.Date        `json:"period_end"`
+	EvaluationIntervalWeeks int32              `json:"evaluation_interval_weeks"`
+	OverallNotes            *string            `json:"overall_notes"`
+	CreatedByEmployeeID     *uuid.UUID         `json:"created_by_employee_id"`
+	CreatedAt               pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt               pgtype.Timestamptz `json:"updated_at"`
+}
+
+type ClientGoalEvaluationItem struct {
+	ID           uuid.UUID              `json:"id"`
+	EvaluationID uuid.UUID              `json:"evaluation_id"`
+	GoalID       uuid.UUID              `json:"goal_id"`
+	Progress     ClientGoalProgressEnum `json:"progress"`
+	Notes        *string                `json:"notes"`
+	CreatedAt    pgtype.Timestamptz     `json:"created_at"`
+	UpdatedAt    pgtype.Timestamptz     `json:"updated_at"`
+}
+
 type ClientLocationTransfer struct {
 	ID                 uuid.UUID                        `json:"id"`
 	ClientID           uuid.UUID                        `json:"client_id"`
@@ -2365,20 +2211,6 @@ type ClientStatusHistory struct {
 	ChangedAt pgtype.Timestamptz `json:"changed_at"`
 	ChangedBy *uuid.UUID         `json:"changed_by"`
 	Reason    *string            `json:"reason"`
-}
-
-type ClientTopicAssessment struct {
-	ID                  uuid.UUID          `json:"id"`
-	ClientID            uuid.UUID          `json:"client_id"`
-	TopicID             uuid.UUID          `json:"topic_id"`
-	StartDate           pgtype.Date        `json:"start_date"`
-	EndDate             pgtype.Date        `json:"end_date"`
-	InitialLevel        int32              `json:"initial_level"`
-	TargetLevel         int32              `json:"target_level"`
-	CurrentLevel        int32              `json:"current_level"`
-	CarePlanGeneratedAt pgtype.Timestamptz `json:"care_plan_generated_at"`
-	CarePlanStatus      CarePlanStatusEnum `json:"care_plan_status"`
-	IsActive            bool               `json:"is_active"`
 }
 
 type CollaborationAgreement struct {
@@ -2423,12 +2255,6 @@ type ConsentDeclaration struct {
 	Updated                       pgtype.Timestamptz `json:"updated"`
 	Created                       pgtype.Timestamptz `json:"created"`
 	PdfAttachmentID               *uuid.UUID         `json:"pdf_attachment_id"`
-}
-
-type ContactRelationship struct {
-	ID         uuid.UUID `json:"id"`
-	Name       string    `json:"name"`
-	SoftDelete bool      `json:"soft_delete"`
 }
 
 type Contract struct {
@@ -2581,7 +2407,7 @@ type EmployeeProfile struct {
 	DateOfBirth         pgtype.Date              `json:"date_of_birth"`
 	HomeTelephoneNumber *string                  `json:"home_telephone_number"`
 	CreatedAt           pgtype.Timestamptz       `json:"created_at"`
-	Gender              EmployeeGenderEnum       `json:"gender"`
+	Gender              GenderEnum               `json:"gender"`
 	LocationID          *uuid.UUID               `json:"location_id"`
 	HasBorrowed         bool                     `json:"has_borrowed"`
 	OutOfService        *bool                    `json:"out_of_service"`
@@ -2737,15 +2563,6 @@ type InvoicePaymentHistory struct {
 	UpdatedAt        pgtype.Timestamptz `json:"updated_at"`
 }
 
-type LevelHistory struct {
-	ID                      uuid.UUID          `json:"id"`
-	ClientTopicAssessmentID uuid.UUID          `json:"client_topic_assessment_id"`
-	ChangeDate              pgtype.Timestamptz `json:"change_date"`
-	OldLevel                int32              `json:"old_level"`
-	NewLevel                int32              `json:"new_level"`
-	Comment                 string             `json:"comment"`
-}
-
 type Location struct {
 	ID                  uuid.UUID          `json:"id"`
 	OrganisationID      uuid.UUID          `json:"organisation_id"`
@@ -2825,89 +2642,89 @@ type Provision struct {
 }
 
 type RegistrationForm struct {
-	ID                            uuid.UUID                    `json:"id"`
-	ClientFirstName               string                       `json:"client_first_name"`
-	ClientLastName                string                       `json:"client_last_name"`
-	ClientDateOfBirth             pgtype.Date                  `json:"client_date_of_birth"`
-	ClientBsnNumber               string                       `json:"client_bsn_number"`
-	ClientGender                  ClientGenderEnum             `json:"client_gender"`
-	ClientNationality             string                       `json:"client_nationality"`
-	ClientPhoneNumber             string                       `json:"client_phone_number"`
-	ClientEmail                   string                       `json:"client_email"`
-	ClientStreet                  string                       `json:"client_street"`
-	ClientHouseNumber             string                       `json:"client_house_number"`
-	ClientHouseNumberAddition     *string                      `json:"client_house_number_addition"`
-	ClientPostalCode              string                       `json:"client_postal_code"`
-	ClientCity                    string                       `json:"client_city"`
-	ReferrerFirstName             string                       `json:"referrer_first_name"`
-	ReferrerLastName              string                       `json:"referrer_last_name"`
-	ReferrerOrganization          string                       `json:"referrer_organization"`
-	ReferrerJobTitle              string                       `json:"referrer_job_title"`
-	ReferrerPhoneNumber           string                       `json:"referrer_phone_number"`
-	ReferrerEmail                 string                       `json:"referrer_email"`
-	Guardian1FirstName            string                       `json:"guardian1_first_name"`
-	Guardian1LastName             string                       `json:"guardian1_last_name"`
-	Guardian1Relationship         string                       `json:"guardian1_relationship"`
-	Guardian1PhoneNumber          string                       `json:"guardian1_phone_number"`
-	Guardian1Email                string                       `json:"guardian1_email"`
-	Guardian2FirstName            string                       `json:"guardian2_first_name"`
-	Guardian2LastName             string                       `json:"guardian2_last_name"`
-	Guardian2Relationship         string                       `json:"guardian2_relationship"`
-	Guardian2PhoneNumber          string                       `json:"guardian2_phone_number"`
-	Guardian2Email                string                       `json:"guardian2_email"`
-	EducationInstitution          *string                      `json:"education_institution"`
-	EducationMentorName           *string                      `json:"education_mentor_name"`
-	EducationMentorPhone          *string                      `json:"education_mentor_phone"`
-	EducationMentorEmail          *string                      `json:"education_mentor_email"`
-	EducationCurrentlyEnrolled    bool                         `json:"education_currently_enrolled"`
-	EducationAdditionalNotes      *string                      `json:"education_additional_notes"`
-	EducationLevel                NullClientEducationLevelEnum `json:"education_level"`
-	WorkCurrentEmployer           *string                      `json:"work_current_employer"`
-	WorkEmployerPhone             *string                      `json:"work_employer_phone"`
-	WorkEmployerEmail             *string                      `json:"work_employer_email"`
-	WorkCurrentPosition           *string                      `json:"work_current_position"`
-	WorkCurrentlyEmployed         bool                         `json:"work_currently_employed"`
-	WorkStartDate                 pgtype.Date                  `json:"work_start_date"`
-	WorkAdditionalNotes           *string                      `json:"work_additional_notes"`
-	CareProtectedLiving           *bool                        `json:"care_protected_living"`
-	CareAssistedIndependentLiving *bool                        `json:"care_assisted_independent_living"`
-	CareRoomTrainingCenter        *bool                        `json:"care_room_training_center"`
-	CareAmbulatoryGuidance        *bool                        `json:"care_ambulatory_guidance"`
-	ApplicationReason             *string                      `json:"application_reason"`
-	ClientGoals                   []string                     `json:"client_goals"`
-	RiskAggressiveBehavior        *bool                        `json:"risk_aggressive_behavior"`
-	RiskSuicidalSelfharm          *bool                        `json:"risk_suicidal_selfharm"`
-	RiskSubstanceAbuse            *bool                        `json:"risk_substance_abuse"`
-	RiskPsychiatricIssues         *bool                        `json:"risk_psychiatric_issues"`
-	RiskCriminalHistory           *bool                        `json:"risk_criminal_history"`
-	RiskFlightBehavior            *bool                        `json:"risk_flight_behavior"`
-	RiskWeaponPossession          *bool                        `json:"risk_weapon_possession"`
-	RiskSexualBehavior            *bool                        `json:"risk_sexual_behavior"`
-	RiskDayNightRhythm            *bool                        `json:"risk_day_night_rhythm"`
-	RiskOther                     *bool                        `json:"risk_other"`
-	RiskOtherDescription          *string                      `json:"risk_other_description"`
-	RiskAdditionalNotes           *string                      `json:"risk_additional_notes"`
-	DocumentReferral              *uuid.UUID                   `json:"document_referral"`
-	DocumentEducationReport       *uuid.UUID                   `json:"document_education_report"`
-	DocumentActionPlan            *uuid.UUID                   `json:"document_action_plan"`
-	DocumentPsychiatricReport     *uuid.UUID                   `json:"document_psychiatric_report"`
-	DocumentDiagnosis             *uuid.UUID                   `json:"document_diagnosis"`
-	DocumentSafetyPlan            *uuid.UUID                   `json:"document_safety_plan"`
-	DocumentIDCopy                *uuid.UUID                   `json:"document_id_copy"`
-	ApplicationDate               pgtype.Date                  `json:"application_date"`
-	ReferrerSignature             *bool                        `json:"referrer_signature"`
-	FormStatus                    FormStatusEnum               `json:"form_status"`
-	IntakeOptions                 []byte                       `json:"intake_options"`
-	IntakeToken                   *string                      `json:"intake_token"`
-	CreatedAt                     pgtype.Timestamptz           `json:"created_at"`
-	UpdatedAt                     pgtype.Timestamptz           `json:"updated_at"`
-	SubmittedAt                   pgtype.Timestamptz           `json:"submitted_at"`
-	ProcessedAt                   pgtype.Timestamptz           `json:"processed_at"`
-	ProcessedByEmployeeID         *uuid.UUID                   `json:"processed_by_employee_id"`
-	IntakeAppointmentDatetime     pgtype.Timestamptz           `json:"intake_appointment_datetime"`
-	IntakeAppointmentLocation     *string                      `json:"intake_appointment_location"`
-	AddmissionType                *string                      `json:"addmission_type"`
-	RejectionReason               *string                      `json:"rejection_reason"`
+	ID                            uuid.UUID          `json:"id"`
+	ClientFirstName               string             `json:"client_first_name"`
+	ClientLastName                string             `json:"client_last_name"`
+	ClientDateOfBirth             pgtype.Date        `json:"client_date_of_birth"`
+	ClientBsnNumber               string             `json:"client_bsn_number"`
+	ClientGender                  GenderEnum         `json:"client_gender"`
+	ClientNationality             string             `json:"client_nationality"`
+	ClientPhoneNumber             string             `json:"client_phone_number"`
+	ClientEmail                   string             `json:"client_email"`
+	ClientStreet                  string             `json:"client_street"`
+	ClientHouseNumber             string             `json:"client_house_number"`
+	ClientHouseNumberAddition     *string            `json:"client_house_number_addition"`
+	ClientPostalCode              string             `json:"client_postal_code"`
+	ClientCity                    string             `json:"client_city"`
+	ReferrerFirstName             string             `json:"referrer_first_name"`
+	ReferrerLastName              string             `json:"referrer_last_name"`
+	ReferrerOrganization          string             `json:"referrer_organization"`
+	ReferrerJobTitle              string             `json:"referrer_job_title"`
+	ReferrerPhoneNumber           string             `json:"referrer_phone_number"`
+	ReferrerEmail                 string             `json:"referrer_email"`
+	Guardian1FirstName            string             `json:"guardian1_first_name"`
+	Guardian1LastName             string             `json:"guardian1_last_name"`
+	Guardian1Relationship         string             `json:"guardian1_relationship"`
+	Guardian1PhoneNumber          string             `json:"guardian1_phone_number"`
+	Guardian1Email                string             `json:"guardian1_email"`
+	Guardian2FirstName            string             `json:"guardian2_first_name"`
+	Guardian2LastName             string             `json:"guardian2_last_name"`
+	Guardian2Relationship         string             `json:"guardian2_relationship"`
+	Guardian2PhoneNumber          string             `json:"guardian2_phone_number"`
+	Guardian2Email                string             `json:"guardian2_email"`
+	EducationInstitution          *string            `json:"education_institution"`
+	EducationMentorName           *string            `json:"education_mentor_name"`
+	EducationMentorPhone          *string            `json:"education_mentor_phone"`
+	EducationMentorEmail          *string            `json:"education_mentor_email"`
+	EducationCurrentlyEnrolled    bool               `json:"education_currently_enrolled"`
+	EducationAdditionalNotes      *string            `json:"education_additional_notes"`
+	EducationLevel                EducationLevelEnum `json:"education_level"`
+	WorkCurrentEmployer           *string            `json:"work_current_employer"`
+	WorkEmployerPhone             *string            `json:"work_employer_phone"`
+	WorkEmployerEmail             *string            `json:"work_employer_email"`
+	WorkCurrentPosition           *string            `json:"work_current_position"`
+	WorkCurrentlyEmployed         bool               `json:"work_currently_employed"`
+	WorkStartDate                 pgtype.Date        `json:"work_start_date"`
+	WorkAdditionalNotes           *string            `json:"work_additional_notes"`
+	CareProtectedLiving           *bool              `json:"care_protected_living"`
+	CareAssistedIndependentLiving *bool              `json:"care_assisted_independent_living"`
+	CareRoomTrainingCenter        *bool              `json:"care_room_training_center"`
+	CareAmbulatoryGuidance        *bool              `json:"care_ambulatory_guidance"`
+	ApplicationReason             *string            `json:"application_reason"`
+	ClientGoals                   []string           `json:"client_goals"`
+	RiskAggressiveBehavior        *bool              `json:"risk_aggressive_behavior"`
+	RiskSuicidalSelfharm          *bool              `json:"risk_suicidal_selfharm"`
+	RiskSubstanceAbuse            *bool              `json:"risk_substance_abuse"`
+	RiskPsychiatricIssues         *bool              `json:"risk_psychiatric_issues"`
+	RiskCriminalHistory           *bool              `json:"risk_criminal_history"`
+	RiskFlightBehavior            *bool              `json:"risk_flight_behavior"`
+	RiskWeaponPossession          *bool              `json:"risk_weapon_possession"`
+	RiskSexualBehavior            *bool              `json:"risk_sexual_behavior"`
+	RiskDayNightRhythm            *bool              `json:"risk_day_night_rhythm"`
+	RiskOther                     *bool              `json:"risk_other"`
+	RiskOtherDescription          *string            `json:"risk_other_description"`
+	RiskAdditionalNotes           *string            `json:"risk_additional_notes"`
+	DocumentReferral              *uuid.UUID         `json:"document_referral"`
+	DocumentEducationReport       *uuid.UUID         `json:"document_education_report"`
+	DocumentActionPlan            *uuid.UUID         `json:"document_action_plan"`
+	DocumentPsychiatricReport     *uuid.UUID         `json:"document_psychiatric_report"`
+	DocumentDiagnosis             *uuid.UUID         `json:"document_diagnosis"`
+	DocumentSafetyPlan            *uuid.UUID         `json:"document_safety_plan"`
+	DocumentIDCopy                *uuid.UUID         `json:"document_id_copy"`
+	ApplicationDate               pgtype.Date        `json:"application_date"`
+	ReferrerSignature             *bool              `json:"referrer_signature"`
+	FormStatus                    FormStatusEnum     `json:"form_status"`
+	IntakeOptions                 []byte             `json:"intake_options"`
+	IntakeToken                   *string            `json:"intake_token"`
+	CreatedAt                     pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt                     pgtype.Timestamptz `json:"updated_at"`
+	SubmittedAt                   pgtype.Timestamptz `json:"submitted_at"`
+	ProcessedAt                   pgtype.Timestamptz `json:"processed_at"`
+	ProcessedByEmployeeID         *uuid.UUID         `json:"processed_by_employee_id"`
+	IntakeAppointmentDatetime     pgtype.Timestamptz `json:"intake_appointment_datetime"`
+	IntakeAppointmentLocation     *string            `json:"intake_appointment_location"`
+	AddmissionType                AdmissionTypeEnum  `json:"addmission_type"`
+	RejectionReason               *string            `json:"rejection_reason"`
 }
 
 type RiskAssessment struct {
@@ -3011,12 +2828,12 @@ type ScheduledAppointment struct {
 }
 
 type ScheduledStatusChange struct {
-	ID            uuid.UUID          `json:"id"`
-	ClientID      uuid.UUID          `json:"client_id"`
-	NewStatus     *string            `json:"new_status"`
-	Reason        *string            `json:"reason"`
-	ScheduledDate pgtype.Date        `json:"scheduled_date"`
-	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+	ID            uuid.UUID            `json:"id"`
+	ClientID      uuid.UUID            `json:"client_id"`
+	NewStatus     NullClientStatusEnum `json:"new_status"`
+	Reason        *string              `json:"reason"`
+	ScheduledDate pgtype.Date          `json:"scheduled_date"`
+	CreatedAt     pgtype.Timestamptz   `json:"created_at"`
 }
 
 type Sender struct {

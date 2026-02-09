@@ -1,4 +1,4 @@
--- name: CreateIntakeMaturityAssessment :one
+-- name: CreateIntakeTopicAssessment :one
 INSERT INTO intake_topic_assessments (
     intake_form_id,
     topic_id,
@@ -11,7 +11,7 @@ INSERT INTO intake_topic_assessments (
 RETURNING *;
 
 
--- name: CreateIntakeMaturityAssessmentsBatch :many
+-- name: CreateIntakeTopicAssessmentsBatch :many
 WITH inserted AS (
     INSERT INTO intake_topic_assessments (
         intake_form_id,
@@ -38,8 +38,8 @@ ORDER BY t.topic_name;
 
 
 
--- name: GetIntakeMaturityAssessments :many
-SELECT 
+-- name: GetIntakeTopicsAssessments :many
+SELECT
     ima.*,
     t.topic_name
 FROM intake_topic_assessments ima
@@ -50,7 +50,7 @@ ORDER BY t.topic_name;
 
 
 -- name: GetIntakeMaturityAssessment :one
-SELECT 
+SELECT
     ima.*,
     t.topic_name
 FROM intake_topic_assessments ima
@@ -59,7 +59,7 @@ WHERE ima.id = $1;
 
 
 
--- name: UpdateIntakeMaturityAssessment :one
+-- name: UpdateIntakeTopicsAssessment :one
 UPDATE intake_topic_assessments
 SET
     current_level = COALESCE(sqlc.narg('current_level'), current_level),
@@ -70,14 +70,14 @@ RETURNING *;
 
 
 
--- name: DeleteIntakeMaturityAssessment :exec
+-- name: DeleteIntakeTopicsAssessment :exec
 DELETE FROM intake_topic_assessments
 WHERE id = $1;
 
 
 
--- name: ListIntakeMaturityAssessmentsByIntake :many
-SELECT 
+-- name: ListIntakeTopicsAssessmentsByIntake :many
+SELECT
     ima.*,
     t.topic_name
 FROM intake_topic_assessments ima

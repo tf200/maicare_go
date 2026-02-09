@@ -66,6 +66,35 @@ func (server *Server) ListClientsApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
+// ListWaitingListClientsApi lists waiting list clients
+// @Summary List waiting list clients
+// @Tags clients
+// @Produce json
+// @Param search query string false "Search by client first_name, last_name, or sender_name (max 120 chars)"
+// @Param placement query string false "Care type filter: protected_living|training_center|supported_independent_living|ambulatory_support|other"
+// @Param sort_days query string false "Sort by days_in_waitlist: asc|desc (default: desc)"
+// @Param page query int true "Page number (min 1)"
+// @Param page_size query int true "Page size (min 5, max 100)"
+// @Success 200 {object} Response[pagination.Response[clientp.ListWaitingListClientsResponse]]
+// @Failure 400,404,500 {object} Response[clientp.ListWaitingListClientsResponse]
+// @Router /clients/waiting-list [get]
+func (server *Server) ListWaitingListClientsApi(ctx *gin.Context) {
+	var req clientp.ListWaitingListClientsParams
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid query parameters: %v", err)))
+		return
+	}
+
+	result, err := server.businessService.ClientService.ListWaitingListClients(ctx, req)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to list waiting list clients: %v", err)))
+		return
+	}
+
+	res := SuccessResponse(result, "Waiting list clients fetched successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
 // GetClientsCountApi gets the count of clients
 // @Summary Get the count of clients
 // @Tags clients
@@ -203,6 +232,40 @@ func (server *Server) UpdateClientStatusApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
+// PutClientInCareApi moves a waiting-list client into care lifecycle
+// @Summary Put client in care lifecycle
+// @Tags clients
+// @Accept json
+// @Produce json
+// @Param id path uuid true "Client ID"
+// @Param request body clientp.PutClientInCareRequest true "Put in care payload"
+// @Success 200 {object} Response[clientp.PutClientInCareResponse]
+// @Failure 400,404,500 {object} Response[any]
+// @Router /clients/{id}/put-in-care [put]
+func (server *Server) PutClientInCareApi(ctx *gin.Context) {
+	id := ctx.Param("id")
+	clientID, err := uuid.Parse(id)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	var req clientp.PutClientInCareRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	result, err := server.businessService.ClientService.PutClientInCare(ctx, req, clientID)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(result, "Client moved to care lifecycle successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
 // ListStatusHistoryApi lists status history of a client
 // @Summary List status history of a client
 // @Tags clients
@@ -226,39 +289,6 @@ func (server *Server) ListStatusHistoryApi(ctx *gin.Context) {
 	}
 
 	res := SuccessResponse(statusHistoryList, "Status history fetched successfully")
-	ctx.JSON(http.StatusOK, res)
-}
-
-// SetClientProfilePictureApi sets a client profile picture
-// @Summary Set a client profile picture
-// @Tags clients
-// @Accept json
-// @Produce json
-// @Param id path uuid true "Client ID"
-// @Param request body clientp.SetClientProfilePictureRequest true "Client profile picture"
-// @Success 200 {object} Response[clientp.SetClientProfilePictureResponse]
-// @Failure 400,404,500 {object} Response[any]
-// @Router /clients/{id}/profile_picture [put]
-func (server *Server) SetClientProfilePictureApi(ctx *gin.Context) {
-	id := ctx.Param("id")
-	clientID, err := uuid.Parse(id)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-	var req clientp.SetClientProfilePictureRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-
-	response, err := server.businessService.ClientService.SetClientProfilePicture(ctx, req, clientID)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	res := SuccessResponse(response, "Profile picture set successfully")
 	ctx.JSON(http.StatusOK, res)
 }
 

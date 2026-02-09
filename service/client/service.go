@@ -15,13 +15,14 @@ type ClientService interface {
 	// Client Details
 	CreateClientDetails(req CreateClientDetailsRequest, ctx context.Context) (*CreateClientDetailsResponse, error)
 	ListClientDetails(ctx *gin.Context, req ListClientsApiParams) (*pagination.Response[ListClientsApiResponse], error)
+	ListWaitingListClients(ctx *gin.Context, req ListWaitingListClientsParams) (*pagination.Response[ListWaitingListClientsResponse], error)
 	GetClientsCount(ctx context.Context) (*GetClientsCountResponse, error)
 	GetClientDetails(ctx context.Context, clientID uuid.UUID) (*GetClientApiResponse, error)
 	GetClientAddresses(ctx context.Context, clientID uuid.UUID) (*GetClientAddressesApiResponse, error)
 	UpdateClientDetails(ctx context.Context, req UpdateClientDetailsRequest, clientID uuid.UUID) (*UpdateClientDetailsResponse, error)
 	UpdateClientStatus(ctx context.Context, req UpdateClientStatusRequest, clientID uuid.UUID) (*UpdateClientStatusResponse, error)
+	PutClientInCare(ctx context.Context, req PutClientInCareRequest, clientID uuid.UUID) (*PutClientInCareResponse, error)
 	ListStatusHistory(ctx context.Context, clientID uuid.UUID) ([]ListStatusHistoryApiResponse, error)
-	SetClientProfilePicture(ctx context.Context, req SetClientProfilePictureRequest, clientID uuid.UUID) (*SetClientProfilePictureResponse, error)
 	// Client Documents
 	AddClientDocument(ctx context.Context, req AddClientDocumentApiRequest, clientID uuid.UUID) (*AddClientDocumentApiResponse, error)
 	ListClientDocuments(ctx *gin.Context, req ListClientDocumentsApiRequest, clientID uuid.UUID) (*pagination.Response[ListClientDocumentsApiResponse], error)
@@ -107,6 +108,7 @@ type ClientService interface {
 	ListIntakeForms(ctx *gin.Context, req *ListIntakeFormsRequest) (*pagination.Response[ListIntakeFormsResponse], error)
 	GetIntakeForm(ctx context.Context, intakeFormID uuid.UUID) (*GetIntakeFormResponse, error)
 	CreateIntakeFormGoals(ctx context.Context, intakeFormID uuid.UUID, req *CreateIntakeFormGoalsRequest) (*CreateIntakeFormGoalsResponse, error)
+	UpdateIntakeConclusion(ctx context.Context, intakeFormID uuid.UUID, req *UpdateIntakeConclusionRequest) (*UpdateIntakeConclusionResponse, error)
 
 	// Intake Maturity Assessments
 

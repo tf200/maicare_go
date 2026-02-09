@@ -66,7 +66,7 @@ LIMIT 10;
 
 -- name: DischargeOverview :many
 WITH client_discharges AS (
-    -- Get clients with scheduled status change to "Out Of Care"
+    -- Get clients with scheduled status change to "scheduled_out_of_care"
     SELECT
         cd.id,
         cd.first_name,
@@ -83,8 +83,8 @@ WITH client_discharges AS (
     FROM client_details cd
     JOIN scheduled_status_changes ssc ON cd.id = ssc.client_id
     LEFT JOIN contract c ON cd.id = c.client_id AND c.status = 'approved'
-    WHERE cd.status = 'In Care'
-      AND ssc.new_status = 'Out Of Care'
+    WHERE cd.status = 'in_care'
+      AND ssc.new_status = 'scheduled_out_of_care'
       AND ssc.scheduled_date <= CURRENT_DATE + INTERVAL '3 months'
 
     UNION ALL
@@ -105,7 +105,7 @@ WITH client_discharges AS (
         'contract_end' AS discharge_type
     FROM client_details cd
     JOIN contract c ON cd.id = c.client_id
-    WHERE cd.status = 'In Care'
+    WHERE cd.status = 'in_care'
       AND c.status = 'approved'
       AND c.end_date <= CURRENT_DATE + INTERVAL '3 months'
       -- Exclude clients who are already included in the scheduled status changes
@@ -113,7 +113,7 @@ WITH client_discharges AS (
           SELECT 1
           FROM scheduled_status_changes ssc
           WHERE cd.id = ssc.client_id
-            AND ssc.new_status = 'Out Of Care'
+            AND ssc.new_status = 'scheduled_out_of_care'
             AND ssc.scheduled_date <= CURRENT_DATE + INTERVAL '3 months'
       )
 )
@@ -138,12 +138,12 @@ LIMIT $1 OFFSET $2;
 
 -- name: TotalDischargeCount :one
 WITH client_discharges AS (
-    -- Get clients with scheduled status change to "Out Of Care"
+    -- Get clients with scheduled status change to "scheduled_out_of_care"
     SELECT cd.id, 'scheduled_status' AS discharge_type
     FROM client_details cd
     JOIN scheduled_status_changes ssc ON cd.id = ssc.client_id
-    WHERE cd.status = 'In Care'
-      AND ssc.new_status = 'Out Of Care'
+    WHERE cd.status = 'in_care'
+      AND ssc.new_status = 'scheduled_out_of_care'
       AND ssc.scheduled_date <= CURRENT_DATE + INTERVAL '3 months'
 
     UNION ALL
@@ -152,7 +152,7 @@ WITH client_discharges AS (
     SELECT cd.id, 'contract_end' AS discharge_type
     FROM client_details cd
     JOIN contract c ON cd.id = c.client_id
-    WHERE cd.status = 'In Care'
+    WHERE cd.status = 'in_care'
       AND c.status = 'approved'
       AND c.end_date <= CURRENT_DATE + INTERVAL '3 months'
       -- Exclude clients who are already included in the scheduled status changes
@@ -160,7 +160,7 @@ WITH client_discharges AS (
           SELECT 1
           FROM scheduled_status_changes ssc
           WHERE cd.id = ssc.client_id
-            AND ssc.new_status = 'Out Of Care'
+            AND ssc.new_status = 'scheduled_out_of_care'
             AND ssc.scheduled_date <= CURRENT_DATE + INTERVAL '3 months'
       )
 )
@@ -170,14 +170,14 @@ FROM client_discharges;
 
 -- name: UrgentCasesCount :one
 WITH client_discharges AS (
-    -- Get clients with scheduled status change to "Out Of Care"
+    -- Get clients with scheduled status change to "scheduled_out_of_care"
     SELECT
         cd.id,
         ssc.scheduled_date AS relevant_date
     FROM client_details cd
     JOIN scheduled_status_changes ssc ON cd.id = ssc.client_id
-    WHERE cd.status = 'In Care'
-      AND ssc.new_status = 'Out Of Care'
+    WHERE cd.status = 'in_care'
+      AND ssc.new_status = 'scheduled_out_of_care'
       AND ssc.scheduled_date <= CURRENT_DATE + INTERVAL '30 days'
 
     UNION ALL
@@ -188,7 +188,7 @@ WITH client_discharges AS (
         c.end_date AS relevant_date
     FROM client_details cd
     JOIN contract c ON cd.id = c.client_id
-    WHERE cd.status = 'In Care'
+    WHERE cd.status = 'in_care'
       AND c.status = 'approved'
       AND c.end_date <= CURRENT_DATE + INTERVAL '30 days'
       -- Exclude clients who are already included in the scheduled status changes
@@ -196,7 +196,7 @@ WITH client_discharges AS (
           SELECT 1
           FROM scheduled_status_changes ssc
           WHERE cd.id = ssc.client_id
-            AND ssc.new_status = 'Out Of Care'
+            AND ssc.new_status = 'scheduled_out_of_care'
             AND ssc.scheduled_date <= CURRENT_DATE + INTERVAL '30 days'
       )
 )
@@ -209,8 +209,8 @@ FROM client_discharges;
 SELECT COUNT(*) as status_changes_count
 FROM client_details cd
 JOIN scheduled_status_changes ssc ON cd.id = ssc.client_id
-WHERE cd.status = 'In Care'
-  AND ssc.new_status = 'Out Of Care'
+WHERE cd.status = 'in_care'
+  AND ssc.new_status = 'scheduled_out_of_care'
   AND ssc.scheduled_date <= CURRENT_DATE + INTERVAL '3 months';
 
 
@@ -219,7 +219,7 @@ WHERE cd.status = 'In Care'
 SELECT COUNT(*) as contract_end_count
 FROM client_details cd
 JOIN contract c ON cd.id = c.client_id
-WHERE cd.status = 'In Care'
+WHERE cd.status = 'in_care'
   AND c.status = 'approved'
   AND c.end_date <= CURRENT_DATE + INTERVAL '3 months'
   -- Exclude clients who are already included in the scheduled status changes
@@ -227,7 +227,7 @@ WHERE cd.status = 'In Care'
       SELECT 1
       FROM scheduled_status_changes ssc
       WHERE cd.id = ssc.client_id
-        AND ssc.new_status = 'Out Of Care'
+        AND ssc.new_status = 'scheduled_out_of_care'
         AND ssc.scheduled_date <= CURRENT_DATE + INTERVAL '3 months'
   );
 
@@ -237,12 +237,12 @@ WHERE cd.status = 'In Care'
 -- name: TotalActiveClients :one
 SELECT COUNT(id) AS total_active_clients
 FROM client_details
-WHERE status = 'In Care';
+WHERE status = 'in_care';
 
 -- name: ClientsOnWaitlist :one
 SELECT COUNT(id) AS total_clients_on_waitlist
 FROM client_details
-WHERE status = 'On Waitlist';
+WHERE status = 'on_waiting_list';
 
 -- name: RecentIncidents :one
 SELECT COUNT(id) AS total_recent_incidents

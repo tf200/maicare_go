@@ -11,6 +11,7 @@ import (
 )
 
 type Querier interface {
+	ActivateDueScheduledInCareClients(ctx context.Context) ([]uuid.UUID, error)
 	AddEducationToEmployeeProfile(ctx context.Context, arg AddEducationToEmployeeProfileParams) (EmployeeEducation, error)
 	AddEmployeeCertification(ctx context.Context, arg AddEmployeeCertificationParams) (Certification, error)
 	AddEmployeeContractDetails(ctx context.Context, arg AddEmployeeContractDetailsParams) (EmployeeProfile, error)
@@ -33,6 +34,7 @@ type Querier interface {
 	ConfirmAppointment(ctx context.Context, arg ConfirmAppointmentParams) error
 	ConfirmIncident(ctx context.Context, id uuid.UUID) (ConfirmIncidentRow, error)
 	ContractEndCount(ctx context.Context) (int64, error)
+	CountActiveGoalsByClientID(ctx context.Context, clientID uuid.UUID) (int64, error)
 	CountAllIncidents(ctx context.Context, isConfirmed bool) (int64, error)
 	CountEmployeeProfile(ctx context.Context, arg CountEmployeeProfileParams) (int64, error)
 	CountRegistrationForms(ctx context.Context, arg CountRegistrationFormsParams) (int64, error)
@@ -44,28 +46,11 @@ type Querier interface {
 	CreateAttachment(ctx context.Context, arg CreateAttachmentParams) (AttachmentFile, error)
 	// Audit table queries
 	CreateAuditRecord(ctx context.Context, arg CreateAuditRecordParams) error
-	// ==================== new code    ====================
-	CreateCarePlan(ctx context.Context, arg CreateCarePlanParams) (CarePlan, error)
-	CreateCarePlanAction(ctx context.Context, arg CreateCarePlanActionParams) (CarePlanAction, error)
-	// ==================== care plan interventions ====================
-	CreateCarePlanIntervention(ctx context.Context, arg CreateCarePlanInterventionParams) (CarePlanIntervention, error)
-	// ==================== care plan objectives and actions ====================
-	CreateCarePlanObjective(ctx context.Context, arg CreateCarePlanObjectiveParams) (CarePlanObjective, error)
-	// ===================== care plan reports ====================
-	CreateCarePlanReport(ctx context.Context, arg CreateCarePlanReportParams) (CarePlanReport, error)
-	// ==================== care plan resources ====================
-	CreateCarePlanResources(ctx context.Context, arg CreateCarePlanResourcesParams) (CarePlanResource, error)
-	// ==================== care plan risks ====================
-	CreateCarePlanRisk(ctx context.Context, arg CreateCarePlanRiskParams) (CarePlanRisk, error)
-	// ==================== care plan success metrics ====================
-	CreateCarePlanSuccessMetric(ctx context.Context, arg CreateCarePlanSuccessMetricParams) (CarePlanMetric, error)
-	// ===================== care plan support network ====================
-	CreateCarePlanSupportNetwork(ctx context.Context, arg CreateCarePlanSupportNetworkParams) (CarePlanSupportNetwork, error)
 	CreateClientDetails(ctx context.Context, arg CreateClientDetailsParams) (ClientDetail, error)
 	CreateClientDiagnosis(ctx context.Context, arg CreateClientDiagnosisParams) (ClientDiagnosis, error)
 	CreateClientDocument(ctx context.Context, arg CreateClientDocumentParams) (ClientDocument, error)
+	CreateClientGoalsFromIntakeAssessments(ctx context.Context, arg CreateClientGoalsFromIntakeAssessmentsParams) ([]CreateClientGoalsFromIntakeAssessmentsRow, error)
 	CreateClientLocationTransfer(ctx context.Context, arg CreateClientLocationTransferParams) error
-	CreateClientMaturityMatrixAssessment(ctx context.Context, arg CreateClientMaturityMatrixAssessmentParams) (CreateClientMaturityMatrixAssessmentRow, error)
 	CreateClientMedication(ctx context.Context, arg CreateClientMedicationParams) (ClientMedication, error)
 	CreateClientStatusHistory(ctx context.Context, arg CreateClientStatusHistoryParams) (ClientStatusHistory, error)
 	CreateContract(ctx context.Context, arg CreateContractParams) (Contract, error)
@@ -75,8 +60,8 @@ type Querier interface {
 	CreateEmployeeProfile(ctx context.Context, arg CreateEmployeeProfileParams) (EmployeeProfile, error)
 	CreateIncident(ctx context.Context, arg CreateIncidentParams) (CreateIncidentRow, error)
 	CreateIntakeForm(ctx context.Context, arg CreateIntakeFormParams) (IntakeForm, error)
-	CreateIntakeMaturityAssessment(ctx context.Context, arg CreateIntakeMaturityAssessmentParams) (IntakeTopicAssessment, error)
-	CreateIntakeMaturityAssessmentsBatch(ctx context.Context, arg CreateIntakeMaturityAssessmentsBatchParams) ([]CreateIntakeMaturityAssessmentsBatchRow, error)
+	CreateIntakeTopicAssessment(ctx context.Context, arg CreateIntakeTopicAssessmentParams) (IntakeTopicAssessment, error)
+	CreateIntakeTopicAssessmentsBatch(ctx context.Context, arg CreateIntakeTopicAssessmentsBatchParams) ([]CreateIntakeTopicAssessmentsBatchRow, error)
 	CreateInvoice(ctx context.Context, arg CreateInvoiceParams) (Invoice, error)
 	CreateLocation(ctx context.Context, arg CreateLocationParams) (Location, error)
 	CreateNotification(ctx context.Context, arg CreateNotificationParams) (Notification, error)
@@ -90,6 +75,7 @@ type Querier interface {
 	CreateRole(ctx context.Context, name string) (Role, error)
 	CreateSchedueledClientStatusChange(ctx context.Context, arg CreateSchedueledClientStatusChangeParams) (ScheduledStatusChange, error)
 	CreateSchedule(ctx context.Context, arg CreateScheduleParams) (CreateScheduleRow, error)
+	CreateSeedIntakeForm(ctx context.Context, arg CreateSeedIntakeFormParams) (CreateSeedIntakeFormRow, error)
 	CreateSender(ctx context.Context, arg CreateSenderParams) (Sender, error)
 	CreateSenderInvoiceTemplate(ctx context.Context, arg CreateSenderInvoiceTemplateParams) ([]uuid.UUID, error)
 	CreateSession(ctx context.Context, arg CreateSessionParams) (Session, error)
@@ -101,15 +87,6 @@ type Querier interface {
 	DeleteAppointmentParticipants(ctx context.Context, appointmentID uuid.UUID) error
 	DeleteAssignedEmployee(ctx context.Context, id uuid.UUID) (AssignedEmployee, error)
 	DeleteAttachment(ctx context.Context, argUuid uuid.UUID) (AttachmentFile, error)
-	DeleteCarePlan(ctx context.Context, id uuid.UUID) error
-	DeleteCarePlanAction(ctx context.Context, id uuid.UUID) error
-	DeleteCarePlanIntervention(ctx context.Context, id uuid.UUID) error
-	DeleteCarePlanObjective(ctx context.Context, id uuid.UUID) error
-	DeleteCarePlanReport(ctx context.Context, id uuid.UUID) error
-	DeleteCarePlanResource(ctx context.Context, id uuid.UUID) error
-	DeleteCarePlanRisk(ctx context.Context, id uuid.UUID) error
-	DeleteCarePlanSuccessMetric(ctx context.Context, id uuid.UUID) error
-	DeleteCarePlanSupportNetwork(ctx context.Context, id uuid.UUID) error
 	DeleteClientDiagnosis(ctx context.Context, id uuid.UUID) (ClientDiagnosis, error)
 	DeleteClientDocument(ctx context.Context, attachmentUuid *uuid.UUID) (ClientDocument, error)
 	DeleteClientMedication(ctx context.Context, id uuid.UUID) error
@@ -119,7 +96,7 @@ type Querier interface {
 	DeleteEmployeeEducation(ctx context.Context, id uuid.UUID) (EmployeeEducation, error)
 	DeleteEmployeeExperience(ctx context.Context, id uuid.UUID) (EmployeeExperience, error)
 	DeleteIncident(ctx context.Context, id uuid.UUID) error
-	DeleteIntakeMaturityAssessment(ctx context.Context, id uuid.UUID) error
+	DeleteIntakeTopicsAssessment(ctx context.Context, id uuid.UUID) error
 	DeleteInvoice(ctx context.Context, id uuid.UUID) error
 	DeleteLocation(ctx context.Context, id uuid.UUID) (Location, error)
 	DeleteOrganisation(ctx context.Context, id uuid.UUID) (Organisation, error)
@@ -151,21 +128,11 @@ type Querier interface {
 	GetAttachmentsByUUIDs(ctx context.Context, dollar_1 []uuid.UUID) ([]AttachmentFile, error)
 	// Deduplicate identical status within 1 second windows
 	GetBillablePeriodsForContract(ctx context.Context, arg GetBillablePeriodsForContractParams) ([]GetBillablePeriodsForContractRow, error)
-	GetCarePlanActionsMaxSortOrder(ctx context.Context, objectiveID uuid.UUID) (int32, error)
-	GetCarePlanInterventions(ctx context.Context, carePlanID uuid.UUID) ([]CarePlanIntervention, error)
-	GetCarePlanObjectivesWithActions(ctx context.Context, carePlanID uuid.UUID) ([]GetCarePlanObjectivesWithActionsRow, error)
-	GetCarePlanOverview(ctx context.Context, id uuid.UUID) (GetCarePlanOverviewRow, error)
-	GetCarePlanReport(ctx context.Context, id uuid.UUID) (GetCarePlanReportRow, error)
-	GetCarePlanResources(ctx context.Context, carePlanID uuid.UUID) ([]CarePlanResource, error)
-	GetCarePlanRisks(ctx context.Context, carePlanID uuid.UUID) ([]CarePlanRisk, error)
-	GetCarePlanSuccessMetrics(ctx context.Context, carePlanID uuid.UUID) ([]CarePlanMetric, error)
-	GetCarePlanSupportNetwork(ctx context.Context, carePlanID uuid.UUID) ([]CarePlanSupportNetwork, error)
 	GetClientByIntakeFormID(ctx context.Context, intakeFormID *uuid.UUID) (ClientDetail, error)
 	GetClientContract(ctx context.Context, id uuid.UUID) (GetClientContractRow, error)
 	GetClientCounts(ctx context.Context) (GetClientCountsRow, error)
 	GetClientDetails(ctx context.Context, id uuid.UUID) (GetClientDetailsRow, error)
 	GetClientDiagnosis(ctx context.Context, id uuid.UUID) (ClientDiagnosis, error)
-	GetClientMaturityMatrixAssessment(ctx context.Context, id uuid.UUID) (GetClientMaturityMatrixAssessmentRow, error)
 	GetClientRelatedEmails(ctx context.Context, clientID uuid.UUID) ([]*string, error)
 	GetClientSender(ctx context.Context, id uuid.UUID) (Sender, error)
 	GetCompletedPaymentSum(ctx context.Context, invoiceID uuid.UUID) (float64, error)
@@ -182,14 +149,12 @@ type Querier interface {
 	GetIntakeFormByRegistrationFormID(ctx context.Context, registrationFormID uuid.UUID) (IntakeForm, error)
 	GetIntakeFormDetails(ctx context.Context, id uuid.UUID) (GetIntakeFormDetailsRow, error)
 	GetIntakeMaturityAssessment(ctx context.Context, id uuid.UUID) (GetIntakeMaturityAssessmentRow, error)
-	GetIntakeMaturityAssessments(ctx context.Context, intakeFormID uuid.UUID) ([]GetIntakeMaturityAssessmentsRow, error)
+	GetIntakeTopicsAssessments(ctx context.Context, intakeFormID uuid.UUID) ([]GetIntakeTopicsAssessmentsRow, error)
 	GetInvoice(ctx context.Context, id uuid.UUID) (GetInvoiceRow, error)
 	GetInvoiceAuditLogs(ctx context.Context, invoiceID uuid.UUID) ([]GetInvoiceAuditLogsRow, error)
 	GetInvoiceSenderID(ctx context.Context, id uuid.UUID) (*uuid.UUID, error)
 	GetLatestAuditHash(ctx context.Context) (string, error)
-	GetLevelDescription(ctx context.Context, arg GetLevelDescriptionParams) (GetLevelDescriptionRow, error)
 	GetLocation(ctx context.Context, id uuid.UUID) (Location, error)
-	GetMaturityMatrix(ctx context.Context, id uuid.UUID) (Topic, error)
 	GetMaxInvoiceSequenceForDate(ctx context.Context, date interface{}) (int64, error)
 	GetMedication(ctx context.Context, id uuid.UUID) (GetMedicationRow, error)
 	GetMissingClientDocuments(ctx context.Context, clientID uuid.UUID) ([]string, error)
@@ -213,6 +178,7 @@ type Querier interface {
 	GetTemp2FaSecret(ctx context.Context, id uuid.UUID) (*string, error)
 	GetTemplateItemsByIds(ctx context.Context, dollar_1 []uuid.UUID) ([]uuid.UUID, error)
 	GetTemplateItemsBySourceTable(ctx context.Context, dollar_1 []uuid.UUID) ([]TemplateItem, error)
+	GetTopicLevel(ctx context.Context, arg GetTopicLevelParams) (GetTopicLevelRow, error)
 	GetTotalPaidAmountByInvoice(ctx context.Context, invoiceID uuid.UUID) (float64, error)
 	GetUserByEmail(ctx context.Context, email string) (GetUserByEmailRow, error)
 	GetUserByID(ctx context.Context, id uuid.UUID) (GetUserByIDRow, error)
@@ -234,10 +200,9 @@ type Querier interface {
 	// ---------- 3. ROLE-PERMISSION MAPPING ----------
 	// Returns all permissions attached to a single role.
 	ListAllRolePermissions(ctx context.Context, roleID uuid.UUID) ([]ListAllRolePermissionsRow, error)
-	// Join to get the client location name
 	ListAssignedEmployees(ctx context.Context, arg ListAssignedEmployeesParams) ([]ListAssignedEmployeesRow, error)
 	ListAuditRecords(ctx context.Context, arg ListAuditRecordsParams) ([]Audit, error)
-	ListCarePlanReports(ctx context.Context, arg ListCarePlanReportsParams) ([]ListCarePlanReportsRow, error)
+	ListCarePlanTopics(ctx context.Context) ([]Topic, error)
 	// Define the parameters for the query
 	// client_id: The ID of the client whose appointments are being queried.
 	// start_date: The beginning of the time range to search within (inclusive).
@@ -255,7 +220,6 @@ type Querier interface {
 	ListClientDiagnoses(ctx context.Context, arg ListClientDiagnosesParams) ([]ListClientDiagnosesRow, error)
 	ListClientDocuments(ctx context.Context, arg ListClientDocumentsParams) ([]ListClientDocumentsRow, error)
 	ListClientLocationTransfer(ctx context.Context, arg ListClientLocationTransferParams) ([]ListClientLocationTransferRow, error)
-	ListClientMaturityMatrixAssessments(ctx context.Context, arg ListClientMaturityMatrixAssessmentsParams) ([]ListClientMaturityMatrixAssessmentsRow, error)
 	ListClientStatusHistory(ctx context.Context, arg ListClientStatusHistoryParams) ([]ClientStatusHistory, error)
 	ListContractTypes(ctx context.Context) ([]ContractType, error)
 	ListContracts(ctx context.Context, arg ListContractsParams) ([]ListContractsRow, error)
@@ -275,12 +239,11 @@ type Querier interface {
 	ListEmployeesWithContractHours(ctx context.Context, dollar_1 []uuid.UUID) ([]ListEmployeesWithContractHoursRow, error)
 	ListIncidents(ctx context.Context, arg ListIncidentsParams) ([]ListIncidentsRow, error)
 	ListIntakeForms(ctx context.Context, arg ListIntakeFormsParams) ([]ListIntakeFormsRow, error)
-	ListIntakeMaturityAssessmentsByIntake(ctx context.Context, arg ListIntakeMaturityAssessmentsByIntakeParams) ([]ListIntakeMaturityAssessmentsByIntakeRow, error)
+	ListIntakeTopicsAssessmentsByIntake(ctx context.Context, arg ListIntakeTopicsAssessmentsByIntakeParams) ([]ListIntakeTopicsAssessmentsByIntakeRow, error)
 	ListInvoices(ctx context.Context, arg ListInvoicesParams) ([]ListInvoicesRow, error)
 	ListLatestPayments(ctx context.Context) ([]ListLatestPaymentsRow, error)
 	ListLocations(ctx context.Context, organisationID uuid.UUID) ([]ListLocationsRow, error)
 	ListLocationsPaginated(ctx context.Context, arg ListLocationsPaginatedParams) ([]ListLocationsPaginatedRow, error)
-	ListMaturityMatrix(ctx context.Context) ([]Topic, error)
 	ListMedicationsByDiagnosisID(ctx context.Context, arg ListMedicationsByDiagnosisIDParams) ([]ListMedicationsByDiagnosisIDRow, error)
 	ListMedicationsByDiagnosisIDs(ctx context.Context, dollar_1 []uuid.UUID) ([]ClientMedication, error)
 	ListNotifications(ctx context.Context, arg ListNotificationsParams) ([]Notification, error)
@@ -296,7 +259,9 @@ type Querier interface {
 	// ---------- 5. USER-PERMISSION MAPPING ----------
 	// Returns every permission granted to a user (direct or via roles).
 	ListUserPermissions(ctx context.Context, userID uuid.UUID) ([]ListUserPermissionsRow, error)
+	ListWaitingListClients(ctx context.Context, arg ListWaitingListClientsParams) ([]ListWaitingListClientsRow, error)
 	MarkNotificationAsRead(ctx context.Context, id uuid.UUID) (Notification, error)
+	PutClientInCare(ctx context.Context, arg PutClientInCareParams) (ClientDetail, error)
 	RecentIncidents(ctx context.Context) (int64, error)
 	// Removes *all* permissions from the given role.
 	RemovePermissionsFromRole(ctx context.Context, roleID uuid.UUID) error
@@ -310,15 +275,6 @@ type Querier interface {
 	UpdateAppointmentCard(ctx context.Context, arg UpdateAppointmentCardParams) (AppointmentCard, error)
 	UpdateAppointmentCardUrl(ctx context.Context, arg UpdateAppointmentCardUrlParams) (*string, error)
 	UpdateAssignedEmployee(ctx context.Context, arg UpdateAssignedEmployeeParams) (AssignedEmployee, error)
-	UpdateCarePlanAction(ctx context.Context, arg UpdateCarePlanActionParams) (CarePlanAction, error)
-	UpdateCarePlanIntervention(ctx context.Context, arg UpdateCarePlanInterventionParams) (CarePlanIntervention, error)
-	UpdateCarePlanObjective(ctx context.Context, arg UpdateCarePlanObjectiveParams) (CarePlanObjective, error)
-	UpdateCarePlanOverview(ctx context.Context, arg UpdateCarePlanOverviewParams) (CarePlan, error)
-	UpdateCarePlanReport(ctx context.Context, arg UpdateCarePlanReportParams) (CarePlanReport, error)
-	UpdateCarePlanResource(ctx context.Context, arg UpdateCarePlanResourceParams) (CarePlanResource, error)
-	UpdateCarePlanRisk(ctx context.Context, arg UpdateCarePlanRiskParams) (CarePlanRisk, error)
-	UpdateCarePlanSuccessMetric(ctx context.Context, arg UpdateCarePlanSuccessMetricParams) (CarePlanMetric, error)
-	UpdateCarePlanSupportNetwork(ctx context.Context, arg UpdateCarePlanSupportNetworkParams) (CarePlanSupportNetwork, error)
 	UpdateClientDiagnosis(ctx context.Context, arg UpdateClientDiagnosisParams) (ClientDiagnosis, error)
 	UpdateClientMedication(ctx context.Context, arg UpdateClientMedicationParams) (ClientMedication, error)
 	// -- name: UpdateClientDetails :one
@@ -369,7 +325,8 @@ type Querier interface {
 	UpdateEmployeeProfile(ctx context.Context, arg UpdateEmployeeProfileParams) (EmployeeProfile, error)
 	UpdateIncident(ctx context.Context, arg UpdateIncidentParams) (Incident, error)
 	UpdateIncidentFileUrl(ctx context.Context, arg UpdateIncidentFileUrlParams) (*string, error)
-	UpdateIntakeMaturityAssessment(ctx context.Context, arg UpdateIntakeMaturityAssessmentParams) (IntakeTopicAssessment, error)
+	UpdateIntakeConclusion(ctx context.Context, arg UpdateIntakeConclusionParams) (IntakeForm, error)
+	UpdateIntakeTopicsAssessment(ctx context.Context, arg UpdateIntakeTopicsAssessmentParams) (IntakeTopicAssessment, error)
 	UpdateInvoice(ctx context.Context, arg UpdateInvoiceParams) (Invoice, error)
 	UpdateInvoiceStatus(ctx context.Context, arg UpdateInvoiceStatusParams) (Invoice, error)
 	UpdateLocation(ctx context.Context, arg UpdateLocationParams) (Location, error)
@@ -383,6 +340,8 @@ type Querier interface {
 	UpdateSchedule(ctx context.Context, arg UpdateScheduleParams) (UpdateScheduleRow, error)
 	UpdateSender(ctx context.Context, arg UpdateSenderParams) (Sender, error)
 	UpdateShift(ctx context.Context, arg UpdateShiftParams) (LocationShift, error)
+	// Join to get the client location name
+	UpsertMainCoordinator(ctx context.Context, arg UpsertMainCoordinatorParams) (UpsertMainCoordinatorRow, error)
 	UrgentCasesCount(ctx context.Context) (int64, error)
 }
 

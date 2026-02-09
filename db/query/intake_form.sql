@@ -20,6 +20,46 @@ INSERT INTO intake_forms (
 ) RETURNING *;
 
 
+-- name: CreateSeedIntakeForm :one
+INSERT INTO intake_forms (
+    registration_form_id,
+    date_of_intake,
+    care_type,
+    intake_participants,
+    family_situation,
+    psychological_state,
+    self_sufficiency,
+    sender_id,
+    assigned_location_id,
+    risk_assessment,
+    intake_conclusion,
+    intake_conclusion_notes,
+    evaluation_intervals_weeks,
+    signature
+) VALUES (
+    $1,
+    $2,
+    $3,
+    ARRAY['client','parents/guardians','care_coordinator']::intake_participants_enum[],
+    $4,
+    $5,
+    $6,
+    $7,
+    $8,
+    $9,
+    $10,
+    $11,
+    $12,
+    $13
+) RETURNING
+    id,
+    registration_form_id,
+    care_type,
+    sender_id,
+    assigned_location_id,
+    evaluation_intervals_weeks;
+
+
 
 -- name: ListIntakeForms :many
 SELECT
@@ -75,7 +115,12 @@ SELECT
     l.house_number AS location_house_number,
     l.house_number_addition AS location_house_number_addition,
     l.postal_code AS location_postal_code,
-    l.city AS location_city
+    l.city AS location_city,
+    EXISTS (
+        SELECT 1
+        FROM client_details cd
+        WHERE cd.intake_form_id = i.id
+    ) AS has_client
 FROM intake_forms i
 JOIN registration_form r ON i.registration_form_id = r.id
 LEFT JOIN sender s ON i.sender_id = s.id
@@ -93,3 +138,13 @@ WHERE id = $1;
 -- name: GetIntakeFormByRegistrationFormID :one
 SELECT * FROM intake_forms
 WHERE registration_form_id = $1;
+
+
+-- name: UpdateIntakeConclusion :one
+UPDATE intake_forms
+SET
+    intake_conclusion = $2,
+    intake_conclusion_notes = COALESCE(sqlc.narg('intake_conclusion_notes'), intake_conclusion_notes),
+    updated_at = NOW()
+WHERE id = $1
+RETURNING *;

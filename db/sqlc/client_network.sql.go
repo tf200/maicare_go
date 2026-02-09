@@ -89,7 +89,7 @@ const assignSender = `-- name: AssignSender :one
 UPDATE client_details
 SET sender_id = $1
 WHERE id = $2
-RETURNING id, intake_form_id, registration_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, email, phone_number, gender, filenumber, created_at, sender_id, location_id, street, house_number, house_number_addition, postal_code, city, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, nationality, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes
+RETURNING id, intake_form_id, registration_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, evaluation_intarvals_weeks, care_type, email, phone_number, gender, filenumber, created_at, placed_in_care_at, care_start_date, next_evaluation_date, sender_id, location_id, street, house_number, house_number_addition, postal_code, city, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, nationality, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes
 `
 
 type AssignSenderParams struct {
@@ -111,11 +111,16 @@ func (q *Queries) AssignSender(ctx context.Context, arg AssignSenderParams) (Cli
 		&i.Status,
 		&i.Bsn,
 		&i.BsnVerifiedBy,
+		&i.EvaluationIntarvalsWeeks,
+		&i.CareType,
 		&i.Email,
 		&i.PhoneNumber,
 		&i.Gender,
 		&i.Filenumber,
 		&i.CreatedAt,
+		&i.PlacedInCareAt,
+		&i.CareStartDate,
+		&i.NextEvaluationDate,
 		&i.SenderID,
 		&i.LocationID,
 		&i.Street,
@@ -404,10 +409,6 @@ func (q *Queries) GetEmergencyContact(ctx context.Context, id uuid.UUID) (Client
 }
 
 const listAssignedEmployees = `-- name: ListAssignedEmployees :many
-
-
-
-
 SELECT
     ae.id, ae.client_id, ae.employee_id, ae.start_date, ae.role, ae.created_at,
     e.first_name AS employee_first_name,
@@ -438,7 +439,6 @@ type ListAssignedEmployeesRow struct {
 	TotalCount        int64              `json:"total_count"`
 }
 
-// Join to get the client location name
 func (q *Queries) ListAssignedEmployees(ctx context.Context, arg ListAssignedEmployeesParams) ([]ListAssignedEmployeesRow, error) {
 	rows, err := q.db.Query(ctx, listAssignedEmployees, arg.ClientID, arg.Limit, arg.Offset)
 	if err != nil {
@@ -646,6 +646,75 @@ func (q *Queries) UpdateEmergencyContact(ctx context.Context, arg UpdateEmergenc
 		&i.MedicalReports,
 		&i.IncidentsReports,
 		&i.GoalsReports,
+	)
+	return i, err
+}
+
+const upsertMainCoordinator = `-- name: UpsertMainCoordinator :one
+
+
+WITH upserted_assignment AS (
+    INSERT INTO assigned_employee (
+        client_id,
+        employee_id,
+        start_date,
+        role
+    ) VALUES (
+        $1, $2, $3, 'coordinator'
+    )
+    ON CONFLICT (client_id) WHERE role = 'coordinator'
+    DO UPDATE SET
+        employee_id = EXCLUDED.employee_id,
+        start_date = EXCLUDED.start_date,
+        role = EXCLUDED.role
+    RETURNING id, client_id, employee_id, start_date, role, created_at
+)
+SELECT
+    ua.id, ua.client_id, ua.employee_id, ua.start_date, ua.role, ua.created_at,
+    ep.user_id,
+    cl.first_name AS client_first_name,
+    cl.last_name AS client_last_name,
+    l.name AS client_location_name
+FROM upserted_assignment ua
+JOIN employee_profile ep ON ua.employee_id = ep.id
+JOIN client_details cl ON ua.client_id = cl.id
+LEFT JOIN location l ON cl.location_id = l.id
+`
+
+type UpsertMainCoordinatorParams struct {
+	ClientID   uuid.UUID   `json:"client_id"`
+	EmployeeID uuid.UUID   `json:"employee_id"`
+	StartDate  pgtype.Date `json:"start_date"`
+}
+
+type UpsertMainCoordinatorRow struct {
+	ID                 uuid.UUID          `json:"id"`
+	ClientID           uuid.UUID          `json:"client_id"`
+	EmployeeID         uuid.UUID          `json:"employee_id"`
+	StartDate          pgtype.Date        `json:"start_date"`
+	Role               string             `json:"role"`
+	CreatedAt          pgtype.Timestamptz `json:"created_at"`
+	UserID             uuid.UUID          `json:"user_id"`
+	ClientFirstName    string             `json:"client_first_name"`
+	ClientLastName     string             `json:"client_last_name"`
+	ClientLocationName *string            `json:"client_location_name"`
+}
+
+// Join to get the client location name
+func (q *Queries) UpsertMainCoordinator(ctx context.Context, arg UpsertMainCoordinatorParams) (UpsertMainCoordinatorRow, error) {
+	row := q.db.QueryRow(ctx, upsertMainCoordinator, arg.ClientID, arg.EmployeeID, arg.StartDate)
+	var i UpsertMainCoordinatorRow
+	err := row.Scan(
+		&i.ID,
+		&i.ClientID,
+		&i.EmployeeID,
+		&i.StartDate,
+		&i.Role,
+		&i.CreatedAt,
+		&i.UserID,
+		&i.ClientFirstName,
+		&i.ClientLastName,
+		&i.ClientLocationName,
 	)
 	return i, err
 }

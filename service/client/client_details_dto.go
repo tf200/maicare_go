@@ -30,7 +30,8 @@ type CreateClientDetailsRequest struct {
 	Birthplace                 *string    `json:"birthplace"`
 	Departement                *string    `json:"departement"`
 	Gender                     string     `json:"gender" binding:"required,oneof=male female other"`
-	Filenumber                 string     `json:"filenumber" binding:"required"`
+	CareType                   *string    `json:"care_type" binding:"omitempty,oneof=protected_living training_center supported_independent_living ambulatory_support other"`
+	Filenumber                 string     `json:"filenumber"`
 	DateOfBirth                string     `json:"date_of_birth" binding:"required" time_format:"2006-01-02"`
 	PhoneNumber                *string    `json:"phone_number" binding:"required"`
 	SenderID                   *uuid.UUID `json:"sender_id" binding:"required"`
@@ -141,6 +142,24 @@ type ListClientsApiResponse struct {
 	Addresses             []Address  `json:"addresses"`
 	LegalMeasure          *string    `json:"legal_measure"`
 	HasUntakenMedications bool       `json:"has_untaken_medications"`
+}
+
+type ListWaitingListClientsParams struct {
+	pagination.Request
+	Search    *string `form:"search" binding:"omitempty,max=120"`
+	Placement *string `form:"placement" binding:"omitempty,oneof=protected_living training_center supported_independent_living ambulatory_support other"`
+	SortDays  *string `form:"sort_days" binding:"omitempty,oneof=asc desc"`
+}
+
+type ListWaitingListClientsResponse struct {
+	ID             uuid.UUID `json:"id"`
+	FirstName      string    `json:"first_name"`
+	Bsn            *string   `json:"bsn"`
+	LastName       string    `json:"last_name"`
+	CareType       *string   `json:"care_type"`
+	SenderName     *string   `json:"sender_name"`
+	DaysInWaitlist int32     `json:"days_in_waitlist"`
+	AdmissionType  *string   `json:"admission_type"`
 }
 
 // GetClientsCountApi gets the count of clients
@@ -289,6 +308,23 @@ type UpdateClientStatusRequest struct {
 type UpdateClientStatusResponse struct {
 	ID     uuid.UUID `json:"id"`
 	Status string    `json:"status"`
+}
+
+type PutClientInCareRequest struct {
+	CareStartDate         string     `json:"care_start_date" binding:"required"`
+	CoordinatorEmployeeID uuid.UUID  `json:"coordinator_employee_id" binding:"required"`
+	PlacedInCareAt        *time.Time `json:"placed_in_care_at"`
+	Reason                *string    `json:"reason"`
+}
+
+type PutClientInCareResponse struct {
+	ID                  uuid.UUID  `json:"id"`
+	Status              string     `json:"status"`
+	CareStartDate       time.Time  `json:"care_start_date"`
+	PlacedInCareAt      time.Time  `json:"placed_in_care_at"`
+	NextEvaluationDate  *time.Time `json:"next_evaluation_date"`
+	CoordinatorAssignID uuid.UUID  `json:"coordinator_assignment_id"`
+	Warning             *string    `json:"warning,omitempty"`
 }
 
 // ListStatusHistoryApiResponse represents a response to a list status history request

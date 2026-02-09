@@ -29,16 +29,30 @@ type LoggerImpl struct {
 	logger *zap.Logger
 }
 
+func (l *LoggerImpl) ZapLogger() *zap.Logger {
+	if l == nil {
+		return nil
+	}
+	return l.logger
+}
+
+func (l *LoggerImpl) Sync() error {
+	if l == nil || l.logger == nil {
+		return nil
+	}
+	return l.logger.Sync()
+}
+
 func SetupLogger(environment string) (Logger, error) {
 	var config zap.Config
 	if environment == "production" {
 		config = zap.NewProductionConfig()
 		config.DisableCaller = true
 		config.DisableStacktrace = true
-		config.OutputPaths = []string{"stdout"}
+		config.OutputPaths = []string{"stderr"}
 	} else {
 		config = zap.NewDevelopmentConfig()
-		config.OutputPaths = []string{"stdout"}
+		config.OutputPaths = []string{"stderr"}
 	}
 
 	logger, err := config.Build()
@@ -118,5 +132,7 @@ func (l *LoggerImpl) LogBusinessEvent(ctx context.Context, level LogLevel, opera
 		l.logger.Warn(message, allFields...)
 	case LogLevelInfo:
 		l.logger.Info(message, allFields...)
+	default:
+		l.logger.Info(message, append(allFields, zap.String("unexpected_log_level", string(level)))...)
 	}
 }

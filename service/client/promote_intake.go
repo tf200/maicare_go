@@ -2,7 +2,6 @@ package clientp
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	db "maicare_go/db/sqlc"
@@ -10,7 +9,6 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
 )
 
@@ -55,55 +53,29 @@ func (s *clientService) PromoteIntakeToClient(ctx context.Context, req *PromoteI
 			return err
 		}
 
-		// 3. Get all maturity assessments for this intake
-		intakeAssessments, err := q.GetIntakeMaturityAssessments(ctx, req.IntakeFormID)
-		if err != nil {
-			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "PromoteIntakeToClient", "Failed to get maturity assessments", zap.Error(err))
-			return err
-		}
-
-		// 4. Map gender from registration to client gender enum
-		var clientGender db.ClientGenderEnum
-		switch registrationForm.ClientGender {
-		case "male":
-			clientGender = db.ClientGenderEnumMale
-		case "female":
-			clientGender = db.ClientGenderEnumFemale
-		default:
-			clientGender = db.ClientGenderEnumOther
-		}
-
-		// Map education level
-		var educationLevel db.ClientEducationLevelEnum
-		if registrationForm.EducationLevel.Valid {
-			educationLevel = registrationForm.EducationLevel.ClientEducationLevelEnum
-		} else {
-			educationLevel = db.ClientEducationLevelEnumNone
-		}
-
-		// Parse work start date
-		var workStartDate pgtype.Date
-		if registrationForm.WorkStartDate.Valid {
-			workStartDate = registrationForm.WorkStartDate
-		}
+		// 3. Intake goals are migrated after client creation.
 
 		// 5. Create the client record
 		createClientParams := db.CreateClientDetailsParams{
-			IntakeFormID:               &req.IntakeFormID,
-			RegistrationFormID:         &intakeForm.RegistrationFormID,
-			FirstName:                  registrationForm.ClientFirstName,
-			LastName:                   registrationForm.ClientLastName,
-			DateOfBirth:                registrationForm.ClientDateOfBirth,
-			Identity:                   false,
-			Bsn:                        &registrationForm.ClientBsnNumber,
-			BsnVerifiedBy:              nil,
-			Nationality:                &registrationForm.ClientNationality,
-			Email:                      registrationForm.ClientEmail,
-			PhoneNumber:                &registrationForm.ClientPhoneNumber,
-			Gender:                     clientGender,
-			Filenumber:                 registrationForm.ClientBsnNumber,
+			IntakeFormID:       &req.IntakeFormID,
+			RegistrationFormID: &intakeForm.RegistrationFormID,
+			FirstName:          registrationForm.ClientFirstName,
+			LastName:           registrationForm.ClientLastName,
+			DateOfBirth:        registrationForm.ClientDateOfBirth,
+			Identity:           false,
+			Bsn:                &registrationForm.ClientBsnNumber,
+			BsnVerifiedBy:      nil,
+			Nationality:        &registrationForm.ClientNationality,
+			Email:              registrationForm.ClientEmail,
+			PhoneNumber:        &registrationForm.ClientPhoneNumber,
+			Gender:             registrationForm.ClientGender,
+			CareType: db.NullIntakeCareTypeEnum{
+				IntakeCareTypeEnum: intakeForm.CareType,
+				Valid:              true,
+			},
 			SenderID:                   intakeForm.SenderID,
 			LocationID:                 intakeForm.AssignedLocationID,
+			EvaluationIntarvalsWeeks:   intakeForm.EvaluationIntervalsWeeks,
 			Street:                     registrationForm.ClientStreet,
 			HouseNumber:                registrationForm.ClientHouseNumber,
 			HouseNumberAddition:        registrationForm.ClientHouseNumberAddition,
@@ -115,13 +87,13 @@ func (s *clientService) PromoteIntakeToClient(ctx context.Context, req *PromoteI
 			EducationMentorPhone:       registrationForm.EducationMentorPhone,
 			EducationMentorEmail:       registrationForm.EducationMentorEmail,
 			EducationAdditionalNotes:   registrationForm.EducationAdditionalNotes,
-			EducationLevel:             educationLevel,
+			EducationLevel:             registrationForm.EducationLevel,
 			WorkCurrentlyEmployed:      registrationForm.WorkCurrentlyEmployed,
 			WorkCurrentEmployer:        registrationForm.WorkCurrentEmployer,
 			WorkCurrentEmployerPhone:   registrationForm.WorkEmployerPhone,
 			WorkCurrentEmployerEmail:   registrationForm.WorkEmployerEmail,
 			WorkCurrentPosition:        registrationForm.WorkCurrentPosition,
-			WorkStartDate:              workStartDate,
+			WorkStartDate:              registrationForm.WorkStartDate,
 			WorkAdditionalNotes:        registrationForm.WorkAdditionalNotes,
 			RiskAggressiveBehavior:     registrationForm.RiskAggressiveBehavior,
 			RiskSuicidalSelfharm:       registrationForm.RiskSuicidalSelfharm,
@@ -158,64 +130,15 @@ func (s *clientService) PromoteIntakeToClient(ctx context.Context, req *PromoteI
 		result.IntakeFormID = req.IntakeFormID
 		result.RegistrationFormID = intakeForm.RegistrationFormID
 
-		// 6. Create maturity matrix assessments and care plans from intake assessments
-		for _, intakeAssessment := range intakeAssessments {
-			// Create client maturity matrix assessment
-			endDate := pgtype.Date{Time: intakeForm.DateOfIntake.Time.AddDate(1, 0, 0), Valid: true}
-
-			createAssessmentParams := db.CreateClientMaturityMatrixAssessmentParams{
-				ClientID:     client.ID,
-				TopicID:      intakeAssessment.TopicID,
-				StartDate:    pgtype.Date{Time: intakeForm.DateOfIntake.Time, Valid: true},
-				EndDate:      endDate,
-				InitialLevel: intakeAssessment.CurrentLevel,
-				TargetLevel:  5,
-				CurrentLevel: intakeAssessment.CurrentLevel,
-			}
-
-			clientAssessment, err := q.CreateClientMaturityMatrixAssessment(ctx, createAssessmentParams)
-			if err != nil {
-				s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "PromoteIntakeToClient", "Failed to create maturity assessment", zap.Error(err))
-				return err
-			}
-			result.MaturityAssessmentsCreated++
-
-			// Create care plan for this assessment
-			createCarePlanParams := db.CreateCarePlanParams{
-				AssessmentID:          clientAssessment.ID,
-				GeneratedByEmployeeID: nil,
-				AssessmentSummary:     fmt.Sprintf("Initial care plan for %s based on intake assessment", intakeAssessment.TopicName),
-			}
-
-			carePlan, err := q.CreateCarePlan(ctx, createCarePlanParams)
-			if err != nil {
-				s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "PromoteIntakeToClient", "Failed to create care plan", zap.Error(err))
-				return err
-			}
-
-			// Create objectives from goals
-			var goals []IntakeAssessmentGoal
-			if len(intakeAssessment.ProposedGoals) > 0 {
-				if err := json.Unmarshal(intakeAssessment.ProposedGoals, &goals); err != nil {
-					s.Logger.LogBusinessEvent(ctx, logger.LogLevelWarn, "PromoteIntakeToClient", "Failed to unmarshal goals, continuing without objectives", zap.Error(err))
-				} else {
-					for _, goal := range goals {
-						createObjectiveParams := db.CreateCarePlanObjectiveParams{
-							CarePlanID:  carePlan.ID,
-							Timeframe:   db.CarePlanTimeframeEnumShortTerm,
-							GoalTitle:   goal.Title,
-							Description: goal.Description,
-							Priority:    goal.Priority,
-						}
-
-						_, err := q.CreateCarePlanObjective(ctx, createObjectiveParams)
-						if err != nil {
-							s.Logger.LogBusinessEvent(ctx, logger.LogLevelWarn, "PromoteIntakeToClient", "Failed to create care plan objective", zap.Error(err))
-						}
-					}
-				}
-			}
+		createdGoals, err := q.CreateClientGoalsFromIntakeAssessments(ctx, db.CreateClientGoalsFromIntakeAssessmentsParams{
+			ClientID:     client.ID,
+			IntakeFormID: req.IntakeFormID,
+		})
+		if err != nil {
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "PromoteIntakeToClient", "Failed to migrate intake goals into client goals", zap.Error(err))
+			return err
 		}
+		result.MaturityAssessmentsCreated = len(createdGoals)
 
 		// 7. Create emergency contacts from guardians
 		// Guardian 1
@@ -261,8 +184,6 @@ func (s *clientService) PromoteIntakeToClient(ctx context.Context, req *PromoteI
 				result.EmergencyContactsCreated++
 			}
 		}
-
-		// 8. Keep intake documents in registration_form for now (no client_documents linking here).
 
 		return nil
 	})

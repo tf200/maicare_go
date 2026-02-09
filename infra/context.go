@@ -19,8 +19,21 @@ const (
 )
 
 func GetEmployeeID(ctx context.Context) uuid.UUID {
-	if ctx, ok := ctx.(*gin.Context); ok {
-		payload, exists := ctx.Get(AuthorizationPayloadKey)
+	if ctx == nil {
+		return uuid.Nil
+	}
+
+	defer func() {
+		if recover() != nil {
+			// Keep this helper fail-safe for non-request contexts (seeds, jobs, CLI commands).
+		}
+	}()
+
+	if ginCtx, ok := ctx.(*gin.Context); ok {
+		if ginCtx == nil {
+			return uuid.Nil
+		}
+		payload, exists := ginCtx.Get(AuthorizationPayloadKey)
 		if !exists {
 			return uuid.Nil
 		}
@@ -31,17 +44,17 @@ func GetEmployeeID(ctx context.Context) uuid.UUID {
 		employeeID := p.EmployeeID
 
 		return employeeID
-	} else {
-		payload := ctx.Value(AuthorizationPayloadKey)
-		if payload == nil {
-			return uuid.Nil
-		}
-		p, ok := payload.(*token.Payload)
-		if !ok {
-			return uuid.Nil
-		}
-		employeeID := p.EmployeeID
-
-		return employeeID
 	}
+
+	payload := ctx.Value(AuthorizationPayloadKey)
+	if payload == nil {
+		return uuid.Nil
+	}
+	p, ok := payload.(*token.Payload)
+	if !ok {
+		return uuid.Nil
+	}
+	employeeID := p.EmployeeID
+
+	return employeeID
 }

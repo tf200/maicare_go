@@ -104,7 +104,7 @@ type CreateEmployeeProfileParams struct {
 	PrivatePhoneNumber  *string                  `json:"private_phone_number"`
 	DateOfBirth         pgtype.Date              `json:"date_of_birth"`
 	HomeTelephoneNumber *string                  `json:"home_telephone_number"`
-	Gender              EmployeeGenderEnum       `json:"gender"`
+	Gender              GenderEnum               `json:"gender"`
 	LocationID          *uuid.UUID               `json:"location_id"`
 	ContractHours       *float64                 `json:"contract_hours"`
 	ContractEndDate     pgtype.Date              `json:"contract_end_date"`
@@ -210,7 +210,7 @@ type GetEmployeeProfileByIDRow struct {
 	DateOfBirth         pgtype.Date              `json:"date_of_birth"`
 	HomeTelephoneNumber *string                  `json:"home_telephone_number"`
 	CreatedAt           pgtype.Timestamptz       `json:"created_at"`
-	Gender              EmployeeGenderEnum       `json:"gender"`
+	Gender              GenderEnum               `json:"gender"`
 	LocationID          *uuid.UUID               `json:"location_id"`
 	HasBorrowed         bool                     `json:"has_borrowed"`
 	OutOfService        *bool                    `json:"out_of_service"`
@@ -431,24 +431,24 @@ RETURNING id, user_id, first_name, last_name, bsn, street, house_number, house_n
 `
 
 type UpdateEmployeeProfileParams struct {
-	FirstName           *string                `json:"first_name"`
-	LastName            *string                `json:"last_name"`
-	Position            *string                `json:"position"`
-	Department          *string                `json:"department"`
-	EmployeeNumber      *string                `json:"employee_number"`
-	EmploymentNumber    *string                `json:"employment_number"`
-	PrivateEmailAddress *string                `json:"private_email_address"`
-	WorkEmailAddress    *string                `json:"work_email_address"`
-	WorkPhoneNumber     *string                `json:"work_phone_number"`
-	PrivatePhoneNumber  *string                `json:"private_phone_number"`
-	DateOfBirth         pgtype.Date            `json:"date_of_birth"`
-	HomeTelephoneNumber *string                `json:"home_telephone_number"`
-	Gender              NullEmployeeGenderEnum `json:"gender"`
-	LocationID          *uuid.UUID             `json:"location_id"`
-	HasBorrowed         *bool                  `json:"has_borrowed"`
-	OutOfService        *bool                  `json:"out_of_service"`
-	IsArchived          *bool                  `json:"is_archived"`
-	ID                  uuid.UUID              `json:"id"`
+	FirstName           *string        `json:"first_name"`
+	LastName            *string        `json:"last_name"`
+	Position            *string        `json:"position"`
+	Department          *string        `json:"department"`
+	EmployeeNumber      *string        `json:"employee_number"`
+	EmploymentNumber    *string        `json:"employment_number"`
+	PrivateEmailAddress *string        `json:"private_email_address"`
+	WorkEmailAddress    *string        `json:"work_email_address"`
+	WorkPhoneNumber     *string        `json:"work_phone_number"`
+	PrivatePhoneNumber  *string        `json:"private_phone_number"`
+	DateOfBirth         pgtype.Date    `json:"date_of_birth"`
+	HomeTelephoneNumber *string        `json:"home_telephone_number"`
+	Gender              NullGenderEnum `json:"gender"`
+	LocationID          *uuid.UUID     `json:"location_id"`
+	HasBorrowed         *bool          `json:"has_borrowed"`
+	OutOfService        *bool          `json:"out_of_service"`
+	IsArchived          *bool          `json:"is_archived"`
+	ID                  uuid.UUID      `json:"id"`
 }
 
 func (q *Queries) UpdateEmployeeProfile(ctx context.Context, arg UpdateEmployeeProfileParams) (EmployeeProfile, error) {

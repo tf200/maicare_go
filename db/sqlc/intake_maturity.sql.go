@@ -12,7 +12,7 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const createIntakeMaturityAssessment = `-- name: CreateIntakeMaturityAssessment :one
+const createIntakeTopicAssessment = `-- name: CreateIntakeTopicAssessment :one
 INSERT INTO intake_topic_assessments (
     intake_form_id,
     topic_id,
@@ -25,7 +25,7 @@ INSERT INTO intake_topic_assessments (
 RETURNING id, intake_form_id, topic_id, current_level, proposed_goals, notes, created_at
 `
 
-type CreateIntakeMaturityAssessmentParams struct {
+type CreateIntakeTopicAssessmentParams struct {
 	IntakeFormID  uuid.UUID `json:"intake_form_id"`
 	TopicID       uuid.UUID `json:"topic_id"`
 	CurrentLevel  int32     `json:"current_level"`
@@ -33,8 +33,8 @@ type CreateIntakeMaturityAssessmentParams struct {
 	Notes         *string   `json:"notes"`
 }
 
-func (q *Queries) CreateIntakeMaturityAssessment(ctx context.Context, arg CreateIntakeMaturityAssessmentParams) (IntakeTopicAssessment, error) {
-	row := q.db.QueryRow(ctx, createIntakeMaturityAssessment,
+func (q *Queries) CreateIntakeTopicAssessment(ctx context.Context, arg CreateIntakeTopicAssessmentParams) (IntakeTopicAssessment, error) {
+	row := q.db.QueryRow(ctx, createIntakeTopicAssessment,
 		arg.IntakeFormID,
 		arg.TopicID,
 		arg.CurrentLevel,
@@ -54,7 +54,7 @@ func (q *Queries) CreateIntakeMaturityAssessment(ctx context.Context, arg Create
 	return i, err
 }
 
-const createIntakeMaturityAssessmentsBatch = `-- name: CreateIntakeMaturityAssessmentsBatch :many
+const createIntakeTopicAssessmentsBatch = `-- name: CreateIntakeTopicAssessmentsBatch :many
 WITH inserted AS (
     INSERT INTO intake_topic_assessments (
         intake_form_id,
@@ -80,12 +80,12 @@ JOIN topics t ON inserted.topic_id = t.id
 ORDER BY t.topic_name
 `
 
-type CreateIntakeMaturityAssessmentsBatchParams struct {
+type CreateIntakeTopicAssessmentsBatchParams struct {
 	IntakeFormID uuid.UUID `json:"intake_form_id"`
 	Items        []byte    `json:"items"`
 }
 
-type CreateIntakeMaturityAssessmentsBatchRow struct {
+type CreateIntakeTopicAssessmentsBatchRow struct {
 	ID            uuid.UUID          `json:"id"`
 	IntakeFormID  uuid.UUID          `json:"intake_form_id"`
 	TopicID       uuid.UUID          `json:"topic_id"`
@@ -96,15 +96,15 @@ type CreateIntakeMaturityAssessmentsBatchRow struct {
 	TopicName     string             `json:"topic_name"`
 }
 
-func (q *Queries) CreateIntakeMaturityAssessmentsBatch(ctx context.Context, arg CreateIntakeMaturityAssessmentsBatchParams) ([]CreateIntakeMaturityAssessmentsBatchRow, error) {
-	rows, err := q.db.Query(ctx, createIntakeMaturityAssessmentsBatch, arg.IntakeFormID, arg.Items)
+func (q *Queries) CreateIntakeTopicAssessmentsBatch(ctx context.Context, arg CreateIntakeTopicAssessmentsBatchParams) ([]CreateIntakeTopicAssessmentsBatchRow, error) {
+	rows, err := q.db.Query(ctx, createIntakeTopicAssessmentsBatch, arg.IntakeFormID, arg.Items)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []CreateIntakeMaturityAssessmentsBatchRow{}
+	items := []CreateIntakeTopicAssessmentsBatchRow{}
 	for rows.Next() {
-		var i CreateIntakeMaturityAssessmentsBatchRow
+		var i CreateIntakeTopicAssessmentsBatchRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.IntakeFormID,
@@ -125,18 +125,18 @@ func (q *Queries) CreateIntakeMaturityAssessmentsBatch(ctx context.Context, arg 
 	return items, nil
 }
 
-const deleteIntakeMaturityAssessment = `-- name: DeleteIntakeMaturityAssessment :exec
+const deleteIntakeTopicsAssessment = `-- name: DeleteIntakeTopicsAssessment :exec
 DELETE FROM intake_topic_assessments
 WHERE id = $1
 `
 
-func (q *Queries) DeleteIntakeMaturityAssessment(ctx context.Context, id uuid.UUID) error {
-	_, err := q.db.Exec(ctx, deleteIntakeMaturityAssessment, id)
+func (q *Queries) DeleteIntakeTopicsAssessment(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteIntakeTopicsAssessment, id)
 	return err
 }
 
 const getIntakeMaturityAssessment = `-- name: GetIntakeMaturityAssessment :one
-SELECT 
+SELECT
     ima.id, ima.intake_form_id, ima.topic_id, ima.current_level, ima.proposed_goals, ima.notes, ima.created_at,
     t.topic_name
 FROM intake_topic_assessments ima
@@ -171,8 +171,8 @@ func (q *Queries) GetIntakeMaturityAssessment(ctx context.Context, id uuid.UUID)
 	return i, err
 }
 
-const getIntakeMaturityAssessments = `-- name: GetIntakeMaturityAssessments :many
-SELECT 
+const getIntakeTopicsAssessments = `-- name: GetIntakeTopicsAssessments :many
+SELECT
     ima.id, ima.intake_form_id, ima.topic_id, ima.current_level, ima.proposed_goals, ima.notes, ima.created_at,
     t.topic_name
 FROM intake_topic_assessments ima
@@ -181,7 +181,7 @@ WHERE ima.intake_form_id = $1
 ORDER BY t.topic_name
 `
 
-type GetIntakeMaturityAssessmentsRow struct {
+type GetIntakeTopicsAssessmentsRow struct {
 	ID            uuid.UUID          `json:"id"`
 	IntakeFormID  uuid.UUID          `json:"intake_form_id"`
 	TopicID       uuid.UUID          `json:"topic_id"`
@@ -192,15 +192,15 @@ type GetIntakeMaturityAssessmentsRow struct {
 	TopicName     string             `json:"topic_name"`
 }
 
-func (q *Queries) GetIntakeMaturityAssessments(ctx context.Context, intakeFormID uuid.UUID) ([]GetIntakeMaturityAssessmentsRow, error) {
-	rows, err := q.db.Query(ctx, getIntakeMaturityAssessments, intakeFormID)
+func (q *Queries) GetIntakeTopicsAssessments(ctx context.Context, intakeFormID uuid.UUID) ([]GetIntakeTopicsAssessmentsRow, error) {
+	rows, err := q.db.Query(ctx, getIntakeTopicsAssessments, intakeFormID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []GetIntakeMaturityAssessmentsRow{}
+	items := []GetIntakeTopicsAssessmentsRow{}
 	for rows.Next() {
-		var i GetIntakeMaturityAssessmentsRow
+		var i GetIntakeTopicsAssessmentsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.IntakeFormID,
@@ -221,8 +221,8 @@ func (q *Queries) GetIntakeMaturityAssessments(ctx context.Context, intakeFormID
 	return items, nil
 }
 
-const listIntakeMaturityAssessmentsByIntake = `-- name: ListIntakeMaturityAssessmentsByIntake :many
-SELECT 
+const listIntakeTopicsAssessmentsByIntake = `-- name: ListIntakeTopicsAssessmentsByIntake :many
+SELECT
     ima.id, ima.intake_form_id, ima.topic_id, ima.current_level, ima.proposed_goals, ima.notes, ima.created_at,
     t.topic_name
 FROM intake_topic_assessments ima
@@ -232,13 +232,13 @@ ORDER BY t.topic_name
 LIMIT $2 OFFSET $3
 `
 
-type ListIntakeMaturityAssessmentsByIntakeParams struct {
+type ListIntakeTopicsAssessmentsByIntakeParams struct {
 	IntakeFormID uuid.UUID `json:"intake_form_id"`
 	Limit        int32     `json:"limit"`
 	Offset       int32     `json:"offset"`
 }
 
-type ListIntakeMaturityAssessmentsByIntakeRow struct {
+type ListIntakeTopicsAssessmentsByIntakeRow struct {
 	ID            uuid.UUID          `json:"id"`
 	IntakeFormID  uuid.UUID          `json:"intake_form_id"`
 	TopicID       uuid.UUID          `json:"topic_id"`
@@ -249,15 +249,15 @@ type ListIntakeMaturityAssessmentsByIntakeRow struct {
 	TopicName     string             `json:"topic_name"`
 }
 
-func (q *Queries) ListIntakeMaturityAssessmentsByIntake(ctx context.Context, arg ListIntakeMaturityAssessmentsByIntakeParams) ([]ListIntakeMaturityAssessmentsByIntakeRow, error) {
-	rows, err := q.db.Query(ctx, listIntakeMaturityAssessmentsByIntake, arg.IntakeFormID, arg.Limit, arg.Offset)
+func (q *Queries) ListIntakeTopicsAssessmentsByIntake(ctx context.Context, arg ListIntakeTopicsAssessmentsByIntakeParams) ([]ListIntakeTopicsAssessmentsByIntakeRow, error) {
+	rows, err := q.db.Query(ctx, listIntakeTopicsAssessmentsByIntake, arg.IntakeFormID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []ListIntakeMaturityAssessmentsByIntakeRow{}
+	items := []ListIntakeTopicsAssessmentsByIntakeRow{}
 	for rows.Next() {
-		var i ListIntakeMaturityAssessmentsByIntakeRow
+		var i ListIntakeTopicsAssessmentsByIntakeRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.IntakeFormID,
@@ -278,7 +278,7 @@ func (q *Queries) ListIntakeMaturityAssessmentsByIntake(ctx context.Context, arg
 	return items, nil
 }
 
-const updateIntakeMaturityAssessment = `-- name: UpdateIntakeMaturityAssessment :one
+const updateIntakeTopicsAssessment = `-- name: UpdateIntakeTopicsAssessment :one
 UPDATE intake_topic_assessments
 SET
     current_level = COALESCE($1, current_level),
@@ -288,15 +288,15 @@ WHERE id = $4
 RETURNING id, intake_form_id, topic_id, current_level, proposed_goals, notes, created_at
 `
 
-type UpdateIntakeMaturityAssessmentParams struct {
+type UpdateIntakeTopicsAssessmentParams struct {
 	CurrentLevel  *int32    `json:"current_level"`
 	ProposedGoals []byte    `json:"proposed_goals"`
 	Notes         *string   `json:"notes"`
 	ID            uuid.UUID `json:"id"`
 }
 
-func (q *Queries) UpdateIntakeMaturityAssessment(ctx context.Context, arg UpdateIntakeMaturityAssessmentParams) (IntakeTopicAssessment, error) {
-	row := q.db.QueryRow(ctx, updateIntakeMaturityAssessment,
+func (q *Queries) UpdateIntakeTopicsAssessment(ctx context.Context, arg UpdateIntakeTopicsAssessmentParams) (IntakeTopicAssessment, error) {
+	row := q.db.QueryRow(ctx, updateIntakeTopicsAssessment,
 		arg.CurrentLevel,
 		arg.ProposedGoals,
 		arg.Notes,

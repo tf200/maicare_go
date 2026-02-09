@@ -5,6 +5,7 @@ import (
 	_ "maicare_go/pagination"
 	clientp "maicare_go/service/client"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -125,5 +126,43 @@ func (s *Server) CreateIntakeFormGoalsApi(ctx *gin.Context) {
 	}
 
 	res := SuccessResponse(result, "Intake Form goals created successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
+// @Summary Update Intake Conclusion
+// @Description Accept or refuse an intake by updating intake conclusion.
+// @Tags Intake Forms
+// @Accept json
+// @Produce json
+// @Param id path uuid true "Intake Form ID"
+// @Param request body clientp.UpdateIntakeConclusionRequest true "Conclusion update payload"
+// @Success 200 {object} Response[clientp.UpdateIntakeConclusionResponse]
+// @Failure 400 {object} Response[any]
+// @Failure 500 {object} Response[any]
+// @Router /intake_forms/{id}/conclusion [patch]
+func (s *Server) UpdateIntakeConclusionApi(ctx *gin.Context) {
+	intakeFormID, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	var req clientp.UpdateIntakeConclusionRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body")))
+		return
+	}
+
+	result, err := s.businessService.ClientService.UpdateIntakeConclusion(ctx, intakeFormID, &req)
+	if err != nil {
+		if strings.Contains(err.Error(), "invalid decision") {
+			ctx.JSON(http.StatusBadRequest, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(result, "Intake conclusion updated successfully")
 	ctx.JSON(http.StatusOK, res)
 }

@@ -579,8 +579,8 @@ CREATE INDEX temporary_file_uploaded_at_idx ON temporary_file(uploaded_at);
 -- EMPLOYEE MANAGEMENT
 -- ==========================================
 
--- Employee Gender ENUM
-CREATE TYPE employee_gender_enum AS ENUM ('male', 'female', 'not_specified');
+-- Shared Gender ENUM
+CREATE TYPE gender_enum AS ENUM ('male', 'female', 'other', 'unknown');
 -- Employee Contract Type ENUM
 CREATE TYPE employee_contract_type_enum AS ENUM ('loondienst', 'ZZP', 'none');
 -- Employee profile (linked to custom_user)
@@ -606,7 +606,7 @@ CREATE TABLE employee_profile (
     date_of_birth DATE NULL,
     home_telephone_number VARCHAR(100) NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    gender employee_gender_enum NOT NULL,
+    gender gender_enum NOT NULL,
     location_id UUID NULL REFERENCES location(id) ON DELETE SET NULL,
     has_borrowed BOOLEAN NOT NULL DEFAULT FALSE,
     out_of_service BOOLEAN NULL DEFAULT FALSE,
@@ -677,18 +677,18 @@ CREATE TYPE sender_types_enum AS ENUM (
 CREATE TABLE sender (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     types sender_types_enum NOT NULL,
-    name VARCHAR(60) NOT NULL,
-    street VARCHAR(200) NULL,
-    house_number VARCHAR(20) NULL,
-    house_number_addition VARCHAR(20) NULL,
-    postal_code VARCHAR(20) NULL,
-    city VARCHAR(100) NULL,
-    land VARCHAR(20) NULL,
-    kvknumber VARCHAR(20) NULL,
-    btwnumber VARCHAR(20) NULL,
-    phone_number VARCHAR(20) NULL,
-    client_number VARCHAR(20) NULL,
-    email_address VARCHAR(20) NULL,
+    name TEXT NOT NULL,
+    street TEXT NULL,
+    house_number TEXT NULL,
+    house_number_addition TEXT NULL,
+    postal_code TEXT NULL,
+    city TEXT NULL,
+    land TEXT NULL,
+    kvknumber TEXT NULL,
+    btwnumber TEXT NULL,
+    phone_number TEXT NULL,
+    client_number TEXT NULL,
+    email_address  TEXT NULL,
     contacts JSONB NOT NULL DEFAULT '[]',
     invoice_template UUID[] NULL,
     is_archived BOOLEAN NOT NULL DEFAULT FALSE,
@@ -702,17 +702,17 @@ CREATE INDEX sender_types_idx ON sender(types);
 -- Registration forms
 -- Form Status ENUM
 CREATE TYPE form_status_enum AS ENUM ('pending', 'processed', 'rejected');
--- Client Gender ENUM
-CREATE TYPE client_gender_enum AS ENUM ('male', 'female', 'other');
--- Client Education Level ENUM
-CREATE TYPE client_education_level_enum AS ENUM ('primary', 'secondary', 'higher', 'none');
+-- Shared Education Level ENUM
+CREATE TYPE education_level_enum AS ENUM ('primary', 'secondary', 'higher', 'none');
+-- Admission Type ENUM
+CREATE TYPE admission_type_enum AS ENUM ('crisis_admission', 'regular_placement');
 CREATE TABLE registration_form (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     client_first_name VARCHAR(255) NOT NULL,
     client_last_name VARCHAR(255) NOT NULL,
     client_date_of_birth DATE NULL,
     client_bsn_number VARCHAR(50) NOT NULL,
-    client_gender client_gender_enum NOT NULL,
+    client_gender gender_enum NOT NULL,
     client_nationality VARCHAR(100) NOT NULL,
     client_phone_number VARCHAR(20) NOT NULL,
     client_email VARCHAR(255) NOT NULL,
@@ -747,7 +747,7 @@ CREATE TABLE registration_form (
     education_mentor_email VARCHAR(255) NULL,
     education_currently_enrolled BOOLEAN NOT NULL DEFAULT FALSE,
     education_additional_notes TEXT NULL,
-    education_level client_education_level_enum NULL,
+    education_level education_level_enum NOT NULL DEFAULT 'none',
     -- Work
     work_current_employer VARCHAR(255) NULL,
     work_employer_phone VARCHAR(20) NULL,
@@ -798,7 +798,7 @@ CREATE TABLE registration_form (
     processed_by_employee_id UUID NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
     intake_appointment_datetime TIMESTAMPTZ NULL,
     intake_appointment_location VARCHAR(255) NULL,
-    addmission_type VARCHAR(50) NULL CHECK (addmission_type IN ('crisis_admission', 'regular_placement')),
+    addmission_type admission_type_enum NOT NULL DEFAULT 'regular_placement',
     rejection_reason TEXT NULL
 );
 
@@ -846,11 +846,27 @@ CREATE TABLE intake_topic_assessments (
 
 
 -- Client STATUS ENUM
-CREATE TYPE client_status_enum AS ENUM ('In Care', 'On Waiting List', 'Out Of Care');
+CREATE TYPE client_status_enum AS ENUM (
+    'in_care',
+    'on_waiting_list',
+    'scheduled_in_care',
+    'scheduled_out_of_care',
+    'out_of_care'
+);
 
 
 -- Clients living Situation ENUM
 CREATE TYPE client_living_situation_enum AS ENUM ('home', 'foster_care', 'youth_care_institution', 'other');
+
+-- Client file number sequence and formatter (YYYY-00001)
+CREATE SEQUENCE client_filenumber_seq START 1;
+
+CREATE OR REPLACE FUNCTION generate_client_filenumber()
+RETURNS TEXT AS $$
+BEGIN
+    RETURN to_char(CURRENT_DATE, 'YYYY') || '-' || lpad(nextval('client_filenumber_seq')::TEXT, 5, '0');
+END;
+$$ LANGUAGE plpgsql;
 
 -- Main client details table
 CREATE TABLE client_details (
@@ -861,20 +877,30 @@ CREATE TABLE client_details (
     last_name VARCHAR(100) NOT NULL,
     date_of_birth DATE NULL,
     "identity" BOOLEAN NOT NULL DEFAULT FALSE,
-    "status" client_status_enum NOT NULL DEFAULT 'On Waiting List',
+    "status" client_status_enum NOT NULL DEFAULT 'on_waiting_list',
     bsn VARCHAR(50) NULL,
     bsn_verified_by UUID NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
-    -- source VARCHAR(100) NULL, -- Not needed now: keep intake_care_type in intake stage
+    evaluation_intarvals_weeks INT NOT NULL DEFAULT 0,
+    care_type intake_care_type_enum NULL,
+    -- source VARCHAR(100) NULL, -- Not needed now
     -- birthplace VARCHAR(100) NULL, -- Not needed now
     email VARCHAR(100) NOT NULL,
     phone_number VARCHAR(20) NULL,
     -- organization_id UUID NULL REFERENCES organisations(id) ON DELETE SET NULL, -- Not needed now
     -- departement VARCHAR(100) NULL, -- Not needed now
-    gender client_gender_enum NOT NULL,
-    filenumber VARCHAR(100) NOT NULL,
+    gender gender_enum NOT NULL,
+    filenumber VARCHAR(100) NOT NULL DEFAULT generate_client_filenumber() UNIQUE,
     -- profile_picture VARCHAR(600) NULL, -- Not needed now
     -- infix VARCHAR(100) NULL, -- Not needed now
     created_at TIMESTAMPTZ NULL DEFAULT CURRENT_TIMESTAMP,
+    placed_in_care_at TIMESTAMPTZ NULL,
+    care_start_date DATE NULL,
+    next_evaluation_date DATE GENERATED ALWAYS AS (
+        CASE
+            WHEN care_start_date IS NULL OR evaluation_intarvals_weeks <= 0 THEN NULL
+            ELSE care_start_date + (evaluation_intarvals_weeks * 7)
+        END
+    ) STORED,
     sender_id UUID NULL REFERENCES sender(id) ON DELETE SET NULL DEFAULT NULL,
     location_id UUID NULL REFERENCES location(id) ON DELETE SET NULL DEFAULT NULL,
     -- departure_reason VARCHAR(255) NULL, -- Not needed now
@@ -895,7 +921,7 @@ CREATE TABLE client_details (
     education_mentor_phone VARCHAR(50) NULL,
     education_mentor_email VARCHAR(255) NULL,
     education_additional_notes TEXT NULL,
-    education_level client_education_level_enum NOT NULL DEFAULT 'none',
+    education_level education_level_enum NOT NULL DEFAULT 'none',
     -- Work
     work_currently_employed BOOLEAN NOT NULL DEFAULT FALSE,
     work_current_employer VARCHAR(255) NULL,
@@ -923,6 +949,16 @@ CREATE TABLE client_details (
     risk_other BOOLEAN DEFAULT FALSE,
     risk_other_description TEXT,
     risk_additional_notes TEXT,
+    CONSTRAINT client_details_care_dates_required_for_care_status
+        CHECK (
+            status NOT IN ('scheduled_in_care', 'in_care')
+            OR (care_start_date IS NOT NULL AND placed_in_care_at IS NOT NULL)
+        ),
+    CONSTRAINT client_details_waiting_list_has_no_care_dates
+        CHECK (
+            status <> 'on_waiting_list'
+            OR (care_start_date IS NULL AND placed_in_care_at IS NULL)
+        ),
     UNIQUE (intake_form_id)
 );
 
@@ -930,9 +966,6 @@ CREATE INDEX client_details_sender_id_idx ON client_details(sender_id);
 CREATE INDEX client_details_location_id_idx ON client_details(location_id);
 CREATE INDEX client_details_registration_form_id_idx ON client_details(registration_form_id);
 
--- Goal evaluation cadence copied from intake at promotion time.
-ALTER TABLE client_details
-ADD COLUMN goal_evaluation_interval_weeks INT NOT NULL DEFAULT 0;
 
 -- Client goals and grouped evaluations (new model)
 CREATE TYPE client_goal_priority_enum AS ENUM ('low', 'medium', 'high');
@@ -997,6 +1030,30 @@ CREATE TABLE client_goal_evaluation_items (
 CREATE INDEX client_goal_evaluation_items_goal_created_idx ON client_goal_evaluation_items(goal_id, created_at DESC);
 CREATE INDEX client_goal_evaluation_items_evaluation_idx ON client_goal_evaluation_items(evaluation_id);
 
+-- Guardrail: cannot move a client into/scheduled for care without active goals
+CREATE OR REPLACE FUNCTION ensure_client_has_active_goals_before_care_status()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.status IN ('scheduled_in_care', 'in_care') THEN
+        IF NOT EXISTS (
+            SELECT 1
+            FROM client_goals cg
+            WHERE cg.client_id = NEW.id
+              AND cg.status = 'active'
+        ) THEN
+            RAISE EXCEPTION 'client must have at least one active goal before status %', NEW.status;
+        END IF;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+CREATE TRIGGER trigger_ensure_client_has_active_goals_before_care_status
+BEFORE INSERT OR UPDATE OF status ON client_details
+FOR EACH ROW
+EXECUTE FUNCTION ensure_client_has_active_goals_before_care_status();
+
 -- Client status history tracking
 CREATE TABLE client_status_history (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -1015,7 +1072,7 @@ CREATE INDEX idx_client_status_history_changed_at ON client_status_history(chang
 CREATE TABLE scheduled_status_changes (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
-    new_status VARCHAR(50) NULL,
+    new_status client_status_enum NULL,
     reason TEXT,
     scheduled_date DATE NULL,
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
@@ -1038,14 +1095,7 @@ CREATE TABLE client_diagnosis (
 CREATE INDEX client_diagnosis_client_id_idx ON client_diagnosis(client_id);
 CREATE INDEX client_diagnosis_diagnosis_code_idx ON client_diagnosis(diagnosis_code);
 
--- Contact relationships
-CREATE TABLE contact_relationship (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR(100) NOT NULL,
-    soft_delete BOOLEAN NOT NULL DEFAULT FALSE
-);
 
-CREATE INDEX contact_relationship_soft_delete_idx ON contact_relationship(soft_delete);
 
 -- Client Emergency Contacts Relationship Status ENUM
 CREATE TYPE relation_status_enum AS ENUM ('Primary Relationship', 'Secondary Relationship');
@@ -1568,6 +1618,9 @@ CREATE TABLE assigned_employee (
 
 CREATE INDEX assigned_employee_client_id_idx ON assigned_employee(client_id);
 CREATE INDEX assigned_employee_employee_id_idx ON assigned_employee(employee_id);
+CREATE UNIQUE INDEX assigned_employee_one_coordinator_per_client_idx
+    ON assigned_employee(client_id)
+    WHERE role = 'coordinator';
 
 -- Progress reports
 -- Progress report types ENUM

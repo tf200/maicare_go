@@ -90,6 +90,99 @@ func (q *Queries) CreateIntakeForm(ctx context.Context, arg CreateIntakeFormPara
 	return i, err
 }
 
+const createSeedIntakeForm = `-- name: CreateSeedIntakeForm :one
+INSERT INTO intake_forms (
+    registration_form_id,
+    date_of_intake,
+    care_type,
+    intake_participants,
+    family_situation,
+    psychological_state,
+    self_sufficiency,
+    sender_id,
+    assigned_location_id,
+    risk_assessment,
+    intake_conclusion,
+    intake_conclusion_notes,
+    evaluation_intervals_weeks,
+    signature
+) VALUES (
+    $1,
+    $2,
+    $3,
+    ARRAY['client','parents/guardians','care_coordinator']::intake_participants_enum[],
+    $4,
+    $5,
+    $6,
+    $7,
+    $8,
+    $9,
+    $10,
+    $11,
+    $12,
+    $13
+) RETURNING
+    id,
+    registration_form_id,
+    care_type,
+    sender_id,
+    assigned_location_id,
+    evaluation_intervals_weeks
+`
+
+type CreateSeedIntakeFormParams struct {
+	RegistrationFormID       uuid.UUID            `json:"registration_form_id"`
+	DateOfIntake             pgtype.Timestamptz   `json:"date_of_intake"`
+	CareType                 IntakeCareTypeEnum   `json:"care_type"`
+	FamilySituation          *string              `json:"family_situation"`
+	PsychologicalState       *string              `json:"psychological_state"`
+	SelfSufficiency          int32                `json:"self_sufficiency"`
+	SenderID                 *uuid.UUID           `json:"sender_id"`
+	AssignedLocationID       *uuid.UUID           `json:"assigned_location_id"`
+	RiskAssessment           *string              `json:"risk_assessment"`
+	IntakeConclusion         IntakeConclusionEnum `json:"intake_conclusion"`
+	IntakeConclusionNotes    *string              `json:"intake_conclusion_notes"`
+	EvaluationIntervalsWeeks int32                `json:"evaluation_intervals_weeks"`
+	Signature                *string              `json:"signature"`
+}
+
+type CreateSeedIntakeFormRow struct {
+	ID                       uuid.UUID          `json:"id"`
+	RegistrationFormID       uuid.UUID          `json:"registration_form_id"`
+	CareType                 IntakeCareTypeEnum `json:"care_type"`
+	SenderID                 *uuid.UUID         `json:"sender_id"`
+	AssignedLocationID       *uuid.UUID         `json:"assigned_location_id"`
+	EvaluationIntervalsWeeks int32              `json:"evaluation_intervals_weeks"`
+}
+
+func (q *Queries) CreateSeedIntakeForm(ctx context.Context, arg CreateSeedIntakeFormParams) (CreateSeedIntakeFormRow, error) {
+	row := q.db.QueryRow(ctx, createSeedIntakeForm,
+		arg.RegistrationFormID,
+		arg.DateOfIntake,
+		arg.CareType,
+		arg.FamilySituation,
+		arg.PsychologicalState,
+		arg.SelfSufficiency,
+		arg.SenderID,
+		arg.AssignedLocationID,
+		arg.RiskAssessment,
+		arg.IntakeConclusion,
+		arg.IntakeConclusionNotes,
+		arg.EvaluationIntervalsWeeks,
+		arg.Signature,
+	)
+	var i CreateSeedIntakeFormRow
+	err := row.Scan(
+		&i.ID,
+		&i.RegistrationFormID,
+		&i.CareType,
+		&i.SenderID,
+		&i.AssignedLocationID,
+		&i.EvaluationIntervalsWeeks,
+	)
+	return i, err
+}
+
 const getIntakeForm = `-- name: GetIntakeForm :one
 SELECT id, registration_form_id, date_of_intake, care_type, intake_participants, family_situation, psychological_state, self_sufficiency, sender_id, assigned_location_id, risk_assessment, intake_conclusion, intake_conclusion_notes, evaluation_intervals_weeks, signature, created_at, updated_at FROM intake_forms
 WHERE id = $1
@@ -163,7 +256,12 @@ SELECT
     l.house_number AS location_house_number,
     l.house_number_addition AS location_house_number_addition,
     l.postal_code AS location_postal_code,
-    l.city AS location_city
+    l.city AS location_city,
+    EXISTS (
+        SELECT 1
+        FROM client_details cd
+        WHERE cd.intake_form_id = i.id
+    ) AS has_client
 FROM intake_forms i
 JOIN registration_form r ON i.registration_form_id = r.id
 LEFT JOIN sender s ON i.sender_id = s.id
@@ -201,6 +299,7 @@ type GetIntakeFormDetailsRow struct {
 	LocationHouseNumberAddition *string                  `json:"location_house_number_addition"`
 	LocationPostalCode          *string                  `json:"location_postal_code"`
 	LocationCity                *string                  `json:"location_city"`
+	HasClient                   bool                     `json:"has_client"`
 }
 
 func (q *Queries) GetIntakeFormDetails(ctx context.Context, id uuid.UUID) (GetIntakeFormDetailsRow, error) {
@@ -235,6 +334,7 @@ func (q *Queries) GetIntakeFormDetails(ctx context.Context, id uuid.UUID) (GetIn
 		&i.LocationHouseNumberAddition,
 		&i.LocationPostalCode,
 		&i.LocationCity,
+		&i.HasClient,
 	)
 	return i, err
 }
@@ -349,4 +449,45 @@ func (q *Queries) ListIntakeForms(ctx context.Context, arg ListIntakeFormsParams
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateIntakeConclusion = `-- name: UpdateIntakeConclusion :one
+UPDATE intake_forms
+SET
+    intake_conclusion = $2,
+    intake_conclusion_notes = COALESCE($3, intake_conclusion_notes),
+    updated_at = NOW()
+WHERE id = $1
+RETURNING id, registration_form_id, date_of_intake, care_type, intake_participants, family_situation, psychological_state, self_sufficiency, sender_id, assigned_location_id, risk_assessment, intake_conclusion, intake_conclusion_notes, evaluation_intervals_weeks, signature, created_at, updated_at
+`
+
+type UpdateIntakeConclusionParams struct {
+	ID                    uuid.UUID            `json:"id"`
+	IntakeConclusion      IntakeConclusionEnum `json:"intake_conclusion"`
+	IntakeConclusionNotes *string              `json:"intake_conclusion_notes"`
+}
+
+func (q *Queries) UpdateIntakeConclusion(ctx context.Context, arg UpdateIntakeConclusionParams) (IntakeForm, error) {
+	row := q.db.QueryRow(ctx, updateIntakeConclusion, arg.ID, arg.IntakeConclusion, arg.IntakeConclusionNotes)
+	var i IntakeForm
+	err := row.Scan(
+		&i.ID,
+		&i.RegistrationFormID,
+		&i.DateOfIntake,
+		&i.CareType,
+		&i.IntakeParticipants,
+		&i.FamilySituation,
+		&i.PsychologicalState,
+		&i.SelfSufficiency,
+		&i.SenderID,
+		&i.AssignedLocationID,
+		&i.RiskAssessment,
+		&i.IntakeConclusion,
+		&i.IntakeConclusionNotes,
+		&i.EvaluationIntervalsWeeks,
+		&i.Signature,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }

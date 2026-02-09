@@ -8,17 +8,17 @@ func (server *Server) setupClientRoutes(baseRouter *gin.RouterGroup) {
 	{
 		clientsGroup.POST("", server.RBACMiddleware("CLIENT.CREATE"), server.CreateClientApi)
 		clientsGroup.GET("", server.RBACMiddleware("CLIENT.VIEW"), server.ListClientsApi)
+		clientsGroup.GET("/waiting-list", server.RBACMiddleware("CLIENT.VIEW"), server.ListWaitingListClientsApi)
 		clientsGroup.GET("/counts", server.RBACMiddleware("CLIENT.VIEW"), server.GetClientsCountApi)
 	}
 	{
 		clientsGroup.GET("/:id", server.RBACMiddleware("CLIENT.VIEW"), server.AuditMiddleware(), server.GetClientApi)
 		clientsGroup.PUT("/:id", server.RBACMiddleware("CLIENT.UPDATE"), server.UpdateClientApi)
 
-		clientsGroup.PUT("/:id/profile_picture", server.RBACMiddleware("CLIENT.UPDATE"), server.SetClientProfilePictureApi)
-
 		clientsGroup.GET("/:id/addresses", server.RBACMiddleware("CLIENT.VIEW"), server.GetClientAddressesApi)
 
 		clientsGroup.PUT("/:id/status", server.RBACMiddleware("CLIENT.STATUS.UPDATE"), server.UpdateClientStatusApi)
+		clientsGroup.PUT("/:id/put-in-care", server.RBACMiddleware("CLIENT.STATUS.UPDATE"), server.PutClientInCareApi)
 		clientsGroup.GET("/:id/status_history", server.RBACMiddleware("CLIENT.VIEW"), server.ListStatusHistoryApi)
 
 		clientsGroup.POST("/:id/documents", server.RBACMiddleware("CLIENT.CREATE"), server.AddClientDocumentApi)

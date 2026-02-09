@@ -63,9 +63,9 @@ func (s *clientService) GenerateIntakeGoals(ctx context.Context, req *GenerateIn
 	}
 
 	// 3. Get level description from maturity matrix
-	level, err := s.Store.GetLevelDescription(ctx, db.GetLevelDescriptionParams{
+	level, err := s.Store.GetTopicLevel(ctx, db.GetTopicLevelParams{
 		ID:    req.TopicID,
-		Level: fmt.Sprintf("%d", req.CurrentLevel),
+		Level: int32(req.CurrentLevel),
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelWarn, "GenerateIntakeGoals", "Failed to get level description", zap.Error(err))

@@ -1,4 +1,10 @@
 
+SEED_ORGANISATIONS ?= 6
+SEED_LOCATIONS_PER_ORG ?= 2
+SEED_SENDERS ?= 12
+SEED_REGISTRATION_FORMS ?= 25
+SEED_WAITING_LIST_CLIENTS ?= 12
+
 migrateup:
 	migrate -path db/migrations -database "postgresql://maicare:maicare@localhost:5432/maicare?sslmode=disable" -verbose up 1
 
@@ -30,6 +36,9 @@ roles:
 admin:
 	go run cmd/admin/main.go
 
+seed:
+	go run cmd/seed/main.go -organisations $(SEED_ORGANISATIONS) -locations-per-org $(SEED_LOCATIONS_PER_ORG) -senders $(SEED_SENDERS) -count $(SEED_REGISTRATION_FORMS) -waiting-list-clients $(SEED_WAITING_LIST_CLIENTS)
+
 
 push:
 	sudo docker build -t taha541/maicare:back . && sudo docker push taha541/maicare:back && git push
@@ -50,4 +59,4 @@ mocks:
 	go generate ./...
 
 
-.PHONY: postgres createdb dropdb migrateup migratedown sqlc server mockdb swaggerrest_post roles admin push migrateforce update-proto generate-grpc lint mocks
+.PHONY: postgres createdb dropdb migrateup migratedown sqlc server mockdb swaggerrest_post roles admin seed push migrateforce update-proto generate-grpc lint mocks

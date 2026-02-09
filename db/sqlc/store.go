@@ -32,7 +32,7 @@ func (store *Store) ExecTx(ctx context.Context, fn TxFn) error {
 	employeeID := infra.GetEmployeeID(ctx)
 
 	if employeeID != uuid.Nil {
-		_, err = tx.Exec(ctx, "SET LOCAL myapp.current_employee_id = $1", employeeID)
+		_, err = tx.Exec(ctx, "SELECT set_config('myapp.current_employee_id', $1, true)", employeeID.String())
 		if err != nil {
 			if rbErr := tx.Rollback(ctx); rbErr != nil {
 				return rbErr

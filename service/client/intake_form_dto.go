@@ -119,4 +119,17 @@ type GetIntakeFormResponse struct {
 	SenderName               *string                     `json:"sender_name"`
 	Location                 *IntakeFormLocationDetails  `json:"location"`
 	IntakeGoalsAssigned      []IntakeGoalTopic           `json:"intake_goals_assigned"`
+	HasClient                bool                        `json:"has_client"`
+}
+
+type UpdateIntakeConclusionRequest struct {
+	Decision              string  `json:"decision" binding:"required,oneof=accept refuse"`
+	IntakeConclusionNotes *string `json:"intake_conclusion_notes"`
+}
+
+type UpdateIntakeConclusionResponse struct {
+	ID                    uuid.UUID               `json:"id"`
+	IntakeConclusion      db.IntakeConclusionEnum `json:"intake_conclusion"`
+	IntakeConclusionNotes *string                 `json:"intake_conclusion_notes"`
+	UpdatedAt             time.Time               `json:"updated_at"`
 }

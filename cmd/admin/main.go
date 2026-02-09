@@ -99,10 +99,10 @@ func createCustomUser(ctx context.Context, store *db.Store, email string, passwo
 
 func seedEmployeeProfiles(ctx context.Context, store *db.Store, user *db.CustomUser, location *db.Location) (*db.EmployeeProfile, error) {
 
-	genders := []db.EmployeeGenderEnum{
-		db.EmployeeGenderEnumMale,
-		db.EmployeeGenderEnumFemale,
-		db.EmployeeGenderEnumNotSpecified,
+	genders := []db.GenderEnum{
+		db.GenderEnumMale,
+		db.GenderEnumFemale,
+		db.GenderEnumOther,
 	}
 
 	contractTypes := []db.EmployeeContractTypeEnum{
