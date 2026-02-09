@@ -16,6 +16,11 @@ The script currently seeds the following, in this order:
 4. `registration_form`
 5. `intake_forms` + `intake_topic_assessments` (suitable only)
 6. `client_details` (promoted to **On Waiting List**)
+7. `client_details` promoted to **In Care** with:
+   - care dates (`placed_in_care_at`, `care_start_date`)
+   - coordinator assignment (`assigned_employee` with role `coordinator`)
+   - approved active contract (`contract`)
+8. `client_goal_evaluations` + `client_goal_evaluation_items` for in-care clients
 
 This order is intentional and should be kept for FK safety when future tables are added.
 
@@ -43,7 +48,13 @@ go run cmd/seed/main.go -organisations 6 -locations-per-org 2 -senders 12 -count
 Example with waiting list clients:
 
 ```bash
-go run cmd/seed/main.go -organisations 6 -locations-per-org 2 -senders 12 -count 30 -waiting-list-clients 20
+go run cmd/seed/main.go -organisations 6 -locations-per-org 2 -senders 12 -count 30 -waiting-list-clients 20 -in-care-clients 8
+```
+
+Example with in-care evaluations:
+
+```bash
+go run cmd/seed/main.go -in-care-clients 8 -evaluations-per-in-care-client 2
 ```
 
 ## CLI Flags
@@ -53,9 +64,26 @@ go run cmd/seed/main.go -organisations 6 -locations-per-org 2 -senders 12 -count
 - `-senders`: number of senders to create (default: `12`)
 - `-count`: number of registration forms to create (default: `25`)
 - `-waiting-list-clients`: number of clients to create through intake->client promotion flow (default: `12`)
+- `-in-care-clients`: number of clients to create and promote to in-care pattern (default: `6`)
+- `-evaluations-per-in-care-client`: goal evaluations to create per in-care client (default: `2`)
 - `-seed`: random seed value (default: current timestamp)
 - `-timeout`: overall seed timeout duration (default: `10m`)
 - `-db`: explicit DB connection string
+
+## In-Care Data Pattern
+
+For each requested in-care client, the seeder performs a realistic flow:
+
+1. Seeds a regular waiting-list client through registration + intake + goals.
+2. Promotes that client to status `in_care` using `PutClientInCare`.
+3. Creates a dedicated coordinator user/profile and assigns them as main coordinator.
+4. Creates an `approved` contract with pricing/hours fields aligned to care type constraints.
+5. Seeds compact goal-evaluation history per in-care client:
+   - tries to create one `completed` evaluation when the 14-day completion window allows it
+   - fills the remainder as `draft` evaluations
+   - adds `client_goal_evaluation_items` for each active goal
+
+This keeps seeded in-care clients compatible with in-care listing endpoints and dashboard logic.
 
 DB connection fallback order:
 

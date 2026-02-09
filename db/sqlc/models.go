@@ -762,6 +762,49 @@ func (ns NullEmployeeContractTypeEnum) Value() (driver.Value, error) {
 	return string(ns.EmployeeContractTypeEnum), nil
 }
 
+type EvaluationStatusEnum string
+
+const (
+	EvaluationStatusEnumDraft     EvaluationStatusEnum = "draft"
+	EvaluationStatusEnumCompleted EvaluationStatusEnum = "completed"
+	EvaluationStatusEnumArchived  EvaluationStatusEnum = "archived"
+)
+
+func (e *EvaluationStatusEnum) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = EvaluationStatusEnum(s)
+	case string:
+		*e = EvaluationStatusEnum(s)
+	default:
+		return fmt.Errorf("unsupported scan type for EvaluationStatusEnum: %T", src)
+	}
+	return nil
+}
+
+type NullEvaluationStatusEnum struct {
+	EvaluationStatusEnum EvaluationStatusEnum `json:"evaluation_status_enum"`
+	Valid                bool                 `json:"valid"` // Valid is true if EvaluationStatusEnum is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullEvaluationStatusEnum) Scan(value interface{}) error {
+	if value == nil {
+		ns.EvaluationStatusEnum, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.EvaluationStatusEnum.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullEvaluationStatusEnum) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.EvaluationStatusEnum), nil
+}
+
 type FinancingActEnum string
 
 const (
@@ -1565,11 +1608,10 @@ func (ns NullPhysicalInjuryEnum) Value() (driver.Value, error) {
 type PriceTimeUnitEnum string
 
 const (
-	PriceTimeUnitEnumMinute  PriceTimeUnitEnum = "minute"
-	PriceTimeUnitEnumHourly  PriceTimeUnitEnum = "hourly"
-	PriceTimeUnitEnumDaily   PriceTimeUnitEnum = "daily"
-	PriceTimeUnitEnumWeekly  PriceTimeUnitEnum = "weekly"
-	PriceTimeUnitEnumMonthly PriceTimeUnitEnum = "monthly"
+	PriceTimeUnitEnumMinute PriceTimeUnitEnum = "minute"
+	PriceTimeUnitEnumHourly PriceTimeUnitEnum = "hourly"
+	PriceTimeUnitEnumDaily  PriceTimeUnitEnum = "daily"
+	PriceTimeUnitEnumWeekly PriceTimeUnitEnum = "weekly"
 )
 
 func (e *PriceTimeUnitEnum) Scan(src interface{}) error {
@@ -2051,7 +2093,7 @@ type ClientDetail struct {
 	Status                     ClientStatusEnum       `json:"status"`
 	Bsn                        *string                `json:"bsn"`
 	BsnVerifiedBy              *uuid.UUID             `json:"bsn_verified_by"`
-	EvaluationIntarvalsWeeks   int32                  `json:"evaluation_intarvals_weeks"`
+	EvaluationIntervalsWeeks   int32                  `json:"evaluation_intervals_weeks"`
 	CareType                   NullIntakeCareTypeEnum `json:"care_type"`
 	Email                      string                 `json:"email"`
 	PhoneNumber                *string                `json:"phone_number"`
@@ -2060,6 +2102,7 @@ type ClientDetail struct {
 	CreatedAt                  pgtype.Timestamptz     `json:"created_at"`
 	PlacedInCareAt             pgtype.Timestamptz     `json:"placed_in_care_at"`
 	CareStartDate              pgtype.Date            `json:"care_start_date"`
+	LastEvaluationAnchorDate   pgtype.Date            `json:"last_evaluation_anchor_date"`
 	NextEvaluationDate         pgtype.Date            `json:"next_evaluation_date"`
 	SenderID                   *uuid.UUID             `json:"sender_id"`
 	LocationID                 *uuid.UUID             `json:"location_id"`
@@ -2152,16 +2195,17 @@ type ClientGoal struct {
 }
 
 type ClientGoalEvaluation struct {
-	ID                      uuid.UUID          `json:"id"`
-	ClientID                uuid.UUID          `json:"client_id"`
-	EvaluationDate          pgtype.Date        `json:"evaluation_date"`
-	PeriodStart             pgtype.Date        `json:"period_start"`
-	PeriodEnd               pgtype.Date        `json:"period_end"`
-	EvaluationIntervalWeeks int32              `json:"evaluation_interval_weeks"`
-	OverallNotes            *string            `json:"overall_notes"`
-	CreatedByEmployeeID     *uuid.UUID         `json:"created_by_employee_id"`
-	CreatedAt               pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt               pgtype.Timestamptz `json:"updated_at"`
+	ID                      uuid.UUID            `json:"id"`
+	ClientID                uuid.UUID            `json:"client_id"`
+	EvaluationDate          pgtype.Date          `json:"evaluation_date"`
+	PeriodStart             pgtype.Date          `json:"period_start"`
+	PeriodEnd               pgtype.Date          `json:"period_end"`
+	EvaluationIntervalWeeks int32                `json:"evaluation_interval_weeks"`
+	Status                  EvaluationStatusEnum `json:"status"`
+	OverallNotes            *string              `json:"overall_notes"`
+	CreatedByEmployeeID     *uuid.UUID           `json:"created_by_employee_id"`
+	CreatedAt               pgtype.Timestamptz   `json:"created_at"`
+	UpdatedAt               pgtype.Timestamptz   `json:"updated_at"`
 }
 
 type ClientGoalEvaluationItem struct {
@@ -2269,7 +2313,7 @@ type Contract struct {
 	Price           float64             `json:"price"`
 	PriceTimeUnit   PriceTimeUnitEnum   `json:"price_time_unit"`
 	Hours           *float64            `json:"hours"`
-	HoursType       HoursTypeEnum       `json:"hours_type"`
+	HoursType       NullHoursTypeEnum   `json:"hours_type"`
 	CareName        string              `json:"care_name"`
 	CareType        CareTypeEnum        `json:"care_type"`
 	ClientID        uuid.UUID           `json:"client_id"`

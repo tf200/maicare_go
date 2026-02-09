@@ -141,3 +141,46 @@ func (q *Queries) CreateClientGoalsFromIntakeAssessments(ctx context.Context, ar
 	}
 	return items, nil
 }
+
+const listActiveGoalsByClientID = `-- name: ListActiveGoalsByClientID :many
+SELECT id, client_id, title, description, priority, status, topic_id, topic_name_snapshot, source, origin_intake_assessment_id, sort_order, created_at, updated_at, archived_at
+FROM client_goals
+WHERE client_id = $1
+  AND status = 'active'
+ORDER BY sort_order
+`
+
+func (q *Queries) ListActiveGoalsByClientID(ctx context.Context, clientID uuid.UUID) ([]ClientGoal, error) {
+	rows, err := q.db.Query(ctx, listActiveGoalsByClientID, clientID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ClientGoal{}
+	for rows.Next() {
+		var i ClientGoal
+		if err := rows.Scan(
+			&i.ID,
+			&i.ClientID,
+			&i.Title,
+			&i.Description,
+			&i.Priority,
+			&i.Status,
+			&i.TopicID,
+			&i.TopicNameSnapshot,
+			&i.Source,
+			&i.OriginIntakeAssessmentID,
+			&i.SortOrder,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.ArchivedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

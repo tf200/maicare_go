@@ -117,6 +117,7 @@ DROP TYPE IF EXISTS contract_status_enum CASCADE;
 DROP TYPE IF EXISTS client_location_transfer_status_enum CASCADE;
 DROP TYPE IF EXISTS client_document_label_enum CASCADE;
 DROP TYPE IF EXISTS relation_status_enum CASCADE;
+DROP TYPE IF EXISTS evaluation_status_enum CASCADE;
 DROP TYPE IF EXISTS client_goal_progress_enum CASCADE;
 DROP TYPE IF EXISTS client_goal_source_enum CASCADE;
 DROP TYPE IF EXISTS client_goal_status_enum CASCADE;

@@ -95,6 +95,35 @@ func (server *Server) ListWaitingListClientsApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
+// ListInCareClientsApi lists clients that are in care or scheduled in care
+// @Summary List in-care clients
+// @Tags clients
+// @Produce json
+// @Param search query string false "Search by first or last name (max 120 chars)"
+// @Param status query []string false "Status filter" Enums(in_care, scheduled_in_care)
+// @Param sort_days_in_care query string false "Sort by days_in_care: asc|desc (default: desc)"
+// @Param page query int true "Page number (min 1)"
+// @Param page_size query int true "Page size (min 5, max 100)"
+// @Success 200 {object} Response[pagination.Response[clientp.ListInCareClientsResponse]]
+// @Failure 400,404,500 {object} Response[clientp.ListInCareClientsResponse]
+// @Router /clients/in-care [get]
+func (server *Server) ListInCareClientsApi(ctx *gin.Context) {
+	var req clientp.ListInCareClientsParams
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid query parameters: %v", err)))
+		return
+	}
+
+	result, err := server.businessService.ClientService.ListInCareClients(ctx, req)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to list in-care clients: %v", err)))
+		return
+	}
+
+	res := SuccessResponse(result, "In-care clients fetched successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
 // GetClientsCountApi gets the count of clients
 // @Summary Get the count of clients
 // @Tags clients
@@ -510,5 +539,126 @@ func (server *Server) ListLocationTransferRequestsApi(ctx *gin.Context) {
 	}
 
 	res := SuccessResponse(pag, "Location transfer requests fetched successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
+// ListUpcomingEvaluationsApi lists upcoming evaluations for the logged-in coordinator
+// @Summary List upcoming evaluations for coordinator
+// @Tags evaluations
+// @Produce json
+// @Param page query int true "Page number"
+// @Param page_size query int true "Page size"
+// @Success 200 {object} Response[pagination.Response[clientp.ListUpcomingEvaluationsResponse]]
+// @Failure 400,500 {object} Response[any]
+// @Router /evaluations/upcoming [get]
+func (server *Server) ListUpcomingEvaluationsApi(ctx *gin.Context) {
+	payload, err := GetAuthPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
+	var req clientp.ListUpcomingEvaluationsRequest
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	result, err := server.businessService.ClientService.ListUpcomingEvaluations(ctx, payload.EmployeeID, req)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(result, "Upcoming evaluations fetched successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
+// GetGoalEvaluationBootstrapApi returns create-screen bootstrap data for a client
+// @Summary Get goal evaluation bootstrap data
+// @Tags evaluations
+// @Produce json
+// @Param id path string true "Client ID"
+// @Success 200 {object} Response[clientp.GoalEvaluationBootstrapResponse]
+// @Failure 400,500 {object} Response[any]
+// @Router /clients/{id}/evaluations/bootstrap [get]
+func (server *Server) GetGoalEvaluationBootstrapApi(ctx *gin.Context) {
+	clientID, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid client ID")))
+		return
+	}
+
+	result, err := server.businessService.ClientService.GetGoalEvaluationBootstrap(ctx, clientID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(result, "Goal evaluation bootstrap fetched successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
+// ListRecentSubmittedEvaluationsApi lists recently submitted evaluations for the logged-in user
+// @Summary List recent submitted evaluations
+// @Tags evaluations
+// @Produce json
+// @Param page query int true "Page number"
+// @Param page_size query int true "Page size"
+// @Success 200 {object} Response[pagination.Response[clientp.ListRecentSubmittedEvaluationsResponse]]
+// @Failure 400,500 {object} Response[any]
+// @Router /evaluations/recent-submitted [get]
+func (server *Server) ListRecentSubmittedEvaluationsApi(ctx *gin.Context) {
+	payload, err := GetAuthPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
+	var req clientp.ListRecentSubmittedEvaluationsRequest
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	result, err := server.businessService.ClientService.ListRecentSubmittedEvaluations(ctx, payload.EmployeeID, req)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(result, "Recent submitted evaluations fetched successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
+// ListRecentDraftEvaluationsApi lists recent draft evaluations for the logged-in user
+// @Summary List recent draft evaluations
+// @Tags evaluations
+// @Produce json
+// @Param page query int true "Page number"
+// @Param page_size query int true "Page size"
+// @Success 200 {object} Response[pagination.Response[clientp.ListRecentDraftEvaluationsResponse]]
+// @Failure 400,500 {object} Response[any]
+// @Router /evaluations/recent-drafts [get]
+func (server *Server) ListRecentDraftEvaluationsApi(ctx *gin.Context) {
+	payload, err := GetAuthPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
+	var req clientp.ListRecentDraftEvaluationsRequest
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	result, err := server.businessService.ClientService.ListRecentDraftEvaluations(ctx, payload.EmployeeID, req)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(result, "Recent draft evaluations fetched successfully")
 	ctx.JSON(http.StatusOK, res)
 }

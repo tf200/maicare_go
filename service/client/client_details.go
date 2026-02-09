@@ -127,18 +127,14 @@ func (s *clientService) ListClientDetails(ctx *gin.Context, req ListClientsApiPa
 			ID:           client.ID,
 			FirstName:    client.FirstName,
 			LastName:     client.LastName,
-			DateOfBirth:  client.DateOfBirth.Time,
-			Identity:     client.Identity,
-			Status:       string(client.Status),
 			Bsn:          client.Bsn,
-			Email:        client.Email,
-			PhoneNumber:  client.PhoneNumber,
-			Gender:       string(client.Gender),
 			Filenumber:   client.Filenumber,
-			CreatedAt:    client.CreatedAt.Time,
-			SenderID:     client.SenderID,
-			LocationID:   client.LocationID,
 			LocationName: client.LocationName,
+			CareType:     db.IntakeCareTypePtrFromEnum(client.CareType),
+			Status:       string(client.Status),
+			GoalsCount:   client.GoalsCount,
+			RiskCount:    client.RiskCount,
+			CreatedAt:    client.CreatedAt.Time,
 		}
 	}
 	pagObj := pagination.NewResponse(ctx, req.Request, clientList, totalCount)
@@ -193,6 +189,77 @@ func (s *clientService) ListWaitingListClients(ctx *gin.Context, req ListWaiting
 			DaysInWaitlist: client.DaysInWaitlist,
 			AdmissionType:  admissionType,
 			Bsn:            client.Bsn,
+		}
+	}
+
+	pagObj := pagination.NewResponse(ctx, req.Request, response, totalCount)
+	return &pagObj, nil
+}
+
+func (s *clientService) ListInCareClients(ctx *gin.Context, req ListInCareClientsParams) (*pagination.Response[ListInCareClientsResponse], error) {
+	params := req.GetParams()
+	sortDaysInCare := "desc"
+	if req.SortDaysInCare != nil {
+		sortDaysInCare = *req.SortDaysInCare
+	}
+
+	var statusFilters []db.ClientStatusEnum
+	if len(req.Status) > 0 {
+		statusFilters = make([]db.ClientStatusEnum, len(req.Status))
+		for i, status := range req.Status {
+			statusFilters[i] = db.ClientStatusEnum(status)
+		}
+	}
+
+	var clients []db.ListInCareClientsRow
+	err := s.Store.ExecTx(ctx, func(q *db.Queries) error {
+		var err error
+		clients, err = q.ListInCareClients(ctx, db.ListInCareClientsParams{
+			Search:         req.Search,
+			Status:         statusFilters,
+			SortDaysInCare: sortDaysInCare,
+			Limit:          params.Limit,
+			Offset:         params.Offset,
+		})
+		return err
+	})
+	if err != nil {
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListInCareClients",
+			"Failed to list in-care clients", zap.Error(err))
+		return nil, fmt.Errorf("failed to list in-care clients")
+	}
+
+	if len(clients) == 0 {
+		pagObj := pagination.NewResponse(ctx, req.Request, []ListInCareClientsResponse{}, 0)
+		return &pagObj, nil
+	}
+
+	totalCount := clients[0].TotalCount
+	response := make([]ListInCareClientsResponse, len(clients))
+	for i, client := range clients {
+		var careStartDate *time.Time
+		if client.CareStartDate.Valid {
+			t := client.CareStartDate.Time
+			careStartDate = &t
+		}
+
+		var coordinatorName *string
+		if client.CoordinatorName != "" {
+			name := client.CoordinatorName
+			coordinatorName = &name
+		}
+
+		response[i] = ListInCareClientsResponse{
+			ID:                client.ID,
+			Bsn:               client.Bsn,
+			FirstName:         client.FirstName,
+			LastName:          client.LastName,
+			CoordinatorName:   coordinatorName,
+			LocationName:      client.LocationName,
+			Status:            string(client.Status),
+			CareStartDate:     careStartDate,
+			DaysInCare:        client.DaysInCare,
+			HasActiveContract: client.HasActiveContract,
 		}
 	}
 

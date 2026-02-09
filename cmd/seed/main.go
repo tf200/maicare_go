@@ -21,9 +21,14 @@ import (
 type SeedData struct {
 	OrganisationIDs     []uuid.UUID
 	RegistrationFormIDs []uuid.UUID
+	NextRegistrationIdx int
 	IntakeFormIDs       []uuid.UUID
 	ClientIDs           []uuid.UUID
+	InCareClientIDs     []uuid.UUID
+	EvaluationIDs       []uuid.UUID
 	EmployeeIDs         []uuid.UUID
+	CoordinatorIDs      []uuid.UUID
+	ClientCoordinators  map[uuid.UUID]uuid.UUID
 	AttachmentIDs       []uuid.UUID
 	LocationIDs         []uuid.UUID
 	SenderIDs           []uuid.UUID
@@ -37,7 +42,9 @@ type Seeder struct {
 func newSeeder(store *db.Store) *Seeder {
 	return &Seeder{
 		store: store,
-		data:  &SeedData{},
+		data: &SeedData{
+			ClientCoordinators: make(map[uuid.UUID]uuid.UUID),
+		},
 	}
 }
 
@@ -70,8 +77,9 @@ func (s *Seeder) SeedWaitingListClients(ctx context.Context, count int) error {
 		return fmt.Errorf("no locations available; seed locations first")
 	}
 
-	if len(s.data.RegistrationFormIDs) < count {
-		missing := count - len(s.data.RegistrationFormIDs)
+	requiredRegistrationForms := s.data.NextRegistrationIdx + count
+	if len(s.data.RegistrationFormIDs) < requiredRegistrationForms {
+		missing := requiredRegistrationForms - len(s.data.RegistrationFormIDs)
 		if err := s.SeedRegistrationForms(ctx, missing); err != nil {
 			return fmt.Errorf("create additional registration forms: %w", err)
 		}
@@ -89,7 +97,7 @@ func (s *Seeder) SeedWaitingListClients(ctx context.Context, count int) error {
 		if (i+1)%10 == 0 || i == 0 || i+1 == count {
 			fmt.Printf("[seed] waiting-list clients: %d/%d\n", i+1, count)
 		}
-		registrationFormID := s.data.RegistrationFormIDs[i]
+		registrationFormID := s.data.RegistrationFormIDs[s.data.NextRegistrationIdx+i]
 
 		var createdIntakeID uuid.UUID
 		var createdClientID uuid.UUID
@@ -216,7 +224,7 @@ func (s *Seeder) SeedWaitingListClients(ctx context.Context, count int) error {
 				RiskOther:                  registrationForm.RiskOther,
 				RiskOtherDescription:       registrationForm.RiskOtherDescription,
 				RiskAdditionalNotes:        registrationForm.RiskAdditionalNotes,
-				EvaluationIntarvalsWeeks:   intakeForm.EvaluationIntervalsWeeks,
+				EvaluationIntervalsWeeks:   intakeForm.EvaluationIntervalsWeeks,
 			})
 			if err != nil {
 				return fmt.Errorf("create client details: %w", err)
@@ -276,7 +284,381 @@ func (s *Seeder) SeedWaitingListClients(ctx context.Context, count int) error {
 		s.data.ClientIDs = append(s.data.ClientIDs, createdClientID)
 	}
 
+	s.data.NextRegistrationIdx += count
+
 	return nil
+}
+
+func (s *Seeder) SeedInCareClients(ctx context.Context, count int) error {
+	if count <= 0 {
+		return nil
+	}
+
+	startClientCount := len(s.data.ClientIDs)
+	if err := s.SeedWaitingListClients(ctx, count); err != nil {
+		return fmt.Errorf("seed base waiting-list clients for in-care flow: %w", err)
+	}
+
+	if len(s.data.ClientIDs) < startClientCount+count {
+		return fmt.Errorf("expected %d newly seeded clients, got %d", count, len(s.data.ClientIDs)-startClientCount)
+	}
+
+	promotedClientIDs := append([]uuid.UUID(nil), s.data.ClientIDs[startClientCount:]...)
+
+	for i, clientID := range promotedClientIDs {
+		if (i+1)%10 == 0 || i == 0 || i+1 == len(promotedClientIDs) {
+			fmt.Printf("[seed] in-care clients: %d/%d\n", i+1, len(promotedClientIDs))
+		}
+
+		err := s.store.ExecTx(ctx, func(q *db.Queries) error {
+			client, err := q.GetClientDetails(ctx, clientID)
+			if err != nil {
+				return fmt.Errorf("get client details: %w", err)
+			}
+
+			careStartDate := randomRecentDate(90)
+			placedInCareAt := careStartDate.AddDate(0, 0, -gofakeit.Number(1, 14))
+
+			if _, err := q.PutClientInCare(ctx, db.PutClientInCareParams{
+				ID:             client.ID,
+				Status:         db.ClientStatusEnumInCare,
+				CareStartDate:  pgDate(careStartDate),
+				PlacedInCareAt: pgTimestamptz(placedInCareAt),
+			}); err != nil {
+				return fmt.Errorf("put client in care: %w", err)
+			}
+
+			coordinatorID, err := s.createSeedCoordinatorProfile(ctx, q, client.LocationID)
+			if err != nil {
+				return fmt.Errorf("create coordinator profile: %w", err)
+			}
+
+			if _, err := q.UpsertMainCoordinator(ctx, db.UpsertMainCoordinatorParams{
+				ClientID:   client.ID,
+				EmployeeID: coordinatorID,
+				StartDate:  pgDate(careStartDate),
+			}); err != nil {
+				return fmt.Errorf("upsert main coordinator: %w", err)
+			}
+
+			contractCareType, priceUnit, hours, hoursType := contractSettingsFromIntakeCareType(client.CareType)
+			price := float64(gofakeit.Number(450, 1800))
+			careName := "Residential care placement"
+			if contractCareType == db.CareTypeEnumAmbulante {
+				price = float64(gofakeit.Number(45, 125))
+				careName = "Ambulatory guidance"
+			}
+
+			if _, err := q.CreateContract(ctx, db.CreateContractParams{
+				TypeID:          nil,
+				Status:          db.ContractStatusEnumApproved,
+				StartDate:       pgTimestamptz(careStartDate),
+				EndDate:         pgTimestamptz(careStartDate.AddDate(0, gofakeit.Number(4, 12), 0)),
+				ReminderPeriod:  90,
+				Vat:             nil,
+				Price:           price,
+				PriceTimeUnit:   priceUnit,
+				Hours:           hours,
+				HoursType:       hoursType,
+				CareName:        careName,
+				CareType:        contractCareType,
+				ClientID:        client.ID,
+				SenderID:        client.SenderID,
+				AttachmentIds:   []uuid.UUID{},
+				FinancingAct:    db.FinancingActEnumWMO,
+				FinancingOption: db.FinancingOptionEnumPGB,
+			}); err != nil {
+				return fmt.Errorf("create approved contract: %w", err)
+			}
+
+			return nil
+		})
+		if err != nil {
+			return fmt.Errorf("seed in-care client %d: %w", i+1, err)
+		}
+
+		s.data.InCareClientIDs = append(s.data.InCareClientIDs, clientID)
+		s.data.ClientCoordinators[clientID] = s.data.CoordinatorIDs[len(s.data.CoordinatorIDs)-1]
+	}
+
+	return nil
+}
+
+func (s *Seeder) SeedGoalEvaluationsForInCareClients(ctx context.Context, evaluationsPerClient int) error {
+	if evaluationsPerClient <= 0 || len(s.data.InCareClientIDs) == 0 {
+		return nil
+	}
+
+	for i, clientID := range s.data.InCareClientIDs {
+		if (i+1)%10 == 0 || i == 0 || i+1 == len(s.data.InCareClientIDs) {
+			fmt.Printf("[seed] goal evaluations for in-care clients: %d/%d\n", i+1, len(s.data.InCareClientIDs))
+		}
+
+		if err := s.seedEvaluationsForClient(ctx, clientID, evaluationsPerClient); err != nil {
+			return fmt.Errorf("seed goal evaluations for in-care client %s: %w", clientID, err)
+		}
+	}
+
+	return nil
+}
+
+func (s *Seeder) seedEvaluationsForClient(ctx context.Context, clientID uuid.UUID, evaluationsPerClient int) error {
+	return s.store.ExecTx(ctx, func(q *db.Queries) error {
+		client, err := q.GetClientDetails(ctx, clientID)
+		if err != nil {
+			return fmt.Errorf("get client details: %w", err)
+		}
+
+		goals, err := q.ListActiveGoalsByClientID(ctx, clientID)
+		if err != nil {
+			return fmt.Errorf("list active goals: %w", err)
+		}
+		if len(goals) == 0 {
+			return nil
+		}
+
+		employeeID := s.pickCoordinatorForClient(clientID)
+		var createdByEmployeeID *uuid.UUID
+		if employeeID != uuid.Nil {
+			createdByEmployeeID = &employeeID
+		}
+		nowDate := time.Now().UTC().Truncate(24 * time.Hour)
+		intervalWeeks := client.EvaluationIntervalsWeeks
+		if intervalWeeks <= 0 {
+			intervalWeeks = 12
+		}
+
+		createdCount := 0
+		if evaluationsPerClient >= 2 {
+			if evalID, ok, err := s.createCompletedEvaluationIfAllowed(ctx, q, client, createdByEmployeeID, goals, intervalWeeks, nowDate); err != nil {
+				return err
+			} else if ok {
+				s.data.EvaluationIDs = append(s.data.EvaluationIDs, evalID)
+				createdCount++
+				client, err = q.GetClientDetails(ctx, clientID)
+				if err != nil {
+					return fmt.Errorf("refresh client details after completed evaluation: %w", err)
+				}
+			}
+		}
+
+		for createdCount < evaluationsPerClient {
+			evalID, err := s.createDraftEvaluation(ctx, q, client, createdByEmployeeID, goals, intervalWeeks)
+			if err != nil {
+				return err
+			}
+			s.data.EvaluationIDs = append(s.data.EvaluationIDs, evalID)
+			createdCount++
+		}
+
+		return nil
+	})
+}
+
+func (s *Seeder) createCompletedEvaluationIfAllowed(
+	ctx context.Context,
+	q *db.Queries,
+	client db.GetClientDetailsRow,
+	createdByEmployeeID *uuid.UUID,
+	goals []db.ClientGoal,
+	intervalWeeks int32,
+	nowDate time.Time,
+) (uuid.UUID, bool, error) {
+	if !client.NextEvaluationDate.Valid {
+		return uuid.Nil, false, nil
+	}
+
+	dueDate := client.NextEvaluationDate.Time
+	windowStart := dueDate.AddDate(0, 0, -14)
+	if nowDate.Before(windowStart) {
+		return uuid.Nil, false, nil
+	}
+
+	periodEnd := dueDate
+	periodStart := periodEnd.AddDate(0, 0, -int(intervalWeeks*7))
+	overallNotes := "Seeded completed evaluation"
+
+	eval, err := q.CreateGoalEvaluation(ctx, db.CreateGoalEvaluationParams{
+		ClientID:                client.ID,
+		EvaluationDate:          pgDate(dueDate),
+		PeriodStart:             pgDate(periodStart),
+		PeriodEnd:               pgDate(periodEnd),
+		EvaluationIntervalWeeks: intervalWeeks,
+		Status:                  db.EvaluationStatusEnumDraft,
+		OverallNotes:            &overallNotes,
+		CreatedByEmployeeID:     createdByEmployeeID,
+	})
+	if err != nil {
+		return uuid.Nil, false, fmt.Errorf("create completed-candidate evaluation: %w", err)
+	}
+
+	for _, goal := range goals {
+		progress := oneOf([]db.ClientGoalProgressEnum{
+			db.ClientGoalProgressEnumRegression,
+			db.ClientGoalProgressEnumLimitedProgress,
+			db.ClientGoalProgressEnumGoodProgress,
+			db.ClientGoalProgressEnumAchieved,
+			db.ClientGoalProgressEnumBlocked,
+		})
+		notes := nullableString(gofakeit.Sentence(10), 0.15)
+		if _, err := q.UpsertGoalEvaluationItem(ctx, db.UpsertGoalEvaluationItemParams{
+			EvaluationID: eval.ID,
+			GoalID:       goal.ID,
+			Progress:     progress,
+			Notes:        notes,
+		}); err != nil {
+			return uuid.Nil, false, fmt.Errorf("upsert completed evaluation item: %w", err)
+		}
+	}
+
+	if _, err := q.UpdateGoalEvaluation(ctx, db.UpdateGoalEvaluationParams{
+		ID:             eval.ID,
+		Status:         db.NullEvaluationStatusEnum{EvaluationStatusEnum: db.EvaluationStatusEnumCompleted, Valid: true},
+		EvaluationDate: pgtype.Date{},
+		PeriodStart:    pgtype.Date{},
+		PeriodEnd:      pgtype.Date{},
+	}); err != nil {
+		return uuid.Nil, false, fmt.Errorf("mark evaluation as completed: %w", err)
+	}
+
+	return eval.ID, true, nil
+}
+
+func (s *Seeder) createDraftEvaluation(
+	ctx context.Context,
+	q *db.Queries,
+	client db.GetClientDetailsRow,
+	createdByEmployeeID *uuid.UUID,
+	goals []db.ClientGoal,
+	intervalWeeks int32,
+) (uuid.UUID, error) {
+	evaluationDate := time.Now().UTC().Truncate(24 * time.Hour)
+	if client.NextEvaluationDate.Valid {
+		evaluationDate = client.NextEvaluationDate.Time
+	}
+	periodEnd := evaluationDate
+	periodStart := periodEnd.AddDate(0, 0, -int(intervalWeeks*7))
+	overallNotes := "Seeded draft evaluation"
+
+	eval, err := q.CreateGoalEvaluation(ctx, db.CreateGoalEvaluationParams{
+		ClientID:                client.ID,
+		EvaluationDate:          pgDate(evaluationDate),
+		PeriodStart:             pgDate(periodStart),
+		PeriodEnd:               pgDate(periodEnd),
+		EvaluationIntervalWeeks: intervalWeeks,
+		Status:                  db.EvaluationStatusEnumDraft,
+		OverallNotes:            &overallNotes,
+		CreatedByEmployeeID:     createdByEmployeeID,
+	})
+	if err != nil {
+		return uuid.Nil, fmt.Errorf("create draft evaluation: %w", err)
+	}
+
+	for _, goal := range goals {
+		progressPool := []db.ClientGoalProgressEnum{
+			db.ClientGoalProgressEnumNoProgress,
+			db.ClientGoalProgressEnumLimitedProgress,
+			db.ClientGoalProgressEnumGoodProgress,
+			db.ClientGoalProgressEnumBlocked,
+		}
+		if chance(0.35) {
+			progressPool = []db.ClientGoalProgressEnum{
+				db.ClientGoalProgressEnumLimitedProgress,
+				db.ClientGoalProgressEnumGoodProgress,
+				db.ClientGoalProgressEnumAchieved,
+			}
+		}
+
+		if _, err := q.UpsertGoalEvaluationItem(ctx, db.UpsertGoalEvaluationItemParams{
+			EvaluationID: eval.ID,
+			GoalID:       goal.ID,
+			Progress:     oneOf(progressPool),
+			Notes:        nullableString(gofakeit.Sentence(9), 0.35),
+		}); err != nil {
+			return uuid.Nil, fmt.Errorf("upsert draft evaluation item: %w", err)
+		}
+	}
+
+	return eval.ID, nil
+}
+
+func (s *Seeder) pickCoordinatorForClient(clientID uuid.UUID) uuid.UUID {
+	if coordinatorID, ok := s.data.ClientCoordinators[clientID]; ok {
+		return coordinatorID
+	}
+	if len(s.data.CoordinatorIDs) > 0 {
+		return oneOf(s.data.CoordinatorIDs)
+	}
+	if len(s.data.EmployeeIDs) > 0 {
+		return oneOf(s.data.EmployeeIDs)
+	}
+	return uuid.Nil
+}
+
+func (s *Seeder) createSeedCoordinatorProfile(ctx context.Context, q *db.Queries, locationID *uuid.UUID) (uuid.UUID, error) {
+	resolvedLocationID := locationID
+	if resolvedLocationID == nil && len(s.data.LocationIDs) > 0 {
+		picked := oneOf(s.data.LocationIDs)
+		resolvedLocationID = &picked
+	}
+
+	email := fmt.Sprintf("seed.coordinator.%s@maicare.local", strings.ToLower(gofakeit.LetterN(8)))
+	user, err := q.CreateUser(ctx, db.CreateUserParams{
+		Password:       "seed-password",
+		Email:          email,
+		IsActive:       true,
+		ProfilePicture: nil,
+	})
+	if err != nil {
+		return uuid.Nil, fmt.Errorf("create user: %w", err)
+	}
+
+	contractHours := 36.0
+	contractRate := 58.0
+	employeeNumber := fmt.Sprintf("EMP-%06d", gofakeit.Number(1, 999999))
+	employmentNumber := fmt.Sprintf("CONT-%06d", gofakeit.Number(1, 999999))
+	workEmail := email
+	privateEmail := strings.ToLower(gofakeit.Email())
+	workPhone := fakePhone()
+	privatePhone := fakePhone()
+	homePhone := fakePhone()
+
+	employee, err := q.CreateEmployeeProfile(ctx, db.CreateEmployeeProfileParams{
+		UserID:              user.ID,
+		FirstName:           gofakeit.FirstName(),
+		LastName:            gofakeit.LastName(),
+		Bsn:                 fmt.Sprintf("%09d", gofakeit.Number(100000000, 999999999)),
+		Street:              gofakeit.StreetName(),
+		HouseNumber:         fmt.Sprintf("%d", gofakeit.Number(1, 350)),
+		HouseNumberAddition: nullableString(strings.ToUpper(gofakeit.LetterN(1)), 0.8),
+		PostalCode:          fakePostalCodeNL(),
+		City:                gofakeit.City(),
+		Position:            stringPtr("Care Coordinator"),
+		Department:          stringPtr("Youth Care"),
+		EmployeeNumber:      &employeeNumber,
+		EmploymentNumber:    &employmentNumber,
+		PrivateEmailAddress: &privateEmail,
+		WorkEmailAddress:    &workEmail,
+		WorkPhoneNumber:     &workPhone,
+		PrivatePhoneNumber:  &privatePhone,
+		DateOfBirth:         pgDate(randomDate(1975, 1998)),
+		HomeTelephoneNumber: &homePhone,
+		Gender:              oneOf([]db.GenderEnum{db.GenderEnumMale, db.GenderEnumFemale, db.GenderEnumOther}),
+		LocationID:          resolvedLocationID,
+		ContractHours:       &contractHours,
+		ContractEndDate:     pgtype.Date{},
+		ContractStartDate:   pgDate(time.Now().AddDate(-1, 0, 0)),
+		ContractType:        db.EmployeeContractTypeEnumLoondienst,
+		ContractRate:        &contractRate,
+	})
+	if err != nil {
+		return uuid.Nil, fmt.Errorf("create employee profile: %w", err)
+	}
+
+	s.data.EmployeeIDs = append(s.data.EmployeeIDs, employee.ID)
+	s.data.CoordinatorIDs = append(s.data.CoordinatorIDs, employee.ID)
+
+	return employee.ID, nil
 }
 
 func (s *Seeder) SeedOrganisations(ctx context.Context, count int) error {
@@ -547,6 +929,8 @@ func main() {
 	senderCount := flag.Int("senders", 12, "number of senders to seed")
 	count := flag.Int("count", 25, "number of registration forms to seed")
 	waitingListClients := flag.Int("waiting-list-clients", 12, "number of waiting list clients to seed via intake promotion flow")
+	inCareClients := flag.Int("in-care-clients", 6, "number of in-care clients to seed via waiting-list to in-care promotion flow")
+	evaluationsPerInCareClient := flag.Int("evaluations-per-in-care-client", 2, "number of goal evaluations to seed for each in-care client")
 	seedValue := flag.Int64("seed", time.Now().UnixNano(), "random seed")
 	seedTimeout := flag.Duration("timeout", 10*time.Minute, "overall seed timeout")
 	dataSource := flag.String("db", "", "database connection string (defaults to DB_SOURCE or local default)")
@@ -579,8 +963,8 @@ func main() {
 	seeder := newSeeder(store)
 
 	startedAt := time.Now()
-	fmt.Printf("[seed] start organisations=%d locations_per_org=%d senders=%d registration_forms=%d waiting_list_clients=%d timeout=%s\n",
-		*organisationCount, *locationsPerOrg, *senderCount, *count, *waitingListClients, (*seedTimeout).String())
+	fmt.Printf("[seed] start organisations=%d locations_per_org=%d senders=%d registration_forms=%d waiting_list_clients=%d in_care_clients=%d evaluations_per_in_care_client=%d timeout=%s\n",
+		*organisationCount, *locationsPerOrg, *senderCount, *count, *waitingListClients, *inCareClients, *evaluationsPerInCareClient, (*seedTimeout).String())
 	if err := seeder.SeedOrganisations(ctx, *organisationCount); err != nil {
 		log.Fatalf("seeding organisations failed: %v", err)
 	}
@@ -601,13 +985,25 @@ func main() {
 		log.Fatalf("seeding waiting list clients failed: %v", err)
 	}
 
-	fmt.Printf("Seeded %d organisations, %d locations, %d senders, %d registration forms, %d intake forms, %d waiting list clients in %s\n",
+	if err := seeder.SeedInCareClients(ctx, *inCareClients); err != nil {
+		log.Fatalf("seeding in-care clients failed: %v", err)
+	}
+
+	if err := seeder.SeedGoalEvaluationsForInCareClients(ctx, *evaluationsPerInCareClient); err != nil {
+		log.Fatalf("seeding goal evaluations for in-care clients failed: %v", err)
+	}
+
+	fmt.Printf("Seeded %d organisations, %d locations, %d senders, %d registration forms, %d intake forms, %d total clients, %d waiting list clients, %d in-care clients, %d coordinators, %d goal evaluations in %s\n",
 		len(seeder.data.OrganisationIDs),
 		len(seeder.data.LocationIDs),
 		len(seeder.data.SenderIDs),
 		len(seeder.data.RegistrationFormIDs),
 		len(seeder.data.IntakeFormIDs),
 		len(seeder.data.ClientIDs),
+		len(seeder.data.ClientIDs)-len(seeder.data.InCareClientIDs),
+		len(seeder.data.InCareClientIDs),
+		len(seeder.data.CoordinatorIDs),
+		len(seeder.data.EvaluationIDs),
 		time.Since(startedAt).Round(time.Millisecond),
 	)
 	if len(seeder.data.RegistrationFormIDs) > 0 {
@@ -815,4 +1211,16 @@ func buildProposedGoals(topicName string) []map[string]string {
 			"priority":    "medium",
 		},
 	}
+}
+
+func contractSettingsFromIntakeCareType(careType db.NullIntakeCareTypeEnum) (db.CareTypeEnum, db.PriceTimeUnitEnum, *float64, db.NullHoursTypeEnum) {
+	if careType.Valid && careType.IntakeCareTypeEnum == db.IntakeCareTypeEnumAmbulatorySupport {
+		hours := float64(gofakeit.Number(4, 24))
+		return db.CareTypeEnumAmbulante, db.PriceTimeUnitEnumHourly, &hours, db.NullHoursTypeEnum{
+			HoursTypeEnum: db.HoursTypeEnumWeekly,
+			Valid:         true,
+		}
+	}
+
+	return db.CareTypeEnumAccommodation, db.PriceTimeUnitEnumWeekly, nil, db.NullHoursTypeEnum{Valid: false}
 }

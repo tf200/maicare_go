@@ -880,7 +880,7 @@ CREATE TABLE client_details (
     "status" client_status_enum NOT NULL DEFAULT 'on_waiting_list',
     bsn VARCHAR(50) NULL,
     bsn_verified_by UUID NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
-    evaluation_intarvals_weeks INT NOT NULL DEFAULT 0,
+    evaluation_intervals_weeks INT NOT NULL DEFAULT 0,
     care_type intake_care_type_enum NULL,
     -- source VARCHAR(100) NULL, -- Not needed now
     -- birthplace VARCHAR(100) NULL, -- Not needed now
@@ -895,12 +895,8 @@ CREATE TABLE client_details (
     created_at TIMESTAMPTZ NULL DEFAULT CURRENT_TIMESTAMP,
     placed_in_care_at TIMESTAMPTZ NULL,
     care_start_date DATE NULL,
-    next_evaluation_date DATE GENERATED ALWAYS AS (
-        CASE
-            WHEN care_start_date IS NULL OR evaluation_intarvals_weeks <= 0 THEN NULL
-            ELSE care_start_date + (evaluation_intarvals_weeks * 7)
-        END
-    ) STORED,
+    last_evaluation_anchor_date DATE NULL,
+    next_evaluation_date DATE NULL,
     sender_id UUID NULL REFERENCES sender(id) ON DELETE SET NULL DEFAULT NULL,
     location_id UUID NULL REFERENCES location(id) ON DELETE SET NULL DEFAULT NULL,
     -- departure_reason VARCHAR(255) NULL, -- Not needed now
@@ -1000,6 +996,8 @@ CREATE TABLE client_goals (
 CREATE INDEX client_goals_client_status_idx ON client_goals(client_id, status);
 CREATE INDEX client_goals_client_sort_order_idx ON client_goals(client_id, sort_order);
 
+CREATE TYPE evaluation_status_enum AS ENUM ('draft', 'completed', 'archived');
+
 CREATE TABLE client_goal_evaluations (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
@@ -1007,6 +1005,7 @@ CREATE TABLE client_goal_evaluations (
     period_start DATE NULL,
     period_end DATE NULL,
     evaluation_interval_weeks INT NOT NULL,
+    status evaluation_status_enum NOT NULL DEFAULT 'draft',
     overall_notes TEXT NULL,
     created_by_employee_id UUID NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -1029,6 +1028,92 @@ CREATE TABLE client_goal_evaluation_items (
 
 CREATE INDEX client_goal_evaluation_items_goal_created_idx ON client_goal_evaluation_items(goal_id, created_at DESC);
 CREATE INDEX client_goal_evaluation_items_evaluation_idx ON client_goal_evaluation_items(evaluation_id);
+
+-- ==========================================
+-- EVALUATION SCHEDULING & CADENCE LOGIC
+-- ==========================================
+
+-- Function to initialize evaluation dates when a client enters care
+CREATE OR REPLACE FUNCTION initialize_client_evaluation_dates()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- If care_start_date is being set for the first time
+    IF NEW.care_start_date IS NOT NULL AND (OLD.care_start_date IS NULL OR OLD.care_start_date <> NEW.care_start_date) THEN
+        -- Initialize anchor as the start date
+        NEW.last_evaluation_anchor_date := NEW.care_start_date;
+        
+        -- Set next evaluation date based on intervals
+        IF NEW.evaluation_intervals_weeks > 0 THEN
+            NEW.next_evaluation_date := NEW.care_start_date + (NEW.evaluation_intervals_weeks * INTERVAL '1 week');
+        ELSE
+            -- Default to 12 weeks if not specified
+            NEW.next_evaluation_date := NEW.care_start_date + INTERVAL '12 weeks';
+        END IF;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_initialize_client_evaluation_dates
+BEFORE UPDATE OF care_start_date ON client_details
+FOR EACH ROW
+EXECUTE FUNCTION initialize_client_evaluation_dates();
+
+-- Function to prevent premature evaluation completion
+CREATE OR REPLACE FUNCTION enforce_evaluation_submission_window()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_next_eval_date DATE;
+BEGIN
+    -- Only check when transitioning to 'completed'
+    IF NEW.status = 'completed' AND (OLD.status IS NULL OR OLD.status <> 'completed') THEN
+        SELECT next_evaluation_date INTO v_next_eval_date
+        FROM client_details
+        WHERE id = NEW.client_id;
+
+        -- Refuse if more than 14 days before the due date
+        IF CURRENT_DATE < (v_next_eval_date - INTERVAL '14 days') THEN
+            RAISE EXCEPTION 'Evaluation cannot be completed more than 14 days before the due date (%)', v_next_eval_date;
+        END IF;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_enforce_evaluation_submission_window
+BEFORE UPDATE OF status ON client_goal_evaluations
+FOR EACH ROW
+EXECUTE FUNCTION enforce_evaluation_submission_window();
+
+-- Function to update next evaluation date upon completion
+CREATE OR REPLACE FUNCTION update_client_evaluation_cadence()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_intervals INT;
+    v_current_next DATE;
+BEGIN
+    -- When an evaluation is completed
+    IF NEW.status = 'completed' AND (OLD.status IS NULL OR OLD.status <> 'completed') THEN
+        SELECT evaluation_intervals_weeks, next_evaluation_date 
+        INTO v_intervals, v_current_next
+        FROM client_details
+        WHERE id = NEW.client_id;
+
+        -- Update the client record
+        UPDATE client_details
+        SET 
+            last_evaluation_anchor_date = v_current_next,
+            next_evaluation_date = v_current_next + (COALESCE(NULLIF(v_intervals, 0), 12) * INTERVAL '1 week')
+        WHERE id = NEW.client_id;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_update_client_evaluation_cadence
+AFTER UPDATE OF status ON client_goal_evaluations
+FOR EACH ROW
+EXECUTE FUNCTION update_client_evaluation_cadence();
 
 -- Guardrail: cannot move a client into/scheduled for care without active goals
 CREATE OR REPLACE FUNCTION ensure_client_has_active_goals_before_care_status()
@@ -1181,7 +1266,7 @@ CREATE TABLE contract_type (
 -- Contract status ENUM
 CREATE TYPE contract_status_enum AS ENUM ('approved', 'draft', 'terminated', 'stopped', 'expired');
 -- Price time unit ENUM
-CREATE TYPE price_time_unit_enum AS ENUM ('minute', 'hourly', 'daily', 'weekly', 'monthly');
+CREATE TYPE price_time_unit_enum AS ENUM ('minute', 'hourly', 'daily', 'weekly');
 -- Hours type ENUM
 CREATE TYPE hours_type_enum AS ENUM ('weekly', 'all_period');
 -- Care type ENUM
@@ -1202,8 +1287,8 @@ CREATE TABLE contract (
     VAT INTEGER NULL DEFAULT -1,
     price DECIMAL(10,2) NOT NULL,
     price_time_unit price_time_unit_enum NOT NULL DEFAULT 'weekly',
-    hours DECIMAL(10,2) NULL DEFAULT 0,
-    hours_type hours_type_enum NOT NULL DEFAULT NULL,
+    hours DECIMAL(10,2) NULL,
+    hours_type hours_type_enum NULL,
     care_name VARCHAR(255) NOT NULL,
     care_type care_type_enum NOT NULL,
     client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
@@ -1214,7 +1299,23 @@ CREATE TABLE contract (
     departure_reason VARCHAR(255) NULL,
     departure_report TEXT NULL,
     updated_at TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_at TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT contract_care_type_pricing_and_hours_consistency CHECK (
+        (
+            care_type = 'ambulante'
+            AND price_time_unit IN ('minute', 'hourly')
+            AND hours IS NOT NULL
+            AND hours > 0
+            AND hours_type IS NOT NULL
+        )
+        OR
+        (
+            care_type = 'accommodation'
+            AND price_time_unit IN ('daily', 'weekly')
+            AND hours IS NULL
+            AND hours_type IS NULL
+        )
+    )
 );
 
 CREATE INDEX contract_type_id_idx ON contract(type_id);

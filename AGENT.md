@@ -35,8 +35,18 @@ We are now focusing on client management:
     - Main coordinator ownership is represented through `assigned_employee` with role `coordinator` (single coordinator per client).
     - Clients cannot be marked as `scheduled_in_care` or `in_care` without at least one active goal in `client_goals`.
 - **In-Care Flow**:
-    - Current focus.
-    - Next step is building in-care client listing and in-care operational views.
+    - Status: completed.
+    - In-care client listing now supports:
+        - statuses `in_care` and `scheduled_in_care`
+        - search by client name
+        - status filtering
+        - sorting by days in care (asc/desc)
+        - active contract flag (approved and currently active)
+
+### Next Step
+- **Client Dossier**:
+    - Build and verify the complete client dossier retrieval flow.
+    - Focus on the client detail GET endpoint and aggregation of all related client data.
 
 ## Technical Notes
 

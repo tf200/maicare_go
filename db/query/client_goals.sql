@@ -69,3 +69,10 @@ inserted AS (
     RETURNING *
 )
 SELECT * FROM inserted;
+
+-- name: ListActiveGoalsByClientID :many
+SELECT *
+FROM client_goals
+WHERE client_id = $1
+  AND status = 'active'
+ORDER BY sort_order;

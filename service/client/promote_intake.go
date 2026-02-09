@@ -75,7 +75,7 @@ func (s *clientService) PromoteIntakeToClient(ctx context.Context, req *PromoteI
 			},
 			SenderID:                   intakeForm.SenderID,
 			LocationID:                 intakeForm.AssignedLocationID,
-			EvaluationIntarvalsWeeks:   intakeForm.EvaluationIntervalsWeeks,
+			EvaluationIntervalsWeeks:   intakeForm.EvaluationIntervalsWeeks,
 			Street:                     registrationForm.ClientStreet,
 			HouseNumber:                registrationForm.ClientHouseNumber,
 			HouseNumberAddition:        registrationForm.ClientHouseNumberAddition,

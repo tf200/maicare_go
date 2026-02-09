@@ -39,9 +39,9 @@ type CreateContractRequest struct {
 	ReminderPeriod  int32       `json:"reminder_period" example:"30"`
 	Vat             *int32      `json:"VAT" example:"21"`
 	Price           float64     `json:"price" example:"100.50"`
-	PriceTimeUnit   string      `json:"price_time_unit" binding:"required,oneof=minute hourly daily weekly monthly yearly" example:"monthly" enum:"minute,hourly,daily,weekly,monthly,yearly"`
+	PriceTimeUnit   string      `json:"price_time_unit" binding:"required,oneof=minute hourly daily weekly" example:"weekly" enum:"minute,hourly,daily,weekly"`
 	Hours           *float64    `json:"hours" example:"40"`
-	HoursType       string      `json:"hours_type" enum:"weekly,all_period" binding:"required,oneof=weekly all_period" example:"weekly"`
+	HoursType       *string     `json:"hours_type" enum:"weekly,all_period" binding:"omitempty,oneof=weekly all_period" example:"weekly"`
 	CareName        string      `json:"care_name" example:"Home Care"`
 	CareType        string      `json:"care_type" binding:"required,oneof=ambulante accommodation" example:"ambulante" enum:"ambulante,accommodation"`
 	SenderID        *uuid.UUID  `json:"sender_id" example:"afc465cc-cddb-440b-9472-615bb07ec1d8"`
@@ -62,7 +62,7 @@ type CreateContractResponse struct {
 	Price           float64            `json:"price"`
 	PriceTimeUnit   string             `json:"price_time_unit"`
 	Hours           *float64           `json:"hours"`
-	HoursType       string             `json:"hours_type"`
+	HoursType       *string            `json:"hours_type"`
 	CareName        string             `json:"care_name"`
 	CareType        string             `json:"care_type"`
 	ClientID        uuid.UUID          `json:"client_id"`
@@ -93,7 +93,7 @@ type ListClientContractsResponse struct {
 	Price           float64     `json:"price"`
 	PriceTimeUnit   string      `json:"price_time_unit"`
 	Hours           *float64    `json:"hours"`
-	HoursType       string      `json:"hours_type"`
+	HoursType       *string     `json:"hours_type"`
 	CareName        string      `json:"care_name"`
 	CareType        string      `json:"care_type"`
 	ClientID        uuid.UUID   `json:"client_id"`
@@ -142,7 +142,7 @@ type UpdateContractResponse struct {
 	Price           float64     `json:"price"`
 	PriceFrequency  string      `json:"price_frequency"`
 	Hours           *float64    `json:"hours"`
-	HoursType       string      `json:"hours_type"`
+	HoursType       *string     `json:"hours_type"`
 	CareName        string      `json:"care_name"`
 	CareType        string      `json:"care_type"`
 	ClientID        uuid.UUID   `json:"client_id"`
@@ -180,7 +180,7 @@ type GetClientContractResponse struct {
 	Price           float64     `json:"price"`
 	PriceTimeUnit   string      `json:"price_time_unit"`
 	Hours           *float64    `json:"hours"`
-	HoursType       string      `json:"hours_type"`
+	HoursType       *string     `json:"hours_type"`
 	CareName        string      `json:"care_name"`
 	CareType        string      `json:"care_type"`
 	ClientID        uuid.UUID   `json:"client_id"`

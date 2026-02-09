@@ -238,6 +238,9 @@ func TestListClient(t *testing.T) {
 				require.NoError(t, err)
 				require.NotEmpty(t, clients.Data)
 				require.Len(t, clients.Data.Results, 5)
+				require.NotEqual(t, uuid.Nil, clients.Data.Results[0].ID)
+				require.NotEmpty(t, clients.Data.Results[0].FirstName)
+				require.NotEmpty(t, clients.Data.Results[0].LastName)
 			},
 		},
 		{

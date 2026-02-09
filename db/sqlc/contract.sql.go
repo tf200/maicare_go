@@ -47,7 +47,7 @@ type CreateContractParams struct {
 	Price           float64             `json:"price"`
 	PriceTimeUnit   PriceTimeUnitEnum   `json:"price_time_unit"`
 	Hours           *float64            `json:"hours"`
-	HoursType       HoursTypeEnum       `json:"hours_type"`
+	HoursType       NullHoursTypeEnum   `json:"hours_type"`
 	CareName        string              `json:"care_name"`
 	CareType        CareTypeEnum        `json:"care_type"`
 	ClientID        uuid.UUID           `json:"client_id"`
@@ -265,7 +265,7 @@ type GetClientContractRow struct {
 	Price            float64             `json:"price"`
 	PriceTimeUnit    PriceTimeUnitEnum   `json:"price_time_unit"`
 	Hours            *float64            `json:"hours"`
-	HoursType        HoursTypeEnum       `json:"hours_type"`
+	HoursType        NullHoursTypeEnum   `json:"hours_type"`
 	CareName         string              `json:"care_name"`
 	CareType         CareTypeEnum        `json:"care_type"`
 	ClientID         uuid.UUID           `json:"client_id"`
@@ -462,7 +462,7 @@ type ListClientContractsRow struct {
 	Price            float64             `json:"price"`
 	PriceTimeUnit    PriceTimeUnitEnum   `json:"price_time_unit"`
 	Hours            *float64            `json:"hours"`
-	HoursType        HoursTypeEnum       `json:"hours_type"`
+	HoursType        NullHoursTypeEnum   `json:"hours_type"`
 	CareName         string              `json:"care_name"`
 	CareType         CareTypeEnum        `json:"care_type"`
 	ClientID         uuid.UUID           `json:"client_id"`

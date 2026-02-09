@@ -89,7 +89,7 @@ const assignSender = `-- name: AssignSender :one
 UPDATE client_details
 SET sender_id = $1
 WHERE id = $2
-RETURNING id, intake_form_id, registration_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, evaluation_intarvals_weeks, care_type, email, phone_number, gender, filenumber, created_at, placed_in_care_at, care_start_date, next_evaluation_date, sender_id, location_id, street, house_number, house_number_addition, postal_code, city, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, nationality, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes
+RETURNING id, intake_form_id, registration_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, evaluation_intervals_weeks, care_type, email, phone_number, gender, filenumber, created_at, placed_in_care_at, care_start_date, last_evaluation_anchor_date, next_evaluation_date, sender_id, location_id, street, house_number, house_number_addition, postal_code, city, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, nationality, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes
 `
 
 type AssignSenderParams struct {
@@ -111,7 +111,7 @@ func (q *Queries) AssignSender(ctx context.Context, arg AssignSenderParams) (Cli
 		&i.Status,
 		&i.Bsn,
 		&i.BsnVerifiedBy,
-		&i.EvaluationIntarvalsWeeks,
+		&i.EvaluationIntervalsWeeks,
 		&i.CareType,
 		&i.Email,
 		&i.PhoneNumber,
@@ -120,6 +120,7 @@ func (q *Queries) AssignSender(ctx context.Context, arg AssignSenderParams) (Cli
 		&i.CreatedAt,
 		&i.PlacedInCareAt,
 		&i.CareStartDate,
+		&i.LastEvaluationAnchorDate,
 		&i.NextEvaluationDate,
 		&i.SenderID,
 		&i.LocationID,

@@ -115,33 +115,17 @@ type ListClientsApiParams struct {
 
 // ListClientsApiResponse represents a response to a list clients request
 type ListClientsApiResponse struct {
-	ID                    uuid.UUID  `json:"id"`
-	FirstName             string     `json:"first_name"`
-	LastName              string     `json:"last_name"`
-	DateOfBirth           time.Time  `json:"date_of_birth"`
-	Identity              bool       `json:"identity"`
-	Status                string     `json:"status"`
-	Bsn                   *string    `json:"bsn"`
-	Source                *string    `json:"source"`
-	Birthplace            *string    `json:"birthplace"`
-	Nationality           *string    `json:"nationality"`
-	Email                 string     `json:"email"`
-	PhoneNumber           *string    `json:"phone_number"`
-	OrganizationID        *uuid.UUID `json:"organization_id"`
-	Departement           *string    `json:"departement"`
-	Gender                string     `json:"gender"`
-	Filenumber            string     `json:"filenumber"`
-	ProfilePicture        *string    `json:"profile_picture"`
-	Infix                 *string    `json:"infix"`
-	CreatedAt             time.Time  `json:"created_at"`
-	SenderID              *uuid.UUID `json:"sender_id"`
-	LocationID            *uuid.UUID `json:"location_id"`
-	LocationName          *string    `json:"location_name"`
-	DepartureReason       *string    `json:"departure_reason"`
-	DepartureReport       *string    `json:"departure_report"`
-	Addresses             []Address  `json:"addresses"`
-	LegalMeasure          *string    `json:"legal_measure"`
-	HasUntakenMedications bool       `json:"has_untaken_medications"`
+	ID           uuid.UUID `json:"id"`
+	FirstName    string    `json:"first_name"`
+	LastName     string    `json:"last_name"`
+	Bsn          *string   `json:"bsn"`
+	Filenumber   string    `json:"filenumber"`
+	LocationName *string   `json:"location_name"`
+	CareType     *string   `json:"care_type"`
+	Status       string    `json:"status"`
+	GoalsCount   int64     `json:"goals_count"`
+	RiskCount    int64     `json:"risk_count"`
+	CreatedAt    time.Time `json:"created_at"`
 }
 
 type ListWaitingListClientsParams struct {
@@ -160,6 +144,26 @@ type ListWaitingListClientsResponse struct {
 	SenderName     *string   `json:"sender_name"`
 	DaysInWaitlist int32     `json:"days_in_waitlist"`
 	AdmissionType  *string   `json:"admission_type"`
+}
+
+type ListInCareClientsParams struct {
+	pagination.Request
+	Search         *string  `form:"search" binding:"omitempty,max=120"`
+	Status         []string `form:"status" binding:"omitempty,dive,oneof=in_care scheduled_in_care"`
+	SortDaysInCare *string  `form:"sort_days_in_care" binding:"omitempty,oneof=asc desc"`
+}
+
+type ListInCareClientsResponse struct {
+	ID                uuid.UUID  `json:"id"`
+	Bsn               *string    `json:"bsn"`
+	FirstName         string     `json:"first_name"`
+	LastName          string     `json:"last_name"`
+	CoordinatorName   *string    `json:"coordinator_name"`
+	LocationName      *string    `json:"location_name"`
+	Status            string     `json:"status"`
+	CareStartDate     *time.Time `json:"care_start_date"`
+	DaysInCare        int32      `json:"days_in_care"`
+	HasActiveContract bool       `json:"has_active_contract"`
 }
 
 // GetClientsCountApi gets the count of clients

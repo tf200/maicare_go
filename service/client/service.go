@@ -16,6 +16,7 @@ type ClientService interface {
 	CreateClientDetails(req CreateClientDetailsRequest, ctx context.Context) (*CreateClientDetailsResponse, error)
 	ListClientDetails(ctx *gin.Context, req ListClientsApiParams) (*pagination.Response[ListClientsApiResponse], error)
 	ListWaitingListClients(ctx *gin.Context, req ListWaitingListClientsParams) (*pagination.Response[ListWaitingListClientsResponse], error)
+	ListInCareClients(ctx *gin.Context, req ListInCareClientsParams) (*pagination.Response[ListInCareClientsResponse], error)
 	GetClientsCount(ctx context.Context) (*GetClientsCountResponse, error)
 	GetClientDetails(ctx context.Context, clientID uuid.UUID) (*GetClientApiResponse, error)
 	GetClientAddresses(ctx context.Context, clientID uuid.UUID) (*GetClientAddressesApiResponse, error)
@@ -116,6 +117,15 @@ type ClientService interface {
 
 	// Promote Intake to Client
 	PromoteIntakeToClient(ctx context.Context, req *PromoteIntakeToClientRequest) (*PromoteIntakeToClientResponse, error)
+
+	// Goal Evaluations
+	CreateGoalEvaluation(ctx context.Context, clientID uuid.UUID, employeeID uuid.UUID, req CreateGoalEvaluationRequest) (*GoalEvaluationResponse, error)
+	SaveGoalEvaluationDraft(ctx context.Context, evaluationID uuid.UUID, req SaveGoalEvaluationDraftRequest) (*GoalEvaluationResponse, error)
+	SubmitGoalEvaluationDraft(ctx context.Context, evaluationID uuid.UUID) (*GoalEvaluationResponse, error)
+	GetGoalEvaluationBootstrap(ctx context.Context, clientID uuid.UUID) (*GoalEvaluationBootstrapResponse, error)
+	ListUpcomingEvaluations(ctx *gin.Context, coordinatorID uuid.UUID, req ListUpcomingEvaluationsRequest) (*pagination.Response[ListUpcomingEvaluationsResponse], error)
+	ListRecentSubmittedEvaluations(ctx *gin.Context, employeeID uuid.UUID, req ListRecentSubmittedEvaluationsRequest) (*pagination.Response[ListRecentSubmittedEvaluationsResponse], error)
+	ListRecentDraftEvaluations(ctx *gin.Context, employeeID uuid.UUID, req ListRecentDraftEvaluationsRequest) (*pagination.Response[ListRecentDraftEvaluationsResponse], error)
 
 	// Location Transfer
 	RequestLocationTransfer(ctx context.Context, clientID uuid.UUID, req LocationTransferRequest) error

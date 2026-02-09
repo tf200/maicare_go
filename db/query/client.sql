@@ -46,7 +46,7 @@ INSERT INTO client_details (
     risk_other,
     risk_other_description,
     risk_additional_notes,
-    evaluation_intarvals_weeks
+    evaluation_intervals_weeks
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16,
     $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30,
@@ -63,20 +63,46 @@ LIMIT 1;
 
 -- name: ListClientDetails :many
 SELECT
-    *,
-    location.name AS location_name,
+    c.id,
+    c.first_name,
+    c.last_name,
+    c.bsn,
+    c.filenumber,
+    l.name AS location_name,
+    c.care_type,
+    c.status,
+    COALESCE(gc.goals_count, 0)::bigint AS goals_count,
+    (
+        CASE WHEN COALESCE(c.risk_aggressive_behavior, FALSE) THEN 1 ELSE 0 END +
+        CASE WHEN COALESCE(c.risk_suicidal_selfharm, FALSE) THEN 1 ELSE 0 END +
+        CASE WHEN COALESCE(c.risk_substance_abuse, FALSE) THEN 1 ELSE 0 END +
+        CASE WHEN COALESCE(c.risk_psychiatric_issues, FALSE) THEN 1 ELSE 0 END +
+        CASE WHEN COALESCE(c.risk_criminal_history, FALSE) THEN 1 ELSE 0 END +
+        CASE WHEN COALESCE(c.risk_flight_behavior, FALSE) THEN 1 ELSE 0 END +
+        CASE WHEN COALESCE(c.risk_weapon_possession, FALSE) THEN 1 ELSE 0 END +
+        CASE WHEN COALESCE(c.risk_sexual_behavior, FALSE) THEN 1 ELSE 0 END +
+        CASE WHEN COALESCE(c.risk_day_night_rhythm, FALSE) THEN 1 ELSE 0 END +
+        CASE WHEN COALESCE(c.risk_other, FALSE) THEN 1 ELSE 0 END
+    )::bigint AS risk_count,
+    c.created_at,
     COUNT(*) OVER() AS total_count
 FROM client_details c
-LEFT JOIN location ON c.location_id = location.id
+LEFT JOIN location l ON c.location_id = l.id
+LEFT JOIN (
+    SELECT
+        client_id,
+        COUNT(*) FILTER (WHERE status = 'active')::bigint AS goals_count
+    FROM client_goals
+    GROUP BY client_id
+) gc ON gc.client_id = c.id
 WHERE
-    (status = sqlc.narg('status') OR sqlc.narg('status') IS NULL) AND
-    (location_id = sqlc.narg('location_id') OR sqlc.narg('location_id') IS NULL) AND
+    (c.status = sqlc.narg('status') OR sqlc.narg('status') IS NULL) AND
+    (c.location_id = sqlc.narg('location_id') OR sqlc.narg('location_id') IS NULL) AND
     (sqlc.narg('search')::TEXT IS NULL OR
-        first_name ILIKE '%' || sqlc.narg('search') || '%' OR
-        last_name ILIKE '%' || sqlc.narg('search') || '%' OR
-        filenumber ILIKE '%' || sqlc.narg('search') || '%' OR
-        email ILIKE '%' || sqlc.narg('search') || '%' OR
-        phone_number ILIKE '%' || sqlc.narg('search') || '%')
+        c.first_name ILIKE '%' || sqlc.narg('search') || '%' OR
+        c.last_name ILIKE '%' || sqlc.narg('search') || '%' OR
+        c.filenumber ILIKE '%' || sqlc.narg('search') || '%' OR
+        c.bsn ILIKE '%' || sqlc.narg('search') || '%')
 ORDER BY c.created_at DESC
 LIMIT sqlc.arg('limit') OFFSET sqlc.arg('offset');
 
@@ -120,6 +146,64 @@ ORDER BY
     CASE WHEN sqlc.arg('sort_days')::text = 'asc' THEN (CURRENT_DATE - c.created_at::date) END ASC,
     CASE WHEN sqlc.arg('sort_days')::text = 'desc' THEN (CURRENT_DATE - c.created_at::date) END DESC,
     c.created_at ASC
+LIMIT sqlc.arg('limit') OFFSET sqlc.arg('offset');
+
+
+-- name: ListInCareClients :many
+SELECT
+    c.id,
+    c.bsn,
+    c.first_name,
+    c.last_name,
+    NULLIF(CONCAT_WS(' ', ep.first_name, ep.last_name), '')::text AS coordinator_name,
+    l.name AS location_name,
+    c.status,
+    c.care_start_date,
+    CASE
+        WHEN c.care_start_date IS NULL OR CURRENT_DATE < c.care_start_date THEN 0
+        ELSE (CURRENT_DATE - c.care_start_date)::int4
+    END AS days_in_care,
+    EXISTS (
+        SELECT 1
+        FROM contract ct
+        WHERE ct.client_id = c.id
+          AND ct.status = 'approved'
+          AND ct.start_date <= CURRENT_TIMESTAMP
+          AND ct.end_date >= CURRENT_TIMESTAMP
+    ) AS has_active_contract,
+    COUNT(*) OVER() AS total_count
+FROM client_details c
+LEFT JOIN location l ON c.location_id = l.id
+LEFT JOIN assigned_employee ae ON ae.client_id = c.id AND ae.role = 'coordinator'
+LEFT JOIN employee_profile ep ON ep.id = ae.employee_id
+WHERE
+    c.status IN ('in_care', 'scheduled_in_care')
+    AND (
+        sqlc.narg('search')::text IS NULL
+        OR sqlc.narg('search')::text = ''
+        OR c.first_name ILIKE '%' || sqlc.narg('search') || '%'
+        OR c.last_name ILIKE '%' || sqlc.narg('search') || '%'
+    )
+    AND (
+        sqlc.narg('status')::client_status_enum[] IS NULL
+        OR c.status = ANY(sqlc.narg('status')::client_status_enum[])
+    )
+ORDER BY
+    CASE
+        WHEN sqlc.arg('sort_days_in_care')::text = 'asc' THEN
+            CASE
+                WHEN c.care_start_date IS NULL OR CURRENT_DATE < c.care_start_date THEN 0
+                ELSE (CURRENT_DATE - c.care_start_date)::int4
+            END
+    END ASC,
+    CASE
+        WHEN sqlc.arg('sort_days_in_care')::text = 'desc' THEN
+            CASE
+                WHEN c.care_start_date IS NULL OR CURRENT_DATE < c.care_start_date THEN 0
+                ELSE (CURRENT_DATE - c.care_start_date)::int4
+            END
+    END DESC,
+    c.created_at DESC
 LIMIT sqlc.arg('limit') OFFSET sqlc.arg('offset');
 
 

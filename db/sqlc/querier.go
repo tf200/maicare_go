@@ -58,6 +58,7 @@ type Querier interface {
 	CreateContractType(ctx context.Context, name string) (ContractType, error)
 	CreateEmemrgencyContact(ctx context.Context, arg CreateEmemrgencyContactParams) (ClientEmergencyContact, error)
 	CreateEmployeeProfile(ctx context.Context, arg CreateEmployeeProfileParams) (EmployeeProfile, error)
+	CreateGoalEvaluation(ctx context.Context, arg CreateGoalEvaluationParams) (ClientGoalEvaluation, error)
 	CreateIncident(ctx context.Context, arg CreateIncidentParams) (CreateIncidentRow, error)
 	CreateIntakeForm(ctx context.Context, arg CreateIntakeFormParams) (IntakeForm, error)
 	CreateIntakeTopicAssessment(ctx context.Context, arg CreateIntakeTopicAssessmentParams) (IntakeTopicAssessment, error)
@@ -95,6 +96,7 @@ type Querier interface {
 	DeleteEmployeeCertification(ctx context.Context, id uuid.UUID) (Certification, error)
 	DeleteEmployeeEducation(ctx context.Context, id uuid.UUID) (EmployeeEducation, error)
 	DeleteEmployeeExperience(ctx context.Context, id uuid.UUID) (EmployeeExperience, error)
+	DeleteGoalEvaluation(ctx context.Context, id uuid.UUID) error
 	DeleteIncident(ctx context.Context, id uuid.UUID) error
 	DeleteIntakeTopicsAssessment(ctx context.Context, id uuid.UUID) error
 	DeleteInvoice(ctx context.Context, id uuid.UUID) error
@@ -144,6 +146,8 @@ type Querier interface {
 	GetEmployeeProfileByID(ctx context.Context, id uuid.UUID) (GetEmployeeProfileByIDRow, error)
 	GetEmployeeProfileByUserID(ctx context.Context, id uuid.UUID) (GetEmployeeProfileByUserIDRow, error)
 	GetEmployeeSchedules(ctx context.Context, arg GetEmployeeSchedulesParams) ([]GetEmployeeSchedulesRow, error)
+	GetGoalEvaluation(ctx context.Context, id uuid.UUID) (GetGoalEvaluationRow, error)
+	GetGoalEvaluationItems(ctx context.Context, evaluationID uuid.UUID) ([]GetGoalEvaluationItemsRow, error)
 	GetIncident(ctx context.Context, id uuid.UUID) (GetIncidentRow, error)
 	GetIntakeForm(ctx context.Context, id uuid.UUID) (IntakeForm, error)
 	GetIntakeFormByRegistrationFormID(ctx context.Context, registrationFormID uuid.UUID) (IntakeForm, error)
@@ -154,6 +158,8 @@ type Querier interface {
 	GetInvoiceAuditLogs(ctx context.Context, invoiceID uuid.UUID) ([]GetInvoiceAuditLogsRow, error)
 	GetInvoiceSenderID(ctx context.Context, id uuid.UUID) (*uuid.UUID, error)
 	GetLatestAuditHash(ctx context.Context) (string, error)
+	GetLatestCompletedEvaluationByClient(ctx context.Context, clientID uuid.UUID) (GetLatestCompletedEvaluationByClientRow, error)
+	GetLatestDraftEvaluationByClient(ctx context.Context, clientID uuid.UUID) (GetLatestDraftEvaluationByClientRow, error)
 	GetLocation(ctx context.Context, id uuid.UUID) (Location, error)
 	GetMaxInvoiceSequenceForDate(ctx context.Context, date interface{}) (int64, error)
 	GetMedication(ctx context.Context, id uuid.UUID) (GetMedicationRow, error)
@@ -190,6 +196,7 @@ type Querier interface {
 	// Bulk-insert permission IDs for a user (idempotent).
 	GrantUserPermissions(ctx context.Context, arg GrantUserPermissionsParams) error
 	InsertIncoicePdfUrl(ctx context.Context, arg InsertIncoicePdfUrlParams) (*uuid.UUID, error)
+	ListActiveGoalsByClientID(ctx context.Context, clientID uuid.UUID) ([]ClientGoal, error)
 	ListAiGeneratedReports(ctx context.Context, arg ListAiGeneratedReportsParams) ([]ListAiGeneratedReportsRow, error)
 	ListAllIncidents(ctx context.Context, arg ListAllIncidentsParams) ([]ListAllIncidentsRow, error)
 	ListAllLocations(ctx context.Context) ([]ListAllLocationsRow, error)
@@ -237,10 +244,13 @@ type Querier interface {
 	ListEmployeeProfile(ctx context.Context, arg ListEmployeeProfileParams) ([]ListEmployeeProfileRow, error)
 	ListEmployeesByContractEndDate(ctx context.Context) ([]ListEmployeesByContractEndDateRow, error)
 	ListEmployeesWithContractHours(ctx context.Context, dollar_1 []uuid.UUID) ([]ListEmployeesWithContractHoursRow, error)
+	ListGoalEvaluations(ctx context.Context, arg ListGoalEvaluationsParams) ([]ListGoalEvaluationsRow, error)
+	ListInCareClients(ctx context.Context, arg ListInCareClientsParams) ([]ListInCareClientsRow, error)
 	ListIncidents(ctx context.Context, arg ListIncidentsParams) ([]ListIncidentsRow, error)
 	ListIntakeForms(ctx context.Context, arg ListIntakeFormsParams) ([]ListIntakeFormsRow, error)
 	ListIntakeTopicsAssessmentsByIntake(ctx context.Context, arg ListIntakeTopicsAssessmentsByIntakeParams) ([]ListIntakeTopicsAssessmentsByIntakeRow, error)
 	ListInvoices(ctx context.Context, arg ListInvoicesParams) ([]ListInvoicesRow, error)
+	ListLatestCompletedGoalProgressByClient(ctx context.Context, clientID uuid.UUID) ([]ListLatestCompletedGoalProgressByClientRow, error)
 	ListLatestPayments(ctx context.Context) ([]ListLatestPaymentsRow, error)
 	ListLocations(ctx context.Context, organisationID uuid.UUID) ([]ListLocationsRow, error)
 	ListLocationsPaginated(ctx context.Context, arg ListLocationsPaginatedParams) ([]ListLocationsPaginatedRow, error)
@@ -251,11 +261,14 @@ type Querier interface {
 	ListOrganisationsPaginated(ctx context.Context, arg ListOrganisationsPaginatedParams) ([]ListOrganisationsPaginatedRow, error)
 	ListPayments(ctx context.Context, invoiceID uuid.UUID) ([]ListPaymentsRow, error)
 	ListProgressReports(ctx context.Context, arg ListProgressReportsParams) ([]ListProgressReportsRow, error)
+	ListRecentDraftEvaluationsByEmployee(ctx context.Context, arg ListRecentDraftEvaluationsByEmployeeParams) ([]ListRecentDraftEvaluationsByEmployeeRow, error)
+	ListRecentSubmittedEvaluationsByEmployee(ctx context.Context, arg ListRecentSubmittedEvaluationsByEmployeeParams) ([]ListRecentSubmittedEvaluationsByEmployeeRow, error)
 	ListRegistrationForms(ctx context.Context, arg ListRegistrationFormsParams) ([]ListRegistrationFormsRow, error)
 	// Returns every role ordered by id with count of permissions.
 	ListRoles(ctx context.Context) ([]ListRolesRow, error)
 	ListSenders(ctx context.Context, arg ListSendersParams) ([]Sender, error)
 	ListUpcomingAppointments(ctx context.Context, creatorEmployeeID *uuid.UUID) ([]ListUpcomingAppointmentsRow, error)
+	ListUpcomingEvaluationsForCoordinator(ctx context.Context, arg ListUpcomingEvaluationsForCoordinatorParams) ([]ListUpcomingEvaluationsForCoordinatorRow, error)
 	// ---------- 5. USER-PERMISSION MAPPING ----------
 	// Returns every permission granted to a user (direct or via roles).
 	ListUserPermissions(ctx context.Context, userID uuid.UUID) ([]ListUserPermissionsRow, error)
@@ -323,6 +336,7 @@ type Querier interface {
 	UpdateEmployeeExperience(ctx context.Context, arg UpdateEmployeeExperienceParams) (EmployeeExperience, error)
 	UpdateEmployeeIsSubcontractor(ctx context.Context, arg UpdateEmployeeIsSubcontractorParams) (EmployeeProfile, error)
 	UpdateEmployeeProfile(ctx context.Context, arg UpdateEmployeeProfileParams) (EmployeeProfile, error)
+	UpdateGoalEvaluation(ctx context.Context, arg UpdateGoalEvaluationParams) (ClientGoalEvaluation, error)
 	UpdateIncident(ctx context.Context, arg UpdateIncidentParams) (Incident, error)
 	UpdateIncidentFileUrl(ctx context.Context, arg UpdateIncidentFileUrlParams) (*string, error)
 	UpdateIntakeConclusion(ctx context.Context, arg UpdateIntakeConclusionParams) (IntakeForm, error)
@@ -340,6 +354,7 @@ type Querier interface {
 	UpdateSchedule(ctx context.Context, arg UpdateScheduleParams) (UpdateScheduleRow, error)
 	UpdateSender(ctx context.Context, arg UpdateSenderParams) (Sender, error)
 	UpdateShift(ctx context.Context, arg UpdateShiftParams) (LocationShift, error)
+	UpsertGoalEvaluationItem(ctx context.Context, arg UpsertGoalEvaluationItemParams) (ClientGoalEvaluationItem, error)
 	// Join to get the client location name
 	UpsertMainCoordinator(ctx context.Context, arg UpsertMainCoordinatorParams) (UpsertMainCoordinatorRow, error)
 	UrgentCasesCount(ctx context.Context) (int64, error)
