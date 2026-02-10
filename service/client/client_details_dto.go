@@ -20,6 +20,7 @@ type Address struct {
 
 // CreateClientDetailsRequest represents a request to create a new client
 type CreateClientDetailsRequest struct {
+	IntakeFormID             *uuid.UUID `json:"intake_form_id"`
 	FirstName                  string     `json:"first_name" binding:"required"`
 	LastName                   string     `json:"last_name" binding:"required"`
 	Email                      string     `json:"email" binding:"required,email"`

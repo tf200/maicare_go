@@ -26,29 +26,99 @@ INSERT INTO intake_forms (
     risk_assessment,
     intake_conclusion,
     intake_conclusion_notes,
-    signature
+    signature,
+    status
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13
-) RETURNING id, registration_form_id, date_of_intake, care_type, intake_participants, family_situation, psychological_state, self_sufficiency, maturity_matrix_id, goals, risk_assessment, intake_conclusion, intake_conclusion_notes, signature, created_at, updated_at
+    $1,
+    $2,
+    $3,
+    $4::text[]::intake_participants_enum[],
+    $5,
+    $6,
+    $7,
+    $8,
+    $9,
+    $10,
+    $11,
+    $12,
+    $13,
+    $14
+)
+ON CONFLICT (registration_form_id) DO UPDATE SET
+    date_of_intake = EXCLUDED.date_of_intake,
+    care_type = EXCLUDED.care_type,
+    intake_participants = EXCLUDED.intake_participants,
+    family_situation = EXCLUDED.family_situation,
+    psychological_state = EXCLUDED.psychological_state,
+    self_sufficiency = EXCLUDED.self_sufficiency,
+    maturity_matrix_id = EXCLUDED.maturity_matrix_id,
+    goals = EXCLUDED.goals,
+    risk_assessment = EXCLUDED.risk_assessment,
+    intake_conclusion = EXCLUDED.intake_conclusion,
+    intake_conclusion_notes = EXCLUDED.intake_conclusion_notes,
+    signature = EXCLUDED.signature,
+    status = EXCLUDED.status,
+    updated_at = NOW()
+RETURNING
+    id,
+    registration_form_id,
+    date_of_intake,
+    care_type,
+    intake_participants::text[] AS intake_participants,
+    family_situation,
+    psychological_state,
+    self_sufficiency,
+    maturity_matrix_id,
+    goals,
+    risk_assessment,
+    intake_conclusion,
+    intake_conclusion_notes,
+    signature,
+    created_at,
+    updated_at,
+    status,
+    urgency_level
 `
 
 type CreateIntakeFormParams struct {
 	RegistrationFormID    uuid.UUID                `json:"registration_form_id"`
 	DateOfIntake          pgtype.Timestamptz       `json:"date_of_intake"`
-	CareType              IntakeCareTypeEnum       `json:"care_type"`
-	IntakeParticipants    []IntakeParticipantsEnum `json:"intake_participants"`
+	CareType              NullIntakeCareTypeEnum   `json:"care_type"`
+	IntakeParticipants    []string                 `json:"intake_participants"`
 	FamilySituation       *string                  `json:"family_situation"`
 	PsychologicalState    *string                  `json:"psychological_state"`
-	SelfSufficiency       int32                    `json:"self_sufficiency"`
+	SelfSufficiency       *int32                   `json:"self_sufficiency"`
 	MaturityMatrixID      *uuid.UUID               `json:"maturity_matrix_id"`
 	Goals                 *string                  `json:"goals"`
 	RiskAssessment        *string                  `json:"risk_assessment"`
-	IntakeConclusion      IntakeConclusionEnum     `json:"intake_conclusion"`
+	IntakeConclusion      NullIntakeConclusionEnum `json:"intake_conclusion"`
 	IntakeConclusionNotes *string                  `json:"intake_conclusion_notes"`
 	Signature             *string                  `json:"signature"`
+	Status                IntakeStatusEnum         `json:"status"`
 }
 
-func (q *Queries) CreateIntakeForm(ctx context.Context, arg CreateIntakeFormParams) (IntakeForm, error) {
+type CreateIntakeFormRow struct {
+	ID                    uuid.UUID                `json:"id"`
+	RegistrationFormID    uuid.UUID                `json:"registration_form_id"`
+	DateOfIntake          pgtype.Timestamptz       `json:"date_of_intake"`
+	CareType              NullIntakeCareTypeEnum   `json:"care_type"`
+	IntakeParticipants    []string                 `json:"intake_participants"`
+	FamilySituation       *string                  `json:"family_situation"`
+	PsychologicalState    *string                  `json:"psychological_state"`
+	SelfSufficiency       *int32                   `json:"self_sufficiency"`
+	MaturityMatrixID      *uuid.UUID               `json:"maturity_matrix_id"`
+	Goals                 *string                  `json:"goals"`
+	RiskAssessment        *string                  `json:"risk_assessment"`
+	IntakeConclusion      NullIntakeConclusionEnum `json:"intake_conclusion"`
+	IntakeConclusionNotes *string                  `json:"intake_conclusion_notes"`
+	Signature             *string                  `json:"signature"`
+	CreatedAt             pgtype.Timestamptz       `json:"created_at"`
+	UpdatedAt             pgtype.Timestamptz       `json:"updated_at"`
+	Status                IntakeStatusEnum         `json:"status"`
+	UrgencyLevel          NullUrgencyLevelEnum     `json:"urgency_level"`
+}
+
+func (q *Queries) CreateIntakeForm(ctx context.Context, arg CreateIntakeFormParams) (CreateIntakeFormRow, error) {
 	row := q.db.QueryRow(ctx, createIntakeForm,
 		arg.RegistrationFormID,
 		arg.DateOfIntake,
@@ -63,8 +133,9 @@ func (q *Queries) CreateIntakeForm(ctx context.Context, arg CreateIntakeFormPara
 		arg.IntakeConclusion,
 		arg.IntakeConclusionNotes,
 		arg.Signature,
+		arg.Status,
 	)
-	var i IntakeForm
+	var i CreateIntakeFormRow
 	err := row.Scan(
 		&i.ID,
 		&i.RegistrationFormID,
@@ -82,18 +153,60 @@ func (q *Queries) CreateIntakeForm(ctx context.Context, arg CreateIntakeFormPara
 		&i.Signature,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Status,
+		&i.UrgencyLevel,
 	)
 	return i, err
 }
 
 const getIntakeForm = `-- name: GetIntakeForm :one
-SELECT id, registration_form_id, date_of_intake, care_type, intake_participants, family_situation, psychological_state, self_sufficiency, maturity_matrix_id, goals, risk_assessment, intake_conclusion, intake_conclusion_notes, signature, created_at, updated_at FROM intake_forms
+SELECT
+    id,
+    registration_form_id,
+    date_of_intake,
+    care_type,
+    intake_participants::text[] AS intake_participants,
+    family_situation,
+    psychological_state,
+    self_sufficiency,
+    maturity_matrix_id,
+    goals,
+    risk_assessment,
+    intake_conclusion,
+    intake_conclusion_notes,
+    signature,
+    created_at,
+    updated_at,
+    status,
+    urgency_level
+FROM intake_forms
 WHERE id = $1
 `
 
-func (q *Queries) GetIntakeForm(ctx context.Context, id uuid.UUID) (IntakeForm, error) {
+type GetIntakeFormRow struct {
+	ID                    uuid.UUID                `json:"id"`
+	RegistrationFormID    uuid.UUID                `json:"registration_form_id"`
+	DateOfIntake          pgtype.Timestamptz       `json:"date_of_intake"`
+	CareType              NullIntakeCareTypeEnum   `json:"care_type"`
+	IntakeParticipants    []string                 `json:"intake_participants"`
+	FamilySituation       *string                  `json:"family_situation"`
+	PsychologicalState    *string                  `json:"psychological_state"`
+	SelfSufficiency       *int32                   `json:"self_sufficiency"`
+	MaturityMatrixID      *uuid.UUID               `json:"maturity_matrix_id"`
+	Goals                 *string                  `json:"goals"`
+	RiskAssessment        *string                  `json:"risk_assessment"`
+	IntakeConclusion      NullIntakeConclusionEnum `json:"intake_conclusion"`
+	IntakeConclusionNotes *string                  `json:"intake_conclusion_notes"`
+	Signature             *string                  `json:"signature"`
+	CreatedAt             pgtype.Timestamptz       `json:"created_at"`
+	UpdatedAt             pgtype.Timestamptz       `json:"updated_at"`
+	Status                IntakeStatusEnum         `json:"status"`
+	UrgencyLevel          NullUrgencyLevelEnum     `json:"urgency_level"`
+}
+
+func (q *Queries) GetIntakeForm(ctx context.Context, id uuid.UUID) (GetIntakeFormRow, error) {
 	row := q.db.QueryRow(ctx, getIntakeForm, id)
-	var i IntakeForm
+	var i GetIntakeFormRow
 	err := row.Scan(
 		&i.ID,
 		&i.RegistrationFormID,
@@ -111,13 +224,32 @@ func (q *Queries) GetIntakeForm(ctx context.Context, id uuid.UUID) (IntakeForm, 
 		&i.Signature,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Status,
+		&i.UrgencyLevel,
 	)
 	return i, err
 }
 
 const listIntakeForms = `-- name: ListIntakeForms :many
 SELECT 
-    i.id, i.registration_form_id, i.date_of_intake, i.care_type, i.intake_participants, i.family_situation, i.psychological_state, i.self_sufficiency, i.maturity_matrix_id, i.goals, i.risk_assessment, i.intake_conclusion, i.intake_conclusion_notes, i.signature, i.created_at, i.updated_at,
+    i.id,
+    i.registration_form_id,
+    i.date_of_intake,
+    i.care_type,
+    i.intake_participants::text[] AS intake_participants,
+    i.family_situation,
+    i.psychological_state,
+    i.self_sufficiency,
+    i.maturity_matrix_id,
+    i.goals,
+    i.risk_assessment,
+    i.intake_conclusion,
+    i.intake_conclusion_notes,
+    i.signature,
+    i.created_at,
+    i.updated_at,
+    i.status,
+    i.urgency_level,
     r.client_first_name,
     r.client_last_name,
     r.client_bsn_number,
@@ -148,19 +280,21 @@ type ListIntakeFormsRow struct {
 	ID                    uuid.UUID                `json:"id"`
 	RegistrationFormID    uuid.UUID                `json:"registration_form_id"`
 	DateOfIntake          pgtype.Timestamptz       `json:"date_of_intake"`
-	CareType              IntakeCareTypeEnum       `json:"care_type"`
-	IntakeParticipants    []IntakeParticipantsEnum `json:"intake_participants"`
+	CareType              NullIntakeCareTypeEnum   `json:"care_type"`
+	IntakeParticipants    []string                 `json:"intake_participants"`
 	FamilySituation       *string                  `json:"family_situation"`
 	PsychologicalState    *string                  `json:"psychological_state"`
-	SelfSufficiency       int32                    `json:"self_sufficiency"`
+	SelfSufficiency       *int32                   `json:"self_sufficiency"`
 	MaturityMatrixID      *uuid.UUID               `json:"maturity_matrix_id"`
 	Goals                 *string                  `json:"goals"`
 	RiskAssessment        *string                  `json:"risk_assessment"`
-	IntakeConclusion      IntakeConclusionEnum     `json:"intake_conclusion"`
+	IntakeConclusion      NullIntakeConclusionEnum `json:"intake_conclusion"`
 	IntakeConclusionNotes *string                  `json:"intake_conclusion_notes"`
 	Signature             *string                  `json:"signature"`
 	CreatedAt             pgtype.Timestamptz       `json:"created_at"`
 	UpdatedAt             pgtype.Timestamptz       `json:"updated_at"`
+	Status                IntakeStatusEnum         `json:"status"`
+	UrgencyLevel          NullUrgencyLevelEnum     `json:"urgency_level"`
 	ClientFirstName       string                   `json:"client_first_name"`
 	ClientLastName        string                   `json:"client_last_name"`
 	ClientBsnNumber       string                   `json:"client_bsn_number"`
@@ -199,6 +333,8 @@ func (q *Queries) ListIntakeForms(ctx context.Context, arg ListIntakeFormsParams
 			&i.Signature,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.Status,
+			&i.UrgencyLevel,
 			&i.ClientFirstName,
 			&i.ClientLastName,
 			&i.ClientBsnNumber,
@@ -212,4 +348,184 @@ func (q *Queries) ListIntakeForms(ctx context.Context, arg ListIntakeFormsParams
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateIntakeFormOutcome = `-- name: UpdateIntakeFormOutcome :one
+UPDATE intake_forms
+SET
+    status = $2,
+    intake_conclusion = $3,
+    urgency_level = $4,
+    intake_conclusion_notes = COALESCE($5, intake_conclusion_notes),
+    risk_assessment = COALESCE($6, risk_assessment),
+    updated_at = NOW()
+WHERE id = $1
+RETURNING
+    id,
+    registration_form_id,
+    date_of_intake,
+    care_type,
+    intake_participants::text[] AS intake_participants,
+    family_situation,
+    psychological_state,
+    self_sufficiency,
+    maturity_matrix_id,
+    goals,
+    risk_assessment,
+    intake_conclusion,
+    intake_conclusion_notes,
+    signature,
+    created_at,
+    updated_at,
+    status,
+    urgency_level
+`
+
+type UpdateIntakeFormOutcomeParams struct {
+	ID                    uuid.UUID                `json:"id"`
+	Status                IntakeStatusEnum         `json:"status"`
+	IntakeConclusion      NullIntakeConclusionEnum `json:"intake_conclusion"`
+	UrgencyLevel          NullUrgencyLevelEnum     `json:"urgency_level"`
+	IntakeConclusionNotes *string                  `json:"intake_conclusion_notes"`
+	RiskAssessment        *string                  `json:"risk_assessment"`
+}
+
+type UpdateIntakeFormOutcomeRow struct {
+	ID                    uuid.UUID                `json:"id"`
+	RegistrationFormID    uuid.UUID                `json:"registration_form_id"`
+	DateOfIntake          pgtype.Timestamptz       `json:"date_of_intake"`
+	CareType              NullIntakeCareTypeEnum   `json:"care_type"`
+	IntakeParticipants    []string                 `json:"intake_participants"`
+	FamilySituation       *string                  `json:"family_situation"`
+	PsychologicalState    *string                  `json:"psychological_state"`
+	SelfSufficiency       *int32                   `json:"self_sufficiency"`
+	MaturityMatrixID      *uuid.UUID               `json:"maturity_matrix_id"`
+	Goals                 *string                  `json:"goals"`
+	RiskAssessment        *string                  `json:"risk_assessment"`
+	IntakeConclusion      NullIntakeConclusionEnum `json:"intake_conclusion"`
+	IntakeConclusionNotes *string                  `json:"intake_conclusion_notes"`
+	Signature             *string                  `json:"signature"`
+	CreatedAt             pgtype.Timestamptz       `json:"created_at"`
+	UpdatedAt             pgtype.Timestamptz       `json:"updated_at"`
+	Status                IntakeStatusEnum         `json:"status"`
+	UrgencyLevel          NullUrgencyLevelEnum     `json:"urgency_level"`
+}
+
+func (q *Queries) UpdateIntakeFormOutcome(ctx context.Context, arg UpdateIntakeFormOutcomeParams) (UpdateIntakeFormOutcomeRow, error) {
+	row := q.db.QueryRow(ctx, updateIntakeFormOutcome,
+		arg.ID,
+		arg.Status,
+		arg.IntakeConclusion,
+		arg.UrgencyLevel,
+		arg.IntakeConclusionNotes,
+		arg.RiskAssessment,
+	)
+	var i UpdateIntakeFormOutcomeRow
+	err := row.Scan(
+		&i.ID,
+		&i.RegistrationFormID,
+		&i.DateOfIntake,
+		&i.CareType,
+		&i.IntakeParticipants,
+		&i.FamilySituation,
+		&i.PsychologicalState,
+		&i.SelfSufficiency,
+		&i.MaturityMatrixID,
+		&i.Goals,
+		&i.RiskAssessment,
+		&i.IntakeConclusion,
+		&i.IntakeConclusionNotes,
+		&i.Signature,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Status,
+		&i.UrgencyLevel,
+	)
+	return i, err
+}
+
+const upsertIntakeFormDraft = `-- name: UpsertIntakeFormDraft :one
+INSERT INTO intake_forms (
+    registration_form_id,
+    date_of_intake,
+    status
+) VALUES (
+    $1, $2, $3
+)
+ON CONFLICT (registration_form_id) DO UPDATE SET
+    date_of_intake = EXCLUDED.date_of_intake,
+    status = EXCLUDED.status,
+    updated_at = NOW()
+RETURNING
+    id,
+    registration_form_id,
+    date_of_intake,
+    care_type,
+    intake_participants::text[] AS intake_participants,
+    family_situation,
+    psychological_state,
+    self_sufficiency,
+    maturity_matrix_id,
+    goals,
+    risk_assessment,
+    intake_conclusion,
+    intake_conclusion_notes,
+    signature,
+    created_at,
+    updated_at,
+    status,
+    urgency_level
+`
+
+type UpsertIntakeFormDraftParams struct {
+	RegistrationFormID uuid.UUID          `json:"registration_form_id"`
+	DateOfIntake       pgtype.Timestamptz `json:"date_of_intake"`
+	Status             IntakeStatusEnum   `json:"status"`
+}
+
+type UpsertIntakeFormDraftRow struct {
+	ID                    uuid.UUID                `json:"id"`
+	RegistrationFormID    uuid.UUID                `json:"registration_form_id"`
+	DateOfIntake          pgtype.Timestamptz       `json:"date_of_intake"`
+	CareType              NullIntakeCareTypeEnum   `json:"care_type"`
+	IntakeParticipants    []string                 `json:"intake_participants"`
+	FamilySituation       *string                  `json:"family_situation"`
+	PsychologicalState    *string                  `json:"psychological_state"`
+	SelfSufficiency       *int32                   `json:"self_sufficiency"`
+	MaturityMatrixID      *uuid.UUID               `json:"maturity_matrix_id"`
+	Goals                 *string                  `json:"goals"`
+	RiskAssessment        *string                  `json:"risk_assessment"`
+	IntakeConclusion      NullIntakeConclusionEnum `json:"intake_conclusion"`
+	IntakeConclusionNotes *string                  `json:"intake_conclusion_notes"`
+	Signature             *string                  `json:"signature"`
+	CreatedAt             pgtype.Timestamptz       `json:"created_at"`
+	UpdatedAt             pgtype.Timestamptz       `json:"updated_at"`
+	Status                IntakeStatusEnum         `json:"status"`
+	UrgencyLevel          NullUrgencyLevelEnum     `json:"urgency_level"`
+}
+
+func (q *Queries) UpsertIntakeFormDraft(ctx context.Context, arg UpsertIntakeFormDraftParams) (UpsertIntakeFormDraftRow, error) {
+	row := q.db.QueryRow(ctx, upsertIntakeFormDraft, arg.RegistrationFormID, arg.DateOfIntake, arg.Status)
+	var i UpsertIntakeFormDraftRow
+	err := row.Scan(
+		&i.ID,
+		&i.RegistrationFormID,
+		&i.DateOfIntake,
+		&i.CareType,
+		&i.IntakeParticipants,
+		&i.FamilySituation,
+		&i.PsychologicalState,
+		&i.SelfSufficiency,
+		&i.MaturityMatrixID,
+		&i.Goals,
+		&i.RiskAssessment,
+		&i.IntakeConclusion,
+		&i.IntakeConclusionNotes,
+		&i.Signature,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Status,
+		&i.UrgencyLevel,
+	)
+	return i, err
 }

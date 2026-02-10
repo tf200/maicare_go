@@ -33,6 +33,7 @@ func (s *clientService) CreateClientDetails(req CreateClientDetailsRequest, ctx 
 	}
 
 	client, err := s.Store.CreateClientDetails(ctx, db.CreateClientDetailsParams{
+		IntakeFormID:               req.IntakeFormID,
 		FirstName:                  req.FirstName,
 		LastName:                   req.LastName,
 		DateOfBirth:                pgtype.Date{Time: parsedDateOfBirth, Valid: true},

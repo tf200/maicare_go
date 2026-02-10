@@ -120,7 +120,7 @@ func (server *Server) setupRoutes() {
 	server.setupProgressReportsRoutes(baseRouter)
 	server.setupAppointmentCardRoutes(baseRouter)
 	server.setupMaturityMatrixRoutes(baseRouter)
-	// server.setupIntakeFormRoutes(baseRouter)
+	server.setupIntakeFormRoutes(baseRouter)
 	server.setupContractRoutes(baseRouter)
 	server.setupECRRoutes(baseRouter)
 	server.setupAppointmentRoutes(baseRouter)

@@ -1023,3 +1023,104 @@ func (q *Queries) UpdateRegistrationFormStatus(ctx context.Context, arg UpdateRe
 	)
 	return i, err
 }
+
+const updateRegistrationFormStatusOnly = `-- name: UpdateRegistrationFormStatusOnly :one
+UPDATE registration_form
+SET
+    form_status = $2,
+    updated_at = NOW()
+WHERE id = $1
+RETURNING id, client_first_name, client_last_name, client_bsn_number, client_gender, client_nationality, client_phone_number, client_email, client_street, client_house_number, client_postal_code, client_city, referrer_first_name, referrer_last_name, referrer_organization, referrer_job_title, referrer_phone_number, referrer_email, guardian1_first_name, guardian1_last_name, guardian1_relationship, guardian1_phone_number, guardian1_email, guardian2_first_name, guardian2_last_name, guardian2_relationship, guardian2_phone_number, guardian2_email, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_currently_enrolled, education_additional_notes, education_level, work_current_employer, work_employer_phone, work_employer_email, work_current_position, work_currently_employed, work_start_date, work_additional_notes, care_protected_living, care_assisted_independent_living, care_room_training_center, care_ambulatory_guidance, application_reason, client_goals, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes, document_referral, document_education_report, document_action_plan, document_psychiatric_report, document_diagnosis, document_safety_plan, document_id_copy, application_date, referrer_signature, form_status, created_at, updated_at, submitted_at, processed_at, processed_by_employee_id, status, intake_appointment_datetime, intake_appointment_location, addmission_type
+`
+
+type UpdateRegistrationFormStatusOnlyParams struct {
+	ID         uuid.UUID      `json:"id"`
+	FormStatus FormStatusEnum `json:"form_status"`
+}
+
+func (q *Queries) UpdateRegistrationFormStatusOnly(ctx context.Context, arg UpdateRegistrationFormStatusOnlyParams) (RegistrationForm, error) {
+	row := q.db.QueryRow(ctx, updateRegistrationFormStatusOnly, arg.ID, arg.FormStatus)
+	var i RegistrationForm
+	err := row.Scan(
+		&i.ID,
+		&i.ClientFirstName,
+		&i.ClientLastName,
+		&i.ClientBsnNumber,
+		&i.ClientGender,
+		&i.ClientNationality,
+		&i.ClientPhoneNumber,
+		&i.ClientEmail,
+		&i.ClientStreet,
+		&i.ClientHouseNumber,
+		&i.ClientPostalCode,
+		&i.ClientCity,
+		&i.ReferrerFirstName,
+		&i.ReferrerLastName,
+		&i.ReferrerOrganization,
+		&i.ReferrerJobTitle,
+		&i.ReferrerPhoneNumber,
+		&i.ReferrerEmail,
+		&i.Guardian1FirstName,
+		&i.Guardian1LastName,
+		&i.Guardian1Relationship,
+		&i.Guardian1PhoneNumber,
+		&i.Guardian1Email,
+		&i.Guardian2FirstName,
+		&i.Guardian2LastName,
+		&i.Guardian2Relationship,
+		&i.Guardian2PhoneNumber,
+		&i.Guardian2Email,
+		&i.EducationInstitution,
+		&i.EducationMentorName,
+		&i.EducationMentorPhone,
+		&i.EducationMentorEmail,
+		&i.EducationCurrentlyEnrolled,
+		&i.EducationAdditionalNotes,
+		&i.EducationLevel,
+		&i.WorkCurrentEmployer,
+		&i.WorkEmployerPhone,
+		&i.WorkEmployerEmail,
+		&i.WorkCurrentPosition,
+		&i.WorkCurrentlyEmployed,
+		&i.WorkStartDate,
+		&i.WorkAdditionalNotes,
+		&i.CareProtectedLiving,
+		&i.CareAssistedIndependentLiving,
+		&i.CareRoomTrainingCenter,
+		&i.CareAmbulatoryGuidance,
+		&i.ApplicationReason,
+		&i.ClientGoals,
+		&i.RiskAggressiveBehavior,
+		&i.RiskSuicidalSelfharm,
+		&i.RiskSubstanceAbuse,
+		&i.RiskPsychiatricIssues,
+		&i.RiskCriminalHistory,
+		&i.RiskFlightBehavior,
+		&i.RiskWeaponPossession,
+		&i.RiskSexualBehavior,
+		&i.RiskDayNightRhythm,
+		&i.RiskOther,
+		&i.RiskOtherDescription,
+		&i.RiskAdditionalNotes,
+		&i.DocumentReferral,
+		&i.DocumentEducationReport,
+		&i.DocumentActionPlan,
+		&i.DocumentPsychiatricReport,
+		&i.DocumentDiagnosis,
+		&i.DocumentSafetyPlan,
+		&i.DocumentIDCopy,
+		&i.ApplicationDate,
+		&i.ReferrerSignature,
+		&i.FormStatus,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.SubmittedAt,
+		&i.ProcessedAt,
+		&i.ProcessedByEmployeeID,
+		&i.Status,
+		&i.IntakeAppointmentDatetime,
+		&i.IntakeAppointmentLocation,
+		&i.AddmissionType,
+	)
+	return i, err
+}

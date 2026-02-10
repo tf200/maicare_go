@@ -548,10 +548,15 @@ func (s *clientService) DeleteRegistrationForm(ctx context.Context, formID uuid.
 }
 
 func (s *clientService) UpdateRegistrationFormStatus(ctx context.Context, req *UpdateRegistrationFormStatusRequest, formID uuid.UUID, employeeID uuid.UUID) error {
+	intakeDate := pgtype.Timestamptz{Valid: false}
+	if req.Status == "approved" {
+		intakeDate = pgtype.Timestamptz{Time: req.IntakeAppointmentDate, Valid: true}
+	}
 	arg := db.UpdateRegistrationFormStatusParams{
 		ID:                        formID,
 		FormStatus:                db.FormStatusEnum(req.Status),
 		ProcessedByEmployeeID:     &employeeID,
+		IntakeAppointmentDatetime: intakeDate,
 		IntakeAppointmentLocation: req.IntakeAppointmentLocation,
 		AddmissionType:            req.AddmissionType,
 	}
@@ -561,6 +566,15 @@ func (s *clientService) UpdateRegistrationFormStatus(ctx context.Context, req *U
 		return fmt.Errorf("failed to update registration form status: %w", err)
 	}
 	if req.Status == "approved" {
+		_, upsertErr := s.Store.UpsertIntakeFormDraft(ctx, db.UpsertIntakeFormDraftParams{
+			RegistrationFormID: updatedForm.ID,
+			DateOfIntake:       intakeDate,
+			Status:             db.IntakeStatusEnumScheduled,
+		})
+		if upsertErr != nil {
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateRegistrationFormStatus", "Failed to create intake draft", zap.Error(upsertErr), zap.String("FormID", formID.String()))
+		}
+
 		err = s.asynqClient.EnqueueAcceptedRegistration(ctx, aclient.AcceptedRegistrationFormPayload{
 			ReferrerName:        updatedForm.ReferrerFirstName + " " + updatedForm.ReferrerLastName,
 			ChildName:           updatedForm.ClientFirstName + " " + updatedForm.ClientLastName,

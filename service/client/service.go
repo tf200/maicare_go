@@ -98,6 +98,7 @@ type ClientService interface {
 	// Intake Form
 	CreateIntakeForm(ctx context.Context, req *CreateIntakeFormRequest) (*CreateIntakeFormResponse, error)
 	ListIntakeForms(ctx *gin.Context, req *ListIntakeFormsRequest) (*pagination.Response[ListIntakeFormsResponse], error)
+	CompleteIntakeForm(ctx context.Context, req *CompleteIntakeFormRequest, intakeID uuid.UUID) (*CompleteIntakeFormResponse, error)
 
 	// Location Transfer
 	RequestLocationTransfer(ctx context.Context, clientID uuid.UUID, req LocationTransferRequest) error

@@ -986,6 +986,8 @@ const (
 	FormStatusEnumPending  FormStatusEnum = "pending"
 	FormStatusEnumApproved FormStatusEnum = "approved"
 	FormStatusEnumRejected FormStatusEnum = "rejected"
+	FormStatusEnumInReview FormStatusEnum = "in_review"
+	FormStatusEnumArchived FormStatusEnum = "archived"
 )
 
 func (e *FormStatusEnum) Scan(src interface{}) error {
@@ -1242,6 +1244,50 @@ func (ns NullIntakeParticipantsEnum) Value() (driver.Value, error) {
 		return nil, nil
 	}
 	return string(ns.IntakeParticipantsEnum), nil
+}
+
+type IntakeStatusEnum string
+
+const (
+	IntakeStatusEnumScheduled  IntakeStatusEnum = "scheduled"
+	IntakeStatusEnumInProgress IntakeStatusEnum = "in_progress"
+	IntakeStatusEnumCompleted  IntakeStatusEnum = "completed"
+	IntakeStatusEnumCancelled  IntakeStatusEnum = "cancelled"
+)
+
+func (e *IntakeStatusEnum) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = IntakeStatusEnum(s)
+	case string:
+		*e = IntakeStatusEnum(s)
+	default:
+		return fmt.Errorf("unsupported scan type for IntakeStatusEnum: %T", src)
+	}
+	return nil
+}
+
+type NullIntakeStatusEnum struct {
+	IntakeStatusEnum IntakeStatusEnum `json:"intake_status_enum"`
+	Valid            bool             `json:"valid"` // Valid is true if IntakeStatusEnum is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullIntakeStatusEnum) Scan(value interface{}) error {
+	if value == nil {
+		ns.IntakeStatusEnum, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.IntakeStatusEnum.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullIntakeStatusEnum) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.IntakeStatusEnum), nil
 }
 
 type InvoiceAuditOperationEnum string
@@ -2004,6 +2050,50 @@ func (ns NullSeverityOfIncidentEnum) Value() (driver.Value, error) {
 	return string(ns.SeverityOfIncidentEnum), nil
 }
 
+type UrgencyLevelEnum string
+
+const (
+	UrgencyLevelEnumLow      UrgencyLevelEnum = "low"
+	UrgencyLevelEnumMedium   UrgencyLevelEnum = "medium"
+	UrgencyLevelEnumHigh     UrgencyLevelEnum = "high"
+	UrgencyLevelEnumCritical UrgencyLevelEnum = "critical"
+)
+
+func (e *UrgencyLevelEnum) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = UrgencyLevelEnum(s)
+	case string:
+		*e = UrgencyLevelEnum(s)
+	default:
+		return fmt.Errorf("unsupported scan type for UrgencyLevelEnum: %T", src)
+	}
+	return nil
+}
+
+type NullUrgencyLevelEnum struct {
+	UrgencyLevelEnum UrgencyLevelEnum `json:"urgency_level_enum"`
+	Valid            bool             `json:"valid"` // Valid is true if UrgencyLevelEnum is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullUrgencyLevelEnum) Scan(value interface{}) error {
+	if value == nil {
+		ns.UrgencyLevelEnum, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.UrgencyLevelEnum.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullUrgencyLevelEnum) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.UrgencyLevelEnum), nil
+}
+
 type AiGeneratedReport struct {
 	ID         uuid.UUID          `json:"id"`
 	ReportText string             `json:"report_text"`
@@ -2657,19 +2747,21 @@ type IntakeForm struct {
 	ID                    uuid.UUID                `json:"id"`
 	RegistrationFormID    uuid.UUID                `json:"registration_form_id"`
 	DateOfIntake          pgtype.Timestamptz       `json:"date_of_intake"`
-	CareType              IntakeCareTypeEnum       `json:"care_type"`
+	CareType              NullIntakeCareTypeEnum   `json:"care_type"`
 	IntakeParticipants    []IntakeParticipantsEnum `json:"intake_participants"`
 	FamilySituation       *string                  `json:"family_situation"`
 	PsychologicalState    *string                  `json:"psychological_state"`
-	SelfSufficiency       int32                    `json:"self_sufficiency"`
+	SelfSufficiency       *int32                   `json:"self_sufficiency"`
 	MaturityMatrixID      *uuid.UUID               `json:"maturity_matrix_id"`
 	Goals                 *string                  `json:"goals"`
 	RiskAssessment        *string                  `json:"risk_assessment"`
-	IntakeConclusion      IntakeConclusionEnum     `json:"intake_conclusion"`
+	IntakeConclusion      NullIntakeConclusionEnum `json:"intake_conclusion"`
 	IntakeConclusionNotes *string                  `json:"intake_conclusion_notes"`
 	Signature             *string                  `json:"signature"`
 	CreatedAt             pgtype.Timestamptz       `json:"created_at"`
 	UpdatedAt             pgtype.Timestamptz       `json:"updated_at"`
+	Status                IntakeStatusEnum         `json:"status"`
+	UrgencyLevel          NullUrgencyLevelEnum     `json:"urgency_level"`
 }
 
 type Invoice struct {

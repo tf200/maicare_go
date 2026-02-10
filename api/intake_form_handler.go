@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 // @Summary Create Intake Form
@@ -62,4 +63,38 @@ func (s *Server) ListIntakeFormsApi(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, res)
+}
+
+// @Summary Complete Intake Form
+// @Description Complete an intake form and move accepted client to waiting list.
+// @Tags Intake Forms
+// @Accept json
+// @Produce json
+// @Param id path uuid true "Intake Form ID"
+// @Param request body clientp.CompleteIntakeFormRequest true "Complete Intake Form Request"
+// @Success 200 {object} Response[clientp.CompleteIntakeFormResponse]
+// @Failure 400 {object} Response[any]
+// @Failure 404 {object} Response[any]
+// @Failure 500 {object} Response[any]
+// @Router /intake_form/{id}/outcome [put]
+func (s *Server) CompleteIntakeFormApi(ctx *gin.Context) {
+	intakeID, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid intake form id")))
+		return
+	}
+
+	var req clientp.CompleteIntakeFormRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body")))
+		return
+	}
+
+	res, err := s.businessService.ClientService.CompleteIntakeForm(ctx, &req, intakeID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, SuccessResponse(res, "Intake completed"))
 }

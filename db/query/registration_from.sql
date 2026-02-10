@@ -212,3 +212,11 @@ SET
 
 WHERE id = $1
 RETURNING *;
+
+-- name: UpdateRegistrationFormStatusOnly :one
+UPDATE registration_form
+SET
+    form_status = $2,
+    updated_at = NOW()
+WHERE id = $1
+RETURNING *;

@@ -159,7 +159,7 @@ type CreateRegistrationFormResponse struct {
 // ListRegistrationFormsRequest represents the request body for listing registration forms
 type ListRegistrationFormsRequest struct {
 	pagination.Request
-	Status                 *string `form:"status" json:"status" binding:"omitempty,oneof=pending approved rejected"`
+	Status                 *string `form:"status" json:"status" binding:"omitempty,oneof=pending in_review approved rejected archived"`
 	RiskAggressiveBehavior *bool   `form:"risk_aggressive_behavior"`
 	RiskSuicidalSelfharm   *bool   `form:"risk_suicidal_selfharm"`
 	RiskSubstanceAbuse     *bool   `form:"risk_substance_abuse"`
@@ -481,7 +481,7 @@ type UpdateRegistrationFormResponse struct {
 
 // UpdateRegistrationFormStatusRequest represents the response body for updating a registration form status
 type UpdateRegistrationFormStatusRequest struct {
-	Status                    string    `json:"status" binding:"required,oneof=approved rejected" example:"approved"`
+	Status                    string    `json:"status" binding:"required,oneof=pending in_review approved rejected archived" example:"approved"`
 	IntakeAppointmentDate     time.Time `json:"intake_appointment_date" binding:"required_if=Status approved" example:"2023-10-01T10:00:00Z"`
 	IntakeAppointmentLocation *string   `json:"intake_appointment_location" binding:"required_if=Status approved" example:"Amsterdam Central Station"`
 	AddmissionType            *string   `json:"admission_type" binding:"required_if=Status approved,oneof=crisis_admission regular_placement" example:"regular_placement"`

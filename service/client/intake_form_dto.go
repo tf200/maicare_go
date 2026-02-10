@@ -11,39 +11,41 @@ import (
 
 // CreateIntakeFormRequest represents the request payload for creating a new intake form.
 type CreateIntakeFormRequest struct {
-	RegistrationFormID    uuid.UUID                   `json:"registration_form_id"`
-	DateOfIntake          time.Time                   `json:"date_of_intake"`
-	CareType              db.IntakeCareTypeEnum       `json:"care_type"`
-	IntakeParticipants    []db.IntakeParticipantsEnum `json:"intake_participants"`
-	FamilySituation       *string                     `json:"family_situation"`
-	PsychologicalState    *string                     `json:"psychological_state"`
-	SelfSufficiency       int32                       `json:"self_sufficiency"`
-	MaturityMatrixID      *uuid.UUID                  `json:"maturity_matrix_id"`
-	Goals                 *string                     `json:"goals"`
-	RiskAssessment        *string                     `json:"risk_assessment"`
-	IntakeConclusion      db.IntakeConclusionEnum     `json:"intake_conclusion"`
-	IntakeConclusionNotes *string                     `json:"intake_conclusion_notes"`
-	Signature             *string                     `json:"signature"`
+	RegistrationFormID    uuid.UUID               `json:"registration_form_id"`
+	DateOfIntake          time.Time               `json:"date_of_intake"`
+	CareType              db.IntakeCareTypeEnum   `json:"care_type"`
+	IntakeParticipants    []string                `json:"intake_participants"`
+	FamilySituation       *string                 `json:"family_situation"`
+	PsychologicalState    *string                 `json:"psychological_state"`
+	SelfSufficiency       int32                   `json:"self_sufficiency"`
+	MaturityMatrixID      *uuid.UUID              `json:"maturity_matrix_id"`
+	Goals                 *string                 `json:"goals"`
+	RiskAssessment        *string                 `json:"risk_assessment"`
+	IntakeConclusion      db.IntakeConclusionEnum `json:"intake_conclusion"`
+	IntakeConclusionNotes *string                 `json:"intake_conclusion_notes"`
+	Signature             *string                 `json:"signature"`
 }
 
 // CreateIntakeFormResponse represents the response payload after creating a new intake form.
 type CreateIntakeFormResponse struct {
-	ID                    uuid.UUID                   `json:"id"`
-	RegistrationFormID    uuid.UUID                   `json:"registration_form_id"`
-	DateOfIntake          time.Time                   `json:"date_of_intake"`
-	CareType              db.IntakeCareTypeEnum       `json:"care_type"`
-	IntakeParticipants    []db.IntakeParticipantsEnum `json:"intake_participants"`
-	FamilySituation       *string                     `json:"family_situation"`
-	PsychologicalState    *string                     `json:"psychological_state"`
-	SelfSufficiency       int32                       `json:"self_sufficiency"`
-	MaturityMatrixID      *uuid.UUID                  `json:"maturity_matrix_id"`
-	Goals                 *string                     `json:"goals"`
-	RiskAssessment        *string                     `json:"risk_assessment"`
-	IntakeConclusion      db.IntakeConclusionEnum     `json:"intake_conclusion"`
-	IntakeConclusionNotes *string                     `json:"intake_conclusion_notes"`
-	Signature             *string                     `json:"signature"`
-	CreatedAt             pgtype.Timestamptz          `json:"created_at"`
-	UpdatedAt             pgtype.Timestamptz          `json:"updated_at"`
+	ID                    uuid.UUID               `json:"id"`
+	RegistrationFormID    uuid.UUID               `json:"registration_form_id"`
+	DateOfIntake          time.Time               `json:"date_of_intake"`
+	CareType              db.IntakeCareTypeEnum   `json:"care_type"`
+	IntakeParticipants    []string                `json:"intake_participants"`
+	FamilySituation       *string                 `json:"family_situation"`
+	PsychologicalState    *string                 `json:"psychological_state"`
+	SelfSufficiency       int32                   `json:"self_sufficiency"`
+	MaturityMatrixID      *uuid.UUID              `json:"maturity_matrix_id"`
+	Goals                 *string                 `json:"goals"`
+	RiskAssessment        *string                 `json:"risk_assessment"`
+	IntakeConclusion      db.IntakeConclusionEnum `json:"intake_conclusion"`
+	IntakeConclusionNotes *string                 `json:"intake_conclusion_notes"`
+	Signature             *string                 `json:"signature"`
+	Status                db.IntakeStatusEnum     `json:"status"`
+	UrgencyLevel          *db.UrgencyLevelEnum    `json:"urgency_level"`
+	CreatedAt             pgtype.Timestamptz      `json:"created_at"`
+	UpdatedAt             pgtype.Timestamptz      `json:"updated_at"`
 }
 
 type ListIntakeFormsRequest struct {
@@ -53,23 +55,41 @@ type ListIntakeFormsRequest struct {
 }
 
 type ListIntakeFormsResponse struct {
-	ID                    uuid.UUID                   `json:"id"`
-	RegistrationFormID    uuid.UUID                   `json:"registration_form_id"`
-	DateOfIntake          time.Time                   `json:"date_of_intake"`
-	CareType              db.IntakeCareTypeEnum       `json:"care_type"`
-	IntakeParticipants    []db.IntakeParticipantsEnum `json:"intake_participants"`
-	FamilySituation       *string                     `json:"family_situation"`
-	PsychologicalState    *string                     `json:"psychological_state"`
-	SelfSufficiency       int32                       `json:"self_sufficiency"`
-	MaturityMatrixID      *uuid.UUID                  `json:"maturity_matrix_id"`
-	Goals                 *string                     `json:"goals"`
-	RiskAssessment        *string                     `json:"risk_assessment"`
-	IntakeConclusion      db.IntakeConclusionEnum     `json:"intake_conclusion"`
-	IntakeConclusionNotes *string                     `json:"intake_conclusion_notes"`
-	Signature             *string                     `json:"signature"`
-	CreatedAt             pgtype.Timestamptz          `json:"created_at"`
-	UpdatedAt             pgtype.Timestamptz          `json:"updated_at"`
-	ClientFirstName       string                      `json:"client_first_name"`
-	ClientLastName        string                      `json:"client_last_name"`
-	ClientBsnNumber       string                      `json:"client_bsn_number"`
+	ID                    uuid.UUID               `json:"id"`
+	RegistrationFormID    uuid.UUID               `json:"registration_form_id"`
+	DateOfIntake          time.Time               `json:"date_of_intake"`
+	CareType              db.IntakeCareTypeEnum   `json:"care_type"`
+	IntakeParticipants    []string                `json:"intake_participants"`
+	FamilySituation       *string                 `json:"family_situation"`
+	PsychologicalState    *string                 `json:"psychological_state"`
+	SelfSufficiency       int32                   `json:"self_sufficiency"`
+	MaturityMatrixID      *uuid.UUID              `json:"maturity_matrix_id"`
+	Goals                 *string                 `json:"goals"`
+	RiskAssessment        *string                 `json:"risk_assessment"`
+	IntakeConclusion      db.IntakeConclusionEnum `json:"intake_conclusion"`
+	IntakeConclusionNotes *string                 `json:"intake_conclusion_notes"`
+	Signature             *string                 `json:"signature"`
+	Status                db.IntakeStatusEnum     `json:"status"`
+	UrgencyLevel          *db.UrgencyLevelEnum    `json:"urgency_level"`
+	CreatedAt             pgtype.Timestamptz      `json:"created_at"`
+	UpdatedAt             pgtype.Timestamptz      `json:"updated_at"`
+	ClientFirstName       string                  `json:"client_first_name"`
+	ClientLastName        string                  `json:"client_last_name"`
+	ClientBsnNumber       string                  `json:"client_bsn_number"`
+}
+
+type CompleteIntakeFormRequest struct {
+	Outcome        string                      `json:"outcome" binding:"required,oneof=accepted rejected further_investigation"`
+	UrgencyLevel   *string                     `json:"urgency_level" binding:"omitempty,oneof=low medium high critical"`
+	ReportSummary  *string                     `json:"report_summary"`
+	RiskAssessment *string                     `json:"risk_assessment"`
+	ClientDetails  *CreateClientDetailsRequest `json:"client_details"`
+}
+
+type CompleteIntakeFormResponse struct {
+	IntakeID           uuid.UUID           `json:"intake_id"`
+	RegistrationFormID uuid.UUID           `json:"registration_form_id"`
+	ClientID           *uuid.UUID          `json:"client_id"`
+	Outcome            string              `json:"outcome"`
+	Status             db.IntakeStatusEnum `json:"status"`
 }

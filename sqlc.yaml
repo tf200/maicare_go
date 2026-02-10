@@ -37,3 +37,11 @@ sql:
             go_type:
               type: "float64"
               pointer: true
+          - db_type: "_intake_participants_enum"
+            go_type:
+              type: "string"
+              slice: true
+          - db_type: "public._intake_participants_enum"
+            go_type:
+              type: "string"
+              slice: true
