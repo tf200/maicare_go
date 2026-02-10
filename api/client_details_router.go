@@ -32,6 +32,7 @@ func (server *Server) setupClientRoutes(baseRouter *gin.RouterGroup) {
 
 		clientsGroup.POST("/:id/appointments", server.RBACMiddleware("CLIENT.CREATE"), server.ListAppointmentsForClientApi)
 		clientsGroup.GET("/:id/evaluations/bootstrap", server.RBACMiddleware("CLIENT.VIEW"), server.GetGoalEvaluationBootstrapApi)
+		clientsGroup.POST("/:id/evaluations", server.RBACMiddleware("CLIENT.UPDATE"), server.CreateGoalEvaluationApi)
 
 		clientsGroup.POST("/:id/location_transfer", server.RBACMiddleware("CLIENT.UPDATE"), server.RequestLocationTransferApi)
 		clientsGroup.POST("/location_transfer/approve_reject", server.RBACMiddleware("CLIENT.UPDATE"), server.ApproveOrRejectClientLocationTransferApi)
@@ -42,5 +43,7 @@ func (server *Server) setupClientRoutes(baseRouter *gin.RouterGroup) {
 		evaluationsGroup.GET("/upcoming", server.RBACMiddleware("CLIENT.VIEW"), server.ListUpcomingEvaluationsApi)
 		evaluationsGroup.GET("/recent-submitted", server.RBACMiddleware("CLIENT.VIEW"), server.ListRecentSubmittedEvaluationsApi)
 		evaluationsGroup.GET("/recent-drafts", server.RBACMiddleware("CLIENT.VIEW"), server.ListRecentDraftEvaluationsApi)
+		evaluationsGroup.PATCH("/:id/draft", server.RBACMiddleware("CLIENT.UPDATE"), server.UpdateEvaluationDraftApi)
+		evaluationsGroup.POST("/:id/submit", server.RBACMiddleware("CLIENT.UPDATE"), server.SubmitEvaluationDraftApi)
 	}
 }

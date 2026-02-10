@@ -40,7 +40,7 @@ func (s *clientService) CreateGoalEvaluation(ctx context.Context, clientID uuid.
 			return fmt.Errorf("client must have at least one active goal to start an evaluation")
 		}
 
-		evaluationDate := nullableDate(req.EvaluationDate)
+		evaluationDate := nullableDate(req.EvaluationDate) // refactor
 		if !evaluationDate.Valid {
 			evaluationDate = pgtype.Date{Valid: true, Time: time.Now().UTC()}
 		}
