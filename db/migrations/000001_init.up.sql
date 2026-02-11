@@ -1014,6 +1014,9 @@ CREATE TABLE client_goal_evaluations (
 
 CREATE INDEX client_goal_evaluations_client_date_idx ON client_goal_evaluations(client_id, evaluation_date DESC);
 CREATE INDEX client_goal_evaluations_client_created_idx ON client_goal_evaluations(client_id, created_at DESC);
+CREATE UNIQUE INDEX client_goal_evaluations_unique_draft_client_date_idx
+    ON client_goal_evaluations(client_id, evaluation_date)
+    WHERE status = 'draft';
 
 CREATE TABLE client_goal_evaluation_items (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -1089,21 +1092,23 @@ EXECUTE FUNCTION enforce_evaluation_submission_window();
 CREATE OR REPLACE FUNCTION update_client_evaluation_cadence()
 RETURNS TRIGGER AS $$
 DECLARE
-    v_intervals INT;
     v_current_next DATE;
+    v_interval_weeks INT;
 BEGIN
     -- When an evaluation is completed
     IF NEW.status = 'completed' AND (OLD.status IS NULL OR OLD.status <> 'completed') THEN
-        SELECT evaluation_intervals_weeks, next_evaluation_date 
-        INTO v_intervals, v_current_next
+        SELECT next_evaluation_date
+        INTO v_current_next
         FROM client_details
         WHERE id = NEW.client_id;
+
+        v_interval_weeks := COALESCE(NULLIF(NEW.evaluation_interval_weeks, 0), 12);
 
         -- Update the client record
         UPDATE client_details
         SET 
             last_evaluation_anchor_date = v_current_next,
-            next_evaluation_date = v_current_next + (COALESCE(NULLIF(v_intervals, 0), 12) * INTERVAL '1 week')
+            next_evaluation_date = v_current_next + (v_interval_weeks * INTERVAL '1 week')
         WHERE id = NEW.client_id;
     END IF;
     RETURN NEW;
@@ -1153,15 +1158,15 @@ CREATE TABLE client_status_history (
 CREATE INDEX idx_client_status_history_client_id ON client_status_history(client_id);
 CREATE INDEX idx_client_status_history_changed_at ON client_status_history(changed_at DESC);
 
--- Scheduled status changes
-CREATE TABLE scheduled_status_changes (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
-    new_status client_status_enum NULL,
-    reason TEXT,
-    scheduled_date DATE NULL,
-    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-);
+-- -- Scheduled status changes
+-- CREATE TABLE scheduled_status_changes (
+--     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+--     client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
+--     new_status client_status_enum NULL,
+--     reason TEXT,
+--     scheduled_date DATE NULL,
+--     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+-- );
 
 -- Client diagnoses
 CREATE TABLE client_diagnosis (

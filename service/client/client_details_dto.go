@@ -174,53 +174,177 @@ type GetClientsCountResponse struct {
 	ClientsOutOfCare     int64 `json:"clients_out_of_care"`
 }
 
-// GetClientApiResponse represents a response to a get client request
+// GetClientApiResponse represents the client GET page response.
+// This is a stable envelope + nested objects; consumers should not rely on old flat fields.
 type GetClientApiResponse struct {
-	ID                         uuid.UUID  `json:"id"`
-	FirstName                  string     `json:"first_name"`
-	LastName                   string     `json:"last_name"`
-	DateOfBirth                time.Time  `json:"date_of_birth"`
-	Identity                   bool       `json:"identity"`
-	Status                     string     `json:"status"`
-	Bsn                        *string    `json:"bsn"`
-	BsnVerifiedBy              *uuid.UUID `json:"bsn_verified_by"`
-	BsnVerifiedByFirstName     *string    `json:"bsn_verified_by_first_name"`
-	BsnVerifiedByLastName      *string    `json:"bsn_verified_by_last_name"`
-	Source                     *string    `json:"source"`
-	Birthplace                 *string    `json:"birthplace"`
-	Nationality                *string    `json:"nationality"`
-	Email                      string     `json:"email"`
-	PhoneNumber                *string    `json:"phone_number"`
-	OrganizationID             *uuid.UUID `json:"organization_id"`
-	Departement                *string    `json:"departement"`
-	Gender                     string     `json:"gender"`
-	Filenumber                 string     `json:"filenumber"`
-	ProfilePicture             *string    `json:"profile_picture"`
-	Infix                      *string    `json:"infix"`
-	CreatedAt                  time.Time  `json:"created_at"`
-	SenderID                   *uuid.UUID `json:"sender_id"`
-	LocationID                 *uuid.UUID `json:"location_id"`
-	LocationName               *string    `json:"location_name"`
-	DepartureReason            *string    `json:"departure_reason"`
-	DepartureReport            *string    `json:"departure_report"`
-	LegalMeasure               *string    `json:"legal_measure"`
-	HasUntakenMedications      bool       `json:"has_untaken_medications"`
-	EducationCurrentlyEnrolled bool       `json:"education_currently_enrolled"`
-	EducationInstitution       *string    `json:"education_institution"`
-	EducationMentorName        *string    `json:"education_mentor_name"`
-	EducationMentorEmail       *string    `json:"education_mentor_email"`
-	EducationMentorPhone       *string    `json:"education_mentor_phone"`
-	EducationAdditionalNotes   *string    `json:"education_additional_notes"`
-	EducationLevel             string     `json:"education_level"`
-	WorkCurrentlyEmployed      bool       `json:"work_currently_employed"`
-	WorkCurrentEmployer        *string    `json:"work_current_employer"`
-	WorkCurrentEmployerPhone   *string    `json:"work_employer_phone"`
-	WorkCurrentEmployerEmail   *string    `json:"work_employer_email"`
-	WorkCurrentPosition        *string    `json:"work_current_position"`
-	WorkStartDate              time.Time  `json:"work_start_date"`
-	WorkAdditionalNotes        *string    `json:"work_additional_notes"`
-	LivingSituation            *string    `json:"living_situation"`
-	LivingSituationNotes       *string    `json:"living_situation_notes"`
+	SchemaVersion     int32                            `json:"schema_version"`
+	Status            string                           `json:"status"`
+	Client            ClientPageClientResponse         `json:"client"`
+	Care              *ClientInCareResponse            `json:"care,omitempty"`
+	CareSchedule      *ClientCareScheduleResponse      `json:"care_schedule,omitempty"`
+	Sender            *ClientSenderMinimalResponse     `json:"sender"`
+	Coordinator       *ClientCoordinatorResponse       `json:"coordinator,omitempty"`
+	ContractSummary   *ClientContractSummaryResponse   `json:"contract_summary,omitempty"`
+	EvaluationSummary *ClientEvaluationSummaryResponse `json:"evaluation_summary,omitempty"`
+	EmergencyContacts []ClientEmergencySummary         `json:"emergency_contacts"`
+	Documents         ClientDocumentsSummary           `json:"documents"`
+	Goals             []ClientGoalSummaryResponse      `json:"goals"`
+	Intake            ClientIntakeResponse             `json:"intake"`
+	Risks             ClientRiskSummary                `json:"risks"`
+	Counts            ClientPageCounts                 `json:"counts"`
+	Alerts            []ClientPageAlert                `json:"alerts"`
+	Meta              ClientPageMetaResponse           `json:"meta"`
+	StatusTimeline    *ClientStatusTimelineResponse    `json:"status_timeline,omitempty"`
+}
+
+type ClientPageClientResponse struct {
+	ID          uuid.UUID               `json:"id"`
+	FirstName   string                  `json:"first_name"`
+	LastName    string                  `json:"last_name"`
+	Bsn         *string                 `json:"bsn"`
+	FileNumber  string                  `json:"file_number"`
+	Gender      string                  `json:"gender"`
+	DateOfBirth *time.Time              `json:"date_of_birth"`
+	Age         *int32                  `json:"age"`
+	CareType    *string                 `json:"care_type"`
+	Address     ClientAddressResponse   `json:"address"`
+	Location    *ClientLocationResponse `json:"location"`
+}
+
+type ClientLocationResponse struct {
+	ID   uuid.UUID `json:"id"`
+	Name string    `json:"name"`
+}
+
+type ClientPageMetaResponse struct {
+	WaitlistSince time.Time `json:"waitlist_since"`
+	LastUpdatedAt time.Time `json:"last_updated_at"`
+}
+
+type ClientCareScheduleResponse struct {
+	CareStartDate      *time.Time `json:"care_start_date"`
+	PlacedInCareAt     *time.Time `json:"placed_in_care_at"`
+	DaysUntilStart     *int32     `json:"days_until_start"`
+	ShouldBeActiveNow  bool       `json:"should_be_active_now"`
+	NextEvaluationDate *time.Time `json:"next_evaluation_date"`
+}
+
+type ClientCoordinatorResponse struct {
+	EmployeeID *uuid.UUID `json:"employee_id"`
+	FirstName  *string    `json:"first_name"`
+	LastName   *string    `json:"last_name"`
+	StartDate  *time.Time `json:"start_date"`
+}
+
+type ClientStatusTimelineResponse struct {
+	LastChangeReason *string    `json:"last_change_reason"`
+	LastChangedAt    *time.Time `json:"last_changed_at"`
+	LastStatus       *string    `json:"last_status"`
+}
+
+type ClientInCareResponse struct {
+	CareStartDate            *time.Time `json:"care_start_date"`
+	PlacedInCareAt           *time.Time `json:"placed_in_care_at"`
+	DaysInCare               *int32     `json:"days_in_care"`
+	EvaluationIntervalsWeeks int32      `json:"evaluation_intervals_weeks"`
+	LastEvaluationAnchorDate *time.Time `json:"last_evaluation_anchor_date"`
+	NextEvaluationDate       *time.Time `json:"next_evaluation_date"`
+}
+
+type ClientContractSummaryResponse struct {
+	HasActiveApprovedContract bool                          `json:"has_active_approved_contract"`
+	ActiveContract            *ClientActiveContractResponse `json:"active_contract,omitempty"`
+	DaysUntilContractEnd      *int32                        `json:"days_until_contract_end"`
+}
+
+type ClientActiveContractResponse struct {
+	ID              uuid.UUID  `json:"id"`
+	Status          *string    `json:"status"`
+	StartDate       *time.Time `json:"start_date"`
+	EndDate         *time.Time `json:"end_date"`
+	FinancingAct    *string    `json:"financing_act"`
+	FinancingOption *string    `json:"financing_option"`
+	CareType        *string    `json:"care_type"`
+}
+
+type ClientEvaluationSummaryResponse struct {
+	NextEvaluationDate *time.Time                             `json:"next_evaluation_date"`
+	DaysLeft           *int32                                 `json:"days_left"`
+	Priority           *string                                `json:"priority"`
+	Draft              *ClientEvaluationDraftSummaryResponse  `json:"draft,omitempty"`
+	LastCompleted      *ClientEvaluationLastCompletedResponse `json:"last_completed,omitempty"`
+}
+
+type ClientEvaluationDraftSummaryResponse struct {
+	ID        uuid.UUID  `json:"id"`
+	UpdatedAt *time.Time `json:"updated_at"`
+}
+
+type ClientEvaluationLastCompletedResponse struct {
+	ID                  uuid.UUID  `json:"id"`
+	SubmittedAt         *time.Time `json:"submitted_at"`
+	CreatedByEmployeeID *uuid.UUID `json:"created_by_employee_id"`
+	CreatorName         *string    `json:"creator_name"`
+}
+
+type ClientAddressResponse struct {
+	Street              string  `json:"street"`
+	HouseNumber         string  `json:"house_number"`
+	HouseNumberAddition *string `json:"house_number_addition"`
+	PostalCode          string  `json:"postal_code"`
+	City                string  `json:"city"`
+}
+
+type ClientSenderMinimalResponse struct {
+	Name         string  `json:"name"`
+	EmailAddress *string `json:"email_address"`
+	PhoneNumber  *string `json:"phone_number"`
+}
+
+type ClientIntakeResponse struct {
+	SelfSufficiencyScore *int32  `json:"self_sufficiency_score"`
+	Conclusion           *string `json:"conclusion"`
+	ConclusionNotes      *string `json:"conclusion_notes"`
+}
+
+type ClientGoalSummaryResponse struct {
+	Title     string  `json:"title"`
+	Priority  string  `json:"priority"`
+	TopicName *string `json:"topic_name"`
+}
+
+type ClientEmergencySummary struct {
+	ID           uuid.UUID `json:"id"`
+	FirstName    *string   `json:"first_name"`
+	LastName     *string   `json:"last_name"`
+	Relationship *string   `json:"relationship"`
+	PhoneNumber  *string   `json:"phone_number"`
+	Email        *string   `json:"email"`
+}
+
+type ClientDocumentsSummary struct {
+	Existing []string `json:"existing"`
+	Missing  []string `json:"missing"`
+}
+
+type ClientRiskSummary struct {
+	Flags []string `json:"flags"`
+	Notes *string  `json:"notes"`
+}
+
+type ClientPageCounts struct {
+	Contracts    int64 `json:"contracts"`
+	Incidents    int64 `json:"incidents"`
+	Reports      int64 `json:"reports"`
+	Evaluations  int64 `json:"evaluations"`
+	Documents    int64 `json:"documents"`
+	Appointments int64 `json:"appointments"`
+}
+
+type ClientPageAlert struct {
+	Code     string `json:"code"`
+	Severity string `json:"severity"`
+	Message  string `json:"message"`
 }
 
 // GetClientAddressesApiResponse represents a response to a get client addresses request

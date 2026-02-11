@@ -416,43 +416,6 @@ func (q *Queries) CreateClientStatusHistory(ctx context.Context, arg CreateClien
 	return i, err
 }
 
-const createSchedueledClientStatusChange = `-- name: CreateSchedueledClientStatusChange :one
-INSERT INTO scheduled_status_changes (
-    client_id,
-    new_status,
-    reason,
-    scheduled_date
-) VALUES (
-    $1, $2, $3, $4
-) RETURNING id, client_id, new_status, reason, scheduled_date, created_at
-`
-
-type CreateSchedueledClientStatusChangeParams struct {
-	ClientID      uuid.UUID            `json:"client_id"`
-	NewStatus     NullClientStatusEnum `json:"new_status"`
-	Reason        *string              `json:"reason"`
-	ScheduledDate pgtype.Date          `json:"scheduled_date"`
-}
-
-func (q *Queries) CreateSchedueledClientStatusChange(ctx context.Context, arg CreateSchedueledClientStatusChangeParams) (ScheduledStatusChange, error) {
-	row := q.db.QueryRow(ctx, createSchedueledClientStatusChange,
-		arg.ClientID,
-		arg.NewStatus,
-		arg.Reason,
-		arg.ScheduledDate,
-	)
-	var i ScheduledStatusChange
-	err := row.Scan(
-		&i.ID,
-		&i.ClientID,
-		&i.NewStatus,
-		&i.Reason,
-		&i.ScheduledDate,
-		&i.CreatedAt,
-	)
-	return i, err
-}
-
 const deleteClientDocument = `-- name: DeleteClientDocument :one
 DELETE FROM client_documents
 WHERE attachment_uuid = $1
@@ -564,6 +527,52 @@ func (q *Queries) GetClientByIntakeFormID(ctx context.Context, intakeFormID *uui
 	return i, err
 }
 
+const getClientCoordinator = `-- name: GetClientCoordinator :many
+SELECT
+    ae.employee_id,
+    ep.first_name,
+    ep.last_name,
+    ae.start_date
+FROM assigned_employee ae
+JOIN employee_profile ep ON ep.id = ae.employee_id
+WHERE ae.client_id = $1
+  AND ae.role = 'coordinator'
+ORDER BY ae.start_date DESC, ae.created_at DESC
+LIMIT 1
+`
+
+type GetClientCoordinatorRow struct {
+	EmployeeID uuid.UUID   `json:"employee_id"`
+	FirstName  string      `json:"first_name"`
+	LastName   string      `json:"last_name"`
+	StartDate  pgtype.Date `json:"start_date"`
+}
+
+func (q *Queries) GetClientCoordinator(ctx context.Context, clientID uuid.UUID) ([]GetClientCoordinatorRow, error) {
+	rows, err := q.db.Query(ctx, getClientCoordinator, clientID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetClientCoordinatorRow{}
+	for rows.Next() {
+		var i GetClientCoordinatorRow
+		if err := rows.Scan(
+			&i.EmployeeID,
+			&i.FirstName,
+			&i.LastName,
+			&i.StartDate,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getClientCounts = `-- name: GetClientCounts :one
 SELECT
     COUNT(*) AS total_clients,
@@ -595,70 +604,87 @@ func (q *Queries) GetClientCounts(ctx context.Context) (GetClientCountsRow, erro
 const getClientDetails = `-- name: GetClientDetails :one
 SELECT c.id, c.intake_form_id, c.registration_form_id, c.first_name, c.last_name, c.date_of_birth, c.identity, c.status, c.bsn, c.bsn_verified_by, c.evaluation_intervals_weeks, c.care_type, c.email, c.phone_number, c.gender, c.filenumber, c.created_at, c.placed_in_care_at, c.care_start_date, c.last_evaluation_anchor_date, c.next_evaluation_date, c.sender_id, c.location_id, c.street, c.house_number, c.house_number_addition, c.postal_code, c.city, c.education_currently_enrolled, c.education_institution, c.education_mentor_name, c.education_mentor_phone, c.education_mentor_email, c.education_additional_notes, c.education_level, c.work_currently_employed, c.work_current_employer, c.work_current_employer_phone, c.work_current_employer_email, c.work_current_position, c.work_start_date, c.work_additional_notes, c.nationality, c.risk_aggressive_behavior, c.risk_suicidal_selfharm, c.risk_substance_abuse, c.risk_psychiatric_issues, c.risk_criminal_history, c.risk_flight_behavior, c.risk_weapon_possession, c.risk_sexual_behavior, c.risk_day_night_rhythm, c.risk_other, c.risk_other_description, c.risk_additional_notes,
        ep.first_name AS bsn_verified_by_first_name,
-       ep.last_name AS bsn_verified_by_last_name
+       ep.last_name AS bsn_verified_by_last_name,
+       l.name AS location_name,
+       s.name AS sender_name,
+       s.email_address AS sender_email_address,
+       s.phone_number AS sender_phone_number,
+       i.self_sufficiency AS intake_self_sufficiency,
+       i.intake_conclusion AS intake_conclusion,
+       i.intake_conclusion_notes AS intake_conclusion_notes
 FROM client_details c
 LEFT JOIN employee_profile ep ON c.bsn_verified_by = ep.id
+LEFT JOIN location l ON c.location_id = l.id
+LEFT JOIN sender s ON c.sender_id = s.id
+LEFT JOIN intake_forms i ON c.intake_form_id = i.id
 WHERE c.id = $1 LIMIT 1
 `
 
 type GetClientDetailsRow struct {
-	ID                         uuid.UUID              `json:"id"`
-	IntakeFormID               *uuid.UUID             `json:"intake_form_id"`
-	RegistrationFormID         *uuid.UUID             `json:"registration_form_id"`
-	FirstName                  string                 `json:"first_name"`
-	LastName                   string                 `json:"last_name"`
-	DateOfBirth                pgtype.Date            `json:"date_of_birth"`
-	Identity                   bool                   `json:"identity"`
-	Status                     ClientStatusEnum       `json:"status"`
-	Bsn                        *string                `json:"bsn"`
-	BsnVerifiedBy              *uuid.UUID             `json:"bsn_verified_by"`
-	EvaluationIntervalsWeeks   int32                  `json:"evaluation_intervals_weeks"`
-	CareType                   NullIntakeCareTypeEnum `json:"care_type"`
-	Email                      string                 `json:"email"`
-	PhoneNumber                *string                `json:"phone_number"`
-	Gender                     GenderEnum             `json:"gender"`
-	Filenumber                 string                 `json:"filenumber"`
-	CreatedAt                  pgtype.Timestamptz     `json:"created_at"`
-	PlacedInCareAt             pgtype.Timestamptz     `json:"placed_in_care_at"`
-	CareStartDate              pgtype.Date            `json:"care_start_date"`
-	LastEvaluationAnchorDate   pgtype.Date            `json:"last_evaluation_anchor_date"`
-	NextEvaluationDate         pgtype.Date            `json:"next_evaluation_date"`
-	SenderID                   *uuid.UUID             `json:"sender_id"`
-	LocationID                 *uuid.UUID             `json:"location_id"`
-	Street                     string                 `json:"street"`
-	HouseNumber                string                 `json:"house_number"`
-	HouseNumberAddition        *string                `json:"house_number_addition"`
-	PostalCode                 string                 `json:"postal_code"`
-	City                       string                 `json:"city"`
-	EducationCurrentlyEnrolled bool                   `json:"education_currently_enrolled"`
-	EducationInstitution       *string                `json:"education_institution"`
-	EducationMentorName        *string                `json:"education_mentor_name"`
-	EducationMentorPhone       *string                `json:"education_mentor_phone"`
-	EducationMentorEmail       *string                `json:"education_mentor_email"`
-	EducationAdditionalNotes   *string                `json:"education_additional_notes"`
-	EducationLevel             EducationLevelEnum     `json:"education_level"`
-	WorkCurrentlyEmployed      bool                   `json:"work_currently_employed"`
-	WorkCurrentEmployer        *string                `json:"work_current_employer"`
-	WorkCurrentEmployerPhone   *string                `json:"work_current_employer_phone"`
-	WorkCurrentEmployerEmail   *string                `json:"work_current_employer_email"`
-	WorkCurrentPosition        *string                `json:"work_current_position"`
-	WorkStartDate              pgtype.Date            `json:"work_start_date"`
-	WorkAdditionalNotes        *string                `json:"work_additional_notes"`
-	Nationality                *string                `json:"nationality"`
-	RiskAggressiveBehavior     *bool                  `json:"risk_aggressive_behavior"`
-	RiskSuicidalSelfharm       *bool                  `json:"risk_suicidal_selfharm"`
-	RiskSubstanceAbuse         *bool                  `json:"risk_substance_abuse"`
-	RiskPsychiatricIssues      *bool                  `json:"risk_psychiatric_issues"`
-	RiskCriminalHistory        *bool                  `json:"risk_criminal_history"`
-	RiskFlightBehavior         *bool                  `json:"risk_flight_behavior"`
-	RiskWeaponPossession       *bool                  `json:"risk_weapon_possession"`
-	RiskSexualBehavior         *bool                  `json:"risk_sexual_behavior"`
-	RiskDayNightRhythm         *bool                  `json:"risk_day_night_rhythm"`
-	RiskOther                  *bool                  `json:"risk_other"`
-	RiskOtherDescription       *string                `json:"risk_other_description"`
-	RiskAdditionalNotes        *string                `json:"risk_additional_notes"`
-	BsnVerifiedByFirstName     *string                `json:"bsn_verified_by_first_name"`
-	BsnVerifiedByLastName      *string                `json:"bsn_verified_by_last_name"`
+	ID                         uuid.UUID                `json:"id"`
+	IntakeFormID               *uuid.UUID               `json:"intake_form_id"`
+	RegistrationFormID         *uuid.UUID               `json:"registration_form_id"`
+	FirstName                  string                   `json:"first_name"`
+	LastName                   string                   `json:"last_name"`
+	DateOfBirth                pgtype.Date              `json:"date_of_birth"`
+	Identity                   bool                     `json:"identity"`
+	Status                     ClientStatusEnum         `json:"status"`
+	Bsn                        *string                  `json:"bsn"`
+	BsnVerifiedBy              *uuid.UUID               `json:"bsn_verified_by"`
+	EvaluationIntervalsWeeks   int32                    `json:"evaluation_intervals_weeks"`
+	CareType                   NullIntakeCareTypeEnum   `json:"care_type"`
+	Email                      string                   `json:"email"`
+	PhoneNumber                *string                  `json:"phone_number"`
+	Gender                     GenderEnum               `json:"gender"`
+	Filenumber                 string                   `json:"filenumber"`
+	CreatedAt                  pgtype.Timestamptz       `json:"created_at"`
+	PlacedInCareAt             pgtype.Timestamptz       `json:"placed_in_care_at"`
+	CareStartDate              pgtype.Date              `json:"care_start_date"`
+	LastEvaluationAnchorDate   pgtype.Date              `json:"last_evaluation_anchor_date"`
+	NextEvaluationDate         pgtype.Date              `json:"next_evaluation_date"`
+	SenderID                   *uuid.UUID               `json:"sender_id"`
+	LocationID                 *uuid.UUID               `json:"location_id"`
+	Street                     string                   `json:"street"`
+	HouseNumber                string                   `json:"house_number"`
+	HouseNumberAddition        *string                  `json:"house_number_addition"`
+	PostalCode                 string                   `json:"postal_code"`
+	City                       string                   `json:"city"`
+	EducationCurrentlyEnrolled bool                     `json:"education_currently_enrolled"`
+	EducationInstitution       *string                  `json:"education_institution"`
+	EducationMentorName        *string                  `json:"education_mentor_name"`
+	EducationMentorPhone       *string                  `json:"education_mentor_phone"`
+	EducationMentorEmail       *string                  `json:"education_mentor_email"`
+	EducationAdditionalNotes   *string                  `json:"education_additional_notes"`
+	EducationLevel             EducationLevelEnum       `json:"education_level"`
+	WorkCurrentlyEmployed      bool                     `json:"work_currently_employed"`
+	WorkCurrentEmployer        *string                  `json:"work_current_employer"`
+	WorkCurrentEmployerPhone   *string                  `json:"work_current_employer_phone"`
+	WorkCurrentEmployerEmail   *string                  `json:"work_current_employer_email"`
+	WorkCurrentPosition        *string                  `json:"work_current_position"`
+	WorkStartDate              pgtype.Date              `json:"work_start_date"`
+	WorkAdditionalNotes        *string                  `json:"work_additional_notes"`
+	Nationality                *string                  `json:"nationality"`
+	RiskAggressiveBehavior     *bool                    `json:"risk_aggressive_behavior"`
+	RiskSuicidalSelfharm       *bool                    `json:"risk_suicidal_selfharm"`
+	RiskSubstanceAbuse         *bool                    `json:"risk_substance_abuse"`
+	RiskPsychiatricIssues      *bool                    `json:"risk_psychiatric_issues"`
+	RiskCriminalHistory        *bool                    `json:"risk_criminal_history"`
+	RiskFlightBehavior         *bool                    `json:"risk_flight_behavior"`
+	RiskWeaponPossession       *bool                    `json:"risk_weapon_possession"`
+	RiskSexualBehavior         *bool                    `json:"risk_sexual_behavior"`
+	RiskDayNightRhythm         *bool                    `json:"risk_day_night_rhythm"`
+	RiskOther                  *bool                    `json:"risk_other"`
+	RiskOtherDescription       *string                  `json:"risk_other_description"`
+	RiskAdditionalNotes        *string                  `json:"risk_additional_notes"`
+	BsnVerifiedByFirstName     *string                  `json:"bsn_verified_by_first_name"`
+	BsnVerifiedByLastName      *string                  `json:"bsn_verified_by_last_name"`
+	LocationName               *string                  `json:"location_name"`
+	SenderName                 *string                  `json:"sender_name"`
+	SenderEmailAddress         *string                  `json:"sender_email_address"`
+	SenderPhoneNumber          *string                  `json:"sender_phone_number"`
+	IntakeSelfSufficiency      *int32                   `json:"intake_self_sufficiency"`
+	IntakeConclusion           NullIntakeConclusionEnum `json:"intake_conclusion"`
+	IntakeConclusionNotes      *string                  `json:"intake_conclusion_notes"`
 }
 
 func (q *Queries) GetClientDetails(ctx context.Context, id uuid.UUID) (GetClientDetailsRow, error) {
@@ -722,6 +748,92 @@ func (q *Queries) GetClientDetails(ctx context.Context, id uuid.UUID) (GetClient
 		&i.RiskAdditionalNotes,
 		&i.BsnVerifiedByFirstName,
 		&i.BsnVerifiedByLastName,
+		&i.LocationName,
+		&i.SenderName,
+		&i.SenderEmailAddress,
+		&i.SenderPhoneNumber,
+		&i.IntakeSelfSufficiency,
+		&i.IntakeConclusion,
+		&i.IntakeConclusionNotes,
+	)
+	return i, err
+}
+
+const getClientLatestStatusHistory = `-- name: GetClientLatestStatusHistory :one
+SELECT
+    (
+        SELECT csh.reason
+        FROM client_status_history csh
+        WHERE csh.client_id = $1
+        ORDER BY csh.changed_at DESC
+        LIMIT 1
+    ) AS last_change_reason,
+    (
+        SELECT csh.changed_at
+        FROM client_status_history csh
+        WHERE csh.client_id = $1
+        ORDER BY csh.changed_at DESC
+        LIMIT 1
+    ) AS last_changed_at,
+    (
+        COALESCE((
+            SELECT csh.new_status
+            FROM client_status_history csh
+            WHERE csh.client_id = $1
+            ORDER BY csh.changed_at DESC
+            LIMIT 1
+        ), '')::text
+    ) AS last_status
+`
+
+type GetClientLatestStatusHistoryRow struct {
+	LastChangeReason *string            `json:"last_change_reason"`
+	LastChangedAt    pgtype.Timestamptz `json:"last_changed_at"`
+	LastStatus       string             `json:"last_status"`
+}
+
+func (q *Queries) GetClientLatestStatusHistory(ctx context.Context, clientID uuid.UUID) (GetClientLatestStatusHistoryRow, error) {
+	row := q.db.QueryRow(ctx, getClientLatestStatusHistory, clientID)
+	var i GetClientLatestStatusHistoryRow
+	err := row.Scan(&i.LastChangeReason, &i.LastChangedAt, &i.LastStatus)
+	return i, err
+}
+
+const getClientPageCounts = `-- name: GetClientPageCounts :one
+SELECT
+    (SELECT COUNT(*)::bigint FROM contract c WHERE c.client_id = $1) AS contracts_count,
+    (SELECT COUNT(*)::bigint FROM incident i WHERE i.client_id = $1 AND i.soft_delete = FALSE) AS incidents_count,
+    (SELECT COUNT(*)::bigint FROM progress_report pr WHERE pr.client_id = $1) AS reports_count,
+    (SELECT COUNT(*)::bigint FROM client_goal_evaluations e WHERE e.client_id = $1) AS evaluations_count,
+    (SELECT COUNT(*)::bigint FROM client_documents d WHERE d.client_id = $1) AS documents_count,
+    (
+        SELECT COUNT(*)::bigint
+        FROM appointment_clients ac
+        JOIN scheduled_appointments sa ON sa.id = ac.appointment_id
+        WHERE ac.client_id = $1
+          AND sa.status <> 'CANCELLED'
+    ) AS appointments_count
+`
+
+type GetClientPageCountsRow struct {
+	ContractsCount    int64 `json:"contracts_count"`
+	IncidentsCount    int64 `json:"incidents_count"`
+	ReportsCount      int64 `json:"reports_count"`
+	EvaluationsCount  int64 `json:"evaluations_count"`
+	DocumentsCount    int64 `json:"documents_count"`
+	AppointmentsCount int64 `json:"appointments_count"`
+}
+
+func (q *Queries) GetClientPageCounts(ctx context.Context, clientID uuid.UUID) (GetClientPageCountsRow, error) {
+	row := q.db.QueryRow(ctx, getClientPageCounts, clientID)
+	var i GetClientPageCountsRow
+	err := row.Scan(
+		&i.ContractsCount,
+		&i.IncidentsCount,
+		&i.ReportsCount,
+		&i.EvaluationsCount,
+		&i.DocumentsCount,
+		&i.AppointmentsCount,
 	)
 	return i, err
 }
@@ -758,6 +870,101 @@ func (q *Queries) GetMissingClientDocuments(ctx context.Context, clientID uuid.U
 			return nil, err
 		}
 		items = append(items, missing_label)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listActiveGoalSummariesByClientID = `-- name: ListActiveGoalSummariesByClientID :many
+SELECT
+    cg.title,
+    cg.priority,
+    COALESCE(cg.topic_name_snapshot, t.topic_name, '') AS topic_name
+FROM client_goals cg
+LEFT JOIN topics t ON t.id = cg.topic_id
+WHERE cg.client_id = $1 AND cg.status = 'active'
+ORDER BY cg.sort_order
+`
+
+type ListActiveGoalSummariesByClientIDRow struct {
+	Title     string                 `json:"title"`
+	Priority  ClientGoalPriorityEnum `json:"priority"`
+	TopicName string                 `json:"topic_name"`
+}
+
+func (q *Queries) ListActiveGoalSummariesByClientID(ctx context.Context, clientID uuid.UUID) ([]ListActiveGoalSummariesByClientIDRow, error) {
+	rows, err := q.db.Query(ctx, listActiveGoalSummariesByClientID, clientID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListActiveGoalSummariesByClientIDRow{}
+	for rows.Next() {
+		var i ListActiveGoalSummariesByClientIDRow
+		if err := rows.Scan(&i.Title, &i.Priority, &i.TopicName); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listClientActiveApprovedContracts = `-- name: ListClientActiveApprovedContracts :many
+SELECT
+    c.id,
+    c.status::text AS status,
+    c.start_date,
+    c.end_date,
+    c.financing_act::text AS financing_act,
+    c.financing_option::text AS financing_option,
+    c.care_type::text AS care_type,
+    (DATE(c.end_date) - CURRENT_DATE)::int4 AS days_until_contract_end
+FROM contract c
+WHERE c.client_id = $1
+  AND c.status = 'approved'
+  AND c.start_date <= CURRENT_TIMESTAMP
+  AND c.end_date >= CURRENT_TIMESTAMP
+ORDER BY c.end_date ASC
+`
+
+type ListClientActiveApprovedContractsRow struct {
+	ID                   uuid.UUID          `json:"id"`
+	Status               string             `json:"status"`
+	StartDate            pgtype.Timestamptz `json:"start_date"`
+	EndDate              pgtype.Timestamptz `json:"end_date"`
+	FinancingAct         string             `json:"financing_act"`
+	FinancingOption      string             `json:"financing_option"`
+	CareType             string             `json:"care_type"`
+	DaysUntilContractEnd int32              `json:"days_until_contract_end"`
+}
+
+func (q *Queries) ListClientActiveApprovedContracts(ctx context.Context, clientID uuid.UUID) ([]ListClientActiveApprovedContractsRow, error) {
+	rows, err := q.db.Query(ctx, listClientActiveApprovedContracts, clientID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListClientActiveApprovedContractsRow{}
+	for rows.Next() {
+		var i ListClientActiveApprovedContractsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Status,
+			&i.StartDate,
+			&i.EndDate,
+			&i.FinancingAct,
+			&i.FinancingOption,
+			&i.CareType,
+			&i.DaysUntilContractEnd,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -1048,6 +1255,33 @@ func (q *Queries) ListClientStatusHistory(ctx context.Context, arg ListClientSta
 	return items, nil
 }
 
+const listExistingClientDocumentLabels = `-- name: ListExistingClientDocumentLabels :many
+SELECT DISTINCT cd.label::text AS label
+FROM client_documents cd
+WHERE cd.client_id = $1
+ORDER BY label
+`
+
+func (q *Queries) ListExistingClientDocumentLabels(ctx context.Context, clientID uuid.UUID) ([]string, error) {
+	rows, err := q.db.Query(ctx, listExistingClientDocumentLabels, clientID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []string{}
+	for rows.Next() {
+		var label string
+		if err := rows.Scan(&label); err != nil {
+			return nil, err
+		}
+		items = append(items, label)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listInCareClients = `-- name: ListInCareClients :many
 SELECT
     c.id,
@@ -1155,6 +1389,65 @@ func (q *Queries) ListInCareClients(ctx context.Context, arg ListInCareClientsPa
 			&i.DaysInCare,
 			&i.HasActiveContract,
 			&i.TotalCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listTopEmergencyContactsByClientID = `-- name: ListTopEmergencyContactsByClientID :many
+SELECT
+    cec.id,
+    cec.first_name,
+    cec.last_name,
+    cec.relationship,
+    cec.phone_number,
+    cec.email,
+    cec.relation_status
+FROM client_emergency_contact cec
+WHERE cec.client_id = $1
+ORDER BY
+    CASE
+        WHEN cec.relation_status::text = 'Primary Relationship' THEN 1
+        WHEN cec.relation_status::text = 'Secondary Relationship' THEN 2
+        ELSE 3
+    END,
+    cec.created_at ASC
+LIMIT 2
+`
+
+type ListTopEmergencyContactsByClientIDRow struct {
+	ID             uuid.UUID              `json:"id"`
+	FirstName      *string                `json:"first_name"`
+	LastName       *string                `json:"last_name"`
+	Relationship   *string                `json:"relationship"`
+	PhoneNumber    *string                `json:"phone_number"`
+	Email          *string                `json:"email"`
+	RelationStatus NullRelationStatusEnum `json:"relation_status"`
+}
+
+func (q *Queries) ListTopEmergencyContactsByClientID(ctx context.Context, clientID uuid.UUID) ([]ListTopEmergencyContactsByClientIDRow, error) {
+	rows, err := q.db.Query(ctx, listTopEmergencyContactsByClientID, clientID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListTopEmergencyContactsByClientIDRow{}
+	for rows.Next() {
+		var i ListTopEmergencyContactsByClientIDRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.FirstName,
+			&i.LastName,
+			&i.Relationship,
+			&i.PhoneNumber,
+			&i.Email,
+			&i.RelationStatus,
 		); err != nil {
 			return nil, err
 		}

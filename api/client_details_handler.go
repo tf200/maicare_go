@@ -663,14 +663,14 @@ func (server *Server) ListRecentDraftEvaluationsApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
-// CreateGoalEvaluationApi creates a new goal evaluation for a client
-// @Summary Create a new goal evaluation
+// CreateGoalEvaluationApi creates or updates the current scheduled goal evaluation for a client
+// @Summary Save or submit the current scheduled goal evaluation
 // @Tags evaluations
 // @Accept json
 // @Produce json
 // @Param id path string true "Client ID"
 // @Param request body clientp.CreateGoalEvaluationRequest true "Goal evaluation details"
-// @Success 201 {object} Response[clientp.GoalEvaluationResponse]
+// @Success 200 {object} Response[clientp.GoalEvaluationResponse]
 // @Failure 400,500 {object} Response[any]
 // @Router /clients/{id}/evaluations [post]
 func (server *Server) CreateGoalEvaluationApi(ctx *gin.Context) {
@@ -699,64 +699,6 @@ func (server *Server) CreateGoalEvaluationApi(ctx *gin.Context) {
 		return
 	}
 
-	res := SuccessResponse(result, "Goal evaluation created successfully")
-	ctx.JSON(http.StatusCreated, res)
-}
-
-// UpdateEvaluationDraftApi updates a goal evaluation draft
-// @Summary Update a goal evaluation draft
-// @Tags evaluations
-// @Accept json
-// @Produce json
-// @Param id path string true "Evaluation ID"
-// @Param request body clientp.SaveGoalEvaluationDraftRequest true "Goal evaluation draft details"
-// @Success 200 {object} Response[clientp.GoalEvaluationResponse]
-// @Failure 400,500 {object} Response[any]
-// @Router /evaluations/{id}/draft [patch]
-func (server *Server) UpdateEvaluationDraftApi(ctx *gin.Context) {
-	evaluationID, err := uuid.Parse(ctx.Param("id"))
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid evaluation ID")))
-		return
-	}
-
-	var req clientp.SaveGoalEvaluationDraftRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-
-	result, err := server.businessService.ClientService.SaveGoalEvaluationDraft(ctx, evaluationID, req)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	res := SuccessResponse(result, "Goal evaluation draft updated successfully")
-	ctx.JSON(http.StatusOK, res)
-}
-
-// SubmitEvaluationDraftApi submits a goal evaluation draft
-// @Summary Submit a goal evaluation draft
-// @Tags evaluations
-// @Produce json
-// @Param id path string true "Evaluation ID"
-// @Success 200 {object} Response[clientp.GoalEvaluationResponse]
-// @Failure 400,500 {object} Response[any]
-// @Router /evaluations/{id}/submit [post]
-func (server *Server) SubmitEvaluationDraftApi(ctx *gin.Context) {
-	evaluationID, err := uuid.Parse(ctx.Param("id"))
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid evaluation ID")))
-		return
-	}
-
-	result, err := server.businessService.ClientService.SubmitGoalEvaluationDraft(ctx, evaluationID)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	res := SuccessResponse(result, "Goal evaluation draft submitted successfully")
+	res := SuccessResponse(result, "Goal evaluation saved successfully")
 	ctx.JSON(http.StatusOK, res)
 }

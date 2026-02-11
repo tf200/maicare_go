@@ -120,8 +120,6 @@ type ClientService interface {
 
 	// Goal Evaluations
 	CreateGoalEvaluation(ctx context.Context, clientID uuid.UUID, employeeID uuid.UUID, req CreateGoalEvaluationRequest) (*GoalEvaluationResponse, error)
-	SaveGoalEvaluationDraft(ctx context.Context, evaluationID uuid.UUID, req SaveGoalEvaluationDraftRequest) (*GoalEvaluationResponse, error)
-	SubmitGoalEvaluationDraft(ctx context.Context, evaluationID uuid.UUID) (*GoalEvaluationResponse, error)
 	GetGoalEvaluationBootstrap(ctx context.Context, clientID uuid.UUID) (*GoalEvaluationBootstrapResponse, error)
 	ListUpcomingEvaluations(ctx *gin.Context, coordinatorID uuid.UUID, req ListUpcomingEvaluationsRequest) (*pagination.Response[ListUpcomingEvaluationsResponse], error)
 	ListRecentSubmittedEvaluations(ctx *gin.Context, employeeID uuid.UUID, req ListRecentSubmittedEvaluationsRequest) (*pagination.Response[ListRecentSubmittedEvaluationsResponse], error)

@@ -216,10 +216,134 @@ SELECT id FROM client_details;
 -- name: GetClientDetails :one
 SELECT c.*,
        ep.first_name AS bsn_verified_by_first_name,
-       ep.last_name AS bsn_verified_by_last_name
+       ep.last_name AS bsn_verified_by_last_name,
+       l.name AS location_name,
+       s.name AS sender_name,
+       s.email_address AS sender_email_address,
+       s.phone_number AS sender_phone_number,
+       i.self_sufficiency AS intake_self_sufficiency,
+       i.intake_conclusion AS intake_conclusion,
+       i.intake_conclusion_notes AS intake_conclusion_notes
 FROM client_details c
 LEFT JOIN employee_profile ep ON c.bsn_verified_by = ep.id
+LEFT JOIN location l ON c.location_id = l.id
+LEFT JOIN sender s ON c.sender_id = s.id
+LEFT JOIN intake_forms i ON c.intake_form_id = i.id
 WHERE c.id = $1 LIMIT 1;
+
+
+-- name: ListActiveGoalSummariesByClientID :many
+SELECT
+    cg.title,
+    cg.priority,
+    COALESCE(cg.topic_name_snapshot, t.topic_name, '') AS topic_name
+FROM client_goals cg
+LEFT JOIN topics t ON t.id = cg.topic_id
+WHERE cg.client_id = $1 AND cg.status = 'active'
+ORDER BY cg.sort_order;
+
+
+-- name: ListTopEmergencyContactsByClientID :many
+SELECT
+    cec.id,
+    cec.first_name,
+    cec.last_name,
+    cec.relationship,
+    cec.phone_number,
+    cec.email,
+    cec.relation_status
+FROM client_emergency_contact cec
+WHERE cec.client_id = $1
+ORDER BY
+    CASE
+        WHEN cec.relation_status::text = 'Primary Relationship' THEN 1
+        WHEN cec.relation_status::text = 'Secondary Relationship' THEN 2
+        ELSE 3
+    END,
+    cec.created_at ASC
+LIMIT 2;
+
+
+-- name: ListExistingClientDocumentLabels :many
+SELECT DISTINCT cd.label::text AS label
+FROM client_documents cd
+WHERE cd.client_id = $1
+ORDER BY label;
+
+
+-- name: GetClientPageCounts :one
+SELECT
+    (SELECT COUNT(*)::bigint FROM contract c WHERE c.client_id = $1) AS contracts_count,
+    (SELECT COUNT(*)::bigint FROM incident i WHERE i.client_id = $1 AND i.soft_delete = FALSE) AS incidents_count,
+    (SELECT COUNT(*)::bigint FROM progress_report pr WHERE pr.client_id = $1) AS reports_count,
+    (SELECT COUNT(*)::bigint FROM client_goal_evaluations e WHERE e.client_id = $1) AS evaluations_count,
+    (SELECT COUNT(*)::bigint FROM client_documents d WHERE d.client_id = $1) AS documents_count,
+    (
+        SELECT COUNT(*)::bigint
+        FROM appointment_clients ac
+        JOIN scheduled_appointments sa ON sa.id = ac.appointment_id
+        WHERE ac.client_id = $1
+          AND sa.status <> 'CANCELLED'
+    ) AS appointments_count;
+
+
+-- name: GetClientCoordinator :many
+SELECT
+    ae.employee_id,
+    ep.first_name,
+    ep.last_name,
+    ae.start_date
+FROM assigned_employee ae
+JOIN employee_profile ep ON ep.id = ae.employee_id
+WHERE ae.client_id = $1
+  AND ae.role = 'coordinator'
+ORDER BY ae.start_date DESC, ae.created_at DESC
+LIMIT 1;
+
+
+-- name: GetClientLatestStatusHistory :one
+SELECT
+    (
+        SELECT csh.reason
+        FROM client_status_history csh
+        WHERE csh.client_id = $1
+        ORDER BY csh.changed_at DESC
+        LIMIT 1
+    ) AS last_change_reason,
+    (
+        SELECT csh.changed_at
+        FROM client_status_history csh
+        WHERE csh.client_id = $1
+        ORDER BY csh.changed_at DESC
+        LIMIT 1
+    ) AS last_changed_at,
+    (
+        COALESCE((
+            SELECT csh.new_status
+            FROM client_status_history csh
+            WHERE csh.client_id = $1
+            ORDER BY csh.changed_at DESC
+            LIMIT 1
+        ), '')::text
+    ) AS last_status;
+
+
+-- name: ListClientActiveApprovedContracts :many
+SELECT
+    c.id,
+    c.status::text AS status,
+    c.start_date,
+    c.end_date,
+    c.financing_act::text AS financing_act,
+    c.financing_option::text AS financing_option,
+    c.care_type::text AS care_type,
+    (DATE(c.end_date) - CURRENT_DATE)::int4 AS days_until_contract_end
+FROM contract c
+WHERE c.client_id = $1
+  AND c.status = 'approved'
+  AND c.start_date <= CURRENT_TIMESTAMP
+  AND c.end_date >= CURRENT_TIMESTAMP
+ORDER BY c.end_date ASC;
 
 
 
@@ -299,15 +423,6 @@ WHERE client_id = $1
 ORDER BY changed_at DESC
 LIMIT $2 OFFSET $3;
 
--- name: CreateSchedueledClientStatusChange :one
-INSERT INTO scheduled_status_changes (
-    client_id,
-    new_status,
-    reason,
-    scheduled_date
-) VALUES (
-    $1, $2, $3, $4
-) RETURNING *;
 
 -- name: ActivateDueScheduledInCareClients :many
 WITH due_clients AS (

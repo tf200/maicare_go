@@ -12,26 +12,14 @@ INSERT INTO client_goal_evaluations (
     $1, $2, $3, $4, $5, $6, $7, $8
 ) RETURNING *;
 
--- name: GetGoalEvaluation :one
-SELECT 
-    e.*,
-    ep.first_name AS creator_first_name,
-    ep.last_name AS creator_last_name
-FROM client_goal_evaluations e
-LEFT JOIN employee_profile ep ON e.created_by_employee_id = ep.id
-WHERE e.id = $1 LIMIT 1;
-
--- name: ListGoalEvaluations :many
-SELECT 
-    e.*,
-    ep.first_name AS creator_first_name,
-    ep.last_name AS creator_last_name,
-    COUNT(*) OVER() AS total_count
-FROM client_goal_evaluations e
-LEFT JOIN employee_profile ep ON e.created_by_employee_id = ep.id
-WHERE e.client_id = $1
-ORDER BY e.evaluation_date DESC, e.created_at DESC
-LIMIT $2 OFFSET $3;
+-- name: GetDraftGoalEvaluationByClientAndDate :one
+SELECT *
+FROM client_goal_evaluations
+WHERE client_id = $1
+  AND evaluation_date = $2
+  AND status = 'draft'
+ORDER BY updated_at DESC
+LIMIT 1;
 
 -- name: UpdateGoalEvaluation :one
 UPDATE client_goal_evaluations
@@ -72,10 +60,6 @@ FROM client_goal_evaluation_items ei
 JOIN client_goals g ON ei.goal_id = g.id
 WHERE ei.evaluation_id = $1
 ORDER BY g.sort_order;
-
--- name: DeleteGoalEvaluation :exec
-DELETE FROM client_goal_evaluations
-WHERE id = $1;
 
 -- name: ListUpcomingEvaluationsForCoordinator :many
 SELECT

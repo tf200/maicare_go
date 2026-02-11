@@ -43,7 +43,5 @@ func (server *Server) setupClientRoutes(baseRouter *gin.RouterGroup) {
 		evaluationsGroup.GET("/upcoming", server.RBACMiddleware("CLIENT.VIEW"), server.ListUpcomingEvaluationsApi)
 		evaluationsGroup.GET("/recent-submitted", server.RBACMiddleware("CLIENT.VIEW"), server.ListRecentSubmittedEvaluationsApi)
 		evaluationsGroup.GET("/recent-drafts", server.RBACMiddleware("CLIENT.VIEW"), server.ListRecentDraftEvaluationsApi)
-		evaluationsGroup.PATCH("/:id/draft", server.RBACMiddleware("CLIENT.UPDATE"), server.UpdateEvaluationDraftApi)
-		evaluationsGroup.POST("/:id/submit", server.RBACMiddleware("CLIENT.UPDATE"), server.SubmitEvaluationDraftApi)
 	}
 }

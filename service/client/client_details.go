@@ -2,7 +2,9 @@ package clientp
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	db "maicare_go/db/sqlc"
@@ -12,6 +14,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
 )
@@ -291,10 +294,84 @@ func (s *clientService) GetClientsCount(ctx context.Context) (*GetClientsCountRe
 
 func (s *clientService) GetClientDetails(ctx context.Context, clientID uuid.UUID) (*GetClientApiResponse, error) {
 	var client db.GetClientDetailsRow
+	var goals []db.ListActiveGoalSummariesByClientIDRow
+	var emergencyContacts []db.ListTopEmergencyContactsByClientIDRow
+	var existingDocumentLabels []string
+	var missingDocumentLabels []string
+	var counts db.GetClientPageCountsRow
+	var coordinatorRows []db.GetClientCoordinatorRow
+	var latestStatusHistory db.GetClientLatestStatusHistoryRow
+	var activeContracts []db.ListClientActiveApprovedContractsRow
+	var latestDraft db.GetLatestDraftEvaluationByClientRow
+	var hasLatestDraft bool
+	var latestCompleted db.GetLatestCompletedEvaluationByClientRow
+	var hasLatestCompleted bool
 	err := s.Store.ExecTx(ctx, func(q *db.Queries) error {
 		var err error
 		client, err = q.GetClientDetails(ctx, clientID)
-		return err
+		if err != nil {
+			return err
+		}
+
+		goals, err = q.ListActiveGoalSummariesByClientID(ctx, clientID)
+		if err != nil {
+			return err
+		}
+
+		emergencyContacts, err = q.ListTopEmergencyContactsByClientID(ctx, clientID)
+		if err != nil {
+			return err
+		}
+
+		existingDocumentLabels, err = q.ListExistingClientDocumentLabels(ctx, clientID)
+		if err != nil {
+			return err
+		}
+
+		missingDocumentLabels, err = q.GetMissingClientDocuments(ctx, clientID)
+		if err != nil {
+			return err
+		}
+
+		counts, err = q.GetClientPageCounts(ctx, clientID)
+		if err != nil {
+			return err
+		}
+
+		coordinatorRows, err = q.GetClientCoordinator(ctx, clientID)
+		if err != nil {
+			return err
+		}
+
+		latestStatusHistory, err = q.GetClientLatestStatusHistory(ctx, clientID)
+		if err != nil {
+			return err
+		}
+
+		activeContracts, err = q.ListClientActiveApprovedContracts(ctx, clientID)
+		if err != nil {
+			return err
+		}
+
+		latestDraft, err = q.GetLatestDraftEvaluationByClient(ctx, clientID)
+		if err != nil {
+			if !errors.Is(err, pgx.ErrNoRows) {
+				return err
+			}
+		} else {
+			hasLatestDraft = true
+		}
+
+		latestCompleted, err = q.GetLatestCompletedEvaluationByClient(ctx, clientID)
+		if err != nil {
+			if !errors.Is(err, pgx.ErrNoRows) {
+				return err
+			}
+		} else {
+			hasLatestCompleted = true
+		}
+
+		return nil
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetClientDetails",
@@ -302,39 +379,435 @@ func (s *clientService) GetClientDetails(ctx context.Context, clientID uuid.UUID
 		return nil, fmt.Errorf("failed to get client details")
 	}
 
+	var sender *ClientSenderMinimalResponse
+	if client.SenderName != nil || client.SenderEmailAddress != nil || client.SenderPhoneNumber != nil {
+		senderName := ""
+		if client.SenderName != nil {
+			senderName = *client.SenderName
+		}
+
+		sender = &ClientSenderMinimalResponse{
+			Name:         senderName,
+			EmailAddress: client.SenderEmailAddress,
+			PhoneNumber:  client.SenderPhoneNumber,
+		}
+	}
+
+	goalsResponse := make([]ClientGoalSummaryResponse, len(goals))
+	for i, goal := range goals {
+		var topicName *string
+		if goal.TopicName != "" {
+			topicName = &goal.TopicName
+		}
+
+		goalsResponse[i] = ClientGoalSummaryResponse{
+			Title:     goal.Title,
+			Priority:  string(goal.Priority),
+			TopicName: topicName,
+		}
+	}
+
+	emergencyContactsResponse := make([]ClientEmergencySummary, len(emergencyContacts))
+	for i, contact := range emergencyContacts {
+		emergencyContactsResponse[i] = ClientEmergencySummary{
+			ID:           contact.ID,
+			FirstName:    contact.FirstName,
+			LastName:     contact.LastName,
+			Relationship: contact.Relationship,
+			PhoneNumber:  contact.PhoneNumber,
+			Email:        contact.Email,
+		}
+	}
+
+	riskFlags := make([]string, 0, 10)
+	if client.RiskAggressiveBehavior != nil && *client.RiskAggressiveBehavior {
+		riskFlags = append(riskFlags, "risk_aggressive_behavior")
+	}
+	if client.RiskSuicidalSelfharm != nil && *client.RiskSuicidalSelfharm {
+		riskFlags = append(riskFlags, "risk_suicidal_selfharm")
+	}
+	if client.RiskSubstanceAbuse != nil && *client.RiskSubstanceAbuse {
+		riskFlags = append(riskFlags, "risk_substance_abuse")
+	}
+	if client.RiskPsychiatricIssues != nil && *client.RiskPsychiatricIssues {
+		riskFlags = append(riskFlags, "risk_psychiatric_issues")
+	}
+	if client.RiskCriminalHistory != nil && *client.RiskCriminalHistory {
+		riskFlags = append(riskFlags, "risk_criminal_history")
+	}
+	if client.RiskFlightBehavior != nil && *client.RiskFlightBehavior {
+		riskFlags = append(riskFlags, "risk_flight_behavior")
+	}
+	if client.RiskWeaponPossession != nil && *client.RiskWeaponPossession {
+		riskFlags = append(riskFlags, "risk_weapon_possession")
+	}
+	if client.RiskSexualBehavior != nil && *client.RiskSexualBehavior {
+		riskFlags = append(riskFlags, "risk_sexual_behavior")
+	}
+	if client.RiskDayNightRhythm != nil && *client.RiskDayNightRhythm {
+		riskFlags = append(riskFlags, "risk_day_night_rhythm")
+	}
+	if client.RiskOther != nil && *client.RiskOther {
+		riskFlags = append(riskFlags, "risk_other")
+	}
+
+	age := calculateAge(client.DateOfBirth)
+
+	alerts := make([]ClientPageAlert, 0, 4)
+	if len(missingDocumentLabels) > 0 {
+		alerts = append(alerts, ClientPageAlert{
+			Code:     "missing_documents",
+			Severity: "warning",
+			Message:  fmt.Sprintf("%d required documents are missing", len(missingDocumentLabels)),
+		})
+	}
+	if len(goalsResponse) == 0 {
+		alerts = append(alerts, ClientPageAlert{
+			Code:     "missing_goals",
+			Severity: "info",
+			Message:  "No active goals defined",
+		})
+	}
+	if counts.IncidentsCount > 0 {
+		alerts = append(alerts, ClientPageAlert{
+			Code:     "has_incidents",
+			Severity: "warning",
+			Message:  fmt.Sprintf("%d incident(s) linked to client", counts.IncidentsCount),
+		})
+	}
+
+	var coordinator *ClientCoordinatorResponse
+	if len(coordinatorRows) > 0 {
+		coordinator = &ClientCoordinatorResponse{
+			EmployeeID: &coordinatorRows[0].EmployeeID,
+			FirstName:  &coordinatorRows[0].FirstName,
+			LastName:   &coordinatorRows[0].LastName,
+			StartDate:  util.DatePtr(coordinatorRows[0].StartDate),
+		}
+	}
+
+	var careSchedule *ClientCareScheduleResponse
+	if client.Status == db.ClientStatusEnumScheduledInCare {
+		var careStartDate *time.Time
+		var placedInCareAt *time.Time
+		var daysUntilStart *int32
+
+		if client.CareStartDate.Valid {
+			careStartDate = util.DatePtr(client.CareStartDate)
+
+			today := time.Now().UTC()
+			todayDate := time.Date(today.Year(), today.Month(), today.Day(), 0, 0, 0, 0, time.UTC)
+			startDate := time.Date(client.CareStartDate.Time.Year(), client.CareStartDate.Time.Month(), client.CareStartDate.Time.Day(), 0, 0, 0, 0, time.UTC)
+			days := int32(startDate.Sub(todayDate).Hours() / 24)
+			if days < 0 {
+				days = 0
+			}
+			daysUntilStart = &days
+		}
+
+		if client.PlacedInCareAt.Valid {
+			placedAt := client.PlacedInCareAt.Time
+			placedInCareAt = &placedAt
+		}
+
+		shouldBeActiveNow := false
+		if client.CareStartDate.Valid {
+			shouldBeActiveNow = !client.CareStartDate.Time.After(time.Now().UTC())
+		}
+
+		if shouldBeActiveNow {
+			alerts = append(alerts, ClientPageAlert{
+				Code:     "start_date_reached_not_activated",
+				Severity: "warning",
+				Message:  "Care start date has been reached but client is still scheduled_in_care",
+			})
+		}
+
+		if coordinator == nil {
+			alerts = append(alerts, ClientPageAlert{
+				Code:     "missing_coordinator",
+				Severity: "warning",
+				Message:  "No coordinator assigned",
+			})
+		}
+
+		careSchedule = &ClientCareScheduleResponse{
+			CareStartDate:      careStartDate,
+			PlacedInCareAt:     placedInCareAt,
+			DaysUntilStart:     daysUntilStart,
+			ShouldBeActiveNow:  shouldBeActiveNow,
+			NextEvaluationDate: util.DatePtr(client.NextEvaluationDate),
+		}
+	}
+
+	var care *ClientInCareResponse
+	var contractSummary *ClientContractSummaryResponse
+	var evaluationSummary *ClientEvaluationSummaryResponse
+	if client.Status == db.ClientStatusEnumInCare {
+		var daysInCare *int32
+		if client.CareStartDate.Valid {
+			today := time.Now().UTC()
+			todayDate := time.Date(today.Year(), today.Month(), today.Day(), 0, 0, 0, 0, time.UTC)
+			startDate := time.Date(client.CareStartDate.Time.Year(), client.CareStartDate.Time.Month(), client.CareStartDate.Time.Day(), 0, 0, 0, 0, time.UTC)
+			days := int32(todayDate.Sub(startDate).Hours() / 24)
+			if days < 0 {
+				days = 0
+			}
+			daysInCare = &days
+		}
+
+		care = &ClientInCareResponse{
+			CareStartDate:            util.DatePtr(client.CareStartDate),
+			PlacedInCareAt:           timestamptzPtr(client.PlacedInCareAt),
+			DaysInCare:               daysInCare,
+			EvaluationIntervalsWeeks: client.EvaluationIntervalsWeeks,
+			LastEvaluationAnchorDate: util.DatePtr(client.LastEvaluationAnchorDate),
+			NextEvaluationDate:       util.DatePtr(client.NextEvaluationDate),
+		}
+
+		var activeContract *ClientActiveContractResponse
+		var daysUntilContractEnd *int32
+		if len(activeContracts) > 0 {
+			active := activeContracts[0]
+			activeContract = &ClientActiveContractResponse{
+				ID:              active.ID,
+				Status:          stringPtrOrNil(active.Status),
+				StartDate:       timestamptzPtr(active.StartDate),
+				EndDate:         timestamptzPtr(active.EndDate),
+				FinancingAct:    stringPtrOrNil(active.FinancingAct),
+				FinancingOption: stringPtrOrNil(active.FinancingOption),
+				CareType:        stringPtrOrNil(active.CareType),
+			}
+			daysUntilContractEnd = &active.DaysUntilContractEnd
+		}
+
+		hasActiveApprovedContract := len(activeContracts) > 0
+		contractSummary = &ClientContractSummaryResponse{
+			HasActiveApprovedContract: hasActiveApprovedContract,
+			ActiveContract:            activeContract,
+			DaysUntilContractEnd:      daysUntilContractEnd,
+		}
+
+		var draft *ClientEvaluationDraftSummaryResponse
+		if hasLatestDraft {
+			draft = &ClientEvaluationDraftSummaryResponse{
+				ID:        latestDraft.ID,
+				UpdatedAt: timestamptzPtr(latestDraft.UpdatedAt),
+			}
+		}
+
+		var lastCompleted *ClientEvaluationLastCompletedResponse
+		if hasLatestCompleted {
+			creatorName := strings.TrimSpace(strings.Join([]string{derefString(latestCompleted.CreatorFirstName), derefString(latestCompleted.CreatorLastName)}, " "))
+			lastCompleted = &ClientEvaluationLastCompletedResponse{
+				ID:                  latestCompleted.ID,
+				SubmittedAt:         timestamptzPtr(latestCompleted.SubmittedAt),
+				CreatedByEmployeeID: latestCompleted.CreatedByEmployeeID,
+				CreatorName:         stringPtrOrNil(creatorName),
+			}
+		}
+
+		var daysLeft *int32
+		var priority *string
+		nextEvaluationDate := util.DatePtr(client.NextEvaluationDate)
+		if client.NextEvaluationDate.Valid {
+			today := time.Now().UTC()
+			todayDate := time.Date(today.Year(), today.Month(), today.Day(), 0, 0, 0, 0, time.UTC)
+			nextDate := time.Date(client.NextEvaluationDate.Time.Year(), client.NextEvaluationDate.Time.Month(), client.NextEvaluationDate.Time.Day(), 0, 0, 0, 0, time.UTC)
+			delta := int32(nextDate.Sub(todayDate).Hours() / 24)
+			daysLeft = &delta
+
+			p := "normal"
+			if delta <= 3 {
+				p = "critical"
+			}
+			priority = &p
+		}
+
+		evaluationSummary = &ClientEvaluationSummaryResponse{
+			NextEvaluationDate: nextEvaluationDate,
+			DaysLeft:           daysLeft,
+			Priority:           priority,
+			Draft:              draft,
+			LastCompleted:      lastCompleted,
+		}
+
+		if coordinator == nil {
+			alerts = append(alerts, ClientPageAlert{
+				Code:     "missing_coordinator",
+				Severity: "warning",
+				Message:  "No coordinator assigned",
+			})
+		}
+
+		if !hasActiveApprovedContract {
+			alerts = append(alerts, ClientPageAlert{
+				Code:     "missing_active_contract",
+				Severity: "warning",
+				Message:  "No active approved contract",
+			})
+		} else if daysUntilContractEnd != nil && *daysUntilContractEnd <= 30 {
+			alerts = append(alerts, ClientPageAlert{
+				Code:     "contract_ends_soon",
+				Severity: "warning",
+				Message:  fmt.Sprintf("Active contract ends in %d day(s)", *daysUntilContractEnd),
+			})
+		}
+
+		if daysLeft != nil {
+			if *daysLeft < 0 {
+				alerts = append(alerts, ClientPageAlert{
+					Code:     "evaluation_overdue",
+					Severity: "warning",
+					Message:  fmt.Sprintf("Evaluation is overdue by %d day(s)", -*daysLeft),
+				})
+			} else if *daysLeft <= 3 {
+				alerts = append(alerts, ClientPageAlert{
+					Code:     "evaluation_due_soon",
+					Severity: "warning",
+					Message:  fmt.Sprintf("Evaluation due in %d day(s)", *daysLeft),
+				})
+			}
+		}
+	}
+
+	var statusTimeline *ClientStatusTimelineResponse
+	if latestStatusHistory.LastChangeReason != nil || latestStatusHistory.LastChangedAt.Valid || latestStatusHistory.LastStatus != "" {
+		var lastChangedAt *time.Time
+		if latestStatusHistory.LastChangedAt.Valid {
+			t := latestStatusHistory.LastChangedAt.Time
+			lastChangedAt = &t
+		}
+
+		var lastStatus *string
+		if latestStatusHistory.LastStatus != "" {
+			lastStatus = &latestStatusHistory.LastStatus
+		}
+
+		statusTimeline = &ClientStatusTimelineResponse{
+			LastChangeReason: latestStatusHistory.LastChangeReason,
+			LastChangedAt:    lastChangedAt,
+			LastStatus:       lastStatus,
+		}
+	}
+
+	clientAddress := ClientAddressResponse{
+		Street:              client.Street,
+		HouseNumber:         client.HouseNumber,
+		HouseNumberAddition: client.HouseNumberAddition,
+		PostalCode:          client.PostalCode,
+		City:                client.City,
+	}
+
+	var location *ClientLocationResponse
+	if client.LocationID != nil && client.LocationName != nil {
+		location = &ClientLocationResponse{
+			ID:   *client.LocationID,
+			Name: *client.LocationName,
+		}
+	}
+
+	dateOfBirth := util.DatePtr(client.DateOfBirth)
+
+	waitlistSince := time.Now().UTC()
+	if client.CreatedAt.Valid {
+		waitlistSince = client.CreatedAt.Time
+	}
+
 	return &GetClientApiResponse{
-		ID:                         client.ID,
-		FirstName:                  client.FirstName,
-		LastName:                   client.LastName,
-		DateOfBirth:                client.DateOfBirth.Time,
-		Identity:                   client.Identity,
-		Status:                     string(client.Status),
-		Bsn:                        client.Bsn,
-		BsnVerifiedBy:              client.BsnVerifiedBy,
-		BsnVerifiedByFirstName:     client.BsnVerifiedByFirstName,
-		BsnVerifiedByLastName:      client.BsnVerifiedByLastName,
-		Email:                      client.Email,
-		PhoneNumber:                client.PhoneNumber,
-		Gender:                     string(client.Gender),
-		Filenumber:                 client.Filenumber,
-		CreatedAt:                  client.CreatedAt.Time,
-		SenderID:                   client.SenderID,
-		LocationID:                 client.LocationID,
-		EducationCurrentlyEnrolled: client.EducationCurrentlyEnrolled,
-		EducationInstitution:       client.EducationInstitution,
-		EducationMentorName:        client.EducationMentorName,
-		EducationMentorEmail:       client.EducationMentorEmail,
-		EducationMentorPhone:       client.EducationMentorPhone,
-		EducationAdditionalNotes:   client.EducationAdditionalNotes,
-		EducationLevel:             string(client.EducationLevel),
-		WorkCurrentlyEmployed:      client.WorkCurrentlyEmployed,
-		WorkCurrentEmployer:        client.WorkCurrentEmployer,
-		WorkCurrentEmployerPhone:   client.WorkCurrentEmployerPhone,
-		WorkCurrentEmployerEmail:   client.WorkCurrentEmployerEmail,
-		WorkCurrentPosition:        client.WorkCurrentPosition,
-		WorkStartDate:              client.WorkStartDate.Time,
-		WorkAdditionalNotes:        client.WorkAdditionalNotes,
+		SchemaVersion: 1,
+		Status:        string(client.Status),
+		Client: ClientPageClientResponse{
+			ID:          client.ID,
+			FirstName:   client.FirstName,
+			LastName:    client.LastName,
+			Bsn:         client.Bsn,
+			FileNumber:  client.Filenumber,
+			Gender:      string(client.Gender),
+			DateOfBirth: dateOfBirth,
+			Age:         age,
+			CareType:    db.IntakeCareTypePtrFromEnum(client.CareType),
+			Address:     clientAddress,
+			Location:    location,
+		},
+		Care:              care,
+		CareSchedule:      careSchedule,
+		Sender:            sender,
+		Coordinator:       coordinator,
+		ContractSummary:   contractSummary,
+		EvaluationSummary: evaluationSummary,
+		EmergencyContacts: emergencyContactsResponse,
+		Documents: ClientDocumentsSummary{
+			Existing: existingDocumentLabels,
+			Missing:  missingDocumentLabels,
+		},
+		Goals: goalsResponse,
+		Intake: ClientIntakeResponse{
+			SelfSufficiencyScore: client.IntakeSelfSufficiency,
+			Conclusion:           db.IntakeConclusionPtrFromEnum(client.IntakeConclusion),
+			ConclusionNotes:      client.IntakeConclusionNotes,
+		},
+		Risks: ClientRiskSummary{
+			Flags: riskFlags,
+			Notes: client.RiskAdditionalNotes,
+		},
+		Counts: ClientPageCounts{
+			Contracts:    counts.ContractsCount,
+			Incidents:    counts.IncidentsCount,
+			Reports:      counts.ReportsCount,
+			Evaluations:  counts.EvaluationsCount,
+			Documents:    counts.DocumentsCount,
+			Appointments: counts.AppointmentsCount,
+		},
+		Alerts: alerts,
+		Meta: ClientPageMetaResponse{
+			WaitlistSince: waitlistSince,
+			LastUpdatedAt: time.Now().UTC(),
+		},
+		StatusTimeline: statusTimeline,
 	}, nil
+}
+
+func calculateAge(dateOfBirth pgtype.Date) *int32 {
+	if !dateOfBirth.Valid {
+		return nil
+	}
+
+	today := time.Now().UTC()
+	age := int32(today.Year() - dateOfBirth.Time.Year())
+	birthdayThisYear := time.Date(today.Year(), dateOfBirth.Time.Month(), dateOfBirth.Time.Day(), 0, 0, 0, 0, time.UTC)
+	if today.Before(birthdayThisYear) {
+		age--
+	}
+
+	if age < 0 {
+		return nil
+	}
+
+	return &age
+}
+
+func timestamptzPtr(ts pgtype.Timestamptz) *time.Time {
+	if !ts.Valid {
+		return nil
+	}
+	t := ts.Time
+	return &t
+}
+
+func stringPtrOrNil(v string) *string {
+	trimmed := strings.TrimSpace(v)
+	if trimmed == "" {
+		return nil
+	}
+	return &trimmed
+}
+
+func derefString(v *string) string {
+	if v == nil {
+		return ""
+	}
+	return *v
 }
 
 func (s *clientService) GetClientAddresses(ctx context.Context, clientID uuid.UUID) (*GetClientAddressesApiResponse, error) {
@@ -360,38 +833,38 @@ func (s *clientService) UpdateClientStatus(ctx context.Context, req UpdateClient
 }
 
 func (s *clientService) handleSchedueledStatusUpdates(ctx context.Context, req UpdateClientStatusRequest, clientID uuid.UUID) (*UpdateClientStatusResponse, error) {
-	if req.SchedueledFor.Before(time.Now()) {
-		return nil, fmt.Errorf("scheduled time must be in the future")
-	}
+	// if req.SchedueledFor.Before(time.Now()) {
+	// 	return nil, fmt.Errorf("scheduled time must be in the future")
+	// }
 
-	var schedueledChange db.ScheduledStatusChange
-	err := s.Store.ExecTx(ctx, func(q *db.Queries) error {
-		var err error
-		schedueledChange, err = q.CreateSchedueledClientStatusChange(ctx, db.CreateSchedueledClientStatusChangeParams{
-			ClientID:      clientID,
-			NewStatus:     db.NullClientStatusFromPtr(&req.Status),
-			Reason:        &req.Reason,
-			ScheduledDate: pgtype.Date{Time: req.SchedueledFor, Valid: true},
-		})
-		return err
-	})
-	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateClientStatus",
-			"Failed to create scheduled status change", zap.Error(err), zap.String("ClientID", clientID.String()))
-		return nil, fmt.Errorf("failed to create scheduled status change")
-	}
+	// var schedueledChange db.ScheduledStatusChange
+	// err := s.Store.ExecTx(ctx, func(q *db.Queries) error {
+	// 	var err error
+	// 	schedueledChange, err = q.CreateSchedueledClientStatusChange(ctx, db.CreateSchedueledClientStatusChangeParams{
+	// 		ClientID:      clientID,
+	// 		NewStatus:     db.NullClientStatusFromPtr(&req.Status),
+	// 		Reason:        &req.Reason,
+	// 		ScheduledDate: pgtype.Date{Time: req.SchedueledFor, Valid: true},
+	// 	})
+	// 	return err
+	// })
+	// if err != nil {
+	// 	s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateClientStatus",
+	// 		"Failed to create scheduled status change", zap.Error(err), zap.String("ClientID", clientID.String()))
+	// 	return nil, fmt.Errorf("failed to create scheduled status change")
+	// }
 
-	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "UpdateClientStatus",
-		"Successfully created scheduled status change", zap.String("ClientID", clientID.String()),
-		zap.String("NewStatus", req.Status), zap.Time("ScheduledFor", req.SchedueledFor))
+	// s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "UpdateClientStatus",
+	// 	"Successfully created scheduled status change", zap.String("ClientID", clientID.String()),
+	// 	zap.String("NewStatus", req.Status), zap.Time("ScheduledFor", req.SchedueledFor))
 
-	if !schedueledChange.NewStatus.Valid {
-		return nil, fmt.Errorf("scheduled status change not created properly")
-	}
+	// if !schedueledChange.NewStatus.Valid {
+	// 	return nil, fmt.Errorf("scheduled status change not created properly")
+	// }
 
 	return &UpdateClientStatusResponse{
-		ID:     clientID,
-		Status: string(schedueledChange.NewStatus.ClientStatusEnum),
+		ID: clientID,
+		// Status: string(schedueledChange.NewStatus.ClientStatusEnum),
 	}, nil
 }
 

@@ -266,6 +266,25 @@ func IntakeCareTypePtrFromEnum(enum NullIntakeCareTypeEnum) *string {
 	return nil
 }
 
+// IntakeConclusionEnum helpers
+func NullIntakeConclusionFromPtr(ptr *string) NullIntakeConclusionEnum {
+	if ptr != nil {
+		return NullIntakeConclusionEnum{
+			IntakeConclusionEnum: IntakeConclusionEnum(*ptr),
+			Valid:                true,
+		}
+	}
+	return NullIntakeConclusionEnum{Valid: false}
+}
+
+func IntakeConclusionPtrFromEnum(enum NullIntakeConclusionEnum) *string {
+	if enum.Valid {
+		str := string(enum.IntakeConclusionEnum)
+		return &str
+	}
+	return nil
+}
+
 // ContractAuditOperationEnum helpers
 func NullContractAuditOperationFromPtr(ptr *string) NullContractAuditOperationEnum {
 	if ptr != nil {

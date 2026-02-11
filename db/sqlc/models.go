@@ -2871,15 +2871,6 @@ type ScheduledAppointment struct {
 	UpdatedAt              pgtype.Timestamp      `json:"updated_at"`
 }
 
-type ScheduledStatusChange struct {
-	ID            uuid.UUID            `json:"id"`
-	ClientID      uuid.UUID            `json:"client_id"`
-	NewStatus     NullClientStatusEnum `json:"new_status"`
-	Reason        *string              `json:"reason"`
-	ScheduledDate pgtype.Date          `json:"scheduled_date"`
-	CreatedAt     pgtype.Timestamptz   `json:"created_at"`
-}
-
 type Sender struct {
 	ID                  uuid.UUID          `json:"id"`
 	Types               SenderTypesEnum    `json:"types"`

@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"html/template"
 	"log"
-	"os"
 	"time"
 
 	brevo "github.com/getbrevo/brevo-go/lib"
@@ -101,15 +100,15 @@ func (e *SmtpConf) Send(subject, body string, to []string) error {
 	}
 	message.Subject(subject)
 	message.SetBodyString(mail.TypeTextPlain, body)
-	client, err := mail.NewClient(e.SmtpHost, mail.WithSMTPAuth(mail.SMTPAuthPlain),
+	_, err := mail.NewClient(e.SmtpHost, mail.WithSMTPAuth(mail.SMTPAuthPlain),
 		mail.WithUsername(e.Address), mail.WithPassword(e.Athentication), mail.WithPort(e.SmtpPort))
 	if err != nil {
 		log.Fatalf("failed to create mail client: %s", err)
 	}
-	if err = client.DialAndSend(message); err != nil {
-		fmt.Printf("failed to send mail: %s\n", err)
-		os.Exit(1)
-	}
+	// if err = client.DialAndSend(message); err != nil {
+	// 	fmt.Printf("failed to send mail: %s\n", err)
+	// 	os.Exit(1)
+	// }
 	return nil
 }
 

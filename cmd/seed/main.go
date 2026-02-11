@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -14,6 +15,7 @@ import (
 
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -442,13 +444,12 @@ func (s *Seeder) seedEvaluationsForClient(ctx context.Context, clientID uuid.UUI
 			}
 		}
 
-		for createdCount < evaluationsPerClient {
+		if createdCount < evaluationsPerClient {
 			evalID, err := s.createDraftEvaluation(ctx, q, client, createdByEmployeeID, goals, intervalWeeks)
 			if err != nil {
 				return err
 			}
 			s.data.EvaluationIDs = append(s.data.EvaluationIDs, evalID)
-			createdCount++
 		}
 
 		return nil
@@ -478,18 +479,42 @@ func (s *Seeder) createCompletedEvaluationIfAllowed(
 	periodStart := periodEnd.AddDate(0, 0, -int(intervalWeeks*7))
 	overallNotes := "Seeded completed evaluation"
 
-	eval, err := q.CreateGoalEvaluation(ctx, db.CreateGoalEvaluationParams{
-		ClientID:                client.ID,
-		EvaluationDate:          pgDate(dueDate),
-		PeriodStart:             pgDate(periodStart),
-		PeriodEnd:               pgDate(periodEnd),
-		EvaluationIntervalWeeks: intervalWeeks,
-		Status:                  db.EvaluationStatusEnumDraft,
-		OverallNotes:            &overallNotes,
-		CreatedByEmployeeID:     createdByEmployeeID,
+	evalDate := pgDate(dueDate)
+	eval, err := q.GetDraftGoalEvaluationByClientAndDate(ctx, db.GetDraftGoalEvaluationByClientAndDateParams{
+		ClientID:       client.ID,
+		EvaluationDate: evalDate,
 	})
 	if err != nil {
-		return uuid.Nil, false, fmt.Errorf("create completed-candidate evaluation: %w", err)
+		if !errors.Is(err, pgx.ErrNoRows) {
+			return uuid.Nil, false, fmt.Errorf("get existing draft evaluation: %w", err)
+		}
+
+		eval, err = q.CreateGoalEvaluation(ctx, db.CreateGoalEvaluationParams{
+			ClientID:                client.ID,
+			EvaluationDate:          evalDate,
+			PeriodStart:             pgDate(periodStart),
+			PeriodEnd:               pgDate(periodEnd),
+			EvaluationIntervalWeeks: intervalWeeks,
+			Status:                  db.EvaluationStatusEnumDraft,
+			OverallNotes:            &overallNotes,
+			CreatedByEmployeeID:     createdByEmployeeID,
+		})
+		if err != nil {
+			return uuid.Nil, false, fmt.Errorf("create completed-candidate evaluation: %w", err)
+		}
+	} else {
+		eval, err = q.UpdateGoalEvaluation(ctx, db.UpdateGoalEvaluationParams{
+			ID:                      eval.ID,
+			EvaluationDate:          evalDate,
+			PeriodStart:             pgDate(periodStart),
+			PeriodEnd:               pgDate(periodEnd),
+			EvaluationIntervalWeeks: &intervalWeeks,
+			Status:                  db.NullEvaluationStatusEnum{Valid: false},
+			OverallNotes:            &overallNotes,
+		})
+		if err != nil {
+			return uuid.Nil, false, fmt.Errorf("update completed-candidate evaluation: %w", err)
+		}
 	}
 
 	for _, goal := range goals {
@@ -536,22 +561,46 @@ func (s *Seeder) createDraftEvaluation(
 	if client.NextEvaluationDate.Valid {
 		evaluationDate = client.NextEvaluationDate.Time
 	}
+	evalDate := pgDate(evaluationDate)
 	periodEnd := evaluationDate
 	periodStart := periodEnd.AddDate(0, 0, -int(intervalWeeks*7))
 	overallNotes := "Seeded draft evaluation"
 
-	eval, err := q.CreateGoalEvaluation(ctx, db.CreateGoalEvaluationParams{
-		ClientID:                client.ID,
-		EvaluationDate:          pgDate(evaluationDate),
-		PeriodStart:             pgDate(periodStart),
-		PeriodEnd:               pgDate(periodEnd),
-		EvaluationIntervalWeeks: intervalWeeks,
-		Status:                  db.EvaluationStatusEnumDraft,
-		OverallNotes:            &overallNotes,
-		CreatedByEmployeeID:     createdByEmployeeID,
+	eval, err := q.GetDraftGoalEvaluationByClientAndDate(ctx, db.GetDraftGoalEvaluationByClientAndDateParams{
+		ClientID:       client.ID,
+		EvaluationDate: evalDate,
 	})
 	if err != nil {
-		return uuid.Nil, fmt.Errorf("create draft evaluation: %w", err)
+		if !errors.Is(err, pgx.ErrNoRows) {
+			return uuid.Nil, fmt.Errorf("get existing draft evaluation: %w", err)
+		}
+
+		eval, err = q.CreateGoalEvaluation(ctx, db.CreateGoalEvaluationParams{
+			ClientID:                client.ID,
+			EvaluationDate:          evalDate,
+			PeriodStart:             pgDate(periodStart),
+			PeriodEnd:               pgDate(periodEnd),
+			EvaluationIntervalWeeks: intervalWeeks,
+			Status:                  db.EvaluationStatusEnumDraft,
+			OverallNotes:            &overallNotes,
+			CreatedByEmployeeID:     createdByEmployeeID,
+		})
+		if err != nil {
+			return uuid.Nil, fmt.Errorf("create draft evaluation: %w", err)
+		}
+	} else {
+		eval, err = q.UpdateGoalEvaluation(ctx, db.UpdateGoalEvaluationParams{
+			ID:                      eval.ID,
+			EvaluationDate:          evalDate,
+			PeriodStart:             pgDate(periodStart),
+			PeriodEnd:               pgDate(periodEnd),
+			EvaluationIntervalWeeks: &intervalWeeks,
+			Status:                  db.NullEvaluationStatusEnum{Valid: false},
+			OverallNotes:            &overallNotes,
+		})
+		if err != nil {
+			return uuid.Nil, fmt.Errorf("update draft evaluation: %w", err)
+		}
 	}
 
 	for _, goal := range goals {

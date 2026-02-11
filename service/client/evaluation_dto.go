@@ -8,23 +8,10 @@ import (
 	"github.com/google/uuid"
 )
 
-type SaveGoalEvaluationDraftRequest struct {
-	EvaluationDate          *time.Time                    `json:"evaluation_date"`
-	PeriodStart             *time.Time                    `json:"period_start"`
-	PeriodEnd               *time.Time                    `json:"period_end"`
-	EvaluationIntervalWeeks *int32                        `json:"evaluation_interval_weeks"`
-	OverallNotes            *string                       `json:"overall_notes"`
-	Items                   []SaveGoalEvaluationDraftItem `json:"items"`
-}
-
 type CreateGoalEvaluationRequest struct {
-	EvaluationDate          *time.Time                    `json:"evaluation_date"`
-	PeriodStart             *time.Time                    `json:"period_start"`
-	PeriodEnd               *time.Time                    `json:"period_end"`
-	EvaluationIntervalWeeks *int32                        `json:"evaluation_interval_weeks"`
-	OverallNotes            *string                       `json:"overall_notes"`
-	Submit                  bool                          `json:"submit"`
-	Items                   []SaveGoalEvaluationDraftItem `json:"items"`
+	OverallNotes *string                       `json:"overall_notes"`
+	Submit       bool                          `json:"submit"`
+	Items        []SaveGoalEvaluationDraftItem `json:"items"`
 }
 
 type SaveGoalEvaluationDraftItem struct {
@@ -45,6 +32,7 @@ type GoalEvaluationResponse struct {
 	CreatedByEmployeeID     *uuid.UUID                   `json:"created_by_employee_id"`
 	CreatedAt               time.Time                    `json:"created_at"`
 	UpdatedAt               time.Time                    `json:"updated_at"`
+	SubmitError             *string                      `json:"submit_error,omitempty"`
 	Items                   []GoalEvaluationItemResponse `json:"items"`
 }
 

@@ -66,45 +66,24 @@ func (q *Queries) CreateGoalEvaluation(ctx context.Context, arg CreateGoalEvalua
 	return i, err
 }
 
-const deleteGoalEvaluation = `-- name: DeleteGoalEvaluation :exec
-DELETE FROM client_goal_evaluations
-WHERE id = $1
+const getDraftGoalEvaluationByClientAndDate = `-- name: GetDraftGoalEvaluationByClientAndDate :one
+SELECT id, client_id, evaluation_date, period_start, period_end, evaluation_interval_weeks, status, overall_notes, created_by_employee_id, created_at, updated_at
+FROM client_goal_evaluations
+WHERE client_id = $1
+  AND evaluation_date = $2
+  AND status = 'draft'
+ORDER BY updated_at DESC
+LIMIT 1
 `
 
-func (q *Queries) DeleteGoalEvaluation(ctx context.Context, id uuid.UUID) error {
-	_, err := q.db.Exec(ctx, deleteGoalEvaluation, id)
-	return err
+type GetDraftGoalEvaluationByClientAndDateParams struct {
+	ClientID       uuid.UUID   `json:"client_id"`
+	EvaluationDate pgtype.Date `json:"evaluation_date"`
 }
 
-const getGoalEvaluation = `-- name: GetGoalEvaluation :one
-SELECT 
-    e.id, e.client_id, e.evaluation_date, e.period_start, e.period_end, e.evaluation_interval_weeks, e.status, e.overall_notes, e.created_by_employee_id, e.created_at, e.updated_at,
-    ep.first_name AS creator_first_name,
-    ep.last_name AS creator_last_name
-FROM client_goal_evaluations e
-LEFT JOIN employee_profile ep ON e.created_by_employee_id = ep.id
-WHERE e.id = $1 LIMIT 1
-`
-
-type GetGoalEvaluationRow struct {
-	ID                      uuid.UUID            `json:"id"`
-	ClientID                uuid.UUID            `json:"client_id"`
-	EvaluationDate          pgtype.Date          `json:"evaluation_date"`
-	PeriodStart             pgtype.Date          `json:"period_start"`
-	PeriodEnd               pgtype.Date          `json:"period_end"`
-	EvaluationIntervalWeeks int32                `json:"evaluation_interval_weeks"`
-	Status                  EvaluationStatusEnum `json:"status"`
-	OverallNotes            *string              `json:"overall_notes"`
-	CreatedByEmployeeID     *uuid.UUID           `json:"created_by_employee_id"`
-	CreatedAt               pgtype.Timestamptz   `json:"created_at"`
-	UpdatedAt               pgtype.Timestamptz   `json:"updated_at"`
-	CreatorFirstName        *string              `json:"creator_first_name"`
-	CreatorLastName         *string              `json:"creator_last_name"`
-}
-
-func (q *Queries) GetGoalEvaluation(ctx context.Context, id uuid.UUID) (GetGoalEvaluationRow, error) {
-	row := q.db.QueryRow(ctx, getGoalEvaluation, id)
-	var i GetGoalEvaluationRow
+func (q *Queries) GetDraftGoalEvaluationByClientAndDate(ctx context.Context, arg GetDraftGoalEvaluationByClientAndDateParams) (ClientGoalEvaluation, error) {
+	row := q.db.QueryRow(ctx, getDraftGoalEvaluationByClientAndDate, arg.ClientID, arg.EvaluationDate)
+	var i ClientGoalEvaluation
 	err := row.Scan(
 		&i.ID,
 		&i.ClientID,
@@ -117,8 +96,6 @@ func (q *Queries) GetGoalEvaluation(ctx context.Context, id uuid.UUID) (GetGoalE
 		&i.CreatedByEmployeeID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
-		&i.CreatorFirstName,
-		&i.CreatorLastName,
 	)
 	return i, err
 }
@@ -254,77 +231,6 @@ func (q *Queries) GetLatestDraftEvaluationByClient(ctx context.Context, clientID
 		&i.UpdatedAt,
 	)
 	return i, err
-}
-
-const listGoalEvaluations = `-- name: ListGoalEvaluations :many
-SELECT 
-    e.id, e.client_id, e.evaluation_date, e.period_start, e.period_end, e.evaluation_interval_weeks, e.status, e.overall_notes, e.created_by_employee_id, e.created_at, e.updated_at,
-    ep.first_name AS creator_first_name,
-    ep.last_name AS creator_last_name,
-    COUNT(*) OVER() AS total_count
-FROM client_goal_evaluations e
-LEFT JOIN employee_profile ep ON e.created_by_employee_id = ep.id
-WHERE e.client_id = $1
-ORDER BY e.evaluation_date DESC, e.created_at DESC
-LIMIT $2 OFFSET $3
-`
-
-type ListGoalEvaluationsParams struct {
-	ClientID uuid.UUID `json:"client_id"`
-	Limit    int32     `json:"limit"`
-	Offset   int32     `json:"offset"`
-}
-
-type ListGoalEvaluationsRow struct {
-	ID                      uuid.UUID            `json:"id"`
-	ClientID                uuid.UUID            `json:"client_id"`
-	EvaluationDate          pgtype.Date          `json:"evaluation_date"`
-	PeriodStart             pgtype.Date          `json:"period_start"`
-	PeriodEnd               pgtype.Date          `json:"period_end"`
-	EvaluationIntervalWeeks int32                `json:"evaluation_interval_weeks"`
-	Status                  EvaluationStatusEnum `json:"status"`
-	OverallNotes            *string              `json:"overall_notes"`
-	CreatedByEmployeeID     *uuid.UUID           `json:"created_by_employee_id"`
-	CreatedAt               pgtype.Timestamptz   `json:"created_at"`
-	UpdatedAt               pgtype.Timestamptz   `json:"updated_at"`
-	CreatorFirstName        *string              `json:"creator_first_name"`
-	CreatorLastName         *string              `json:"creator_last_name"`
-	TotalCount              int64                `json:"total_count"`
-}
-
-func (q *Queries) ListGoalEvaluations(ctx context.Context, arg ListGoalEvaluationsParams) ([]ListGoalEvaluationsRow, error) {
-	rows, err := q.db.Query(ctx, listGoalEvaluations, arg.ClientID, arg.Limit, arg.Offset)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []ListGoalEvaluationsRow{}
-	for rows.Next() {
-		var i ListGoalEvaluationsRow
-		if err := rows.Scan(
-			&i.ID,
-			&i.ClientID,
-			&i.EvaluationDate,
-			&i.PeriodStart,
-			&i.PeriodEnd,
-			&i.EvaluationIntervalWeeks,
-			&i.Status,
-			&i.OverallNotes,
-			&i.CreatedByEmployeeID,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-			&i.CreatorFirstName,
-			&i.CreatorLastName,
-			&i.TotalCount,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
 }
 
 const listLatestCompletedGoalProgressByClient = `-- name: ListLatestCompletedGoalProgressByClient :many
