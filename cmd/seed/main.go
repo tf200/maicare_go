@@ -351,6 +351,11 @@ func (s *Seeder) SeedInCareClients(ctx context.Context, count int) error {
 				careName = "Ambulatory guidance"
 			}
 
+			contractSenderID := oneOf(s.data.SenderIDs)
+			if client.SenderID != nil {
+				contractSenderID = *client.SenderID
+			}
+
 			if _, err := q.CreateContract(ctx, db.CreateContractParams{
 				TypeID:          nil,
 				Status:          db.ContractStatusEnumApproved,
@@ -365,7 +370,7 @@ func (s *Seeder) SeedInCareClients(ctx context.Context, count int) error {
 				CareName:        careName,
 				CareType:        contractCareType,
 				ClientID:        client.ID,
-				SenderID:        client.SenderID,
+				SenderID:        contractSenderID,
 				AttachmentIds:   []uuid.UUID{},
 				FinancingAct:    db.FinancingActEnumWMO,
 				FinancingOption: db.FinancingOptionEnumPGB,

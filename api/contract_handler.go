@@ -83,25 +83,17 @@ func (server *Server) DeleteContractTypeApi(ctx *gin.Context) {
 // @Tags contracts
 // @Accept json
 // @Produce json
-// @Param id path uuid true "Client ID"
 // @Param request body contract.CreateContractRequest true "Create Contract Request"
 // @Success 200 {object} Response[contract.CreateContractResponse]
-// @Router /clients/{id}/contracts [post]
+// @Router /contracts [post]
 func (server *Server) CreateContractApi(ctx *gin.Context) {
-	id := ctx.Param("id")
-	clientID, err := uuid.Parse(id)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-
 	var req contract.CreateContractRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
-	contract, err := server.businessService.ContractService.CreateContract(ctx, req, clientID)
+	contract, err := server.businessService.ContractService.CreateContract(ctx, req)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -229,9 +221,9 @@ func (server *Server) UpdateContractStatusApi(ctx *gin.Context) {
 // @Produce json
 // @Param id path string true "Contract ID"
 // @Success 200 {object} Response[contract.GetClientContractResponse]
-// @Router /clients/{id}/contracts/{contract_id} [get]
+// @Router /contracts/{id} [get]
 func (server *Server) GetClientContractApi(ctx *gin.Context) {
-	id := ctx.Param("contract_id")
+	id := ctx.Param("id")
 	contractID, err := uuid.Parse(id)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
@@ -254,11 +246,13 @@ func (server *Server) GetClientContractApi(ctx *gin.Context) {
 // @Produce json
 // @Param page query int false "Page number"
 // @Param page_size query int false "Page size"
-// @Param search query string false "Search query"
-// @Param status query []string false "Status" Enums(approved, draft, terminated, stopped)
+// @Param search query string false "Search by client or sender name"
+// @Param status query []string false "Status" Enums(approved, draft, terminated, stopped, expired)
 // @Param care_type query []string false "Care type" Enums(ambulante, accommodation)
 // @Param financing_act query []string false "Financing act" Enums(WMO, ZVW, WLZ, JW, WPG)
-// @Param financing_option query []string false "Financing option" Enums(ZIN, PGB)
+// @Param financing_option query string false "Financing option" Enums(ZIN, PGB)
+// @Param end_date_from query string false "Filter contracts ending on/after date (YYYY-MM-DD)"
+// @Param end_date_to query string false "Filter contracts ending on/before date (YYYY-MM-DD)"
 // @Success 200 {object} Response[pagination.Response[[]contract.ListContractsResponse]]
 // @Router /contracts [get]
 func (server *Server) ListContractsApi(ctx *gin.Context) {

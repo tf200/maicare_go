@@ -26,7 +26,6 @@ DROP TABLE IF EXISTS invoice CASCADE;
 DROP TABLE IF EXISTS framework_agreement CASCADE;
 DROP TABLE IF EXISTS provision CASCADE;
 DROP TABLE IF EXISTS client_agreement CASCADE;
-DROP TABLE IF EXISTS contract_attachment CASCADE;
 DROP TABLE IF EXISTS contract_working_hours CASCADE;
 DROP TABLE IF EXISTS contract_reminder CASCADE;
 DROP TABLE IF EXISTS contract_audit CASCADE;

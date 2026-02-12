@@ -2317,7 +2317,7 @@ type Contract struct {
 	CareName        string              `json:"care_name"`
 	CareType        CareTypeEnum        `json:"care_type"`
 	ClientID        uuid.UUID           `json:"client_id"`
-	SenderID        *uuid.UUID          `json:"sender_id"`
+	SenderID        uuid.UUID           `json:"sender_id"`
 	AttachmentIds   []uuid.UUID         `json:"attachment_ids"`
 	FinancingAct    FinancingActEnum    `json:"financing_act"`
 	FinancingOption FinancingOptionEnum `json:"financing_option"`
@@ -2325,14 +2325,6 @@ type Contract struct {
 	DepartureReport *string             `json:"departure_report"`
 	UpdatedAt       pgtype.Timestamptz  `json:"updated_at"`
 	CreatedAt       pgtype.Timestamptz  `json:"created_at"`
-}
-
-type ContractAttachment struct {
-	ID         uuid.UUID          `json:"id"`
-	ContractID uuid.UUID          `json:"contract_id"`
-	Name       string             `json:"name"`
-	Attachment string             `json:"attachment"`
-	CreatedAt  pgtype.Timestamptz `json:"created_at"`
 }
 
 type ContractAudit struct {

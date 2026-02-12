@@ -62,21 +62,21 @@ OFFSET $3;
 -- name: UpdateContract :one
 UPDATE contract
 SET 
-    type_id = COALESCE(sqlc.narg('type_id'), type_id),
-    start_date = COALESCE(sqlc.narg('start_date'), start_date),
-    end_date = COALESCE(sqlc.narg('end_date'), end_date),
-    reminder_period = COALESCE(sqlc.narg('reminder_period'), reminder_period),
-    VAT = COALESCE(sqlc.narg('VAT'), VAT),
-    price = COALESCE(sqlc.narg('price'), price),
-    price_time_unit = COALESCE(sqlc.narg('price_time_unit'), price_time_unit),
-    hours = COALESCE(sqlc.narg('hours'), hours),
-    hours_type = COALESCE(sqlc.narg('hours_type'), hours_type),
-    care_name = COALESCE(sqlc.narg('care_name'), care_name),
-    care_type = COALESCE(sqlc.narg('care_type'), care_type),
-    sender_id = COALESCE(sqlc.narg('sender_id'), sender_id),
-    attachment_ids = COALESCE(sqlc.narg('attachment_ids'), attachment_ids),
-    financing_act = COALESCE(sqlc.narg('financing_act'), financing_act),
-    financing_option = COALESCE(sqlc.narg('financing_option'), financing_option),
+    type_id = $2,
+    start_date = $3,
+    end_date = $4,
+    reminder_period = $5,
+    VAT = $6,
+    price = $7,
+    price_time_unit = $8,
+    hours = $9,
+    hours_type = $10,
+    care_name = $11,
+    care_type = $12,
+    sender_id = $13,
+    attachment_ids = $14,
+    financing_act = $15,
+    financing_option = $16,
     updated_at = NOW()
 WHERE id = $1
 RETURNING *;
@@ -94,13 +94,27 @@ SELECT c.*,
         ct.name AS contract_type_name,
         cd.first_name AS client_first_name,
         cd.last_name AS client_last_name,
-        s.name AS sender_name
+        cd.filenumber AS client_filenumber,
+        cd.bsn AS client_bsn,
+        s.name AS sender_name,
+        s.types AS sender_type,
+        s.street AS sender_street,
+        s.house_number AS sender_house_number,
+        s.house_number_addition AS sender_house_number_addition,
+        s.postal_code AS sender_postal_code,
+        s.city AS sender_city,
+        s.land AS sender_land,
+        s.kvknumber AS sender_kvknumber,
+        s.btwnumber AS sender_btwnumber,
+        s.phone_number AS sender_phone_number,
+        s.client_number AS sender_client_number,
+        s.email_address AS sender_email_address
 FROM contract c
 LEFT JOIN contract_type ct ON c.type_id = ct.id
 JOIN client_details cd ON c.client_id = cd.id
-LEFT JOIN sender s ON c.sender_id = s.id
+JOIN sender s ON c.sender_id = s.id
 WHERE c.id = $1
-limit 1;
+LIMIT 1;
 
 -- name: GetSenderContracts :many
 SELECT * FROM contract
@@ -110,30 +124,37 @@ WHERE sender_id = $1;
 WITH filtered_contracts AS (
     SELECT
         c.id,
+        c.client_id,
         c.status,
+        c.approved_at,
         c.start_date,
         c.end_date,
+        (c.end_date::date - CURRENT_DATE)::int AS days_left,
         c.price,
         c.price_time_unit,
+        c.hours,
+        c.hours_type,
         c.care_name,
         c.care_type,
         c.financing_act,
         c.financing_option,
-        c.created_at,
+        c.updated_at,
         s.name AS sender_name,
-        cd.id AS client_id,
-        cd.sender_id AS sender_id,
+        c.sender_id AS sender_id,
+        cd.filenumber AS client_filenumber,
         cd.first_name AS client_first_name,
         cd.last_name AS client_last_name
     FROM
         contract c
-    LEFT JOIN
+    JOIN
         sender s ON c.sender_id = s.id
     JOIN
         client_details cd ON c.client_id = cd.id
     WHERE
         (sqlc.narg(search)::varchar IS NULL OR 
             s.name ILIKE '%' || sqlc.narg(search) || '%' OR
+            (cd.first_name || ' ' || cd.last_name) ILIKE '%' || sqlc.narg(search) || '%' OR
+            (cd.last_name || ' ' || cd.first_name) ILIKE '%' || sqlc.narg(search) || '%' OR
             cd.first_name ILIKE '%' || sqlc.narg(search) || '%' OR
             cd.last_name ILIKE '%' || sqlc.narg(search) || '%')
     AND
@@ -143,7 +164,11 @@ WITH filtered_contracts AS (
     AND
         (sqlc.narg(financing_act)::financing_act_enum[] IS NULL OR c.financing_act = ANY(sqlc.narg(financing_act)))
     AND
-        (sqlc.narg(financing_option)::financing_option_enum[] IS NULL OR c.financing_option = ANY(sqlc.narg(financing_option)))
+        (sqlc.narg(financing_option)::financing_option_enum IS NULL OR c.financing_option = sqlc.narg(financing_option))
+    AND
+        (sqlc.narg(end_date_from)::timestamptz IS NULL OR c.end_date >= sqlc.narg(end_date_from))
+    AND
+        (sqlc.narg(end_date_to)::timestamptz IS NULL OR c.end_date <= sqlc.narg(end_date_to))
 )
 SELECT
     (SELECT COUNT(*) FROM filtered_contracts) AS total_count,
@@ -151,7 +176,7 @@ SELECT
 FROM
     filtered_contracts
 ORDER BY
-    created_at DESC
+    updated_at DESC
 LIMIT $1
 OFFSET $2;
 
@@ -268,4 +293,3 @@ FROM contract_audit ca
 LEFT JOIN employee_profile e ON ca.changed_by = e.id
 WHERE ca.contract_id = $1
 ORDER BY ca.changed_at DESC;
-

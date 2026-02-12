@@ -1044,7 +1044,7 @@ BEGIN
     IF NEW.care_start_date IS NOT NULL AND (OLD.care_start_date IS NULL OR OLD.care_start_date <> NEW.care_start_date) THEN
         -- Initialize anchor as the start date
         NEW.last_evaluation_anchor_date := NEW.care_start_date;
-        
+
         -- Set next evaluation date based on intervals
         IF NEW.evaluation_intervals_weeks > 0 THEN
             NEW.next_evaluation_date := NEW.care_start_date + (NEW.evaluation_intervals_weeks * INTERVAL '1 week');
@@ -1106,7 +1106,7 @@ BEGIN
 
         -- Update the client record
         UPDATE client_details
-        SET 
+        SET
             last_evaluation_anchor_date = v_current_next,
             next_evaluation_date = v_current_next + (v_interval_weeks * INTERVAL '1 week')
         WHERE id = NEW.client_id;
@@ -1289,7 +1289,7 @@ CREATE TABLE contract (
     start_date TIMESTAMPTZ NOT NULL,
     end_date TIMESTAMPTZ NOT NULL,
     reminder_period INTEGER NOT NULL DEFAULT 90,
-    VAT INTEGER NULL DEFAULT -1,
+    VAT INTEGER NULL DEFAULT 20,
     price DECIMAL(10,2) NOT NULL,
     price_time_unit price_time_unit_enum NOT NULL DEFAULT 'weekly',
     hours DECIMAL(10,2) NULL,
@@ -1297,7 +1297,7 @@ CREATE TABLE contract (
     care_name VARCHAR(255) NOT NULL,
     care_type care_type_enum NOT NULL,
     client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
-    sender_id UUID NULL REFERENCES sender(id) ON DELETE SET NULL,
+    sender_id UUID NOT NULL REFERENCES sender(id) ON DELETE RESTRICT,
     attachment_ids UUID[] NOT NULL DEFAULT '{}',
     financing_act financing_act_enum NOT NULL DEFAULT 'WMO',
     financing_option financing_option_enum NOT NULL DEFAULT 'PGB',
@@ -1422,16 +1422,6 @@ CREATE TABLE contract_working_hours (
 
 CREATE INDEX contract_working_hours_contract_id_idx ON contract_working_hours(contract_id);
 CREATE INDEX contract_working_hours_datetime_idx ON contract_working_hours(datetime);
-
-CREATE TABLE contract_attachment (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    contract_id UUID NOT NULL REFERENCES contract(id) ON DELETE CASCADE,
-    name VARCHAR(255) NOT NULL,
-    attachment VARCHAR(255) NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE INDEX contract_attachment_contract_id_idx ON contract_attachment(contract_id);
 
 CREATE TABLE client_agreement (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -2186,7 +2176,6 @@ SELECT apply_client_rls('progress_report');
 SELECT apply_client_rls('incident');
 SELECT apply_client_rls('client_documents');
 SELECT apply_client_rls('client_status_history');
-SELECT apply_client_rls('scheduled_status_changes');
 SELECT apply_client_rls('client_diagnosis');
 SELECT apply_client_rls('client_emergency_contact');
 SELECT apply_client_rls('client_location_transfer');

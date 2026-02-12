@@ -174,7 +174,7 @@ type Querier interface {
 	GetScheduleById(ctx context.Context, id uuid.UUID) (GetScheduleByIdRow, error)
 	GetScheduledAppointmentByID(ctx context.Context, id uuid.UUID) (GetScheduledAppointmentByIDRow, error)
 	GetSenderById(ctx context.Context, id uuid.UUID) (Sender, error)
-	GetSenderContracts(ctx context.Context, senderID *uuid.UUID) ([]Contract, error)
+	GetSenderContracts(ctx context.Context, senderID uuid.UUID) ([]Contract, error)
 	GetSenderInvoiceTemplate(ctx context.Context, id uuid.UUID) ([]uuid.UUID, error)
 	GetSessionByID(ctx context.Context, id uuid.UUID) (Session, error)
 	GetShiftByID(ctx context.Context, id uuid.UUID) (LocationShift, error)
