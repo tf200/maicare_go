@@ -324,31 +324,13 @@ func (s *contractService) ListClientContracts(ctx *gin.Context, req ListClientCo
 	contractsRes := make([]ListClientContractsResponse, len(contracts))
 	for i, contract := range contracts {
 		contractsRes[i] = ListClientContractsResponse{
-			ID:              contract.ID,
-			TypeID:          contract.TypeID,
-			Status:          string(contract.Status),
 			StartDate:       contract.StartDate.Time,
 			EndDate:         contract.EndDate.Time,
-			ReminderPeriod:  contract.ReminderPeriod,
-			Vat:             contract.Vat,
-			Price:           contract.Price,
-			PriceTimeUnit:   string(contract.PriceTimeUnit),
-			Hours:           contract.Hours,
-			HoursType:       db.HoursTypePtrFromEnum(contract.HoursType),
+			DaysLeft:        contract.DaysLeft,
 			CareName:        contract.CareName,
 			CareType:        string(contract.CareType),
-			ClientID:        contract.ClientID,
-			ClientFirstName: contract.ClientFirstName,
-			ClientLastName:  contract.ClientLastName,
-			SenderID:        contract.SenderID,
-			SenderName:      contract.SenderName,
-			AttachmentIds:   contract.AttachmentIds,
 			FinancingAct:    string(contract.FinancingAct),
 			FinancingOption: string(contract.FinancingOption),
-			DepartureReason: contract.DepartureReason,
-			DepartureReport: contract.DepartureReport,
-			UpdatedAt:       contract.UpdatedAt.Time,
-			CreatedAt:       contract.CreatedAt.Time,
 		}
 	}
 
@@ -396,15 +378,24 @@ func (s *contractService) UpdateContract(ctx context.Context, req UpdateContract
 	if req.ReminderPeriod != nil {
 		reminderPeriod = *req.ReminderPeriod
 	}
+	if reminderPeriod < 0 {
+		return nil, fmt.Errorf("reminder_period must be greater than or equal to 0")
+	}
 
 	vat := existingContract.Vat
 	if req.Vat != nil {
 		vat = req.Vat
 	}
+	if vat != nil && (*vat < 0 || *vat > 100) {
+		return nil, fmt.Errorf("VAT must be between 0 and 100")
+	}
 
 	price := existingContract.Price
 	if req.Price != nil {
 		price = *req.Price
+	}
+	if price <= 0 {
+		return nil, fmt.Errorf("price must be greater than 0")
 	}
 
 	priceTimeUnit := string(existingContract.PriceTimeUnit)
@@ -424,18 +415,16 @@ func (s *contractService) UpdateContract(ctx context.Context, req UpdateContract
 
 	careName := existingContract.CareName
 	if req.CareName != nil {
-		careName = *req.CareName
+		careName = strings.TrimSpace(*req.CareName)
+	}
+	if strings.TrimSpace(careName) == "" {
+		return nil, fmt.Errorf("care_name is required")
 	}
 
-	careType := string(existingContract.CareType)
 	if req.CareType != nil {
-		careType = *req.CareType
+		return nil, fmt.Errorf("care_type cannot be updated")
 	}
-
-	if careType == string(db.CareTypeEnumAccommodation) {
-		hours = nil
-		hoursType = nil
-	}
+	careType := string(existingContract.CareType)
 
 	if err := validateContractCarePricing(careType, priceTimeUnit, hours, hoursType); err != nil {
 		return nil, err
@@ -453,7 +442,7 @@ func (s *contractService) UpdateContract(ctx context.Context, req UpdateContract
 
 	attachmentIDs := existingContract.AttachmentIds
 	if req.AttachmentIds != nil {
-		attachmentIDs = req.AttachmentIds
+		attachmentIDs = normalizeAttachmentIDs(req.AttachmentIds)
 	}
 
 	if err := s.validateAttachmentIds(ctx, attachmentIDs); err != nil {

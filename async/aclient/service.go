@@ -24,10 +24,6 @@ type AsynqClientInterface interface {
 		ctx context.Context,
 		payload notification.NotificationPayload,
 		opts ...asynq.Option) error
-	EnqueueAppointmentTask(
-		ctx context.Context,
-		payload AppointmentPayload,
-		opts ...asynq.Option) error
 	EnqueueAcceptedRegistration(
 		ctx context.Context,
 		payload AcceptedRegistrationFormPayload,

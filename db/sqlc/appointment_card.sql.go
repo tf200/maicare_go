@@ -28,7 +28,7 @@ INSERT INTO appointment_card (
     leave
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12
-) RETURNING id, client_id, general_information, important_contacts, household_info, organization_agreements, youth_officer_agreements, treatment_agreements, smoking_rules, work, school_internship, travel, leave, file_url, created_at, updated_at
+) RETURNING id, client_id, general_information, important_contacts, household_info, organization_agreements, youth_officer_agreements, treatment_agreements, smoking_rules, work, school_internship, travel, leave, created_at, updated_at
 `
 
 type CreateAppointmentCardParams struct {
@@ -76,7 +76,6 @@ func (q *Queries) CreateAppointmentCard(ctx context.Context, arg CreateAppointme
 		&i.SchoolInternship,
 		&i.Travel,
 		&i.Leave,
-		&i.FileUrl,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -85,7 +84,7 @@ func (q *Queries) CreateAppointmentCard(ctx context.Context, arg CreateAppointme
 
 const getAppointmentCard = `-- name: GetAppointmentCard :one
 SELECT 
-    ac.id, ac.client_id, ac.general_information, ac.important_contacts, ac.household_info, ac.organization_agreements, ac.youth_officer_agreements, ac.treatment_agreements, ac.smoking_rules, ac.work, ac.school_internship, ac.travel, ac.leave, ac.file_url, ac.created_at, ac.updated_at,
+    ac.id, ac.client_id, ac.general_information, ac.important_contacts, ac.household_info, ac.organization_agreements, ac.youth_officer_agreements, ac.treatment_agreements, ac.smoking_rules, ac.work, ac.school_internship, ac.travel, ac.leave, ac.created_at, ac.updated_at,
     c.first_name,
     c.last_name
 FROM appointment_card ac
@@ -108,7 +107,6 @@ type GetAppointmentCardRow struct {
 	SchoolInternship       []string           `json:"school_internship"`
 	Travel                 []string           `json:"travel"`
 	Leave                  []string           `json:"leave"`
-	FileUrl                *string            `json:"file_url"`
 	CreatedAt              pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt              pgtype.Timestamptz `json:"updated_at"`
 	FirstName              string             `json:"first_name"`
@@ -132,7 +130,6 @@ func (q *Queries) GetAppointmentCard(ctx context.Context, clientID uuid.UUID) (G
 		&i.SchoolInternship,
 		&i.Travel,
 		&i.Leave,
-		&i.FileUrl,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.FirstName,
@@ -156,7 +153,7 @@ SET
     travel = COALESCE($11, travel),
     leave = COALESCE($12, leave)
 WHERE client_id = $1
-RETURNING id, client_id, general_information, important_contacts, household_info, organization_agreements, youth_officer_agreements, treatment_agreements, smoking_rules, work, school_internship, travel, leave, file_url, created_at, updated_at
+RETURNING id, client_id, general_information, important_contacts, household_info, organization_agreements, youth_officer_agreements, treatment_agreements, smoking_rules, work, school_internship, travel, leave, created_at, updated_at
 `
 
 type UpdateAppointmentCardParams struct {
@@ -204,29 +201,8 @@ func (q *Queries) UpdateAppointmentCard(ctx context.Context, arg UpdateAppointme
 		&i.SchoolInternship,
 		&i.Travel,
 		&i.Leave,
-		&i.FileUrl,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
 	return i, err
-}
-
-const updateAppointmentCardUrl = `-- name: UpdateAppointmentCardUrl :one
-UPDATE appointment_card
-SET
-    file_url = COALESCE($2, file_url)
-WHERE client_id = $1
-RETURNING file_url
-`
-
-type UpdateAppointmentCardUrlParams struct {
-	ClientID uuid.UUID `json:"client_id"`
-	FileUrl  *string   `json:"file_url"`
-}
-
-func (q *Queries) UpdateAppointmentCardUrl(ctx context.Context, arg UpdateAppointmentCardUrlParams) (*string, error) {
-	row := q.db.QueryRow(ctx, updateAppointmentCardUrl, arg.ClientID, arg.FileUrl)
-	var file_url *string
-	err := row.Scan(&file_url)
-	return file_url, err
 }

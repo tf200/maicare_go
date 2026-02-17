@@ -93,31 +93,13 @@ type ListClientContractsRequest struct {
 
 // ListClientContractsResponse defines the response for ListClientContracts handler
 type ListClientContractsResponse struct {
-	ID              uuid.UUID   `json:"id"`
-	TypeID          *uuid.UUID  `json:"type_id"`
-	Status          string      `json:"status"`
-	StartDate       time.Time   `json:"start_date"`
-	EndDate         time.Time   `json:"end_date"`
-	ReminderPeriod  int32       `json:"reminder_period"`
-	Vat             *int32      `json:"VAT"`
-	Price           float64     `json:"price"`
-	PriceTimeUnit   string      `json:"price_time_unit"`
-	Hours           *float64    `json:"hours"`
-	HoursType       *string     `json:"hours_type"`
-	CareName        string      `json:"care_name"`
-	CareType        string      `json:"care_type"`
-	ClientID        uuid.UUID   `json:"client_id"`
-	ClientFirstName string      `json:"client_first_name"`
-	ClientLastName  string      `json:"client_last_name"`
-	SenderID        uuid.UUID   `json:"sender_id"`
-	SenderName      *string     `json:"sender_name"`
-	AttachmentIds   []uuid.UUID `json:"attachment_ids"`
-	FinancingAct    string      `json:"financing_act"`
-	FinancingOption string      `json:"financing_option"`
-	DepartureReason *string     `json:"departure_reason"`
-	DepartureReport *string     `json:"departure_report"`
-	UpdatedAt       time.Time   `json:"updated_at"`
-	CreatedAt       time.Time   `json:"created_at"`
+	StartDate       time.Time `json:"start_date"`
+	EndDate         time.Time `json:"end_date"`
+	DaysLeft        int32     `json:"days_left"`
+	CareName        string    `json:"care_name"`
+	CareType        string    `json:"care_type"`
+	FinancingAct    string    `json:"financing_act"`
+	FinancingOption string    `json:"financing_option"`
 }
 
 // UpdateContractRequest defines the request for UpdateContract handler
@@ -137,7 +119,6 @@ type UpdateContractRequest struct {
 	AttachmentIds   []uuid.UUID `json:"attachment_ids"`
 	FinancingAct    *string     `json:"financing_act"`
 	FinancingOption *string     `json:"financing_option"`
-	Status          *string     `json:"status"`
 }
 
 // UpdateContractResponse defines the response for UpdateContract handler

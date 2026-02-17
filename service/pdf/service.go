@@ -7,6 +7,7 @@ import (
 )
 
 type PdfService interface {
+	GenerateAppointmentCardPDF(ctx context.Context, cardData AppointmentCard) ([]byte, error)
 	GenerateAndUploadAppointmentCardPDF(ctx context.Context, cardData AppointmentCard) (string, error)
 	GenerateAndUploadInvoicePDF(ctx context.Context, invoiceData InvoicePDFData) (string, int64, error)
 	GenerateAndUploadContractPDF(ctx context.Context, contractData ContractData) (string, error)

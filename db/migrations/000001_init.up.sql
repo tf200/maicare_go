@@ -529,7 +529,7 @@ CREATE INDEX idx_sessions_token_blocked ON sessions("refresh_token", "is_blocked
 CREATE TYPE notification_type_enum AS ENUM (
     'new_appointment', 'appointment_update', 'new_client_assigned',
     'client_goal_update', 'incident_report', 'client_contract_reminder',
-    'new_schedule_notification'
+    'new_schedule_notification', 'system_reminder'
 );
 
 -- Notifications for users
@@ -1774,64 +1774,83 @@ CREATE TABLE schedules (
     CONSTRAINT valid_timeframe CHECK (end_datetime > start_datetime)
 );
 
--- Appointment templates
--- Recurrence type ENUM
-CREATE TYPE recurrence_type_enum AS ENUM ('DAILY', 'WEEKLY', 'MONTHLY');
-CREATE TABLE appointment_templates (
+CREATE TYPE calendar_event_kind_enum AS ENUM ('appointment', 'reminder');
+CREATE TYPE calendar_event_status_enum AS ENUM ('confirmed', 'cancelled');
+CREATE TYPE attendee_response_enum AS ENUM ('needs_action', 'accepted', 'declined', 'tentative');
+CREATE TYPE reminder_channel_enum AS ENUM ('in_app');
+
+CREATE TABLE calendar_events (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    creator_employee_id UUID NOT NULL REFERENCES employee_profile(id),
-    start_time TIMESTAMP NOT NULL,
-    end_time TIMESTAMP NOT NULL,
-    location VARCHAR(255),
-    description TEXT,
-    color VARCHAR(20) DEFAULT '#0000FF',
-    recurrence_type recurrence_type_enum NOT NULL DEFAULT 'DAILY',
-    recurrence_interval INT NULL,
-    recurrence_end_date DATE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    organizer_employee_id UUID NOT NULL REFERENCES employee_profile(id) ON DELETE CASCADE,
+    created_by_employee_id UUID NOT NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
+    kind calendar_event_kind_enum NOT NULL,
+    status calendar_event_status_enum NOT NULL DEFAULT 'confirmed',
+    title TEXT NOT NULL DEFAULT '',
+    description TEXT NULL,
+    location TEXT NULL,
+    color VARCHAR(20) NULL,
+    start_at TIMESTAMPTZ NOT NULL,
+    end_at TIMESTAMPTZ NOT NULL,
+    timezone TEXT NOT NULL DEFAULT 'UTC',
+    rrule TEXT NULL,
+    recurring_event_id UUID NULL REFERENCES calendar_events(id) ON DELETE CASCADE,
+    recurrence_id TIMESTAMPTZ NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT calendar_events_time_order CHECK (end_at > start_at),
+    CONSTRAINT calendar_events_exception_shape CHECK (
+        (recurring_event_id IS NULL AND recurrence_id IS NULL)
+        OR
+        (recurring_event_id IS NOT NULL AND recurrence_id IS NOT NULL)
+    ),
+    CONSTRAINT calendar_events_exception_no_rrule CHECK (
+        recurring_event_id IS NULL OR rrule IS NULL
+    )
 );
 
--- Scheduled appointments
--- Appointment status ENUM
-CREATE TYPE appointment_status_enum AS ENUM ('PENDING', 'CONFIRMED', 'CANCELLED');
-CREATE TABLE scheduled_appointments (
+CREATE INDEX idx_calendar_events_organizer_start ON calendar_events(organizer_employee_id, start_at);
+CREATE INDEX idx_calendar_events_start ON calendar_events(start_at);
+CREATE UNIQUE INDEX uq_calendar_events_exception ON calendar_events(recurring_event_id, recurrence_id)
+    WHERE recurring_event_id IS NOT NULL;
+
+CREATE TABLE calendar_event_attendees (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    appointment_templates_id UUID NULL REFERENCES appointment_templates(id) ON DELETE CASCADE,
-    creator_employee_id UUID NULL REFERENCES employee_profile(id),
-    start_time TIMESTAMP NOT NULL,
-    end_time TIMESTAMP NOT NULL,
-    location VARCHAR(255),
-    description TEXT,
-    status appointment_status_enum NOT NULL DEFAULT 'PENDING',
-    color VARCHAR(20) DEFAULT '#0000FF',
-    is_confirmed BOOLEAN NOT NULL DEFAULT FALSE,
-    confirmed_by_employee_id UUID REFERENCES employee_profile(id),
-    confirmed_at TIMESTAMP NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    event_id UUID NOT NULL REFERENCES calendar_events(id) ON DELETE CASCADE,
+    employee_id UUID NULL REFERENCES employee_profile(id) ON DELETE CASCADE,
+    client_id UUID NULL REFERENCES client_details(id) ON DELETE CASCADE,
+    email TEXT NULL,
+    response attendee_response_enum NOT NULL DEFAULT 'needs_action',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT calendar_event_attendees_one_target CHECK (
+        ((employee_id IS NOT NULL)::INT + (client_id IS NOT NULL)::INT + (email IS NOT NULL)::INT) = 1
+    )
 );
 
-CREATE INDEX idx_scheduled_appointments_time_range ON scheduled_appointments (start_time, end_time);
-CREATE INDEX idx_scheduled_appointments_template_id ON scheduled_appointments (appointment_templates_id);
+CREATE UNIQUE INDEX uq_event_attendee_employee ON calendar_event_attendees(event_id, employee_id)
+    WHERE employee_id IS NOT NULL;
+CREATE UNIQUE INDEX uq_event_attendee_client ON calendar_event_attendees(event_id, client_id)
+    WHERE client_id IS NOT NULL;
+CREATE UNIQUE INDEX uq_event_attendee_email ON calendar_event_attendees(event_id, email)
+    WHERE email IS NOT NULL;
+CREATE INDEX idx_event_attendees_employee ON calendar_event_attendees(employee_id);
+CREATE INDEX idx_event_attendees_client ON calendar_event_attendees(client_id);
 
--- Appointment participants
-CREATE TABLE appointment_participants (
-    appointment_participant_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    appointment_id UUID NOT NULL REFERENCES scheduled_appointments(id) ON DELETE CASCADE,
-    employee_id UUID NOT NULL REFERENCES employee_profile(id),
-    added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE (appointment_id, employee_id)
+CREATE TABLE calendar_event_reminders (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    event_id UUID NOT NULL REFERENCES calendar_events(id) ON DELETE CASCADE,
+    channel reminder_channel_enum NOT NULL DEFAULT 'in_app',
+    minutes_before INT NULL,
+    remind_at TIMESTAMPTZ NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT calendar_event_reminders_one_mode CHECK (
+        (minutes_before IS NOT NULL) <> (remind_at IS NOT NULL)
+    ),
+    CONSTRAINT calendar_event_reminders_minutes_positive CHECK (
+        minutes_before IS NULL OR minutes_before >= 0
+    )
 );
 
--- Appointment clients
-CREATE TABLE appointment_clients (
-    appointment_client_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    appointment_id UUID NOT NULL REFERENCES scheduled_appointments(id) ON DELETE CASCADE,
-    client_id UUID NOT NULL REFERENCES client_details(id),
-    added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE (appointment_id, client_id)
-);
+CREATE INDEX idx_event_reminders_event ON calendar_event_reminders(event_id);
 
 -- ==========================================
 -- FORMS & DOCUMENTATION
@@ -1852,7 +1871,6 @@ CREATE TABLE appointment_card (
     school_internship TEXT[] NOT NULL DEFAULT '{}',
     travel TEXT[] NOT NULL DEFAULT '{}',
     leave TEXT[] NOT NULL DEFAULT '{}',
-    file_url VARCHAR(255) NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -2184,7 +2202,7 @@ SELECT apply_client_rls('invoice');
 SELECT apply_client_rls('assignment');
 SELECT apply_client_rls('assigned_employee');
 SELECT apply_client_rls('ai_generated_reports');
-SELECT apply_client_rls('appointment_clients');
+SELECT apply_client_rls('calendar_event_attendees');
 SELECT apply_client_rls('appointment_card');
 SELECT apply_client_rls('collaboration_agreement');
 SELECT apply_client_rls('risk_assessment');

@@ -465,20 +465,21 @@ func (q *Queries) GetSenderContracts(ctx context.Context, senderID uuid.UUID) ([
 
 const listClientContracts = `-- name: ListClientContracts :many
 WITH client_contracts AS (
-    SELECT c.id, c.type_id, c.status, c.approved_at, c.start_date, c.end_date, c.reminder_period, c.vat, c.price, c.price_time_unit, c.hours, c.hours_type, c.care_name, c.care_type, c.client_id, c.sender_id, c.attachment_ids, c.financing_act, c.financing_option, c.departure_reason, c.departure_report, c.updated_at, c.created_at, 
-            ct.name AS contract_type_name,
-            cd.first_name AS client_first_name,
-            cd.last_name AS client_last_name,
-            s.name AS sender_name
+    SELECT
+            c.start_date,
+            c.end_date,
+            (c.end_date::date - CURRENT_DATE)::int AS days_left,
+            c.care_name,
+            c.care_type,
+            c.financing_act,
+            c.financing_option,
+            c.created_at
     FROM contract c
-    LEFT JOIN contract_type ct ON c.type_id = ct.id
-    JOIN client_details cd ON c.client_id = cd.id
-    LEFT JOIN sender s ON c.sender_id = s.id
     WHERE client_id = $1
 )
 SELECT
     (SELECT COUNT(*) FROM client_contracts) AS total_count,
-    id, type_id, status, approved_at, start_date, end_date, reminder_period, vat, price, price_time_unit, hours, hours_type, care_name, care_type, client_id, sender_id, attachment_ids, financing_act, financing_option, departure_reason, departure_report, updated_at, created_at, contract_type_name, client_first_name, client_last_name, sender_name
+    start_date, end_date, days_left, care_name, care_type, financing_act, financing_option, created_at
 FROM client_contracts
 ORDER BY created_at DESC
 LIMIT $2
@@ -492,34 +493,15 @@ type ListClientContractsParams struct {
 }
 
 type ListClientContractsRow struct {
-	TotalCount       int64               `json:"total_count"`
-	ID               uuid.UUID           `json:"id"`
-	TypeID           *uuid.UUID          `json:"type_id"`
-	Status           ContractStatusEnum  `json:"status"`
-	ApprovedAt       pgtype.Timestamptz  `json:"approved_at"`
-	StartDate        pgtype.Timestamptz  `json:"start_date"`
-	EndDate          pgtype.Timestamptz  `json:"end_date"`
-	ReminderPeriod   int32               `json:"reminder_period"`
-	Vat              *int32              `json:"vat"`
-	Price            float64             `json:"price"`
-	PriceTimeUnit    PriceTimeUnitEnum   `json:"price_time_unit"`
-	Hours            *float64            `json:"hours"`
-	HoursType        NullHoursTypeEnum   `json:"hours_type"`
-	CareName         string              `json:"care_name"`
-	CareType         CareTypeEnum        `json:"care_type"`
-	ClientID         uuid.UUID           `json:"client_id"`
-	SenderID         uuid.UUID           `json:"sender_id"`
-	AttachmentIds    []uuid.UUID         `json:"attachment_ids"`
-	FinancingAct     FinancingActEnum    `json:"financing_act"`
-	FinancingOption  FinancingOptionEnum `json:"financing_option"`
-	DepartureReason  *string             `json:"departure_reason"`
-	DepartureReport  *string             `json:"departure_report"`
-	UpdatedAt        pgtype.Timestamptz  `json:"updated_at"`
-	CreatedAt        pgtype.Timestamptz  `json:"created_at"`
-	ContractTypeName *string             `json:"contract_type_name"`
-	ClientFirstName  string              `json:"client_first_name"`
-	ClientLastName   string              `json:"client_last_name"`
-	SenderName       *string             `json:"sender_name"`
+	TotalCount      int64               `json:"total_count"`
+	StartDate       pgtype.Timestamptz  `json:"start_date"`
+	EndDate         pgtype.Timestamptz  `json:"end_date"`
+	DaysLeft        int32               `json:"days_left"`
+	CareName        string              `json:"care_name"`
+	CareType        CareTypeEnum        `json:"care_type"`
+	FinancingAct    FinancingActEnum    `json:"financing_act"`
+	FinancingOption FinancingOptionEnum `json:"financing_option"`
+	CreatedAt       pgtype.Timestamptz  `json:"created_at"`
 }
 
 func (q *Queries) ListClientContracts(ctx context.Context, arg ListClientContractsParams) ([]ListClientContractsRow, error) {
@@ -533,33 +515,14 @@ func (q *Queries) ListClientContracts(ctx context.Context, arg ListClientContrac
 		var i ListClientContractsRow
 		if err := rows.Scan(
 			&i.TotalCount,
-			&i.ID,
-			&i.TypeID,
-			&i.Status,
-			&i.ApprovedAt,
 			&i.StartDate,
 			&i.EndDate,
-			&i.ReminderPeriod,
-			&i.Vat,
-			&i.Price,
-			&i.PriceTimeUnit,
-			&i.Hours,
-			&i.HoursType,
+			&i.DaysLeft,
 			&i.CareName,
 			&i.CareType,
-			&i.ClientID,
-			&i.SenderID,
-			&i.AttachmentIds,
 			&i.FinancingAct,
 			&i.FinancingOption,
-			&i.DepartureReason,
-			&i.DepartureReport,
-			&i.UpdatedAt,
 			&i.CreatedAt,
-			&i.ContractTypeName,
-			&i.ClientFirstName,
-			&i.ClientLastName,
-			&i.SenderName,
 		); err != nil {
 			return nil, err
 		}

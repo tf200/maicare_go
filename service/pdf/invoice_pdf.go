@@ -1,17 +1,12 @@
 package pdf
 
 import (
-	"bytes"
 	"context"
-	"embed"
 	"fmt"
-	"html/template"
 	"mime/multipart"
+	"sort"
 	"time"
 
-	"maicare_go/bucket"
-
-	"github.com/SebastiaanKlippert/go-wkhtmltopdf"
 	"github.com/google/uuid"
 )
 
@@ -63,60 +58,89 @@ func sumVat(details []InvoiceDetail) float64 {
 	return total
 }
 
-//go:embed templates/invoice.html
-var invoiceTemplateFS embed.FS
-
 func (s *pdfService) generateInvoicePDF(invoiceData InvoicePDFData) (multipart.File, error) {
-	funcMap := template.FuncMap{
-		"sumPreVat": sumPreVat,
-		"sumVat":    sumVat,
+	totalAmount := invoiceData.TotalAmount
+	if totalAmount == 0 {
+		for _, detail := range invoiceData.InvoiceDetails {
+			totalAmount += detail.Total
+		}
 	}
 
-	// Parse and execute HTML template
-	templ, err := template.New("invoice.html").Funcs(funcMap).ParseFS(invoiceTemplateFS, "templates/invoice.html")
+	headerLines := []string{
+		fmt.Sprintf("Invoice number: %s", invoiceData.InvoiceNumber),
+		fmt.Sprintf("Invoice date: %s", invoiceData.InvoiceDate.Format("2006-01-02")),
+		fmt.Sprintf("Due date: %s", invoiceData.DueDate.Format("2006-01-02")),
+		fmt.Sprintf("Sender: %s", invoiceData.SenderName),
+		fmt.Sprintf("Sender contact: %s", invoiceData.SenderContactPerson),
+		fmt.Sprintf("Sender address: %s %s, %s %s", invoiceData.SenderStreet, invoiceData.SenderHouseNumber, invoiceData.SenderPostalCode, invoiceData.SenderCity),
+	}
+
+	sections := make([]documentSection, 0, len(invoiceData.InvoiceDetails)+2)
+	for idx, detail := range invoiceData.InvoiceDetails {
+		lines := []string{
+			fmt.Sprintf("Care type: %s", detail.CareType),
+			fmt.Sprintf("Price: %s per %s", formatCurrency(detail.Price), detail.PriceTimeUnit),
+		}
+
+		for periodIdx, period := range detail.Periods {
+			periodLine := fmt.Sprintf("Period %d: %s to %s", periodIdx+1, period.StartDate.Format("2006-01-02"), period.EndDate.Format("2006-01-02"))
+			lines = append(lines, periodLine)
+			if period.AcommodationTimeFrame != "" {
+				lines = append(lines, fmt.Sprintf("Accommodation timeframe: %s", period.AcommodationTimeFrame))
+			}
+			if period.AmbulanteTotalMinutes > 0 {
+				lines = append(lines, fmt.Sprintf("Ambulante minutes: %.2f", period.AmbulanteTotalMinutes))
+			}
+		}
+
+		lines = append(lines,
+			fmt.Sprintf("Subtotal (excl. VAT): %s", formatCurrency(detail.PreVatTotal)),
+			fmt.Sprintf("Total (incl. VAT): %s", formatCurrency(detail.Total)),
+		)
+
+		sections = append(sections, documentSection{
+			Title: fmt.Sprintf("Invoice detail #%d", idx+1),
+			Lines: lines,
+		})
+	}
+
+	if len(invoiceData.ExtraItems) > 0 {
+		keys := make([]string, 0, len(invoiceData.ExtraItems))
+		for key := range invoiceData.ExtraItems {
+			keys = append(keys, key)
+		}
+		sort.Strings(keys)
+
+		extraLines := make([]string, 0, len(keys))
+		for _, key := range keys {
+			extraLines = append(extraLines, fmt.Sprintf("%s: %s", key, invoiceData.ExtraItems[key]))
+		}
+
+		sections = append(sections, documentSection{
+			Title: "Extra items",
+			Lines: extraLines,
+		})
+	}
+
+	sections = append(sections, documentSection{
+		Title: "Totals",
+		Lines: []string{
+			fmt.Sprintf("Total excl. VAT: %s", formatCurrency(sumPreVat(invoiceData.InvoiceDetails))),
+			fmt.Sprintf("VAT total: %s", formatCurrency(sumVat(invoiceData.InvoiceDetails))),
+			fmt.Sprintf("Total incl. VAT: %s", formatCurrency(totalAmount)),
+		},
+	})
+
+	pdfBytes, err := buildSectionsPDF(fmt.Sprintf("Invoice %s", invoiceData.InvoiceNumber), headerLines, sections)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse template: %w", err)
+		return nil, fmt.Errorf("failed to generate invoice pdf: %w", err)
 	}
 
-	var body bytes.Buffer
-	if err := templ.Execute(&body, invoiceData); err != nil {
-		return nil, fmt.Errorf("failed to execute template: %w", err)
-	}
+	return toMultipartFile(pdfBytes), nil
+}
 
-	// Create PDF generator
-	pdfg, err := wkhtmltopdf.NewPDFGenerator()
-	if err != nil {
-		return nil, fmt.Errorf("failed to create PDF generator: %w", err)
-	}
-
-	// Set global options
-	pdfg.Dpi.Set(300)
-	pdfg.Orientation.Set(wkhtmltopdf.OrientationPortrait)
-	pdfg.Grayscale.Set(false)
-
-	// Create a new input page from our HTML
-	page := wkhtmltopdf.NewPageReader(bytes.NewReader(body.Bytes()))
-
-	// Set page options
-	page.EnableLocalFileAccess.Set(true)
-	page.LoadErrorHandling.Set("ignore")
-
-	// Add page to generator
-	pdfg.AddPage(page)
-
-	// Generate PDF
-	err = pdfg.Create()
-	if err != nil {
-		return nil, fmt.Errorf("failed to create PDF: %w", err)
-	}
-
-	// Get the generated PDF as a byte slice
-	pdfBytes := pdfg.Bytes()
-	// Wrap the byte slice in our InMemoryFile to satisfy the interface
-	file := &bucket.InMemoryFile{
-		Reader: bytes.NewReader(pdfBytes),
-	}
-	return file, nil
+func formatCurrency(value float64) string {
+	return fmt.Sprintf("EUR %.2f", value)
 }
 
 // UploadInvoicePDF uploads a PDF to B2 with a generated filename

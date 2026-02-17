@@ -1,24 +1,5 @@
 package db
 
-// AppointmentStatusEnum helpers
-func NullAppointmentStatusFromPtr(ptr *string) NullAppointmentStatusEnum {
-	if ptr != nil {
-		return NullAppointmentStatusEnum{
-			AppointmentStatusEnum: AppointmentStatusEnum(*ptr),
-			Valid:                 true,
-		}
-	}
-	return NullAppointmentStatusEnum{Valid: false}
-}
-
-func AppointmentStatusPtrFromEnum(enum NullAppointmentStatusEnum) *string {
-	if enum.Valid {
-		str := string(enum.AppointmentStatusEnum)
-		return &str
-	}
-	return nil
-}
-
 // CarePlanInterventionFrequencyEnum helpers
 // func NullCarePlanInterventionFrequencyFromPtr(ptr *string) NullCarePlanInterventionFrequencyEnum {
 // 	if ptr != nil {
@@ -736,25 +717,6 @@ func NullRecurrenceRiskFromPtr(ptr *string) NullRecurrenceRiskEnum {
 func RecurrenceRiskPtrFromEnum(enum NullRecurrenceRiskEnum) *string {
 	if enum.Valid {
 		str := string(enum.RecurrenceRiskEnum)
-		return &str
-	}
-	return nil
-}
-
-// RecurrenceTypeEnum helpers
-func NullRecurrenceTypeFromPtr(ptr *string) NullRecurrenceTypeEnum {
-	if ptr != nil {
-		return NullRecurrenceTypeEnum{
-			RecurrenceTypeEnum: RecurrenceTypeEnum(*ptr),
-			Valid:              true,
-		}
-	}
-	return NullRecurrenceTypeEnum{Valid: false}
-}
-
-func RecurrenceTypePtrFromEnum(enum NullRecurrenceTypeEnum) *string {
-	if enum.Valid {
-		str := string(enum.RecurrenceTypeEnum)
 		return &str
 	}
 	return nil

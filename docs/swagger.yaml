@@ -36,46 +36,21 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-appointment_CreateAppointmentResponse:
+  api.Response-appointment_EventResponse:
     properties:
       data:
-        $ref: '#/definitions/appointment.CreateAppointmentResponse'
+        $ref: '#/definitions/appointment.EventResponse'
       message:
         type: string
       success:
         type: boolean
     type: object
-  api.Response-appointment_GetAppointmentResponse:
+  api.Response-array_appointment_EventOccurrenceResponse:
     properties:
       data:
-        $ref: '#/definitions/appointment.GetAppointmentResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-appointment_ListAppointmentsForClientResponse:
-    properties:
-      data:
-        $ref: '#/definitions/appointment.ListAppointmentsForClientResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-appointment_ListAppointmentsForEmployeeInRangeResponse:
-    properties:
-      data:
-        $ref: '#/definitions/appointment.ListAppointmentsForEmployeeInRangeResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-appointment_UpdateAppointmentResponse:
-    properties:
-      data:
-        $ref: '#/definitions/appointment.UpdateAppointmentResponse'
+        items:
+          $ref: '#/definitions/appointment.EventOccurrenceResponse'
+        type: array
       message:
         type: string
       success:
@@ -119,61 +94,6 @@ definitions:
       data:
         items:
           $ref: '#/definitions/auth.ListRolesApiResponse'
-        type: array
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-array_care_GetCarePlanResourcesResponse:
-    properties:
-      data:
-        items:
-          $ref: '#/definitions/care.GetCarePlanResourcesResponse'
-        type: array
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-array_care_GetCarePlanRisksResponse:
-    properties:
-      data:
-        items:
-          $ref: '#/definitions/care.GetCarePlanRisksResponse'
-        type: array
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-array_care_GetCarePlanSuccessMetricsResponse:
-    properties:
-      data:
-        items:
-          $ref: '#/definitions/care.GetCarePlanSuccessMetricsResponse'
-        type: array
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-array_care_GetCarePlanSupportNetworkResponse:
-    properties:
-      data:
-        items:
-          $ref: '#/definitions/care.GetCarePlanSupportNetworkResponse'
-        type: array
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-array_care_ListCarePlanReportsResponse:
-    properties:
-      data:
-        items:
-          $ref: '#/definitions/care.ListCarePlanReportsResponse'
         type: array
       message:
         type: string
@@ -464,195 +384,6 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-care_CreateCarePlanActionsResponse:
-    properties:
-      data:
-        $ref: '#/definitions/care.CreateCarePlanActionsResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-care_CreateCarePlanInterventionResponse:
-    properties:
-      data:
-        $ref: '#/definitions/care.CreateCarePlanInterventionResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-care_CreateCarePlanObjectiveResponse:
-    properties:
-      data:
-        $ref: '#/definitions/care.CreateCarePlanObjectiveResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-care_CreateCarePlanReportResponse:
-    properties:
-      data:
-        $ref: '#/definitions/care.CreateCarePlanReportResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-care_CreateCarePlanResourcesResponse:
-    properties:
-      data:
-        $ref: '#/definitions/care.CreateCarePlanResourcesResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-care_CreateCarePlanRisksResponse:
-    properties:
-      data:
-        $ref: '#/definitions/care.CreateCarePlanRisksResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-care_CreateCarePlanSuccessMetricsResponse:
-    properties:
-      data:
-        $ref: '#/definitions/care.CreateCarePlanSuccessMetricsResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-care_CreateCarePlanSupportNetworkResponse:
-    properties:
-      data:
-        $ref: '#/definitions/care.CreateCarePlanSupportNetworkResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-care_CreateClientCarePlanResponse:
-    properties:
-      data:
-        $ref: '#/definitions/care.CreateClientCarePlanResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-care_GetCarePlanInterventionsResponse:
-    properties:
-      data:
-        $ref: '#/definitions/care.GetCarePlanInterventionsResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-care_GetCarePlanObjectivesResponse:
-    properties:
-      data:
-        $ref: '#/definitions/care.GetCarePlanObjectivesResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-care_GetCarePlanOverviewResponse:
-    properties:
-      data:
-        $ref: '#/definitions/care.GetCarePlanOverviewResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-care_UpdateCarePlanActionsResponse:
-    properties:
-      data:
-        $ref: '#/definitions/care.UpdateCarePlanActionsResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-care_UpdateCarePlanInterventionResponse:
-    properties:
-      data:
-        $ref: '#/definitions/care.UpdateCarePlanInterventionResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-care_UpdateCarePlanObjectiveResponse:
-    properties:
-      data:
-        $ref: '#/definitions/care.UpdateCarePlanObjectiveResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-care_UpdateCarePlanOverviewResponse:
-    properties:
-      data:
-        $ref: '#/definitions/care.UpdateCarePlanOverviewResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-care_UpdateCarePlanReportResponse:
-    properties:
-      data:
-        $ref: '#/definitions/care.UpdateCarePlanReportResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-care_UpdateCarePlanResourcesResponse:
-    properties:
-      data:
-        $ref: '#/definitions/care.UpdateCarePlanResourcesResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-care_UpdateCarePlanRisksResponse:
-    properties:
-      data:
-        $ref: '#/definitions/care.UpdateCarePlanRisksResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-care_UpdateCarePlanSuccessMetricsResponse:
-    properties:
-      data:
-        $ref: '#/definitions/care.UpdateCarePlanSuccessMetricsResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-care_UpdateCarePlanSupportNetworkResponse:
-    properties:
-      data:
-        $ref: '#/definitions/care.UpdateCarePlanSupportNetworkResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
   api.Response-clientp_AddClientDocumentApiResponse:
     properties:
       data:
@@ -684,15 +415,6 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/clientp.ConfirmProgressReportResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-clientp_CreateAppointmentCardResponse:
-    properties:
-      data:
-        $ref: '#/definitions/clientp.CreateAppointmentCardResponse'
       message:
         type: string
       success:
@@ -743,6 +465,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-clientp_CreateIntakeFormGoalsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.CreateIntakeFormGoalsResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-clientp_CreateProgressReportResponse:
     properties:
       data:
@@ -774,15 +505,6 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/clientp.DeleteClientEmergencyContactResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
-  api.Response-clientp_GenerateAppointmentCardDocumentApiResponse:
-    properties:
-      data:
-        $ref: '#/definitions/clientp.GenerateAppointmentCardDocumentApiResponse'
       message:
         type: string
       success:
@@ -914,6 +636,15 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-clientp_GetIntakeFormResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.GetIntakeFormResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-clientp_GetMissingClientDocumentsApiResponse:
     properties:
       data:
@@ -941,10 +672,19 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-clientp_InitializeIntakeAssessmentsResponse:
+  api.Response-clientp_GoalEvaluationBootstrapResponse:
     properties:
       data:
-        $ref: '#/definitions/clientp.InitializeIntakeAssessmentsResponse'
+        $ref: '#/definitions/clientp.GoalEvaluationBootstrapResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-clientp_GoalEvaluationResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.GoalEvaluationResponse'
       message:
         type: string
       success:
@@ -968,6 +708,24 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-clientp_ListInCareClientsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.ListInCareClientsResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-clientp_ListWaitingListClientsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/clientp.ListWaitingListClientsResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-clientp_PromoteIntakeToClientResponse:
     properties:
       data:
@@ -986,10 +744,10 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-clientp_SetClientProfilePictureResponse:
+  api.Response-clientp_PutClientInCareResponse:
     properties:
       data:
-        $ref: '#/definitions/clientp.SetClientProfilePictureResponse'
+        $ref: '#/definitions/clientp.PutClientInCareResponse'
       message:
         type: string
       success:
@@ -1067,10 +825,10 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-clientp_UpdateIntakeMaturityAssessmentResponse:
+  api.Response-clientp_UpdateIntakeConclusionResponse:
     properties:
       data:
-        $ref: '#/definitions/clientp.UpdateIntakeMaturityAssessmentResponse'
+        $ref: '#/definitions/clientp.UpdateIntakeConclusionResponse'
       message:
         type: string
       success:
@@ -1571,15 +1329,6 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-pagination_Response-care_ListClientCarePlansResponse:
-    properties:
-      data:
-        $ref: '#/definitions/pagination.Response-care_ListClientCarePlansResponse'
-      message:
-        type: string
-      success:
-        type: boolean
-    type: object
   api.Response-pagination_Response-clientp_ListAllIncidentsResponse:
     properties:
       data:
@@ -1634,19 +1383,19 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-pagination_Response-clientp_ListIncidentsResponse:
+  api.Response-pagination_Response-clientp_ListInCareClientsResponse:
     properties:
       data:
-        $ref: '#/definitions/pagination.Response-clientp_ListIncidentsResponse'
+        $ref: '#/definitions/pagination.Response-clientp_ListInCareClientsResponse'
       message:
         type: string
       success:
         type: boolean
     type: object
-  api.Response-pagination_Response-clientp_ListIntakeMaturityAssessmentsResponse:
+  api.Response-pagination_Response-clientp_ListIncidentsResponse:
     properties:
       data:
-        $ref: '#/definitions/pagination.Response-clientp_ListIntakeMaturityAssessmentsResponse'
+        $ref: '#/definitions/pagination.Response-clientp_ListIncidentsResponse'
       message:
         type: string
       success:
@@ -1661,10 +1410,46 @@ definitions:
       success:
         type: boolean
     type: object
+  api.Response-pagination_Response-clientp_ListRecentDraftEvaluationsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/pagination.Response-clientp_ListRecentDraftEvaluationsResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-pagination_Response-clientp_ListRecentSubmittedEvaluationsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/pagination.Response-clientp_ListRecentSubmittedEvaluationsResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   api.Response-pagination_Response-clientp_ListRegistrationFormsResponse:
     properties:
       data:
         $ref: '#/definitions/pagination.Response-clientp_ListRegistrationFormsResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-pagination_Response-clientp_ListUpcomingEvaluationsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/pagination.Response-clientp_ListUpcomingEvaluationsResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  api.Response-pagination_Response-clientp_ListWaitingListClientsResponse:
+    properties:
+      data:
+        $ref: '#/definitions/pagination.Response-clientp_ListWaitingListClientsResponse'
       message:
         type: string
       success:
@@ -1796,296 +1581,224 @@ definitions:
       success:
         type: boolean
     type: object
-  appointment.AddClientToAppointmentRequest:
+  appointment.CreateEventRequest:
     properties:
-      client_ids:
+      attendee_client_ids:
         items:
           type: string
         type: array
-    required:
-    - client_ids
-    type: object
-  appointment.AddParticipantToAppointmentRequest:
-    properties:
-      participant_employee_ids:
-        items:
-          type: string
-        type: array
-    required:
-    - participant_employee_ids
-    type: object
-  appointment.ClientsDetails:
-    properties:
-      client_id:
-        type: string
-      first_name:
-        type: string
-      last_name:
-        type: string
-    type: object
-  appointment.CreateAppointmentRequest:
-    properties:
-      client_ids:
+      attendee_employee_ids:
         items:
           type: string
         type: array
       color:
-        example: '#FF5733'
         type: string
       description:
         type: string
-      end_time:
+      end_at:
         type: string
+      kind:
+        allOf:
+        - $ref: '#/definitions/appointment.EventKind'
+        enum:
+        - appointment
+        - reminder
       location:
         type: string
-      participant_employee_ids:
+      reminders:
+        items:
+          $ref: '#/definitions/appointment.ReminderInput'
+        type: array
+      rrule:
+        type: string
+      start_at:
+        type: string
+      title:
+        type: string
+    required:
+    - end_at
+    - kind
+    - start_at
+    type: object
+  appointment.DeleteEventRequest:
+    properties:
+      recurrence_id:
+        type: string
+      scope:
+        allOf:
+        - $ref: '#/definitions/appointment.MutationScope'
+        enum:
+        - single
+        - series
+        - future
+    required:
+    - scope
+    type: object
+  appointment.EventKind:
+    enum:
+    - appointment
+    - reminder
+    type: string
+    x-enum-varnames:
+    - EventKindAppointment
+    - EventKindReminder
+  appointment.EventOccurrenceResponse:
+    properties:
+      attendee_client_ids:
         items:
           type: string
         type: array
-      recurrence_end_date:
-        example: "2025-10-01T10:00:00Z"
-        type: string
-      recurrence_interval:
-        type: integer
-      recurrence_type:
-        enum:
-        - NONE
-        - DAILY
-        - WEEKLY
-        - MONTHLY
-        example: NONE
-        type: string
-      start_time:
-        example: "2023-10-01T10:00:00Z"
-        type: string
-    required:
-    - end_time
-    - recurrence_type
-    - start_time
-    type: object
-  appointment.CreateAppointmentResponse:
-    properties:
+      attendee_employee_ids:
+        items:
+          type: string
+        type: array
       color:
-        type: string
-      creator_employee_id:
         type: string
       description:
         type: string
-      end_time:
+      end_at:
         type: string
       id:
         type: string
+      is_recurring_instance:
+        type: boolean
+      kind:
+        $ref: '#/definitions/appointment.EventKind'
       location:
         type: string
-      start_time:
+      master_event_id:
+        type: string
+      recurrence_id:
+        type: string
+      start_at:
+        type: string
+      title:
         type: string
     type: object
-  appointment.GetAppointmentResponse:
+  appointment.EventResponse:
     properties:
-      appointment_templates_id:
-        type: integer
-      clients_details:
+      attendee_client_ids:
         items:
-          $ref: '#/definitions/appointment.ClientsDetails'
+          type: string
+        type: array
+      attendee_employee_ids:
+        items:
+          type: string
         type: array
       color:
-        type: string
-      confirmed_at:
-        type: string
-      confirmed_by_employee_id:
-        type: integer
-      confirmer_first_name:
-        type: string
-      confirmer_last_name:
         type: string
       created_at:
         type: string
-      creator_employee_id:
-        type: string
-      creator_first_name:
-        type: string
-      creator_last_name:
-        type: string
       description:
         type: string
-      end_time:
+      end_at:
         type: string
       id:
         type: string
-      is_confirmed:
-        type: boolean
+      kind:
+        $ref: '#/definitions/appointment.EventKind'
       location:
         type: string
-      participants_details:
+      organizer_employee_id:
+        type: string
+      recurrence_id:
+        type: string
+      recurring_event_id:
+        type: string
+      reminders:
         items:
-          $ref: '#/definitions/appointment.ParticipantsDetails'
+          $ref: '#/definitions/appointment.ReminderResponse'
         type: array
-      start_time:
+      rrule:
+        type: string
+      start_at:
         type: string
       status:
+        type: string
+      title:
         type: string
       updated_at:
         type: string
     type: object
-  appointment.ListAppointmentsForClientRequest:
-    properties:
-      end_date:
-        example: "2025-04-30T23:59:59Z"
-        type: string
-      start_date:
-        example: "2025-04-27T00:00:00Z"
-        type: string
-    required:
-    - end_date
-    - start_date
-    type: object
-  appointment.ListAppointmentsForClientResponse:
-    properties:
-      clients_details:
-        items:
-          $ref: '#/definitions/appointment.ClientsDetails'
-        type: array
-      color:
-        type: string
-      confirmed_at:
-        type: string
-      confirmed_by_employee_id:
-        type: integer
-      created_at:
-        type: string
-      creator_employee_id:
-        type: string
-      description:
-        type: string
-      end_time:
-        type: string
-      id:
-        type: string
-      location:
-        type: string
-      participants_details:
-        items:
-          $ref: '#/definitions/appointment.ParticipantsDetails'
-        type: array
-      recurrence_end_date:
-        $ref: '#/definitions/pgtype.Date'
-      recurrence_interval:
-        type: integer
-      recurrence_type:
-        type: string
-      start_time:
-        type: string
-      status:
-        type: string
-    type: object
-  appointment.ListAppointmentsForEmployeeInRangeRequest:
-    properties:
-      end_date:
-        example: "2025-04-30T23:59:59Z"
-        type: string
-      start_date:
-        example: "2025-04-27T00:00:00Z"
-        type: string
-    required:
-    - end_date
-    - start_date
-    type: object
-  appointment.ListAppointmentsForEmployeeInRangeResponse:
-    properties:
-      clients_details:
-        items:
-          $ref: '#/definitions/appointment.ClientsDetails'
-        type: array
-      color:
-        type: string
-      created_at:
-        type: string
-      creator_employee_id:
-        type: string
-      description:
-        type: string
-      end_time:
-        type: string
-      id:
-        type: string
-      is_confirmed:
-        type: boolean
-      location:
-        type: string
-      participants_details:
-        items:
-          $ref: '#/definitions/appointment.ParticipantsDetails'
-        type: array
-      start_time:
-        type: string
-      status:
-        type: string
-    type: object
-  appointment.ParticipantsDetails:
+  appointment.ListEventsRequest:
     properties:
       employee_id:
+        description: 'Optional: filter by specific employee (requires APPOINTMENT.VIEW_ALL
+          permission)'
         type: string
-      first_name:
+      end_at:
         type: string
-      last_name:
-        type: string
-    type: object
-  appointment.UpdateAppointmentRequest:
-    properties:
-      client_ids:
-        items:
-          type: string
-        type: array
-      color:
-        example: '#FF5733'
-        type: string
-      description:
-        type: string
-      end_time:
-        type: string
-      location:
-        type: string
-      participant_employee_ids:
-        items:
-          type: string
-        type: array
-      start_time:
-        example: "2023-10-01T10:00:00Z"
+      start_at:
         type: string
     required:
-    - end_time
-    - start_time
+    - end_at
+    - start_at
     type: object
-  appointment.UpdateAppointmentResponse:
+  appointment.MutationScope:
+    enum:
+    - single
+    - series
+    - future
+    type: string
+    x-enum-varnames:
+    - MutationScopeSingle
+    - MutationScopeSeries
+    - MutationScopeFuture
+  appointment.ReminderInput:
     properties:
-      appointment_templates_id:
+      minutes_before:
+        type: integer
+      remind_at:
         type: string
+    type: object
+  appointment.ReminderResponse:
+    properties:
+      id:
+        type: string
+      minutes_before:
+        type: integer
+      remind_at:
+        type: string
+    type: object
+  appointment.UpdateEventRequest:
+    properties:
+      attendee_client_ids:
+        items:
+          type: string
+        type: array
+      attendee_employee_ids:
+        items:
+          type: string
+        type: array
       color:
-        type: string
-      confirmed_at:
-        $ref: '#/definitions/pgtype.Timestamp'
-      confirmed_by_employee_id:
-        type: string
-      created_at:
-        $ref: '#/definitions/pgtype.Timestamp'
-      creator_employee_id:
         type: string
       description:
         type: string
-      end_time:
-        $ref: '#/definitions/pgtype.Timestamp'
-      id:
+      end_at:
         type: string
-      is_confirmed:
-        type: boolean
       location:
         type: string
-      start_time:
-        $ref: '#/definitions/pgtype.Timestamp'
-      status:
+      recurrence_id:
         type: string
-      updated_at:
-        $ref: '#/definitions/pgtype.Timestamp'
+      reminders:
+        items:
+          $ref: '#/definitions/appointment.ReminderInput'
+        type: array
+      rrule:
+        type: string
+      scope:
+        allOf:
+        - $ref: '#/definitions/appointment.MutationScope'
+        enum:
+        - single
+        - series
+        - future
+      start_at:
+        type: string
+      title:
+        type: string
+    required:
+    - scope
     type: object
   attachment.ConfirmUploadRequest:
     properties:
@@ -2367,579 +2080,24 @@ definitions:
     - temp_token
     - validation_code
     type: object
-  care.CarePlanActions:
-    properties:
-      action_description:
-        type: string
-      action_id:
-        type: string
-      is_completed:
-        type: boolean
-      notes:
-        type: string
-      sort_order:
-        type: integer
-    type: object
-  care.CarePlanObjectives:
-    properties:
-      actions:
-        items:
-          $ref: '#/definitions/care.CarePlanActions'
-        type: array
-      description:
-        type: string
-      objective_id:
-        type: string
-      status:
-        type: string
-      timeframe:
-        type: string
-      title:
-        type: string
-    type: object
-  care.CreateCarePlanActionsRequest:
-    properties:
-      action_description:
-        type: string
-    required:
-    - action_description
-    type: object
-  care.CreateCarePlanActionsResponse:
-    properties:
-      action_description:
-        type: string
-      action_id:
-        type: string
-      objective_id:
-        type: string
-    type: object
-  care.CreateCarePlanInterventionRequest:
-    properties:
-      frequency:
-        enum:
-        - daily
-        - weekly
-        - monthly
-        type: string
-      intervention_description:
-        type: string
-    required:
-    - frequency
-    - intervention_description
-    type: object
-  care.CreateCarePlanInterventionResponse:
-    properties:
-      care_plan_id:
-        type: string
-      frequency:
-        type: string
-      intervention_description:
-        type: string
-      intervention_id:
-        type: string
-    type: object
-  care.CreateCarePlanObjectiveRequest:
+  care.LevelDescription:
     properties:
       description:
         type: string
-      goal_title:
-        type: string
-      timeframe:
-        enum:
-        - short_term
-        - medium_term
-        - long_term
-        type: string
-    required:
-    - description
-    - goal_title
-    - timeframe
-    type: object
-  care.CreateCarePlanObjectiveResponse:
-    properties:
-      care_plan_id:
-        type: string
-      completion_date:
-        type: string
-      completion_notes:
-        type: string
-      created_at:
-        type: string
-      description:
-        type: string
-      goal_title:
-        type: string
-      id:
-        type: string
-      status:
-        type: string
-      target_date:
-        type: string
-      timeframe:
-        type: string
-      updated_at:
-        type: string
-    type: object
-  care.CreateCarePlanReportRequest:
-    properties:
-      is_critical:
-        type: boolean
-      report_content:
-        type: string
-      report_type:
-        type: string
-    required:
-    - report_content
-    - report_type
-    type: object
-  care.CreateCarePlanReportResponse:
-    properties:
-      care_plan_id:
-        type: string
-      created_at:
-        type: string
-      id:
-        type: string
-      is_critical:
-        type: boolean
-      report_content:
-        type: string
-      report_type:
-        type: string
-    type: object
-  care.CreateCarePlanResourcesRequest:
-    properties:
-      is_obtained:
-        type: boolean
-      obtained_date:
-        type: string
-      resource_description:
-        type: string
-    required:
-    - resource_description
-    type: object
-  care.CreateCarePlanResourcesResponse:
-    properties:
-      id:
-        type: string
-      is_obtained:
-        type: boolean
-      obtained_date:
-        type: string
-      resource_description:
-        type: string
-    type: object
-  care.CreateCarePlanRisksRequest:
-    properties:
-      mitigation_strategy:
-        type: string
-      risk_description:
-        type: string
-      risk_level:
-        type: string
-    required:
-    - mitigation_strategy
-    - risk_description
-    type: object
-  care.CreateCarePlanRisksResponse:
-    properties:
-      mitigation_strategy:
-        type: string
-      risk_description:
-        type: string
-      risk_id:
-        type: string
-      risk_level:
-        type: string
-    type: object
-  care.CreateCarePlanSuccessMetricsRequest:
-    properties:
-      current_value:
-        description: Optional, can be nil if not set
-        type: string
-      measurement_method:
-        type: string
-      metric_name:
-        type: string
-      target_value:
-        type: string
-    required:
-    - measurement_method
-    - metric_name
-    - target_value
-    type: object
-  care.CreateCarePlanSuccessMetricsResponse:
-    properties:
-      current_value:
-        type: string
-      measurement_method:
-        type: string
-      metric_id:
-        type: string
-      metric_name:
-        type: string
-      target_value:
-        type: string
-    type: object
-  care.CreateCarePlanSupportNetworkRequest:
-    properties:
-      responsibility_description:
-        type: string
-      role_title:
-        type: string
-    required:
-    - role_title
-    type: object
-  care.CreateCarePlanSupportNetworkResponse:
-    properties:
-      responsibility_description:
-        type: string
-      role_title:
-        type: string
-      support_network_id:
-        type: string
-    type: object
-  care.CreateClientCarePlanRequest:
-    properties:
-      initial_level:
+      level:
         type: integer
-      maturity_matrix_id:
-        type: string
-      target_level:
-        type: integer
-    type: object
-  care.CreateClientCarePlanResponse:
-    properties:
-      care_plan_id:
-        type: string
-      client_id:
-        type: string
-    type: object
-  care.GetCarePlanInterventionsResponse:
-    properties:
-      daily_activities:
-        items:
-          $ref: '#/definitions/care.Intervention'
-        type: array
-      monthly_activities:
-        items:
-          $ref: '#/definitions/care.Intervention'
-        type: array
-      weekly_activities:
-        items:
-          $ref: '#/definitions/care.Intervention'
-        type: array
-    type: object
-  care.GetCarePlanObjectivesResponse:
-    properties:
-      long_term_goals:
-        items:
-          $ref: '#/definitions/care.CarePlanObjectives'
-        type: array
-      medium_term_goals:
-        items:
-          $ref: '#/definitions/care.CarePlanObjectives'
-        type: array
-      short_term_goals:
-        items:
-          $ref: '#/definitions/care.CarePlanObjectives'
-        type: array
-    type: object
-  care.GetCarePlanOverviewResponse:
-    properties:
-      assessment_summary:
-        type: string
-      current_level:
-        type: integer
-      domain:
-        type: string
-      generated_at:
-        type: string
-      id:
-        type: string
-      raw_llm_response:
-        type: string
-      status:
-        type: string
-      target_level:
-        type: integer
-    type: object
-  care.GetCarePlanResourcesResponse:
-    properties:
-      id:
-        type: string
-      is_obtained:
-        type: boolean
-      obtained_date:
-        type: string
-      resource_description:
-        type: string
-    type: object
-  care.GetCarePlanRisksResponse:
-    properties:
-      mitigation_strategy:
-        type: string
-      risk_description:
-        type: string
-      risk_id:
-        type: string
-      risk_level:
-        type: string
-    type: object
-  care.GetCarePlanSuccessMetricsResponse:
-    properties:
-      current_value:
-        type: string
-      measurement_method:
-        type: string
-      metric_id:
-        type: string
-      metric_name:
-        type: string
-      target_value:
-        type: string
-    type: object
-  care.GetCarePlanSupportNetworkResponse:
-    properties:
-      responsibility_description:
-        type: string
-      role_title:
-        type: string
-      support_network_id:
-        type: string
-    type: object
-  care.Intervention:
-    properties:
-      intervention_description:
-        type: string
-      intervention_id:
-        type: string
-    type: object
-  care.ListCarePlanReportsResponse:
-    properties:
-      care_plan_id:
-        type: string
-      created_at:
-        type: string
-      created_by_first_name:
-        type: string
-      created_by_last_name:
-        type: string
-      id:
-        type: string
-      is_critical:
-        type: boolean
-      report_content:
-        type: string
-      report_type:
+      name:
         type: string
     type: object
   care.ListCarePlanTopics:
     properties:
       id:
         type: string
+      level_descriptions:
+        items:
+          $ref: '#/definitions/care.LevelDescription'
+        type: array
       topic_name:
-        type: string
-    type: object
-  care.ListClientCarePlansResponse:
-    properties:
-      care_plan_id:
-        type: string
-      client_id:
-        type: string
-      current_level:
-        type: integer
-      end_date:
-        $ref: '#/definitions/pgtype.Date'
-      initial_level:
-        type: integer
-      is_active:
-        type: boolean
-      start_date:
-        $ref: '#/definitions/pgtype.Date'
-      topic_name:
-        type: string
-    type: object
-  care.UpdateCarePlanActionsRequest:
-    properties:
-      action_description:
-        type: string
-    type: object
-  care.UpdateCarePlanActionsResponse:
-    properties:
-      action_description:
-        type: string
-      action_id:
-        type: string
-      objective_id:
-        type: string
-    type: object
-  care.UpdateCarePlanInterventionRequest:
-    properties:
-      frequency:
-        enum:
-        - daily
-        - weekly
-        - monthly
-        type: string
-      intervention_description:
-        type: string
-    type: object
-  care.UpdateCarePlanInterventionResponse:
-    properties:
-      care_plan_id:
-        type: string
-      frequency:
-        type: string
-      intervention_description:
-        type: string
-      intervention_id:
-        type: string
-    type: object
-  care.UpdateCarePlanObjectiveRequest:
-    properties:
-      description:
-        type: string
-      goal_title:
-        type: string
-      status:
-        enum:
-        - not_started
-        - in_progress
-        - completed
-        - discontinued
-        type: string
-      timeframe:
-        enum:
-        - short_term
-        - medium_term
-        - long_term
-        type: string
-    type: object
-  care.UpdateCarePlanObjectiveResponse:
-    properties:
-      care_plan_id:
-        type: string
-      goal_id:
-        type: string
-    type: object
-  care.UpdateCarePlanOverviewRequest:
-    properties:
-      assessment_summary:
-        type: string
-    type: object
-  care.UpdateCarePlanOverviewResponse:
-    properties:
-      assessment_id:
-        type: string
-      assessment_summary:
-        type: string
-      care_plan_id:
-        type: string
-    type: object
-  care.UpdateCarePlanReportRequest:
-    properties:
-      is_critical:
-        type: boolean
-      report_content:
-        type: string
-      report_type:
-        type: string
-    type: object
-  care.UpdateCarePlanReportResponse:
-    properties:
-      care_plan_id:
-        type: string
-      created_at:
-        type: string
-      id:
-        type: string
-      is_critical:
-        type: boolean
-      report_content:
-        type: string
-      report_type:
-        type: string
-    type: object
-  care.UpdateCarePlanResourcesRequest:
-    properties:
-      is_obtained:
-        type: boolean
-      obtained_date:
-        type: string
-      resource_description:
-        type: string
-    type: object
-  care.UpdateCarePlanResourcesResponse:
-    properties:
-      id:
-        type: string
-      is_obtained:
-        type: boolean
-      obtained_date:
-        type: string
-      resource_description:
-        type: string
-    type: object
-  care.UpdateCarePlanRisksRequest:
-    properties:
-      mitigation_strategy:
-        type: string
-      risk_description:
-        type: string
-      risk_level:
-        type: string
-    type: object
-  care.UpdateCarePlanRisksResponse:
-    properties:
-      mitigation_strategy:
-        type: string
-      risk_description:
-        type: string
-      risk_id:
-        type: string
-      risk_level:
-        type: string
-    type: object
-  care.UpdateCarePlanSuccessMetricsRequest:
-    properties:
-      current_value:
-        description: Optional, can be nil if not set
-        type: string
-      measurement_method:
-        type: string
-      metric_name:
-        type: string
-      target_value:
-        type: string
-    type: object
-  care.UpdateCarePlanSuccessMetricsResponse:
-    properties:
-      current_value:
-        type: string
-      measurement_method:
-        type: string
-      metric_id:
-        type: string
-      metric_name:
-        type: string
-      target_value:
-        type: string
-    type: object
-  care.UpdateCarePlanSupportNetworkRequest:
-    properties:
-      responsibility_description:
-        type: string
-      role_title:
-        type: string
-    type: object
-  care.UpdateCarePlanSupportNetworkResponse:
-    properties:
-      responsibility_description:
-        type: string
-      role_title:
-        type: string
-      support_network_id:
         type: string
     type: object
   clientp.AddClientDocumentApiRequest:
@@ -3031,6 +2189,262 @@ definitions:
       start_date:
         type: string
     type: object
+  clientp.AssignedLocationAddress:
+    properties:
+      city:
+        type: string
+      house_number:
+        type: string
+      house_number_addition:
+        type: string
+      postal_code:
+        type: string
+      street:
+        type: string
+    type: object
+  clientp.ClientActiveContractResponse:
+    properties:
+      care_type:
+        type: string
+      end_date:
+        type: string
+      financing_act:
+        type: string
+      financing_option:
+        type: string
+      id:
+        type: string
+      start_date:
+        type: string
+      status:
+        type: string
+    type: object
+  clientp.ClientAddressResponse:
+    properties:
+      city:
+        type: string
+      house_number:
+        type: string
+      house_number_addition:
+        type: string
+      postal_code:
+        type: string
+      street:
+        type: string
+    type: object
+  clientp.ClientCareScheduleResponse:
+    properties:
+      care_start_date:
+        type: string
+      days_until_start:
+        type: integer
+      next_evaluation_date:
+        type: string
+      placed_in_care_at:
+        type: string
+      should_be_active_now:
+        type: boolean
+    type: object
+  clientp.ClientContractSummaryResponse:
+    properties:
+      active_contract:
+        $ref: '#/definitions/clientp.ClientActiveContractResponse'
+      days_until_contract_end:
+        type: integer
+      has_active_approved_contract:
+        type: boolean
+    type: object
+  clientp.ClientCoordinatorResponse:
+    properties:
+      employee_id:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      start_date:
+        type: string
+    type: object
+  clientp.ClientDocumentsSummary:
+    properties:
+      existing:
+        items:
+          type: string
+        type: array
+      missing:
+        items:
+          type: string
+        type: array
+    type: object
+  clientp.ClientEmergencySummary:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: string
+      last_name:
+        type: string
+      phone_number:
+        type: string
+      relationship:
+        type: string
+    type: object
+  clientp.ClientEvaluationDraftSummaryResponse:
+    properties:
+      id:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  clientp.ClientEvaluationLastCompletedResponse:
+    properties:
+      created_by_employee_id:
+        type: string
+      creator_name:
+        type: string
+      id:
+        type: string
+      submitted_at:
+        type: string
+    type: object
+  clientp.ClientEvaluationSummaryResponse:
+    properties:
+      days_left:
+        type: integer
+      draft:
+        $ref: '#/definitions/clientp.ClientEvaluationDraftSummaryResponse'
+      last_completed:
+        $ref: '#/definitions/clientp.ClientEvaluationLastCompletedResponse'
+      next_evaluation_date:
+        type: string
+      priority:
+        type: string
+    type: object
+  clientp.ClientGoalSummaryResponse:
+    properties:
+      priority:
+        type: string
+      title:
+        type: string
+      topic_name:
+        type: string
+    type: object
+  clientp.ClientInCareResponse:
+    properties:
+      care_start_date:
+        type: string
+      days_in_care:
+        type: integer
+      evaluation_intervals_weeks:
+        type: integer
+      last_evaluation_anchor_date:
+        type: string
+      next_evaluation_date:
+        type: string
+      placed_in_care_at:
+        type: string
+    type: object
+  clientp.ClientIntakeResponse:
+    properties:
+      conclusion:
+        type: string
+      conclusion_notes:
+        type: string
+      self_sufficiency_score:
+        type: integer
+    type: object
+  clientp.ClientLocationResponse:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  clientp.ClientPageAlert:
+    properties:
+      code:
+        type: string
+      message:
+        type: string
+      severity:
+        type: string
+    type: object
+  clientp.ClientPageClientResponse:
+    properties:
+      address:
+        $ref: '#/definitions/clientp.ClientAddressResponse'
+      age:
+        type: integer
+      bsn:
+        type: string
+      care_type:
+        type: string
+      date_of_birth:
+        type: string
+      file_number:
+        type: string
+      first_name:
+        type: string
+      gender:
+        type: string
+      id:
+        type: string
+      last_name:
+        type: string
+      location:
+        $ref: '#/definitions/clientp.ClientLocationResponse'
+    type: object
+  clientp.ClientPageCounts:
+    properties:
+      appointments:
+        type: integer
+      contracts:
+        type: integer
+      documents:
+        type: integer
+      evaluations:
+        type: integer
+      incidents:
+        type: integer
+      reports:
+        type: integer
+    type: object
+  clientp.ClientPageMetaResponse:
+    properties:
+      last_updated_at:
+        type: string
+      waitlist_since:
+        type: string
+    type: object
+  clientp.ClientRiskSummary:
+    properties:
+      flags:
+        items:
+          type: string
+        type: array
+      notes:
+        type: string
+    type: object
+  clientp.ClientSenderMinimalResponse:
+    properties:
+      email_address:
+        type: string
+      name:
+        type: string
+      phone_number:
+        type: string
+    type: object
+  clientp.ClientStatusTimelineResponse:
+    properties:
+      last_change_reason:
+        type: string
+      last_changed_at:
+        type: string
+      last_status:
+        type: string
+    type: object
   clientp.ConfirmIncidentResponse:
     properties:
       file_url:
@@ -3066,110 +2480,6 @@ definitions:
       start_date:
         type: string
     type: object
-  clientp.CreateAppointmentCardRequest:
-    properties:
-      general_information:
-        items:
-          type: string
-        type: array
-      household_info:
-        items:
-          type: string
-        type: array
-      important_contacts:
-        items:
-          type: string
-        type: array
-      leave:
-        items:
-          type: string
-        type: array
-      organization_agreements:
-        items:
-          type: string
-        type: array
-      school_internship:
-        items:
-          type: string
-        type: array
-      smoking_rules:
-        items:
-          type: string
-        type: array
-      travel:
-        items:
-          type: string
-        type: array
-      treatment_agreements:
-        items:
-          type: string
-        type: array
-      work:
-        items:
-          type: string
-        type: array
-      youth_officer_agreements:
-        items:
-          type: string
-        type: array
-    type: object
-  clientp.CreateAppointmentCardResponse:
-    properties:
-      client_id:
-        type: string
-      created_at:
-        type: string
-      file_url:
-        type: string
-      general_information:
-        items:
-          type: string
-        type: array
-      household_info:
-        items:
-          type: string
-        type: array
-      id:
-        type: string
-      important_contacts:
-        items:
-          type: string
-        type: array
-      leave:
-        items:
-          type: string
-        type: array
-      organization_agreements:
-        items:
-          type: string
-        type: array
-      school_internship:
-        items:
-          type: string
-        type: array
-      smoking_rules:
-        items:
-          type: string
-        type: array
-      travel:
-        items:
-          type: string
-        type: array
-      treatment_agreements:
-        items:
-          type: string
-        type: array
-      updated_at:
-        type: string
-      work:
-        items:
-          type: string
-        type: array
-      youth_officer_agreements:
-        items:
-          type: string
-        type: array
-    type: object
   clientp.CreateClientDetailsRequest:
     properties:
       addresses:
@@ -3182,6 +2492,14 @@ definitions:
         type: string
       bsn_verified_by:
         description: needs to be checked
+        type: string
+      care_type:
+        enum:
+        - protected_living
+        - training_center
+        - supported_independent_living
+        - ambulatory_support
+        - other
         type: string
       date_of_birth:
         type: string
@@ -3262,7 +2580,6 @@ definitions:
     required:
     - date_of_birth
     - email
-    - filenumber
     - first_name
     - gender
     - last_name
@@ -3504,6 +2821,17 @@ definitions:
       updated_at:
         type: string
     type: object
+  clientp.CreateGoalEvaluationRequest:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/clientp.SaveGoalEvaluationDraftItem'
+        type: array
+      overall_notes:
+        type: string
+      submit:
+        type: boolean
+    type: object
   clientp.CreateIncidentRequest:
     properties:
       accident:
@@ -3744,6 +3072,33 @@ definitions:
       violence:
         type: boolean
     type: object
+  clientp.CreateIntakeFormGoalItem:
+    properties:
+      current_level:
+        type: integer
+      notes:
+        type: string
+      proposed_goals:
+        items:
+          $ref: '#/definitions/clientp.IntakeAssessmentGoal'
+        type: array
+      topic_id:
+        type: string
+    type: object
+  clientp.CreateIntakeFormGoalsRequest:
+    properties:
+      assessments:
+        items:
+          $ref: '#/definitions/clientp.CreateIntakeFormGoalItem'
+        type: array
+    type: object
+  clientp.CreateIntakeFormGoalsResponse:
+    properties:
+      assessments:
+        items:
+          $ref: '#/definitions/clientp.ListIntakeMaturityAssessmentsResponse'
+        type: array
+    type: object
   clientp.CreateIntakeFormRequest:
     properties:
       assigned_location_id:
@@ -3753,6 +3108,8 @@ definitions:
         $ref: '#/definitions/db.IntakeCareTypeEnum'
       date_of_intake:
         type: string
+      evaluation_intervals_weeks:
+        type: integer
       family_situation:
         type: string
       intake_conclusion:
@@ -3783,10 +3140,10 @@ definitions:
         type: string
       care_type:
         $ref: '#/definitions/db.IntakeCareTypeEnum'
-      created_at:
-        $ref: '#/definitions/pgtype.Timestamptz'
       date_of_intake:
         type: string
+      evaluation_intervals_weeks:
+        type: integer
       family_situation:
         type: string
       id:
@@ -4252,13 +3609,6 @@ definitions:
       size:
         type: integer
     type: object
-  clientp.GenerateAppointmentCardDocumentApiResponse:
-    properties:
-      client_id:
-        type: string
-      file_url:
-        type: string
-    type: object
   clientp.GenerateAutoReportsRequest:
     properties:
       end_date:
@@ -4279,6 +3629,19 @@ definitions:
       file_url:
         type: string
       incident_id:
+        type: string
+    type: object
+  clientp.GenerateIntakeGoalsRequest:
+    properties:
+      assessment_id:
+        type: string
+      current_level:
+        type: integer
+      registration_form_id:
+        type: string
+      topic_id:
+        type: string
+      user_desc:
         type: string
     type: object
   clientp.GenerateIntakeGoalsResponse:
@@ -4371,96 +3734,48 @@ definitions:
     type: object
   clientp.GetClientApiResponse:
     properties:
-      birthplace:
-        type: string
-      bsn:
-        type: string
-      bsn_verified_by:
-        type: string
-      bsn_verified_by_first_name:
-        type: string
-      bsn_verified_by_last_name:
-        type: string
-      created_at:
-        type: string
-      date_of_birth:
-        type: string
-      departement:
-        type: string
-      departure_reason:
-        type: string
-      departure_report:
-        type: string
-      education_additional_notes:
-        type: string
-      education_currently_enrolled:
-        type: boolean
-      education_institution:
-        type: string
-      education_level:
-        type: string
-      education_mentor_email:
-        type: string
-      education_mentor_name:
-        type: string
-      education_mentor_phone:
-        type: string
-      email:
-        type: string
-      filenumber:
-        type: string
-      first_name:
-        type: string
-      gender:
-        type: string
-      has_untaken_medications:
-        type: boolean
-      id:
-        type: string
-      identity:
-        type: boolean
-      infix:
-        type: string
-      last_name:
-        type: string
-      legal_measure:
-        type: string
-      living_situation:
-        type: string
-      living_situation_notes:
-        type: string
-      location_id:
-        type: string
-      location_name:
-        type: string
-      nationality:
-        type: string
-      organization_id:
-        type: string
-      phone_number:
-        type: string
-      profile_picture:
-        type: string
-      sender_id:
-        type: string
-      source:
-        type: string
+      alerts:
+        items:
+          $ref: '#/definitions/clientp.ClientPageAlert'
+        type: array
+      care:
+        $ref: '#/definitions/clientp.ClientInCareResponse'
+      care_schedule:
+        $ref: '#/definitions/clientp.ClientCareScheduleResponse'
+      client:
+        $ref: '#/definitions/clientp.ClientPageClientResponse'
+      contract_summary:
+        $ref: '#/definitions/clientp.ClientContractSummaryResponse'
+      coordinator:
+        $ref: '#/definitions/clientp.ClientCoordinatorResponse'
+      counts:
+        $ref: '#/definitions/clientp.ClientPageCounts'
+      documents:
+        $ref: '#/definitions/clientp.ClientDocumentsSummary'
+      emergency_contacts:
+        items:
+          $ref: '#/definitions/clientp.ClientEmergencySummary'
+        type: array
+      evaluation_summary:
+        $ref: '#/definitions/clientp.ClientEvaluationSummaryResponse'
+      goals:
+        items:
+          $ref: '#/definitions/clientp.ClientGoalSummaryResponse'
+        type: array
+      intake:
+        $ref: '#/definitions/clientp.ClientIntakeResponse'
+      meta:
+        $ref: '#/definitions/clientp.ClientPageMetaResponse'
+      risks:
+        $ref: '#/definitions/clientp.ClientRiskSummary'
+      schema_version:
+        type: integer
+      sender:
+        $ref: '#/definitions/clientp.ClientSenderMinimalResponse'
       status:
         type: string
-      work_additional_notes:
-        type: string
-      work_current_employer:
-        type: string
-      work_current_position:
-        type: string
-      work_currently_employed:
-        type: boolean
-      work_employer_email:
-        type: string
-      work_employer_phone:
-        type: string
-      work_start_date:
-        type: string
+      status_timeline:
+        $ref: '#/definitions/clientp.ClientStatusTimelineResponse'
     type: object
   clientp.GetClientDiagnosisResponse:
     properties:
@@ -4727,6 +4042,65 @@ definitions:
       violence:
         type: boolean
     type: object
+  clientp.GetIntakeFormResponse:
+    properties:
+      assigned_location_id:
+        type: string
+      care_type:
+        $ref: '#/definitions/db.IntakeCareTypeEnum'
+      client_bsn_number:
+        type: string
+      client_first_name:
+        type: string
+      client_last_name:
+        type: string
+      created_at:
+        type: string
+      date_of_intake:
+        type: string
+      desired_goals:
+        items:
+          type: string
+        type: array
+      evaluation_intervals_weeks:
+        type: integer
+      family_situation:
+        type: string
+      has_client:
+        type: boolean
+      id:
+        type: string
+      intake_conclusion:
+        $ref: '#/definitions/db.IntakeConclusionEnum'
+      intake_conclusion_notes:
+        type: string
+      intake_goals_assigned:
+        items:
+          $ref: '#/definitions/clientp.IntakeGoalTopic'
+        type: array
+      intake_participants:
+        items:
+          $ref: '#/definitions/db.IntakeParticipantsEnum'
+        type: array
+      location:
+        $ref: '#/definitions/clientp.IntakeFormLocationDetails'
+      psychological_state:
+        type: string
+      registration_form_id:
+        type: string
+      risk_assessment:
+        type: string
+      self_sufficiency:
+        type: integer
+      sender_id:
+        type: string
+      sender_name:
+        type: string
+      signature:
+        type: string
+      updated_at:
+        type: string
+    type: object
   clientp.GetMissingClientDocumentsApiResponse:
     properties:
       missing_docs:
@@ -4937,10 +4311,123 @@ definitions:
       work_start_date:
         type: string
     type: object
-  clientp.InitializeIntakeAssessmentsResponse:
+  clientp.GoalEvaluationBootstrapActiveGoal:
     properties:
-      count:
+      goal_id:
+        type: string
+      last_notes:
+        type: string
+      last_progress:
+        type: string
+      priority:
+        type: string
+      sort_order:
         type: integer
+      title:
+        type: string
+      topic_name_snapshot:
+        type: string
+    type: object
+  clientp.GoalEvaluationBootstrapCompleted:
+    properties:
+      created_by_employee_id:
+        type: string
+      creator_name:
+        type: string
+      evaluation_date:
+        type: string
+      id:
+        type: string
+      overall_notes:
+        type: string
+      submitted_at:
+        type: string
+    type: object
+  clientp.GoalEvaluationBootstrapDraft:
+    properties:
+      evaluation_date:
+        type: string
+      id:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  clientp.GoalEvaluationBootstrapResponse:
+    properties:
+      active_goals:
+        items:
+          $ref: '#/definitions/clientp.GoalEvaluationBootstrapActiveGoal'
+        type: array
+      client_first_name:
+        type: string
+      client_id:
+        type: string
+      client_last_name:
+        type: string
+      days_left:
+        type: integer
+      existing_draft:
+        $ref: '#/definitions/clientp.GoalEvaluationBootstrapDraft'
+      last_completed_evaluation:
+        $ref: '#/definitions/clientp.GoalEvaluationBootstrapCompleted'
+      next_evaluation_date:
+        type: string
+      priority:
+        type: string
+    type: object
+  clientp.GoalEvaluationItemResponse:
+    properties:
+      created_at:
+        type: string
+      evaluation_id:
+        type: string
+      goal_description:
+        type: string
+      goal_id:
+        type: string
+      goal_title:
+        type: string
+      id:
+        type: string
+      notes:
+        type: string
+      progress:
+        type: string
+      topic_name_snapshot:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  clientp.GoalEvaluationResponse:
+    properties:
+      client_id:
+        type: string
+      created_at:
+        type: string
+      created_by_employee_id:
+        type: string
+      evaluation_date:
+        type: string
+      evaluation_interval_weeks:
+        type: integer
+      id:
+        type: string
+      items:
+        items:
+          $ref: '#/definitions/clientp.GoalEvaluationItemResponse'
+        type: array
+      overall_notes:
+        type: string
+      period_end:
+        type: string
+      period_start:
+        type: string
+      status:
+        type: string
+      submit_error:
+        type: string
+      updated_at:
+        type: string
     type: object
   clientp.IntakeAssessmentGoal:
     properties:
@@ -4955,6 +4442,38 @@ definitions:
         type: string
       title:
         description: Goal title/description
+        type: string
+    type: object
+  clientp.IntakeFormLocationDetails:
+    properties:
+      city:
+        type: string
+      house_number:
+        type: string
+      house_number_addition:
+        type: string
+      name:
+        type: string
+      postal_code:
+        type: string
+      street:
+        type: string
+    type: object
+  clientp.IntakeGoalTopic:
+    properties:
+      assessment_id:
+        type: string
+      current_level:
+        type: integer
+      notes:
+        type: string
+      proposed_goals:
+        items:
+          $ref: '#/definitions/clientp.IntakeAssessmentGoal'
+        type: array
+      topic_id:
+        type: string
+      topic_name:
         type: string
     type: object
   clientp.ListAiGeneratedReportsResponse:
@@ -5198,59 +4717,48 @@ definitions:
     type: object
   clientp.ListClientsApiResponse:
     properties:
-      addresses:
-        items:
-          $ref: '#/definitions/clientp.Address'
-        type: array
-      birthplace:
-        type: string
       bsn:
         type: string
+      care_type:
+        type: string
       created_at:
-        type: string
-      date_of_birth:
-        type: string
-      departement:
-        type: string
-      departure_reason:
-        type: string
-      departure_report:
-        type: string
-      email:
         type: string
       filenumber:
         type: string
       first_name:
         type: string
-      gender:
-        type: string
-      has_untaken_medications:
-        type: boolean
+      goals_count:
+        type: integer
       id:
-        type: string
-      identity:
-        type: boolean
-      infix:
         type: string
       last_name:
         type: string
-      legal_measure:
-        type: string
-      location_id:
-        type: string
       location_name:
         type: string
-      nationality:
+      risk_count:
+        type: integer
+      status:
         type: string
-      organization_id:
+    type: object
+  clientp.ListInCareClientsResponse:
+    properties:
+      bsn:
         type: string
-      phone_number:
+      care_start_date:
         type: string
-      profile_picture:
+      coordinator_name:
         type: string
-      sender_id:
+      days_in_care:
+        type: integer
+      first_name:
         type: string
-      source:
+      has_active_contract:
+        type: boolean
+      id:
+        type: string
+      last_name:
+        type: string
+      location_name:
         type: string
       status:
         type: string
@@ -5374,6 +4882,8 @@ definitions:
     type: object
   clientp.ListIntakeFormsResponse:
     properties:
+      assigned_location_address:
+        $ref: '#/definitions/clientp.AssignedLocationAddress'
       assigned_location_id:
         type: string
       care_type:
@@ -5384,36 +4894,16 @@ definitions:
         type: string
       client_last_name:
         type: string
-      created_at:
-        $ref: '#/definitions/pgtype.Timestamptz'
       date_of_intake:
         type: string
-      family_situation:
-        type: string
+      goal_assessment_done:
+        type: boolean
       id:
         type: string
-      intake_conclusion:
+      intake_status:
         $ref: '#/definitions/db.IntakeConclusionEnum'
-      intake_conclusion_notes:
-        type: string
-      intake_participants:
-        items:
-          $ref: '#/definitions/db.IntakeParticipantsEnum'
-        type: array
-      psychological_state:
-        type: string
       registration_form_id:
         type: string
-      risk_assessment:
-        type: string
-      self_sufficiency:
-        type: integer
-      sender_id:
-        type: string
-      signature:
-        type: string
-      updated_at:
-        $ref: '#/definitions/pgtype.Timestamptz'
     type: object
   clientp.ListIntakeMaturityAssessmentsResponse:
     properties:
@@ -5425,14 +4915,14 @@ definitions:
         type: string
       intake_form_id:
         type: string
-      maturity_matrix_id:
-        type: string
       notes:
         type: string
       proposed_goals:
         items:
           $ref: '#/definitions/clientp.IntakeAssessmentGoal'
         type: array
+      topic_id:
+        type: string
       topic_name:
         type: string
     type: object
@@ -5490,6 +4980,50 @@ definitions:
       type:
         type: string
     type: object
+  clientp.ListRecentDraftEvaluationsResponse:
+    properties:
+      client_first_name:
+        type: string
+      client_id:
+        type: string
+      client_last_name:
+        type: string
+      days_left:
+        type: integer
+      due_date:
+        type: string
+      evaluation_id:
+        type: string
+      filled_goals_count:
+        type: integer
+      priority:
+        type: string
+      total_goals_count:
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  clientp.ListRecentSubmittedEvaluationsResponse:
+    properties:
+      client_first_name:
+        type: string
+      client_id:
+        type: string
+      client_last_name:
+        type: string
+      evaluation_date:
+        type: string
+      evaluation_id:
+        type: string
+      filled_goals_count:
+        type: integer
+      next_evaluation_date:
+        type: string
+      submitted_at:
+        type: string
+      total_goals_count:
+        type: integer
+    type: object
   clientp.ListRegistrationFormsResponse:
     properties:
       care_ambulatory_guidance:
@@ -5536,6 +5070,46 @@ definitions:
       old_status:
         type: string
       reason:
+        type: string
+    type: object
+  clientp.ListUpcomingEvaluationsResponse:
+    properties:
+      client_first_name:
+        type: string
+      client_id:
+        type: string
+      client_last_name:
+        type: string
+      days_left:
+        type: integer
+      due_date:
+        type: string
+      filled_goals_count:
+        type: integer
+      has_draft:
+        type: boolean
+      priority:
+        type: string
+      total_goals_count:
+        type: integer
+    type: object
+  clientp.ListWaitingListClientsResponse:
+    properties:
+      admission_type:
+        type: string
+      bsn:
+        type: string
+      care_type:
+        type: string
+      days_in_waitlist:
+        type: integer
+      first_name:
+        type: string
+      id:
+        type: string
+      last_name:
+        type: string
+      sender_name:
         type: string
     type: object
   clientp.LocationTransferRequest:
@@ -5598,6 +5172,46 @@ definitions:
           type: string
         type: array
     type: object
+  clientp.PutClientInCareRequest:
+    properties:
+      care_start_date:
+        type: string
+      coordinator_employee_id:
+        type: string
+      placed_in_care_at:
+        type: string
+      reason:
+        type: string
+    required:
+    - care_start_date
+    - coordinator_employee_id
+    type: object
+  clientp.PutClientInCareResponse:
+    properties:
+      care_start_date:
+        type: string
+      coordinator_assignment_id:
+        type: string
+      id:
+        type: string
+      next_evaluation_date:
+        type: string
+      placed_in_care_at:
+        type: string
+      status:
+        type: string
+      warning:
+        type: string
+    type: object
+  clientp.SaveGoalEvaluationDraftItem:
+    properties:
+      goal_id:
+        type: string
+      notes:
+        type: string
+      progress:
+        type: string
+    type: object
   clientp.SelectIntakeDateRequest:
     properties:
       selected_date:
@@ -5612,20 +5226,6 @@ definitions:
       name:
         type: string
       phone_number:
-        type: string
-    type: object
-  clientp.SetClientProfilePictureRequest:
-    properties:
-      attachement_id:
-        type: string
-    required:
-    - attachement_id
-    type: object
-  clientp.SetClientProfilePictureResponse:
-    properties:
-      id:
-        type: string
-      profile_picture:
         type: string
     type: object
   clientp.UpdateAppointmentCardRequest:
@@ -6262,42 +5862,28 @@ definitions:
       violence:
         type: boolean
     type: object
-  clientp.UpdateIntakeMaturityAssessmentRequest:
+  clientp.UpdateIntakeConclusionRequest:
     properties:
-      assessment_id:
+      decision:
+        enum:
+        - accept
+        - refuse
         type: string
-      current_level:
-        description: Optional, only update if provided
-        type: integer
-      notes:
-        description: Optional, only update if provided
+      intake_conclusion_notes:
         type: string
-      proposed_goals:
-        description: Optional, only update if provided
-        items:
-          $ref: '#/definitions/clientp.IntakeAssessmentGoal'
-        type: array
     required:
-    - assessment_id
+    - decision
     type: object
-  clientp.UpdateIntakeMaturityAssessmentResponse:
+  clientp.UpdateIntakeConclusionResponse:
     properties:
-      created_at:
-        $ref: '#/definitions/pgtype.Timestamptz'
-      current_level:
-        type: integer
       id:
         type: string
-      intake_form_id:
+      intake_conclusion:
+        $ref: '#/definitions/db.IntakeConclusionEnum'
+      intake_conclusion_notes:
         type: string
-      maturity_matrix_id:
+      updated_at:
         type: string
-      notes:
-        type: string
-      proposed_goals:
-        items:
-          $ref: '#/definitions/clientp.IntakeAssessmentGoal'
-        type: array
     type: object
   clientp.UpdateProgressReportRequest:
     properties:
@@ -6661,6 +6247,17 @@ definitions:
     required:
     - status
     type: object
+  contract.AttachmentDetail:
+    properties:
+      download_url:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      size:
+        type: integer
+    type: object
   contract.CreateContractRequest:
     properties:
       VAT:
@@ -6678,6 +6275,9 @@ definitions:
         - ambulante
         - accommodation
         example: ambulante
+        type: string
+      client_id:
+        example: afc465cc-cddb-440b-9472-615bb07ec1d8
         type: string
       end_date:
         example: "2023-12-31T00:00:00Z"
@@ -6715,12 +6315,11 @@ definitions:
         - hourly
         - daily
         - weekly
-        - monthly
-        - yearly
-        example: monthly
+        example: weekly
         type: string
       reminder_period:
         example: 30
+        minimum: 0
         type: integer
       sender_id:
         example: afc465cc-cddb-440b-9472-615bb07ec1d8
@@ -6733,10 +6332,13 @@ definitions:
         type: string
     required:
     - care_type
+    - client_id
+    - end_date
     - financing_act
     - financing_option
-    - hours_type
     - price_time_unit
+    - sender_id
+    - start_date
     type: object
   contract.CreateContractResponse:
     properties:
@@ -6745,6 +6347,10 @@ definitions:
       attachment_ids:
         items:
           type: string
+        type: array
+      attachments:
+        items:
+          $ref: '#/definitions/contract.AttachmentDetail'
         type: array
       care_name:
         type: string
@@ -6808,6 +6414,8 @@ definitions:
     properties:
       VAT:
         type: integer
+      approved_at:
+        type: string
       attachment_ids:
         items:
           type: string
@@ -6816,9 +6424,14 @@ definitions:
         type: string
       care_type:
         type: string
+      client_bsn:
+        type: string
+      client_filenumber:
+        type: string
       client_first_name:
         type: string
       client_id:
+        description: Client fields
         type: string
       client_last_name:
         type: string
@@ -6839,6 +6452,7 @@ definitions:
       hours_type:
         type: string
       id:
+        description: Contract fields
         type: string
       price:
         type: number
@@ -6846,9 +6460,34 @@ definitions:
         type: string
       reminder_period:
         type: integer
+      sender_btwnumber:
+        type: string
+      sender_city:
+        type: string
+      sender_client_number:
+        type: string
+      sender_email_address:
+        type: string
+      sender_house_number:
+        type: string
+      sender_house_number_addition:
+        type: string
       sender_id:
+        description: Sender fields
+        type: string
+      sender_kvknumber:
+        type: string
+      sender_land:
         type: string
       sender_name:
+        type: string
+      sender_phone_number:
+        type: string
+      sender_postal_code:
+        type: string
+      sender_street:
+        type: string
+      sender_type:
         type: string
       start_date:
         type: string
@@ -6886,15 +6525,37 @@ definitions:
     type: object
   contract.ListClientContractsResponse:
     properties:
-      VAT:
-        type: integer
-      attachment_ids:
-        items:
-          type: string
-        type: array
       care_name:
         type: string
       care_type:
+        type: string
+      days_left:
+        type: integer
+      end_date:
+        type: string
+      financing_act:
+        type: string
+      financing_option:
+        type: string
+      start_date:
+        type: string
+    type: object
+  contract.ListContractTypesResponse:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  contract.ListContractsResponse:
+    properties:
+      approved_at:
+        type: string
+      care_name:
+        type: string
+      care_type:
+        type: string
+      client_filenumber:
         type: string
       client_first_name:
         type: string
@@ -6902,12 +6563,8 @@ definitions:
         type: string
       client_last_name:
         type: string
-      created_at:
-        type: string
-      departure_reason:
-        type: string
-      departure_report:
-        type: string
+      days_left:
+        type: integer
       end_date:
         type: string
       financing_act:
@@ -6924,8 +6581,6 @@ definitions:
         type: number
       price_time_unit:
         type: string
-      reminder_period:
-        type: integer
       sender_id:
         type: string
       sender_name:
@@ -6933,52 +6588,8 @@ definitions:
       start_date:
         type: string
       status:
-        type: string
-      type_id:
         type: string
       updated_at:
-        type: string
-    type: object
-  contract.ListContractTypesResponse:
-    properties:
-      id:
-        type: string
-      name:
-        type: string
-    type: object
-  contract.ListContractsResponse:
-    properties:
-      care_name:
-        type: string
-      care_type:
-        type: string
-      client_first_name:
-        type: string
-      client_id:
-        type: string
-      client_last_name:
-        type: string
-      created_at:
-        type: string
-      end_date:
-        type: string
-      financing_act:
-        type: string
-      financing_option:
-        type: string
-      id:
-        type: string
-      price:
-        type: number
-      price_time_unit:
-        type: string
-      sender_id:
-        type: string
-      sender_name:
-        type: string
-      start_date:
-        type: string
-      status:
         type: string
     type: object
   contract.UpdateContractRequest:
@@ -7012,8 +6623,6 @@ definitions:
       sender_id:
         type: string
       start_date:
-        type: string
-      status:
         type: string
       type_id:
         type: string
@@ -7360,17 +6969,36 @@ definitions:
     type: object
   employees.CreateEmployeeProfileRequest:
     properties:
-      authentication_phone_number:
-        example: "1234567890"
+      bsn:
+        example: "123456789"
+        type: string
+      city:
+        example: Amsterdam
+        type: string
+      contract_end_date:
+        example: "2000-01-01"
+        type: string
+      contract_hours:
+        example: 40
+        type: number
+      contract_rate:
+        example: 100
+        type: number
+      contract_start_date:
+        example: "2000-01-01"
+        type: string
+      contract_type:
+        enum:
+        - loondienst
+        - ZZP
+        - none
+        example: loondienst
         type: string
       date_of_birth:
         example: "2000-01-01"
         type: string
       department:
         example: IT
-        type: string
-      email:
-        example: emai@exe.com
         type: string
       employee_number:
         example: "123456"
@@ -7386,14 +7014,17 @@ definitions:
         - male
         - female
         - not_specified
-        example: man
+        example: male
         type: string
       home_telephone_number:
         example: "1234567890"
         type: string
-      is_subcontractor:
-        example: false
-        type: boolean
+      house_number:
+        example: "10"
+        type: string
+      house_number_addition:
+        example: A
+        type: string
       last_name:
         example: joe
         type: string
@@ -7402,6 +7033,9 @@ definitions:
         type: string
       position:
         example: developer
+        type: string
+      postal_code:
+        example: 1234AB
         type: string
       private_email_address:
         example: joe@ex.com
@@ -7412,20 +7046,30 @@ definitions:
       role_id:
         example: "1"
         type: string
+      street:
+        example: Main St
+        type: string
+      work_email_address:
+        example: email@exe.com
+        type: string
       work_phone_number:
         example: "1234567890"
         type: string
     required:
-    - email
+    - bsn
+    - city
+    - contract_type
     - first_name
-    - is_subcontractor
+    - gender
+    - house_number
     - last_name
+    - postal_code
     - role_id
+    - street
+    - work_email_address
     type: object
   employees.CreateEmployeeProfileResponse:
     properties:
-      authentication_phone_number:
-        type: string
       created_at:
         type: string
       date_of_birth:
@@ -7453,8 +7097,6 @@ definitions:
       id:
         type: string
       is_archived:
-        type: boolean
-      is_subcontractor:
         type: boolean
       last_name:
         type: string
@@ -7676,57 +7318,21 @@ definitions:
     type: object
   employees.ListEmployeeResponse:
     properties:
-      age:
-        type: integer
-      authentication_phone_number:
+      bsn:
         type: string
-      created_at:
+      contract_end_date:
         type: string
-      date_of_birth:
+      contract_type:
         type: string
       department:
         type: string
-      email:
-        type: string
-      employee_number:
-        type: string
-      employment_number:
-        type: string
       first_name:
-        type: string
-      gender:
-        type: string
-      has_borrowed:
-        type: boolean
-      home_telephone_number:
         type: string
       id:
         type: string
-      is_archived:
-        type: boolean
-      is_subcontractor:
-        type: boolean
       last_name:
         type: string
-      location_id:
-        type: string
-      out_of_service:
-        type: boolean
-      position:
-        type: string
-      private_email_address:
-        type: string
-      private_phone_number:
-        type: string
-      profile_picture:
-        type: string
-      role_id:
-        type: string
-      role_name:
-        type: string
-      user_id:
-        type: string
-      work_phone_number:
+      location_address:
         type: string
     type: object
   employees.ListWorkingHoursResponse:
@@ -9053,21 +8659,6 @@ definitions:
           type: array
         type: array
     type: object
-  pagination.Response-care_ListClientCarePlansResponse:
-    properties:
-      count:
-        type: integer
-      next:
-        type: string
-      page_size:
-        type: integer
-      previous:
-        type: string
-      results:
-        items:
-          $ref: '#/definitions/care.ListClientCarePlansResponse'
-        type: array
-    type: object
   pagination.Response-clientp_ListAllIncidentsResponse:
     properties:
       count:
@@ -9158,6 +8749,21 @@ definitions:
           $ref: '#/definitions/clientp.ListClientsApiResponse'
         type: array
     type: object
+  pagination.Response-clientp_ListInCareClientsResponse:
+    properties:
+      count:
+        type: integer
+      next:
+        type: string
+      page_size:
+        type: integer
+      previous:
+        type: string
+      results:
+        items:
+          $ref: '#/definitions/clientp.ListInCareClientsResponse'
+        type: array
+    type: object
   pagination.Response-clientp_ListIncidentsResponse:
     properties:
       count:
@@ -9188,21 +8794,6 @@ definitions:
           $ref: '#/definitions/clientp.ListIntakeFormsResponse'
         type: array
     type: object
-  pagination.Response-clientp_ListIntakeMaturityAssessmentsResponse:
-    properties:
-      count:
-        type: integer
-      next:
-        type: string
-      page_size:
-        type: integer
-      previous:
-        type: string
-      results:
-        items:
-          $ref: '#/definitions/clientp.ListIntakeMaturityAssessmentsResponse'
-        type: array
-    type: object
   pagination.Response-clientp_ListLocationTransferRequestsResponse:
     properties:
       count:
@@ -9218,6 +8809,36 @@ definitions:
           $ref: '#/definitions/clientp.ListLocationTransferRequestsResponse'
         type: array
     type: object
+  pagination.Response-clientp_ListRecentDraftEvaluationsResponse:
+    properties:
+      count:
+        type: integer
+      next:
+        type: string
+      page_size:
+        type: integer
+      previous:
+        type: string
+      results:
+        items:
+          $ref: '#/definitions/clientp.ListRecentDraftEvaluationsResponse'
+        type: array
+    type: object
+  pagination.Response-clientp_ListRecentSubmittedEvaluationsResponse:
+    properties:
+      count:
+        type: integer
+      next:
+        type: string
+      page_size:
+        type: integer
+      previous:
+        type: string
+      results:
+        items:
+          $ref: '#/definitions/clientp.ListRecentSubmittedEvaluationsResponse'
+        type: array
+    type: object
   pagination.Response-clientp_ListRegistrationFormsResponse:
     properties:
       count:
@@ -9231,6 +8852,36 @@ definitions:
       results:
         items:
           $ref: '#/definitions/clientp.ListRegistrationFormsResponse'
+        type: array
+    type: object
+  pagination.Response-clientp_ListUpcomingEvaluationsResponse:
+    properties:
+      count:
+        type: integer
+      next:
+        type: string
+      page_size:
+        type: integer
+      previous:
+        type: string
+      results:
+        items:
+          $ref: '#/definitions/clientp.ListUpcomingEvaluationsResponse'
+        type: array
+    type: object
+  pagination.Response-clientp_ListWaitingListClientsResponse:
+    properties:
+      count:
+        type: integer
+      next:
+        type: string
+      page_size:
+        type: integer
+      previous:
+        type: string
+      results:
+        items:
+          $ref: '#/definitions/clientp.ListWaitingListClientsResponse'
         type: array
     type: object
   pagination.Response-ecr_DischargeOverviewResponse:
@@ -9343,16 +8994,6 @@ definitions:
     - Infinity
     - Finite
     - NegativeInfinity
-  pgtype.Timestamp:
-    properties:
-      infinityModifier:
-        $ref: '#/definitions/pgtype.InfinityModifier'
-      time:
-        description: Time zone will be ignored when encoding to PostgreSQL.
-        type: string
-      valid:
-        type: boolean
-    type: object
   pgtype.Timestamptz:
     properties:
       infinityModifier:
@@ -9992,75 +9633,6 @@ info:
   title: Maicare API
   version: "1.0"
 paths:
-  /actions/{action_id}:
-    delete:
-      description: Delete a care plan action by its ID
-      parameters:
-      - description: Action ID
-        in: path
-        name: action_id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Delete care plan action
-      tags:
-      - care_plan
-    put:
-      consumes:
-      - application/json
-      description: Update a care plan action by its ID
-      parameters:
-      - description: Action ID
-        in: path
-        name: action_id
-        required: true
-        type: integer
-      - description: Request body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/care.UpdateCarePlanActionsRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-care_UpdateCarePlanActionsResponse'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Update care plan action
-      tags:
-      - care_plan
   /ai/spelling_check:
     post:
       consumes:
@@ -10083,302 +9655,6 @@ paths:
       summary: Check spelling of a text
       tags:
       - ai
-  /appointments:
-    post:
-      consumes:
-      - application/json
-      description: Create a new appointment
-      parameters:
-      - description: Create appointment request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/appointment.CreateAppointmentRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-appointment_CreateAppointmentResponse'
-        "400":
-          description: Bad request - Invalid input
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized - Invalid credentials
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "404":
-          description: Not found - User not found
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "409":
-          description: Conflict - Appointment already exists
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Create an appointment
-      tags:
-      - appointments
-  /appointments/{appointment_id}/clients:
-    post:
-      consumes:
-      - application/json
-      description: Add clients to an existing appointment
-      parameters:
-      - description: Appointment ID (UUID)
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Add client request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/appointment.AddClientToAppointmentRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "400":
-          description: Bad request - Invalid input
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized - Invalid credentials
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "404":
-          description: Not found - Appointment not found
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "409":
-          description: Conflict - Client already exists
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Add clients to an appointment
-      tags:
-      - appointments
-  /appointments/{appointment_id}/participants:
-    post:
-      consumes:
-      - application/json
-      description: Add participants to an existing appointment
-      parameters:
-      - description: Appointment ID (UUID)
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Add participant request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/appointment.AddParticipantToAppointmentRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "400":
-          description: Bad request - Invalid input
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized - Invalid credentials
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "404":
-          description: Not found - Appointment not found
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "409":
-          description: Conflict - Participant already exists
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Add participants to an appointment
-      tags:
-      - appointments
-  /appointments/{id}:
-    delete:
-      description: Delete an appointment
-      parameters:
-      - description: Appointment ID (UUID)
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "400":
-          description: Bad request - Invalid input
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized - Invalid credentials
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "404":
-          description: Not found - Appointment not found
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "409":
-          description: Conflict - Appointment already exists
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Delete an appointment
-      tags:
-      - appointments
-    get:
-      consumes:
-      - application/json
-      description: Get an appointment by ID
-      parameters:
-      - description: Appointment ID (UUID)
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-appointment_GetAppointmentResponse'
-        "400":
-          description: Bad request - Invalid input
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized - Invalid credentials
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "404":
-          description: Not found - Appointment not found
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Get an appointment by ID
-      tags:
-      - appointments
-    put:
-      consumes:
-      - application/json
-      description: Update an appointment
-      parameters:
-      - description: Appointment ID (UUID)
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Update appointment request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/appointment.UpdateAppointmentRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-appointment_UpdateAppointmentResponse'
-        "400":
-          description: Bad request - Invalid input
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized - Invalid credentials
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "404":
-          description: Not found - Appointment not found
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "409":
-          description: Conflict - Appointment already exists
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Update an appointment
-      tags:
-      - appointments
-  /appointments/{id}/confirm:
-    post:
-      description: Confirm an appointment
-      parameters:
-      - description: Appointment ID (UUID)
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "400":
-          description: Bad request - Invalid input
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized - Invalid credentials
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "404":
-          description: Not found - Appointment not found
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "409":
-          description: Conflict - Appointment already exists
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Confirm an appointment
-      tags:
-      - appointments
   /attachments/{id}:
     delete:
       description: Delete an attachment by its ID
@@ -10803,670 +10079,6 @@ paths:
       summary: Verify 2FA code
       tags:
       - authentication
-  /care_plan/{care_plan_id}:
-    delete:
-      description: Delete a care plan by its ID
-      parameters:
-      - description: Care Plan ID
-        in: path
-        name: care_plan_id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Delete care plan
-      tags:
-      - care_plan
-  /care_plan/{care_plan_id}/resources:
-    get:
-      description: Get the resources for a given care plan ID
-      parameters:
-      - description: Care Plan ID
-        in: path
-        name: care_plan_id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-array_care_GetCarePlanResourcesResponse'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Get care plan resources
-      tags:
-      - care_plan
-    post:
-      consumes:
-      - application/json
-      description: Create a new care plan resource
-      parameters:
-      - description: Care Plan ID
-        in: path
-        name: care_plan_id
-        required: true
-        type: integer
-      - description: Request body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/care.CreateCarePlanResourcesRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/api.Response-care_CreateCarePlanResourcesResponse'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Create care plan resource
-      tags:
-      - care_plan
-  /care_plan/{care_plan_id}/risks:
-    get:
-      description: Get the risks associated with a given care plan ID
-      parameters:
-      - description: Care Plan ID
-        in: path
-        name: care_plan_id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-array_care_GetCarePlanRisksResponse'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Get care plan risks
-      tags:
-      - care_plan
-  /care_plans/{care_plan_id}:
-    get:
-      description: Get the care plan overview for a given assessment ID
-      parameters:
-      - description: Care Plan ID
-        in: path
-        name: care_plan_id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-care_GetCarePlanOverviewResponse'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Get care plan overview
-      tags:
-      - care_plan
-    put:
-      consumes:
-      - application/json
-      description: Update the care plan overview for a given care plan ID
-      parameters:
-      - description: Care Plan ID
-        in: path
-        name: care_plan_id
-        required: true
-        type: integer
-      - description: Request body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/care.UpdateCarePlanOverviewRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-care_UpdateCarePlanOverviewResponse'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Update care plan overview
-      tags:
-      - care_plan
-  /care_plans/{care_plan_id}/interventions:
-    get:
-      description: Get the care plan interventions for a given care plan ID
-      parameters:
-      - description: Care Plan ID
-        in: path
-        name: care_plan_id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-care_GetCarePlanInterventionsResponse'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Get care plan interventions
-      tags:
-      - care_plan
-    post:
-      consumes:
-      - application/json
-      description: Create a new care plan intervention
-      parameters:
-      - description: Care Plan ID
-        in: path
-        name: care_plan_id
-        required: true
-        type: integer
-      - description: Request body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/care.CreateCarePlanInterventionRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/api.Response-care_CreateCarePlanInterventionResponse'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Create care plan intervention
-      tags:
-      - care_plan
-  /care_plans/{care_plan_id}/objectives:
-    get:
-      description: Get the care plan objectives for a given care plan ID
-      parameters:
-      - description: Care Plan ID
-        in: path
-        name: care_plan_id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-care_GetCarePlanObjectivesResponse'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Get care plan objectives
-      tags:
-      - care_plan
-    post:
-      consumes:
-      - application/json
-      description: Create a new care plan objective
-      parameters:
-      - description: Care Plan ID
-        in: path
-        name: care_plan_id
-        required: true
-        type: integer
-      - description: Request body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/care.CreateCarePlanObjectiveRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/api.Response-care_CreateCarePlanObjectiveResponse'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Create care plan objective
-      tags:
-      - care_plan
-  /care_plans/{care_plan_id}/reports:
-    get:
-      description: List all reports for a given care plan ID
-      parameters:
-      - description: Care Plan ID
-        in: path
-        name: care_plan_id
-        required: true
-        type: integer
-      - in: query
-        minimum: 1
-        name: page
-        required: true
-        type: integer
-      - in: query
-        maximum: 100
-        minimum: 5
-        name: page_size
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-array_care_ListCarePlanReportsResponse'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: List care plan reports
-      tags:
-      - care_plan
-    post:
-      consumes:
-      - application/json
-      description: Create a new care plan report
-      parameters:
-      - description: Care Plan ID
-        in: path
-        name: care_plan_id
-        required: true
-        type: integer
-      - description: Request body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/care.CreateCarePlanReportRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/api.Response-care_CreateCarePlanReportResponse'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Create care plan report
-      tags:
-      - care_plan
-  /care_plans/{care_plan_id}/risks:
-    post:
-      consumes:
-      - application/json
-      description: Create a new care plan risk
-      parameters:
-      - description: Care Plan ID
-        in: path
-        name: care_plan_id
-        required: true
-        type: integer
-      - description: Request body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/care.CreateCarePlanRisksRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/api.Response-care_CreateCarePlanRisksResponse'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Create care plan risk
-      tags:
-      - care_plan
-  /care_plans/{care_plan_id}/success_metrics:
-    get:
-      description: Get the success metrics for a given care plan ID
-      parameters:
-      - description: Care Plan ID
-        in: path
-        name: care_plan_id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-array_care_GetCarePlanSuccessMetricsResponse'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Get care plan success metrics
-      tags:
-      - care_plan
-    post:
-      consumes:
-      - application/json
-      description: Create a new care plan success metric
-      parameters:
-      - description: Care Plan ID
-        in: path
-        name: care_plan_id
-        required: true
-        type: integer
-      - description: Request body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/care.CreateCarePlanSuccessMetricsRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/api.Response-care_CreateCarePlanSuccessMetricsResponse'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Create care plan success metric
-      tags:
-      - care_plan
-  /care_plans/{care_plan_id}/support_network:
-    get:
-      description: Get the support network for a given care plan ID
-      parameters:
-      - description: Care Plan ID
-        in: path
-        name: care_plan_id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-array_care_GetCarePlanSupportNetworkResponse'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Get care plan support network
-      tags:
-      - care_plan
-    post:
-      consumes:
-      - application/json
-      description: Create a new care plan support network
-      parameters:
-      - description: Care Plan ID
-        in: path
-        name: care_plan_id
-        required: true
-        type: integer
-      - description: Request body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/care.CreateCarePlanSupportNetworkRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/api.Response-care_CreateCarePlanSupportNetworkResponse'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Create care plan support network
-      tags:
-      - care_plan
-  /care_plans/reports/{report_id}:
-    delete:
-      description: Delete a care plan report by its ID
-      parameters:
-      - description: Report ID
-        in: path
-        name: report_id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Delete care plan report
-      tags:
-      - care_plan
-    put:
-      consumes:
-      - application/json
-      description: Update a care plan report by its ID
-      parameters:
-      - description: Report ID
-        in: path
-        name: report_id
-        required: true
-        type: integer
-      - description: Request body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/care.UpdateCarePlanReportRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-care_UpdateCarePlanReportResponse'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Update care plan report
-      tags:
-      - care_plan
   /clients:
     get:
       parameters:
@@ -11722,31 +10334,10 @@ paths:
       summary: Get an appointment card by client ID
       tags:
       - appointment_cards
-    post:
-      consumes:
-      - application/json
-      description: Create a new appointment card
-      parameters:
-      - description: Request body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/clientp.CreateAppointmentCardRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/api.Response-clientp_CreateAppointmentCardResponse'
-      summary: Create a new appointment card
-      tags:
-      - appointment_cards
     put:
       consumes:
       - application/json
-      description: Update an appointment card by client ID
+      description: Create or update an appointment card by client ID
       parameters:
       - description: Request body
         in: body
@@ -11761,137 +10352,22 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/api.Response-clientp_UpdateAppointmentCardResponse'
-      summary: Update an appointment card by client ID
+      summary: Create or update an appointment card by client ID
       tags:
       - appointment_cards
   /clients/{id}/appointment_cards/generate_document:
     post:
-      description: Generate an appointment card document by client ID
+      description: Generate and download an appointment card PDF by client ID
       produces:
-      - application/json
+      - application/pdf
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-clientp_GenerateAppointmentCardDocumentApiResponse'
+            type: file
       summary: Generate an appointment card document by client ID
       tags:
       - appointment_cards
-  /clients/{id}/appointments:
-    post:
-      consumes:
-      - application/json
-      description: List appointments for a client in a date range
-      parameters:
-      - description: List appointments request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/appointment.ListAppointmentsForClientRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-appointment_ListAppointmentsForClientResponse'
-        "400":
-          description: Bad request - Invalid input
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized - Invalid credentials
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "404":
-          description: Not found - Client not found
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: List appointments for a client in a date range
-      tags:
-      - appointments
-  /clients/{id}/assessments:
-    get:
-      description: Get a list of client maturity matrix assessments
-      parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Page number
-        in: query
-        name: page
-        type: integer
-      - description: Page size
-        in: query
-        name: page_size
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-pagination_Response-care_ListClientCarePlansResponse'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: List client maturity matrix assessments
-      tags:
-      - care_plan
-    post:
-      consumes:
-      - application/json
-      description: Create a client maturity matrix assessment
-      parameters:
-      - description: Client ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Request body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/care.CreateClientCarePlanRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/api.Response-care_CreateClientCarePlanResponse'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Create client maturity matrix assessment
-      tags:
-      - maturity_matrix
   /clients/{id}/contracts:
     get:
       parameters:
@@ -11911,46 +10387,6 @@ paths:
           schema:
             $ref: '#/definitions/api.Response-pagination_Response-array_contract_ListClientContractsResponse'
       summary: List contracts for a client
-      tags:
-      - contracts
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: Create Contract Request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/contract.CreateContractRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-contract_CreateContractResponse'
-      summary: Create a new contract
-      tags:
-      - contracts
-  /clients/{id}/contracts/{contract_id}:
-    get:
-      consumes:
-      - application/json
-      parameters:
-      - description: Contract ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-contract_GetClientContractResponse'
-      summary: Get a contract by ID
       tags:
       - contracts
   /clients/{id}/diagnosis:
@@ -12417,6 +10853,66 @@ paths:
       summary: Update a client emergency contact
       tags:
       - client_network
+  /clients/{id}/evaluations:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Goal evaluation details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/clientp.CreateGoalEvaluationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-clientp_GoalEvaluationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Save or submit the current scheduled goal evaluation
+      tags:
+      - evaluations
+  /clients/{id}/evaluations/bootstrap:
+    get:
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-clientp_GoalEvaluationBootstrapResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Get goal evaluation bootstrap data
+      tags:
+      - evaluations
   /clients/{id}/incidents:
     get:
       parameters:
@@ -12772,39 +11268,6 @@ paths:
       summary: Get missing documents of a client
       tags:
       - clients
-  /clients/{id}/profile_picture:
-    put:
-      consumes:
-      - application/json
-      parameters:
-      - description: Client profile picture
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/clientp.SetClientProfilePictureRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-clientp_SetClientProfilePictureResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Set a client profile picture
-      tags:
-      - clients
   /clients/{id}/progress_reports:
     get:
       parameters:
@@ -12929,6 +11392,39 @@ paths:
       summary: Update a progress report for a client
       tags:
       - progress_reports
+  /clients/{id}/put-in-care:
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Put in care payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/clientp.PutClientInCareRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-clientp_PutClientInCareResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Put client in care lifecycle
+      tags:
+      - clients
   /clients/{id}/related_emails:
     get:
       produces:
@@ -13050,6 +11546,59 @@ paths:
       summary: Get the count of clients
       tags:
       - clients
+  /clients/in-care:
+    get:
+      parameters:
+      - description: Search by first or last name (max 120 chars)
+        in: query
+        name: search
+        type: string
+      - collectionFormat: csv
+        description: Status filter
+        in: query
+        items:
+          enum:
+          - in_care
+          - scheduled_in_care
+          type: string
+        name: status
+        type: array
+      - description: 'Sort by days_in_care: asc|desc (default: desc)'
+        in: query
+        name: sort_days_in_care
+        type: string
+      - description: Page number (min 1)
+        in: query
+        name: page
+        required: true
+        type: integer
+      - description: Page size (min 5, max 100)
+        in: query
+        name: page_size
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-pagination_Response-clientp_ListInCareClientsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-clientp_ListInCareClientsResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-clientp_ListInCareClientsResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-clientp_ListInCareClientsResponse'
+      summary: List in-care clients
+      tags:
+      - clients
   /clients/location_transfer:
     get:
       parameters:
@@ -13114,6 +11663,54 @@ paths:
           schema:
             $ref: '#/definitions/api.Response-any'
       summary: Approve or reject a location transfer request for a client
+      tags:
+      - clients
+  /clients/waiting-list:
+    get:
+      parameters:
+      - description: Search by client first_name, last_name, or sender_name (max 120
+          chars)
+        in: query
+        name: search
+        type: string
+      - description: 'Care type filter: protected_living|training_center|supported_independent_living|ambulatory_support|other'
+        in: query
+        name: placement
+        type: string
+      - description: 'Sort by days_in_waitlist: asc|desc (default: desc)'
+        in: query
+        name: sort_days
+        type: string
+      - description: Page number (min 1)
+        in: query
+        name: page
+        required: true
+        type: integer
+      - description: Page size (min 5, max 100)
+        in: query
+        name: page_size
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-pagination_Response-clientp_ListWaitingListClientsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-clientp_ListWaitingListClientsResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-clientp_ListWaitingListClientsResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-clientp_ListWaitingListClientsResponse'
+      summary: List waiting list clients
       tags:
       - clients
   /contract_types:
@@ -13181,7 +11778,7 @@ paths:
         in: query
         name: page_size
         type: integer
-      - description: Search query
+      - description: Search by client or sender name
         in: query
         name: search
         type: string
@@ -13194,6 +11791,7 @@ paths:
           - draft
           - terminated
           - stopped
+          - expired
           type: string
         name: status
         type: array
@@ -13220,16 +11818,21 @@ paths:
           type: string
         name: financing_act
         type: array
-      - collectionFormat: csv
-        description: Financing option
+      - description: Financing option
+        enum:
+        - ZIN
+        - PGB
         in: query
-        items:
-          enum:
-          - ZIN
-          - PGB
-          type: string
         name: financing_option
-        type: array
+        type: string
+      - description: Filter contracts ending on/after date (YYYY-MM-DD)
+        in: query
+        name: end_date_from
+        type: string
+      - description: Filter contracts ending on/before date (YYYY-MM-DD)
+        in: query
+        name: end_date_to
+        type: string
       produces:
       - application/json
       responses:
@@ -13240,7 +11843,46 @@ paths:
       summary: List contracts
       tags:
       - contracts
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Create Contract Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/contract.CreateContractRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-contract_CreateContractResponse'
+      summary: Create a new contract
+      tags:
+      - contracts
   /contracts/{id}:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: Contract ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-contract_GetClientContractResponse'
+      summary: Get a contract by ID
+      tags:
+      - contracts
     put:
       consumes:
       - application/json
@@ -13436,18 +12078,14 @@ paths:
         in: query
         name: out_of_service
         type: boolean
-      - description: Filter by department
-        in: query
-        name: department
-        type: string
-      - description: Filter by position
-        in: query
-        name: position
-        type: string
       - description: Filter by location ID
         in: query
         name: location_id
         type: integer
+      - description: Filter by contract type (loondienst, ZZP, none)
+        in: query
+        name: contract_type
+        type: string
       - description: Search term for employee name or number
         in: query
         name: search
@@ -13697,44 +12335,6 @@ paths:
       summary: Update employee profile by ID
       tags:
       - employees
-  /employees/{id}/appointments:
-    post:
-      consumes:
-      - application/json
-      description: List appointments for an employee in a date range
-      parameters:
-      - description: List appointments request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/appointment.ListAppointmentsForEmployeeInRangeRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-appointment_ListAppointmentsForEmployeeInRangeResponse'
-        "400":
-          description: Bad request - Invalid input
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized - Invalid credentials
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "404":
-          description: Not found - Employee not found
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: List appointments for an employee in a date range
-      tags:
-      - appointments
   /employees/{id}/certification:
     get:
       description: Get a list of certifications for employee profile
@@ -14473,6 +13073,278 @@ paths:
       summary: Get employee profile by user ID
       tags:
       - employees
+  /evaluations/recent-drafts:
+    get:
+      parameters:
+      - description: Page number
+        in: query
+        name: page
+        required: true
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-pagination_Response-clientp_ListRecentDraftEvaluationsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: List recent draft evaluations
+      tags:
+      - evaluations
+  /evaluations/recent-submitted:
+    get:
+      parameters:
+      - description: Page number
+        in: query
+        name: page
+        required: true
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-pagination_Response-clientp_ListRecentSubmittedEvaluationsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: List recent submitted evaluations
+      tags:
+      - evaluations
+  /evaluations/upcoming:
+    get:
+      parameters:
+      - description: Page number
+        in: query
+        name: page
+        required: true
+        type: integer
+      - description: Page size
+        in: query
+        name: page_size
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-pagination_Response-clientp_ListUpcomingEvaluationsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: List upcoming evaluations for coordinator
+      tags:
+      - evaluations
+  /events:
+    post:
+      consumes:
+      - application/json
+      description: Create appointment or reminder event (optionally recurring)
+      parameters:
+      - description: Create event request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/appointment.CreateEventRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/api.Response-appointment_EventResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Create calendar event
+      tags:
+      - events
+  /events/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Cancel/delete event with mutation scope
+      parameters:
+      - description: Event ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Delete event request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/appointment.DeleteEventRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Delete event
+      tags:
+      - events
+    get:
+      description: Get event by ID
+      parameters:
+      - description: Event ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-appointment_EventResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Get event by ID
+      tags:
+      - events
+    patch:
+      consumes:
+      - application/json
+      description: Update event with mutation scope (single/series/future)
+      parameters:
+      - description: Event ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update event request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/appointment.UpdateEventRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-appointment_EventResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Update event
+      tags:
+      - events
+  /events/list:
+    post:
+      consumes:
+      - application/json
+      description: List calendar events for current employee in a date range
+      parameters:
+      - description: List events request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/appointment.ListEventsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-array_appointment_EventOccurrenceResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: List events
+      tags:
+      - events
   /incidents:
     get:
       description: List all incidents with pagination and filtering options
@@ -14542,6 +13414,10 @@ paths:
         in: query
         name: search
         type: string
+      - description: Intake status (intake_conclusion) filter
+        in: query
+        name: status
+        type: string
       - description: Sort order (asc or desc)
         in: query
         name: sort_order
@@ -14601,42 +13477,88 @@ paths:
       summary: Create Intake Form
       tags:
       - Intake Forms
-  /intake_forms/{id}/assessments:
+  /intake_forms/{id}:
     get:
-      description: List all maturity assessments for a specific intake form
+      description: Retrieve an intake form by ID with related details.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.Response-clientp_GetIntakeFormResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Get Intake Form
+      tags:
+      - Intake Forms
+  /intake_forms/{id}/conclusion:
+    patch:
+      consumes:
+      - application/json
+      description: Accept or refuse an intake by updating intake conclusion.
       parameters:
-      - description: Page number
-        in: query
-        name: page
-        type: integer
-      - description: Page size
-        in: query
-        name: page_size
-        type: integer
+      - description: Conclusion update payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/clientp.UpdateIntakeConclusionRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-pagination_Response-clientp_ListIntakeMaturityAssessmentsResponse'
-      summary: List Intake Maturity Assessments
+            $ref: '#/definitions/api.Response-clientp_UpdateIntakeConclusionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Update Intake Conclusion
       tags:
-      - Registration Form
-  /intake_forms/{id}/initialize_assessments:
+      - Intake Forms
+  /intake_forms/{id}/goals:
     post:
-      description: Create default assessments for all maturity matrix topics for this
-        intake
+      consumes:
+      - application/json
+      description: Batch create intake maturity assessments (goals) for an intake
+        form.
+      parameters:
+      - description: Goals payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/clientp.CreateIntakeFormGoalsRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-clientp_InitializeIntakeAssessmentsResponse'
-      summary: Initialize Intake Assessments
+            $ref: '#/definitions/api.Response-clientp_CreateIntakeFormGoalsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/api.Response-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/api.Response-any'
+      summary: Create Intake Form Goals
       tags:
-      - Registration Form
+      - Intake Forms
   /intake_forms/{id}/promote:
     post:
       description: Promote an intake form and all its assessments to a full client
@@ -14651,40 +13573,19 @@ paths:
       summary: Promote Intake to Client
       tags:
       - Registration Form
-  /intake_maturity/{assessment_id}:
-    put:
+  /intake_maturity/{assessment_id}/generate_goals:
+    post:
       consumes:
       - application/json
-      description: Update a maturity assessment for an intake
+      description: Generate Care Plan goals for an intake maturity assessment using
+        AI
       parameters:
-      - description: Update Request
+      - description: Request body
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/clientp.UpdateIntakeMaturityAssessmentRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-clientp_UpdateIntakeMaturityAssessmentResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Update Intake Maturity Assessment
-      tags:
-      - Registration Form
-  /intake_maturity/{assessment_id}/generate_goals:
-    post:
-      description: Generate Care Plan goals for an intake maturity assessment using
-        AI
+          $ref: '#/definitions/clientp.GenerateIntakeGoalsRequest'
       produces:
       - application/json
       responses:
@@ -14703,75 +13604,6 @@ paths:
       summary: Generate Intake Goals
       tags:
       - Registration Form
-  /interventions/{intervention_id}:
-    delete:
-      description: Delete a care plan intervention by its ID
-      parameters:
-      - description: Intervention ID
-        in: path
-        name: intervention_id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Delete care plan intervention
-      tags:
-      - care_plan
-    put:
-      consumes:
-      - application/json
-      description: Update a care plan intervention by its ID
-      parameters:
-      - description: Intervention ID
-        in: path
-        name: intervention_id
-        required: true
-        type: integer
-      - description: Request body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/care.UpdateCarePlanInterventionRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-care_UpdateCarePlanInterventionResponse'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Update care plan intervention
-      tags:
-      - care_plan
   /invoices:
     get:
       description: List invoices based on optional filters like client ID, sender
@@ -15790,114 +14622,6 @@ paths:
       summary: Mark Notification as Read
       tags:
       - notifications
-  /objectives/{objective_id}:
-    delete:
-      description: Delete a care plan objective by its ID
-      parameters:
-      - description: Objective ID
-        in: path
-        name: objective_id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Delete care plan objective
-      tags:
-      - care_plan
-    put:
-      consumes:
-      - application/json
-      description: Update a care plan objective by its ID
-      parameters:
-      - description: Objective ID
-        in: path
-        name: objective_id
-        required: true
-        type: integer
-      - description: Request body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/care.UpdateCarePlanObjectiveRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-care_UpdateCarePlanObjectiveResponse'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Update care plan objective
-      tags:
-      - care_plan
-  /objectives/{objective_id}/actions:
-    post:
-      consumes:
-      - application/json
-      description: Create a new care plan action
-      parameters:
-      - description: Objective ID
-        in: path
-        name: objective_id
-        required: true
-        type: integer
-      - description: Request body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/care.CreateCarePlanActionsRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/api.Response-care_CreateCarePlanActionsResponse'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Create care plan action
-      tags:
-      - care_plan
   /organisations/{id}/locations:
     post:
       consumes:
@@ -16530,144 +15254,6 @@ paths:
             $ref: '#/definitions/api.Response-any'
       tags:
       - Registration Form
-  /resources/{resource_id}:
-    delete:
-      description: Delete all resources associated with a care plan
-      parameters:
-      - description: Resource ID
-        in: path
-        name: resource_id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Delete care plan resources
-      tags:
-      - care_plan
-    put:
-      consumes:
-      - application/json
-      description: Update a care plan resource by its ID
-      parameters:
-      - description: Resource ID
-        in: path
-        name: resource_id
-        required: true
-        type: integer
-      - description: Request body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/care.UpdateCarePlanResourcesRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-care_UpdateCarePlanResourcesResponse'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Update care plan resource
-      tags:
-      - care_plan
-  /risks/{risk_id}:
-    delete:
-      description: Delete a care plan risk by its ID
-      parameters:
-      - description: Risk ID
-        in: path
-        name: risk_id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Delete care plan risk
-      tags:
-      - care_plan
-    put:
-      consumes:
-      - application/json
-      description: Update a care plan risk by its ID
-      parameters:
-      - description: Risk ID
-        in: path
-        name: risk_id
-        required: true
-        type: integer
-      - description: Request body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/care.UpdateCarePlanRisksRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-care_UpdateCarePlanRisksResponse'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Update care plan risk
-      tags:
-      - care_plan
   /roles:
     get:
       description: List all roles
@@ -17178,144 +15764,6 @@ paths:
       summary: Create a new sender invoice template
       tags:
       - senders
-  /success_metrics/{metric_id}:
-    delete:
-      description: Delete a care plan success metric by its ID
-      parameters:
-      - description: Metric ID
-        in: path
-        name: metric_id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Delete care plan success metric
-      tags:
-      - care_plan
-    put:
-      consumes:
-      - application/json
-      description: Update a care plan success metric by its ID
-      parameters:
-      - description: Metric ID
-        in: path
-        name: metric_id
-        required: true
-        type: integer
-      - description: Request body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/care.UpdateCarePlanSuccessMetricsRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-care_UpdateCarePlanSuccessMetricsResponse'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Update care plan success metric
-      tags:
-      - care_plan
-  /support_network/{support_network_id}:
-    delete:
-      description: Delete a care plan support network by its ID
-      parameters:
-      - description: Support Network ID
-        in: path
-        name: support_network_id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Delete care plan support network
-      tags:
-      - care_plan
-    put:
-      consumes:
-      - application/json
-      description: Update a care plan support network by its ID
-      parameters:
-      - description: Support Network ID
-        in: path
-        name: support_network_id
-        required: true
-        type: integer
-      - description: Request body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/care.UpdateCarePlanSupportNetworkRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/api.Response-care_UpdateCarePlanSupportNetworkResponse'
-        "400":
-          description: Bad request
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/api.Response-any'
-        "500":
-          description: Internal server error
-          schema:
-            $ref: '#/definitions/api.Response-any'
-      summary: Update care plan support network
-      tags:
-      - care_plan
   /test/notification:
     get:
       responses:

@@ -1,7 +1,6 @@
 package api
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 
@@ -10,44 +9,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
-
-// CreateAppointmentCardApi creates a new appointment card
-// @Summary Create a new appointment card
-// @Description Create a new appointment card
-// @Tags appointment_cards
-// @Accept json
-// @Produce json
-// @Param id path uuid true "Client ID"
-// @Param request body clientp.CreateAppointmentCardRequest true "Request body"
-// @Success 201 {object} Response[clientp.CreateAppointmentCardResponse]
-// @Router /clients/{id}/appointment_cards [post]
-func (server *Server) CreateAppointmentCardApi(ctx *gin.Context) {
-	id := ctx.Param("id")
-	clientID, err := uuid.Parse(id)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid client ID")))
-		return
-	}
-	var req clientp.CreateAppointmentCardRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body")))
-		return
-	}
-	appointmentCard, err := server.businessService.ClientService.CreateAppointmentCard(
-		req,
-		clientID,
-		ctx,
-	)
-	if err != nil {
-		ctx.JSON(
-			http.StatusInternalServerError,
-			errorResponse(fmt.Errorf("failed to create appointment card")),
-		)
-		return
-	}
-	res := SuccessResponse(appointmentCard, "Appointment card created successfully")
-	ctx.JSON(http.StatusCreated, res)
-}
 
 // GetAppointmentCardApi retrieves an appointment card by client ID
 // @Summary Get an appointment card by client ID
@@ -67,12 +28,13 @@ func (server *Server) GetAppointmentCardApi(ctx *gin.Context) {
 
 	appointmentCard, err := server.businessService.ClientService.GetAppointmentCard(ctx, clientID)
 	if err != nil {
-		if errors.Is(err, fmt.Errorf("appointment card not found")) {
-			res := SuccessResponse[any](nil, "Appointment card not found")
-			ctx.JSON(http.StatusNotFound, res)
-			return
-		}
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	if appointmentCard == nil {
+		res := SuccessResponse[any](nil, "Appointment card not found")
+		ctx.JSON(http.StatusOK, res)
 		return
 	}
 
@@ -81,9 +43,9 @@ func (server *Server) GetAppointmentCardApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
-// UpdateAppointmentCardApi updates an appointment card by client ID
-// @Summary Update an appointment card by client ID
-// @Description Update an appointment card by client ID
+// UpdateAppointmentCardApi creates or updates an appointment card by client ID
+// @Summary Create or update an appointment card by client ID
+// @Description Create or update an appointment card by client ID
 // @Tags appointment_cards
 // @Accept json
 // @Produce json
@@ -122,11 +84,11 @@ func (server *Server) UpdateAppointmentCardApi(ctx *gin.Context) {
 
 // GenerateAppointmentCardDocument generates an appointment card document by client ID
 // @Summary Generate an appointment card document by client ID
-// @Description Generate an appointment card document by client ID
+// @Description Generate and download an appointment card PDF by client ID
 // @Tags appointment_cards
-// @Produce json
+// @Produce application/pdf
 // @Param id path uuid true "Client ID"
-// @Success 200 {object} Response[clientp.GenerateAppointmentCardDocumentApiResponse]
+// @Success 200 {file} file
 // @Router /clients/{id}/appointment_cards/generate_document [post]
 func (server *Server) GenerateAppointmentCardDocumentApi(ctx *gin.Context) {
 	id := ctx.Param("id")
@@ -136,11 +98,15 @@ func (server *Server) GenerateAppointmentCardDocumentApi(ctx *gin.Context) {
 		return
 	}
 
-	response, err := server.businessService.ClientService.GenerateAppointmentCardDocumentApi(
+	pdfBytes, fileName, err := server.businessService.ClientService.GenerateAppointmentCardDocumentApi(
 		ctx,
 		clientID,
 	)
 	if err != nil {
+		if err.Error() == "appointment card not found" {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
 		ctx.JSON(
 			http.StatusInternalServerError,
 			errorResponse(fmt.Errorf("failed to generate appointment card document")),
@@ -148,6 +114,6 @@ func (server *Server) GenerateAppointmentCardDocumentApi(ctx *gin.Context) {
 		return
 	}
 
-	res := SuccessResponse(response, "Appointment card document generated successfully")
-	ctx.JSON(http.StatusOK, res)
+	ctx.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", fileName))
+	ctx.Data(http.StatusOK, "application/pdf", pdfBytes)
 }

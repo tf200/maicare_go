@@ -44,11 +44,3 @@ SET
     leave = COALESCE(sqlc.narg('leave'), leave)
 WHERE client_id = $1
 RETURNING *;
-
--- name: UpdateAppointmentCardUrl :one
-UPDATE appointment_card
-SET
-    file_url = COALESCE(sqlc.narg('file_url'), file_url)
-WHERE client_id = $1
-RETURNING file_url;
-

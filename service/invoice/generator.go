@@ -105,7 +105,7 @@ func (s *invoiceService) GenerateInvoice(req GenerateInvoiceRequest, ctx context
 
 	for i, contract := range contracts {
 		billablePeriods, err := s.Store.GetBillablePeriodsForContract(ctx, db.GetBillablePeriodsForContractParams{
-			ContractID:       contract.ID,
+			// ContractID:       contract.ID,
 			InvoiceStartDate: pgtype.Timestamptz{Time: req.StartDate, Valid: true},
 			InvoiceEndDate:   pgtype.Timestamptz{Time: req.EndDate, Valid: true},
 		})
@@ -119,18 +119,18 @@ func (s *invoiceService) GenerateInvoice(req GenerateInvoiceRequest, ctx context
 		totalInvoiceItems++
 
 		invoice[i] = InvoiceDetails{
-			ContractID:    contract.ID,
-			Price:         contract.Price,
-			ContractType:  string(contract.CareType),
-			PriceTimeUnit: string(contract.PriceTimeUnit),
-			Vat:           float64(*contract.Vat),
-			Warnings:      []string{},
-			Periods:       []InvoicePeriod{},
+			// ContractID:    contract.ID,
+			// Price:         contract.Price,
+			// ContractType:  string(contract.CareType),
+			// PriceTimeUnit: string(contract.PriceTimeUnit),
+			// Vat:           float64(*contract.Vat),
+			Warnings: []string{},
+			Periods:  []InvoicePeriod{},
 		}
 
 		if len(billablePeriods) > 1 {
-			invoice[i].Warnings = append(invoice[i].Warnings,
-				fmt.Sprintf("multiple billable periods found for contract %d, make sure to verify contract details", contract.ID))
+			// invoice[i].Warnings = append(invoice[i].Warnings,
+			// 	fmt.Sprintf("multiple billable periods found for contract %d, make sure to verify contract details", contract.ID))
 			warningCount++
 		}
 
@@ -141,15 +141,15 @@ func (s *invoiceService) GenerateInvoice(req GenerateInvoiceRequest, ctx context
 
 			if contract.CareType == "accommodation" {
 				totals, err := CalculateAccomodationInvoiceTotal(AccommodationInvoiceParams{
-					Price:               contract.Price,
-					PriceTimeUnit:       string(contract.PriceTimeUnit),
-					VAT:                 float64(*contract.Vat),
+					// Price:               contract.Price,
+					// PriceTimeUnit:       string(contract.PriceTimeUnit),
+					// VAT:                 float64(*contract.Vat),
 					BillablePeriodStart: period.BillableStart.Time,
 					BillablePeriodEnd:   period.BillableEnd.Time,
 				})
 				if err != nil {
-					invoice[i].Warnings = append(invoice[i].Warnings,
-						fmt.Sprintf("failed to calculate accommodation invoice total for contract %d: %v", contract.ID, err))
+					// invoice[i].Warnings = append(invoice[i].Warnings,
+					// 	fmt.Sprintf("failed to calculate accommodation invoice total for contract %d: %v", contract.ID, err))
 					warningCount++
 					continue
 				}
@@ -162,25 +162,25 @@ func (s *invoiceService) GenerateInvoice(req GenerateInvoiceRequest, ctx context
 
 			} else if contract.CareType == "ambulante" {
 				appointments, err := s.Store.ListClientAppointmentsStartingInRange(ctx, db.ListClientAppointmentsStartingInRangeParams{
-					ClientID: contract.ClientID,
-					StartDate: pgtype.Timestamp{
+					// ClientID: &contract.ClientID,
+					StartDate: pgtype.Timestamptz{
 						Time:  period.BillableStart.Time,
 						Valid: true,
 					},
-					EndDate: pgtype.Timestamp{
+					EndDate: pgtype.Timestamptz{
 						Time:  period.BillableEnd.Time,
 						Valid: true,
 					},
 				})
 				if err != nil {
-					invoice[i].Warnings = append(invoice[i].Warnings,
-						fmt.Sprintf("failed to get appointments for contract %d: %v", contract.ID, err))
+					// invoice[i].Warnings = append(invoice[i].Warnings,
+					// 	fmt.Sprintf("failed to get appointments for contract %d: %v", contract.ID, err))
 					warningCount++
 					continue
 				}
 				if len(appointments) == 0 {
-					invoice[i].Warnings = append(invoice[i].Warnings,
-						fmt.Sprintf("no appointments found for ambulante contract %d in the specified date range", contract.ID))
+					// invoice[i].Warnings = append(invoice[i].Warnings,
+					// 	fmt.Sprintf("no appointments found for ambulante contract %d in the specified date range", contract.ID))
 					warningCount++
 					continue
 				}
@@ -192,14 +192,14 @@ func (s *invoiceService) GenerateInvoice(req GenerateInvoiceRequest, ctx context
 				}
 
 				totals, err := CalculateAmbulanteInvoiceTotal(AmbulanteInvoiceParams{
-					Price:         contract.Price,
-					PriceTimeUnit: string(contract.PriceTimeUnit),
-					VAT:           float64(*contract.Vat),
-					TotalMinutes:  totalMinutes,
+					// Price:         contract.Price,
+					// PriceTimeUnit: string(contract.PriceTimeUnit),
+					// VAT:           float64(*contract.Vat),
+					TotalMinutes: totalMinutes,
 				})
 				if err != nil {
-					invoice[i].Warnings = append(invoice[i].Warnings,
-						fmt.Sprintf("failed to calculate ambulante invoice total for contract %d: %v", contract.ID, err))
+					// invoice[i].Warnings = append(invoice[i].Warnings,
+					// 	fmt.Sprintf("failed to calculate ambulante invoice total for contract %d: %v", contract.ID, err))
 					warningCount++
 					continue
 				}
@@ -247,9 +247,9 @@ func (s *invoiceService) GenerateInvoice(req GenerateInvoiceRequest, ctx context
 	}
 
 	extraContent, err := s.Store.FetchInvoiceTemplateItems(ctx, db.FetchQueryData{
-		ClientID:   req.ClientID,
-		ContractID: contracts[0].ID,
-		SenderID:   clientSender.ID,
+		ClientID: req.ClientID,
+		// ContractID: contracts[0].ID,
+		SenderID: clientSender.ID,
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GenerateInvoice", "Failed to fetch invoice template items",

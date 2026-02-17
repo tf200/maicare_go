@@ -1,23 +1,14 @@
 package pdf
 
 import (
-	"bytes"
 	"context"
-	"embed"
 	"fmt"
-	"html/template"
 	"mime/multipart"
 	"strings"
 	"time"
 
-	"maicare_go/bucket"
-
-	"github.com/SebastiaanKlippert/go-wkhtmltopdf"
 	"github.com/google/uuid"
 )
-
-//go:embed templates/incident.html
-var incidentTemplateFS embed.FS
 
 type IncidentReportData struct {
 	ID                      uuid.UUID `json:"id"`
@@ -70,58 +61,84 @@ type IncidentReportData struct {
 
 // GenerateIncidentPDF generates a PDF from incident data and returns the PDF bytes
 func (s *pdfService) generateIncidentPDF(incidentData IncidentReportData) (multipart.File, error) {
-	funcMap := template.FuncMap{
-		"lower": strings.ToLower,
-		"now": func() time.Time { // You might also need a 'now' function if it's not predefined
-			return time.Now().In(time.FixedZone("GMT+1", 1*60*60)) // Set to Tangier's timezone
+	headerLines := []string{
+		fmt.Sprintf("Incident ID: %s", incidentData.ID),
+		fmt.Sprintf("Incident date: %s", incidentData.IncidentDate.Format(time.RFC3339)),
+		fmt.Sprintf("Location: %s (%s)", incidentData.LocationName, incidentData.LocationID),
+		fmt.Sprintf("Reporter: %s %s (%s)", incidentData.EmployeeFirstName, incidentData.EmployeeLastName, incidentData.EmployeeID),
+		fmt.Sprintf("Client: %s %s (%s)", incidentData.ClientFirstName, incidentData.ClientLastName, incidentData.ClientID),
+	}
+
+	sections := []documentSection{
+		{
+			Title: "Incident details",
+			Lines: []string{
+				fmt.Sprintf("Reporter involvement: %s", incidentData.ReporterInvolvement),
+				fmt.Sprintf("Runtime incident: %s", incidentData.RuntimeIncident),
+				fmt.Sprintf("Incident type: %s", incidentData.IncidentType),
+				fmt.Sprintf("Severity: %s", incidentData.SeverityOfIncident),
+				fmt.Sprintf("Inform who: %s", joinOrNA(incidentData.InformWho)),
+			},
+		},
+		{
+			Title: "Incident categories",
+			Lines: []string{
+				fmt.Sprintf("Passing away: %s", yesNo(incidentData.PassingAway)),
+				fmt.Sprintf("Self harm: %s", yesNo(incidentData.SelfHarm)),
+				fmt.Sprintf("Violence: %s", yesNo(incidentData.Violence)),
+				fmt.Sprintf("Fire/water damage: %s", yesNo(incidentData.FireWaterDamage)),
+				fmt.Sprintf("Accident: %s", yesNo(incidentData.Accident)),
+				fmt.Sprintf("Client absence: %s", yesNo(incidentData.ClientAbsence)),
+				fmt.Sprintf("Medicines: %s", yesNo(incidentData.Medicines)),
+				fmt.Sprintf("Organization: %s", yesNo(incidentData.Organization)),
+				fmt.Sprintf("Use prohibited substances: %s", yesNo(incidentData.UseProhibitedSubstances)),
+				fmt.Sprintf("Other notifications: %s", yesNo(incidentData.OtherNotifications)),
+			},
+		},
+		{
+			Title: "Impact and risk",
+			Lines: []string{
+				fmt.Sprintf("Incident explanation: %s", stringOrNA(incidentData.IncidentExplanation)),
+				fmt.Sprintf("Recurrence risk: %s", incidentData.RecurrenceRisk),
+				fmt.Sprintf("Preventive steps: %s", stringOrNA(incidentData.IncidentPreventSteps)),
+				fmt.Sprintf("Taken measures: %s", stringOrNA(incidentData.IncidentTakenMeasures)),
+			},
+		},
+		{
+			Title: "Cause analysis",
+			Lines: []string{
+				fmt.Sprintf("Technical: %s", joinOrNA(incidentData.Technical)),
+				fmt.Sprintf("Organizational: %s", joinOrNA(incidentData.Organizational)),
+				fmt.Sprintf("Mese worker: %s", joinOrNA(incidentData.MeseWorker)),
+				fmt.Sprintf("Client options: %s", joinOrNA(incidentData.ClientOptions)),
+				fmt.Sprintf("Other cause: %s", stringOrNA(incidentData.OtherCause)),
+				fmt.Sprintf("Cause explanation: %s", stringOrNA(incidentData.CauseExplanation)),
+			},
+		},
+		{
+			Title: "Damage and follow-up",
+			Lines: []string{
+				fmt.Sprintf("Physical injury: %s", incidentData.PhysicalInjury),
+				fmt.Sprintf("Physical injury description: %s", stringOrNA(incidentData.PhysicalInjuryDesc)),
+				fmt.Sprintf("Psychological damage: %s", incidentData.PsychologicalDamage),
+				fmt.Sprintf("Psychological damage description: %s", stringOrNA(incidentData.PsychologicalDamageDesc)),
+				fmt.Sprintf("Needed consultation: %s", incidentData.NeededConsultation),
+				fmt.Sprintf("Succession: %s", joinOrNA(incidentData.Succession)),
+				fmt.Sprintf("Succession description: %s", stringOrNA(incidentData.SuccessionDesc)),
+				fmt.Sprintf("Other: %s", yesNo(incidentData.Other)),
+				fmt.Sprintf("Other description: %s", stringOrNA(incidentData.OtherDesc)),
+				fmt.Sprintf("Additional appointments: %s", stringOrNA(incidentData.AdditionalAppointments)),
+				fmt.Sprintf("Employee absenteeism: %s", incidentData.EmployeeAbsenteeism),
+			},
 		},
 	}
 
-	// Parse and execute HTML template
-	templ, err := template.New("incident.html").Funcs(funcMap).ParseFS(incidentTemplateFS, "templates/incident.html")
+	pdfBytes, err := buildSectionsPDF("Incident report", headerLines, sections)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse template: %w", err)
+		return nil, fmt.Errorf("failed to generate incident pdf: %w", err)
 	}
 
-	var body bytes.Buffer
-	if err := templ.Execute(&body, incidentData); err != nil {
-		return nil, fmt.Errorf("failed to execute template: %w", err)
-	}
-
-	// Create PDF generator
-	pdfg, err := wkhtmltopdf.NewPDFGenerator()
-	if err != nil {
-		return nil, fmt.Errorf("failed to create PDF generator: %w", err)
-	}
-
-	// Set global options
-	pdfg.Dpi.Set(300)
-	pdfg.Orientation.Set(wkhtmltopdf.OrientationPortrait)
-	pdfg.Grayscale.Set(false)
-
-	// Create a new input page from our HTML
-	page := wkhtmltopdf.NewPageReader(bytes.NewReader(body.Bytes()))
-
-	// Set page options
-	page.EnableLocalFileAccess.Set(true)
-	page.LoadErrorHandling.Set("ignore")
-
-	// Add page to generator
-	pdfg.AddPage(page)
-
-	// Generate PDF
-	err = pdfg.Create()
-	if err != nil {
-		return nil, fmt.Errorf("failed to create PDF: %w", err)
-	}
-
-	// Get the generated PDF as a byte slice
-	pdfBytes := pdfg.Bytes()
-	// Wrap the byte slice in our InMemoryFile to satisfy the interface
-	file := &bucket.InMemoryFile{
-		Reader: bytes.NewReader(pdfBytes),
-	}
-	return file, nil
+	return toMultipartFile(pdfBytes), nil
 }
 
 // UploadIncidentPDF uploads a PDF to B2 with a generated filename
@@ -153,4 +170,25 @@ func (s *pdfService) GenerateAndUploadIncidentPDF(ctx context.Context, incidentD
 	}
 
 	return filename, nil
+}
+
+func yesNo(value bool) string {
+	if value {
+		return "yes"
+	}
+	return "no"
+}
+
+func stringOrNA(value *string) string {
+	if value == nil || *value == "" {
+		return "N/A"
+	}
+	return *value
+}
+
+func joinOrNA(values []string) string {
+	if len(values) == 0 {
+		return "N/A"
+	}
+	return strings.Join(values, "; ")
 }

@@ -2,6 +2,11 @@
 SELECT user_id FROM employee_profile
 WHERE id = $1 LIMIT 1;
 
+-- name: ListUserIDsByEmployeeIDs :many
+SELECT user_id
+FROM employee_profile
+WHERE id = ANY($1::uuid[]);
+
 -- name: SetEmployeeProfilePicture :one
 UPDATE custom_user
 SET profile_picture = $2

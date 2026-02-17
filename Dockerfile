@@ -16,26 +16,13 @@ COPY . .
 ENV GOPROXY=https://proxy.golang.org,direct
 
 # Build the Go application
-RUN go build -o main main.go
+RUN CGO_ENABLED=0 go build -ldflags="-s -w" -o main main.go
 
 # Stage 2: Final Image
-FROM debian:bookworm-slim
+FROM alpine:3.22
 
-# Install wkhtmltopdf and its minimal dependencies
-RUN apt-get update && apt-get install -y \
-    ca-certificates \
-    wkhtmltopdf \
-    fontconfig \
-    libfreetype6 \
-    libjpeg62-turbo \
-    libpng16-16 \
-    libx11-6 \
-    libxcb1 \
-    libxext6 \
-    libxrender1 \
-    xfonts-75dpi \
-    xfonts-base \
-    && rm -rf /var/lib/apt/lists/*
+# Install runtime certificates for HTTPS integrations
+RUN apk add --no-cache ca-certificates
 
 # Set the working directory
 WORKDIR /app
@@ -45,14 +32,8 @@ COPY --from=builder /app/main .
 
 COPY db/migrations /app/db/migrations
 
-# Copy the entrypoint script
-COPY entrypoint.sh /app/entrypoint.sh
-
-# Ensure the entrypoint script is executable
-RUN chmod +x /app/entrypoint.sh
-
 # Expose the desired port
 EXPOSE 8080
 
 # Set the entrypoint
-ENTRYPOINT ["/app/entrypoint.sh"]
+ENTRYPOINT ["/app/main"]

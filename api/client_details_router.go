@@ -30,7 +30,6 @@ func (server *Server) setupClientRoutes(baseRouter *gin.RouterGroup) {
 
 		clientsGroup.GET("/:id/missing_documents", server.RBACMiddleware("CLIENT.CREATE"), server.GetMissingClientDocumentsApi)
 
-		clientsGroup.POST("/:id/appointments", server.RBACMiddleware("CLIENT.CREATE"), server.ListAppointmentsForClientApi)
 		clientsGroup.GET("/:id/evaluations/bootstrap", server.RBACMiddleware("CLIENT.VIEW"), server.GetGoalEvaluationBootstrapApi)
 		clientsGroup.POST("/:id/evaluations", server.RBACMiddleware("CLIENT.UPDATE"), server.CreateGoalEvaluationApi)
 

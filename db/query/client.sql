@@ -280,10 +280,11 @@ SELECT
     (SELECT COUNT(*)::bigint FROM client_documents d WHERE d.client_id = $1) AS documents_count,
     (
         SELECT COUNT(*)::bigint
-        FROM appointment_clients ac
-        JOIN scheduled_appointments sa ON sa.id = ac.appointment_id
-        WHERE ac.client_id = $1
-          AND sa.status <> 'CANCELLED'
+        FROM calendar_event_attendees cea
+        JOIN calendar_events ce ON ce.id = cea.event_id
+        WHERE cea.client_id = $1
+          AND ce.kind = 'appointment'
+          AND ce.status <> 'cancelled'
     ) AS appointments_count;
 
 

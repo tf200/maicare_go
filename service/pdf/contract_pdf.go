@@ -1,21 +1,11 @@
 package pdf
 
 import (
-	"bytes"
 	"context"
-	"embed"
 	"fmt"
-	"html/template"
 	"mime/multipart"
 	"time"
-
-	"maicare_go/bucket"
-
-	"github.com/SebastiaanKlippert/go-wkhtmltopdf"
 )
-
-//go:embed templates/contract.html
-var contractTemplateFS embed.FS
 
 // ContractData represents the data structure for the care contract template.
 type ContractData struct {
@@ -62,51 +52,57 @@ type ContractData struct {
 
 // GenerateIncidentPDF generates a PDF from incident data and returns the PDF bytes
 func (s *pdfService) generateContractPDF(contractData ContractData) (multipart.File, error) {
-	// Parse and execute HTML template
-	templ, err := template.ParseFS(contractTemplateFS, "templates/contract.html")
+	headerLines := []string{
+		fmt.Sprintf("Contract ID: %d", contractData.ID),
+		fmt.Sprintf("Status: %s", contractData.Status),
+		fmt.Sprintf("Generation date: %s", contractData.GenerationDate),
+		fmt.Sprintf("Period: %s to %s", contractData.StartDate, contractData.EndDate),
+		fmt.Sprintf("Reminder period (days): %d", contractData.ReminderPeriod),
+	}
+
+	sections := []documentSection{
+		{
+			Title: "Sender",
+			Lines: []string{
+				fmt.Sprintf("Name: %s", contractData.SenderName),
+				fmt.Sprintf("Address: %s %s, %s %s", contractData.SenderStreet, contractData.SenderHouseNumber, contractData.SenderPostalCode, contractData.SenderCity),
+				fmt.Sprintf("Contact info: %s", contractData.SenderContactInfo),
+			},
+		},
+		{
+			Title: "Client",
+			Lines: []string{
+				fmt.Sprintf("Name: %s %s", contractData.ClientFirstName, contractData.ClientLastName),
+				fmt.Sprintf("Address: %s", contractData.ClientAddress),
+				fmt.Sprintf("Contact info: %s", contractData.ClientContactInfo),
+			},
+		},
+		{
+			Title: "Care specification",
+			Lines: []string{
+				fmt.Sprintf("Care type: %s", contractData.CareType),
+				fmt.Sprintf("Care name: %s", contractData.CareName),
+				fmt.Sprintf("Financing act: %s", contractData.FinancingAct),
+				fmt.Sprintf("Financing option: %s", contractData.FinancingOption),
+				fmt.Sprintf("Hours: %.2f (%s)", contractData.Hours, contractData.HoursType),
+			},
+		},
+		{
+			Title: "Financial terms",
+			Lines: []string{
+				fmt.Sprintf("Price: EUR %.2f per %s", contractData.Price, contractData.PriceTimeUnit),
+				fmt.Sprintf("VAT: %.2f%%", contractData.Vat),
+				fmt.Sprintf("Contract type: %s", contractData.TypeName),
+			},
+		},
+	}
+
+	pdfBytes, err := buildSectionsPDF("Care Contract", headerLines, sections)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse template: %w", err)
+		return nil, fmt.Errorf("failed to generate contract pdf: %w", err)
 	}
 
-	var body bytes.Buffer
-	if err := templ.Execute(&body, contractData); err != nil {
-		return nil, fmt.Errorf("failed to execute template: %w", err)
-	}
-
-	// Create PDF generator
-	pdfg, err := wkhtmltopdf.NewPDFGenerator()
-	if err != nil {
-		return nil, fmt.Errorf("failed to create PDF generator: %w", err)
-	}
-
-	// Set global options
-	pdfg.Dpi.Set(300)
-	pdfg.Orientation.Set(wkhtmltopdf.OrientationPortrait)
-	pdfg.Grayscale.Set(false)
-
-	// Create a new input page from our HTML
-	page := wkhtmltopdf.NewPageReader(bytes.NewReader(body.Bytes()))
-
-	// Set page options
-	page.EnableLocalFileAccess.Set(true)
-	page.LoadErrorHandling.Set("ignore")
-
-	// Add page to generator
-	pdfg.AddPage(page)
-
-	// Generate PDF
-	err = pdfg.Create()
-	if err != nil {
-		return nil, fmt.Errorf("failed to create PDF: %w", err)
-	}
-
-	// Get the generated PDF as a byte slice
-	pdfBytes := pdfg.Bytes()
-	// Wrap the byte slice in our InMemoryFile to satisfy the interface
-	file := &bucket.InMemoryFile{
-		Reader: bytes.NewReader(pdfBytes),
-	}
-	return file, nil
+	return toMultipartFile(pdfBytes), nil
 }
 
 // UploadIncidentPDF uploads a PDF to B2 with a generated filename

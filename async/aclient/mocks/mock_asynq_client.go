@@ -76,25 +76,6 @@ func (mr *MockAsynqClientInterfaceMockRecorder) EnqueueAcceptedRegistration(ctx,
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnqueueAcceptedRegistration", reflect.TypeOf((*MockAsynqClientInterface)(nil).EnqueueAcceptedRegistration), varargs...)
 }
 
-// EnqueueAppointmentTask mocks base method.
-func (m *MockAsynqClientInterface) EnqueueAppointmentTask(ctx context.Context, payload aclient.AppointmentPayload, opts ...asynq.Option) error {
-	m.ctrl.T.Helper()
-	varargs := []any{ctx, payload}
-	for _, a := range opts {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "EnqueueAppointmentTask", varargs...)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// EnqueueAppointmentTask indicates an expected call of EnqueueAppointmentTask.
-func (mr *MockAsynqClientInterfaceMockRecorder) EnqueueAppointmentTask(ctx, payload any, opts ...any) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	varargs := append([]any{ctx, payload}, opts...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnqueueAppointmentTask", reflect.TypeOf((*MockAsynqClientInterface)(nil).EnqueueAppointmentTask), varargs...)
-}
-
 // EnqueueEmailDelivery mocks base method.
 func (m *MockAsynqClientInterface) EnqueueEmailDelivery(payload aclient.EmailDeliveryPayload, ctx context.Context, opts ...asynq.Option) error {
 	m.ctrl.T.Helper()

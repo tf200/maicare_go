@@ -20,5 +20,6 @@ func (server *Server) setupContractRoutes(baseRouter *gin.RouterGroup) {
 	baseRouter.GET("/contracts", server.AuthMiddleware(), server.RBACMiddleware("CONTRACT.VIEW"), server.ListContractsApi)
 	baseRouter.GET("/contracts/:id", server.AuthMiddleware(), server.RBACMiddleware("CONTRACT.VIEW"), server.GetClientContractApi)
 	baseRouter.PUT("/contracts/:id", server.AuthMiddleware(), server.RBACMiddleware("CONTRACT.UPDATE"), server.UpdateContractApi)
+	baseRouter.PUT("/contracts/:id/status", server.AuthMiddleware(), server.RBACMiddleware("CONTRACT.UPDATE"), server.UpdateContractStatusApi)
 	baseRouter.GET("/contracts/:id/audit", server.AuthMiddleware(), server.RBACMiddleware("CONTRACT.VIEW"), server.GetContractAuditLogApi)
 }

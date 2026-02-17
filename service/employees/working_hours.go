@@ -75,15 +75,15 @@ func (s *employeeService) fetchWorkingHoursData(
 	appointments, err := s.Store.ListEmployeeAppointmentsInRange(
 		ctx,
 		db.ListEmployeeAppointmentsInRangeParams{
-			StartDate: pgtype.Timestamp{
+			StartDate: pgtype.Timestamptz{
 				Time:  periodStart,
 				Valid: true,
 			},
-			EndDate: pgtype.Timestamp{
+			EndDate: pgtype.Timestamptz{
 				Time:  periodEnd,
 				Valid: true,
 			},
-			EmployeeID: &employeeID,
+			EmployeeID: employeeID,
 		},
 	)
 	if err != nil {

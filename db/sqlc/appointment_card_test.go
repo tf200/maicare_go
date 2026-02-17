@@ -182,60 +182,6 @@ func TestUpdateAppointmentCard(t *testing.T) {
 	}
 }
 
-func TestUpdateAppointmentCardUrl(t *testing.T) {
-	tests := []struct {
-		name   string
-		setup  func(ctx context.Context, qtx *Queries) UpdateAppointmentCardUrlParams
-		checks func(t *testing.T, fileUrl *string, params UpdateAppointmentCardUrlParams, err error)
-	}{
-		{
-			name: "update appointment card url",
-			setup: func(ctx context.Context, qtx *Queries) UpdateAppointmentCardUrlParams {
-				client := createRandomClientDetails(ctx, qtx)
-				_ = createRandomAppointmentCard(ctx, qtx, client.ID)
-				url := util.RandomString(10)
-				return UpdateAppointmentCardUrlParams{
-					ClientID: client.ID,
-					FileUrl:  &url,
-				}
-			},
-			checks: func(t *testing.T, fileUrl *string, params UpdateAppointmentCardUrlParams, err error) {
-				require.NoError(t, err, "UpdateAppointmentCardUrl should not error")
-				require.Equal(t, params.FileUrl, fileUrl)
-			},
-		},
-		{
-			name: "update appointment card url for client without card",
-			setup: func(ctx context.Context, qtx *Queries) UpdateAppointmentCardUrlParams {
-				client := createRandomClientDetails(ctx, qtx)
-				url := util.RandomString(10)
-				return UpdateAppointmentCardUrlParams{
-					ClientID: client.ID,
-					FileUrl:  &url,
-				}
-			},
-			checks: func(t *testing.T, fileUrl *string, params UpdateAppointmentCardUrlParams, err error) {
-				require.Error(t, err, "UpdateAppointmentCardUrl should error for client without card")
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			ctx := context.Background()
-
-			tx, err := testDB.Begin(ctx)
-			require.NoError(t, err, "Failed to begin transaction")
-			defer tx.Rollback(ctx)
-
-			qtx := testQueries.WithTx(tx)
-
-			params := tt.setup(ctx, qtx)
-			fileUrl, err := qtx.UpdateAppointmentCardUrl(ctx, params)
-			tt.checks(t, fileUrl, params, err)
-		})
-	}
-}
-
 // Helpers
 func createRandomAppointmentCard(ctx context.Context, qtx *Queries, clientID uuid.UUID) AppointmentCard {
 

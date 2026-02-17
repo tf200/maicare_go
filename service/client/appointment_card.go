@@ -14,55 +14,13 @@ import (
 	"go.uber.org/zap"
 )
 
-func (s *clientService) CreateAppointmentCard(req CreateAppointmentCardRequest, clientID uuid.UUID, ctx context.Context) (*CreateAppointmentCardResponse, error) {
-	appointmentCard, err := s.Store.CreateAppointmentCard(ctx, db.CreateAppointmentCardParams{
-		ClientID:               clientID,
-		GeneralInformation:     req.GeneralInformation,
-		ImportantContacts:      req.ImportantContacts,
-		HouseholdInfo:          req.HouseholdInfo,
-		OrganizationAgreements: req.OrganizationAgreements,
-		YouthOfficerAgreements: req.YouthOfficerAgreements,
-		TreatmentAgreements:    req.TreatmentAgreements,
-		SmokingRules:           req.SmokingRules,
-		Work:                   req.Work,
-		SchoolInternship:       req.SchoolInternship,
-		Travel:                 req.Travel,
-		Leave:                  req.Leave,
-	})
-	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateAppointmentCard",
-			"Failed to create appointment card", zap.Error(err))
-		return nil, fmt.Errorf("failed to create appointment card")
-	}
-	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "CreateAppointmentCard",
-		"Successfully created appointment card", zap.String("AppointmentCardID", appointmentCard.ID.String()))
-	return &CreateAppointmentCardResponse{
-		ID:                     appointmentCard.ID,
-		ClientID:               appointmentCard.ClientID,
-		GeneralInformation:     appointmentCard.GeneralInformation,
-		ImportantContacts:      appointmentCard.ImportantContacts,
-		HouseholdInfo:          appointmentCard.HouseholdInfo,
-		OrganizationAgreements: appointmentCard.OrganizationAgreements,
-		YouthOfficerAgreements: appointmentCard.YouthOfficerAgreements,
-		TreatmentAgreements:    appointmentCard.TreatmentAgreements,
-		SmokingRules:           appointmentCard.SmokingRules,
-		Work:                   appointmentCard.Work,
-		SchoolInternship:       appointmentCard.SchoolInternship,
-		Travel:                 appointmentCard.Travel,
-		Leave:                  appointmentCard.Leave,
-		CreatedAt:              appointmentCard.CreatedAt.Time,
-		UpdatedAt:              appointmentCard.UpdatedAt.Time,
-		FileUrl:                appointmentCard.FileUrl,
-	}, nil
-}
-
 func (s *clientService) GetAppointmentCard(ctx context.Context, clientID uuid.UUID) (*GetAppointmentCardResponse, error) {
 	appointmentCard, err := s.Store.GetAppointmentCard(ctx, clientID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetAppointmentCard",
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "GetAppointmentCard",
 				"Appointment card not found", zap.String("ClientID", clientID.String()))
-			return nil, fmt.Errorf("appointment card not found")
+			return nil, nil
 		}
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetAppointmentCard",
 			"Failed to get appointment card", zap.Error(err))
@@ -88,7 +46,6 @@ func (s *clientService) GetAppointmentCard(ctx context.Context, clientID uuid.UU
 		Leave:                  appointmentCard.Leave,
 		CreatedAt:              appointmentCard.CreatedAt.Time,
 		UpdatedAt:              appointmentCard.UpdatedAt.Time,
-		FileUrl:                appointmentCard.FileUrl,
 	}, nil
 }
 
@@ -109,6 +66,46 @@ func (s *clientService) UpdateAppointmentCard(req UpdateAppointmentCardRequest, 
 	}
 	appointmentCard, err := s.Store.UpdateAppointmentCard(ctx, arg)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			createdAppointmentCard, createErr := s.Store.CreateAppointmentCard(ctx, db.CreateAppointmentCardParams{
+				ClientID:               clientID,
+				GeneralInformation:     req.GeneralInformation,
+				ImportantContacts:      req.ImportantContacts,
+				HouseholdInfo:          req.HouseholdInfo,
+				OrganizationAgreements: req.OrganizationAgreements,
+				YouthOfficerAgreements: req.YouthOfficerAgreements,
+				TreatmentAgreements:    req.TreatmentAgreements,
+				SmokingRules:           req.SmokingRules,
+				Work:                   req.Work,
+				SchoolInternship:       req.SchoolInternship,
+				Travel:                 req.Travel,
+				Leave:                  req.Leave,
+			})
+			if createErr != nil {
+				s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateAppointmentCard",
+					"Failed to create appointment card during upsert", zap.Error(createErr))
+				return nil, fmt.Errorf("failed to update appointment card")
+			}
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "UpdateAppointmentCard",
+				"Successfully created appointment card during upsert", zap.String("AppointmentCardID", createdAppointmentCard.ID.String()))
+			return &UpdateAppointmentCardResponse{
+				ID:                     createdAppointmentCard.ID,
+				ClientID:               createdAppointmentCard.ClientID,
+				GeneralInformation:     createdAppointmentCard.GeneralInformation,
+				ImportantContacts:      createdAppointmentCard.ImportantContacts,
+				HouseholdInfo:          createdAppointmentCard.HouseholdInfo,
+				OrganizationAgreements: createdAppointmentCard.OrganizationAgreements,
+				YouthOfficerAgreements: createdAppointmentCard.YouthOfficerAgreements,
+				TreatmentAgreements:    createdAppointmentCard.TreatmentAgreements,
+				SmokingRules:           createdAppointmentCard.SmokingRules,
+				Work:                   createdAppointmentCard.Work,
+				SchoolInternship:       createdAppointmentCard.SchoolInternship,
+				Travel:                 createdAppointmentCard.Travel,
+				Leave:                  createdAppointmentCard.Leave,
+				CreatedAt:              createdAppointmentCard.CreatedAt.Time,
+				UpdatedAt:              createdAppointmentCard.UpdatedAt.Time,
+			}, nil
+		}
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateAppointmentCard",
 			"Failed to update appointment card", zap.Error(err))
 		return nil, fmt.Errorf("failed to update appointment card")
@@ -134,26 +131,17 @@ func (s *clientService) UpdateAppointmentCard(req UpdateAppointmentCardRequest, 
 	}, nil
 }
 
-func (s *clientService) GenerateAppointmentCardDocumentApi(ctx context.Context, clientID uuid.UUID) (*GenerateAppointmentCardDocumentApiResponse, error) {
+func (s *clientService) GenerateAppointmentCardDocumentApi(ctx context.Context, clientID uuid.UUID) ([]byte, string, error) {
 	appointmentCard, err := s.Store.GetAppointmentCard(ctx, clientID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			s.Logger.LogBusinessEvent(ctx, logger.LogLevelWarn, "GenerateAppointmentCardDocumentApi",
 				"Appointment card not found", zap.String("ClientID", clientID.String()))
-			return nil, fmt.Errorf("appointment card not found")
+			return nil, "", fmt.Errorf("appointment card not found")
 		}
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GenerateAppointmentCardDocumentApi",
 			"Failed to retrieve appointment card", zap.Error(err))
-		return nil, fmt.Errorf("failed to retrieve appointment card")
-	}
-
-	if appointmentCard.FileUrl != nil && *appointmentCard.FileUrl != "" {
-		err = s.B2Client.Delete(ctx, *appointmentCard.FileUrl)
-		if err != nil {
-			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GenerateAppointmentCardDocumentApi",
-				"Failed to delete existing appointment card document", zap.Error(err))
-			return nil, fmt.Errorf("failed to delete existing appointment card document")
-		}
+		return nil, "", fmt.Errorf("failed to retrieve appointment card")
 	}
 
 	pdfArg := pdf.AppointmentCard{
@@ -173,27 +161,16 @@ func (s *clientService) GenerateAppointmentCardDocumentApi(ctx context.Context, 
 		Leave:                  appointmentCard.Leave,
 	}
 
-	pdfUrl, err := s.PDFService.GenerateAndUploadAppointmentCardPDF(ctx, pdfArg)
+	pdfBytes, err := s.PDFService.GenerateAppointmentCardPDF(ctx, pdfArg)
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GenerateAppointmentCardDocumentApi",
-			"Failed to generate and upload appointment card PDF", zap.Error(err))
-		return nil, fmt.Errorf("failed to generate and upload appointment card PDF")
-	}
-
-	fileKey, err := s.Store.UpdateAppointmentCardUrl(ctx, db.UpdateAppointmentCardUrlParams{
-		ClientID: clientID,
-		FileUrl:  &pdfUrl,
-	})
-	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GenerateAppointmentCardDocumentApi",
-			"Failed to update appointment card with file URL", zap.Error(err))
-		return nil, fmt.Errorf("failed to update appointment card with file URL")
+			"Failed to generate appointment card PDF", zap.Error(err))
+		return nil, "", fmt.Errorf("failed to generate appointment card PDF")
 	}
 
 	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "GenerateAppointmentCardDocumentApi",
 		"Successfully generated appointment card document", zap.String("ClientID", clientID.String()))
-	return &GenerateAppointmentCardDocumentApiResponse{
-		FileUrl:  s.GenerateResponsePresignedURL(fileKey, ctx),
-		ClientID: clientID,
-	}, nil
+
+	fileName := fmt.Sprintf("appointment_card_%s.pdf", appointmentCard.ID.String())
+	return pdfBytes, fileName, nil
 }

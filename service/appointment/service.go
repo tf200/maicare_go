@@ -10,15 +10,11 @@ import (
 )
 
 type AppointmentService interface {
-	CreateAppointment(req *CreateAppointmentRequest, userID uuid.UUID, ctx context.Context) (*CreateAppointmentResponse, error)
-	AddParticipantToAppointment(ctx context.Context, appointmentID uuid.UUID, req AddParticipantToAppointmentRequest) error
-	AddClientToAppointment(ctx context.Context, appointmentID uuid.UUID, req AddClientToAppointmentRequest) error
-	ListAppointmentsForEmployeeInRange(ctx context.Context, employeeID uuid.UUID, req ListAppointmentsForEmployeeInRangeRequest) ([]ListAppointmentsForEmployeeInRangeResponse, error)
-	ListAppointmentsForClientInRange(ctx context.Context, clientID uuid.UUID, req ListAppointmentsForClientRequest) ([]ListAppointmentsForClientResponse, error)
-	GetAppointment(ctx context.Context, appointmentID uuid.UUID) (*GetAppointmentResponse, error)
-	UpdateAppointment(ctx context.Context, appointmentID uuid.UUID, req *UpdateAppointmentRequest) (*UpdateAppointmentResponse, error)
-	DeleteAppointment(ctx context.Context, appointmentID uuid.UUID) error
-	ConfirmAppointment(ctx context.Context, appointmentID uuid.UUID, employeeID uuid.UUID) error
+	CreateEvent(ctx context.Context, req *CreateEventRequest, employeeID uuid.UUID) (*EventResponse, error)
+	ListEvents(ctx context.Context, req ListEventsRequest, employeeID uuid.UUID) ([]EventOccurrenceResponse, error)
+	GetEvent(ctx context.Context, eventID uuid.UUID, employeeID uuid.UUID) (*EventResponse, error)
+	UpdateEvent(ctx context.Context, eventID uuid.UUID, req *UpdateEventRequest, employeeID uuid.UUID) (*EventResponse, error)
+	DeleteEvent(ctx context.Context, eventID uuid.UUID, req DeleteEventRequest, employeeID uuid.UUID) error
 }
 
 type appointmentService struct {

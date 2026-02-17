@@ -31,10 +31,9 @@ type ClientService interface {
 	GetMissingClientDocuments(ctx context.Context, clientID uuid.UUID) (*GetMissingClientDocumentsApiResponse, error)
 
 	// Client Appointment Card
-	CreateAppointmentCard(req CreateAppointmentCardRequest, clientID uuid.UUID, ctx context.Context) (*CreateAppointmentCardResponse, error)
 	GetAppointmentCard(ctx context.Context, clientID uuid.UUID) (*GetAppointmentCardResponse, error)
 	UpdateAppointmentCard(req UpdateAppointmentCardRequest, clientID uuid.UUID, ctx context.Context) (*UpdateAppointmentCardResponse, error)
-	GenerateAppointmentCardDocumentApi(ctx context.Context, clientID uuid.UUID) (*GenerateAppointmentCardDocumentApiResponse, error)
+	GenerateAppointmentCardDocumentApi(ctx context.Context, clientID uuid.UUID) ([]byte, string, error)
 
 	// Client Incidents
 	CreateIncident(ctx context.Context, req CreateIncidentRequest, clientID uuid.UUID) (*CreateIncidentResponse, error)

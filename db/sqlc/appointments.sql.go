@@ -12,459 +12,328 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const bulkAddAppointmentClients = `-- name: BulkAddAppointmentClients :exec
-
-INSERT INTO appointment_clients (appointment_id, client_id)
-SELECT
-    $1, -- The single appointment_id
-    unnest($2::UUID[])
+const addEventClientAttendee = `-- name: AddEventClientAttendee :exec
+INSERT INTO calendar_event_attendees (event_id, client_id)
+VALUES ($1, $2)
 `
 
-type BulkAddAppointmentClientsParams struct {
-	AppointmentID uuid.UUID   `json:"appointment_id"`
-	ClientIds     []uuid.UUID `json:"client_ids"`
+type AddEventClientAttendeeParams struct {
+	EventID  uuid.UUID  `json:"event_id"`
+	ClientID *uuid.UUID `json:"client_id"`
 }
 
-// The array of employee_id
-func (q *Queries) BulkAddAppointmentClients(ctx context.Context, arg BulkAddAppointmentClientsParams) error {
-	_, err := q.db.Exec(ctx, bulkAddAppointmentClients, arg.AppointmentID, arg.ClientIds)
+func (q *Queries) AddEventClientAttendee(ctx context.Context, arg AddEventClientAttendeeParams) error {
+	_, err := q.db.Exec(ctx, addEventClientAttendee, arg.EventID, arg.ClientID)
 	return err
 }
 
-const bulkAddAppointmentParticipants = `-- name: BulkAddAppointmentParticipants :exec
-INSERT INTO appointment_participants (appointment_id, employee_id)
-SELECT
-    $1, -- The single appointment_id
-    unnest($2::UUID[])
+const addEventClientAttendeesBatch = `-- name: AddEventClientAttendeesBatch :exec
+INSERT INTO calendar_event_attendees (event_id, client_id)
+SELECT $1, unnest($2::uuid[])
+ON CONFLICT (event_id, client_id) DO NOTHING
 `
 
-type BulkAddAppointmentParticipantsParams struct {
-	AppointmentID uuid.UUID   `json:"appointment_id"`
-	EmployeeIds   []uuid.UUID `json:"employee_ids"`
+type AddEventClientAttendeesBatchParams struct {
+	EventID   uuid.UUID   `json:"event_id"`
+	ClientIds []uuid.UUID `json:"client_ids"`
 }
 
-func (q *Queries) BulkAddAppointmentParticipants(ctx context.Context, arg BulkAddAppointmentParticipantsParams) error {
-	_, err := q.db.Exec(ctx, bulkAddAppointmentParticipants, arg.AppointmentID, arg.EmployeeIds)
+func (q *Queries) AddEventClientAttendeesBatch(ctx context.Context, arg AddEventClientAttendeesBatchParams) error {
+	_, err := q.db.Exec(ctx, addEventClientAttendeesBatch, arg.EventID, arg.ClientIds)
 	return err
 }
 
-const confirmAppointment = `-- name: ConfirmAppointment :exec
-UPDATE scheduled_appointments
-SET
-    status = 'CONFIRMED',
-    is_confirmed = true,
-    confirmed_by_employee_id = $2,
-    confirmed_at = NOW()
-WHERE id = $1
+const addEventEmployeeAttendee = `-- name: AddEventEmployeeAttendee :exec
+INSERT INTO calendar_event_attendees (event_id, employee_id)
+VALUES ($1, $2)
 `
 
-type ConfirmAppointmentParams struct {
-	ID         uuid.UUID  `json:"id"`
+type AddEventEmployeeAttendeeParams struct {
+	EventID    uuid.UUID  `json:"event_id"`
 	EmployeeID *uuid.UUID `json:"employee_id"`
 }
 
-func (q *Queries) ConfirmAppointment(ctx context.Context, arg ConfirmAppointmentParams) error {
-	_, err := q.db.Exec(ctx, confirmAppointment, arg.ID, arg.EmployeeID)
+func (q *Queries) AddEventEmployeeAttendee(ctx context.Context, arg AddEventEmployeeAttendeeParams) error {
+	_, err := q.db.Exec(ctx, addEventEmployeeAttendee, arg.EventID, arg.EmployeeID)
 	return err
 }
 
-const createAppointment = `-- name: CreateAppointment :one
-INSERT INTO scheduled_appointments (
-    creator_employee_id,
-    start_time,
-    end_time,
-    location,
-    color,
-    description
-) VALUES (
-    $1, $2, $3, $4, $5, $6
-) RETURNING id, appointment_templates_id, creator_employee_id, start_time, end_time, location, description, status, color, is_confirmed, confirmed_by_employee_id, confirmed_at, created_at, updated_at
+const addEventEmployeeAttendeesBatch = `-- name: AddEventEmployeeAttendeesBatch :exec
+INSERT INTO calendar_event_attendees (event_id, employee_id)
+SELECT $1, unnest($2::uuid[])
+ON CONFLICT (event_id, employee_id) DO NOTHING
 `
 
-type CreateAppointmentParams struct {
-	CreatorEmployeeID *uuid.UUID       `json:"creator_employee_id"`
-	StartTime         pgtype.Timestamp `json:"start_time"`
-	EndTime           pgtype.Timestamp `json:"end_time"`
-	Location          *string          `json:"location"`
-	Color             *string          `json:"color"`
-	Description       *string          `json:"description"`
+type AddEventEmployeeAttendeesBatchParams struct {
+	EventID     uuid.UUID   `json:"event_id"`
+	EmployeeIds []uuid.UUID `json:"employee_ids"`
 }
 
-func (q *Queries) CreateAppointment(ctx context.Context, arg CreateAppointmentParams) (ScheduledAppointment, error) {
-	row := q.db.QueryRow(ctx, createAppointment,
-		arg.CreatorEmployeeID,
-		arg.StartTime,
-		arg.EndTime,
-		arg.Location,
-		arg.Color,
-		arg.Description,
-	)
-	var i ScheduledAppointment
-	err := row.Scan(
-		&i.ID,
-		&i.AppointmentTemplatesID,
-		&i.CreatorEmployeeID,
-		&i.StartTime,
-		&i.EndTime,
-		&i.Location,
-		&i.Description,
-		&i.Status,
-		&i.Color,
-		&i.IsConfirmed,
-		&i.ConfirmedByEmployeeID,
-		&i.ConfirmedAt,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
+func (q *Queries) AddEventEmployeeAttendeesBatch(ctx context.Context, arg AddEventEmployeeAttendeesBatchParams) error {
+	_, err := q.db.Exec(ctx, addEventEmployeeAttendeesBatch, arg.EventID, arg.EmployeeIds)
+	return err
 }
 
-const createAppointmentTemplate = `-- name: CreateAppointmentTemplate :one
-INSERT INTO appointment_templates (
-    creator_employee_id,
-    start_time,
-    end_time,
-    location,
+const addEventReminder = `-- name: AddEventReminder :exec
+INSERT INTO calendar_event_reminders (event_id, channel, minutes_before, remind_at)
+VALUES ($1, 'in_app', $2, $3)
+`
+
+type AddEventReminderParams struct {
+	EventID       uuid.UUID          `json:"event_id"`
+	MinutesBefore *int32             `json:"minutes_before"`
+	RemindAt      pgtype.Timestamptz `json:"remind_at"`
+}
+
+func (q *Queries) AddEventReminder(ctx context.Context, arg AddEventReminderParams) error {
+	_, err := q.db.Exec(ctx, addEventReminder, arg.EventID, arg.MinutesBefore, arg.RemindAt)
+	return err
+}
+
+const cancelCalendarEvent = `-- name: CancelCalendarEvent :exec
+UPDATE calendar_events
+SET status = 'cancelled', updated_at = now()
+WHERE id = $1
+`
+
+func (q *Queries) CancelCalendarEvent(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.Exec(ctx, cancelCalendarEvent, id)
+	return err
+}
+
+const createCalendarEvent = `-- name: CreateCalendarEvent :one
+INSERT INTO calendar_events (
+    organizer_employee_id,
+    created_by_employee_id,
+    kind,
+    status,
+    title,
     description,
+    location,
     color,
-    recurrence_type,
-    recurrence_interval,
-    recurrence_end_date
+    start_at,
+    end_at,
+    timezone,
+    rrule,
+    recurring_event_id,
+    recurrence_id
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9
-) RETURNING id, creator_employee_id, start_time, end_time, location, description, color, recurrence_type, recurrence_interval, recurrence_end_date, created_at, updated_at
+    $1,
+    $2,
+    $3,
+    $4,
+    $5,
+    $6,
+    $7,
+    $8,
+    $9,
+    $10,
+    $11,
+    $12,
+    $13,
+    $14
+)
+RETURNING id, organizer_employee_id, created_by_employee_id, kind, status, title, description, location, color, start_at, end_at, timezone, rrule, recurring_event_id, recurrence_id, created_at, updated_at
 `
 
-type CreateAppointmentTemplateParams struct {
-	CreatorEmployeeID  uuid.UUID          `json:"creator_employee_id"`
-	StartTime          pgtype.Timestamp   `json:"start_time"`
-	EndTime            pgtype.Timestamp   `json:"end_time"`
-	Location           *string            `json:"location"`
-	Description        *string            `json:"description"`
-	Color              *string            `json:"color"`
-	RecurrenceType     RecurrenceTypeEnum `json:"recurrence_type"`
-	RecurrenceInterval *int32             `json:"recurrence_interval"`
-	RecurrenceEndDate  pgtype.Date        `json:"recurrence_end_date"`
+type CreateCalendarEventParams struct {
+	OrganizerEmployeeID uuid.UUID               `json:"organizer_employee_id"`
+	CreatedByEmployeeID uuid.UUID               `json:"created_by_employee_id"`
+	Kind                CalendarEventKindEnum   `json:"kind"`
+	Status              CalendarEventStatusEnum `json:"status"`
+	Title               string                  `json:"title"`
+	Description         *string                 `json:"description"`
+	Location            *string                 `json:"location"`
+	Color               *string                 `json:"color"`
+	StartAt             pgtype.Timestamptz      `json:"start_at"`
+	EndAt               pgtype.Timestamptz      `json:"end_at"`
+	Timezone            string                  `json:"timezone"`
+	Rrule               *string                 `json:"rrule"`
+	RecurringEventID    *uuid.UUID              `json:"recurring_event_id"`
+	RecurrenceID        pgtype.Timestamptz      `json:"recurrence_id"`
 }
 
-func (q *Queries) CreateAppointmentTemplate(ctx context.Context, arg CreateAppointmentTemplateParams) (AppointmentTemplate, error) {
-	row := q.db.QueryRow(ctx, createAppointmentTemplate,
-		arg.CreatorEmployeeID,
-		arg.StartTime,
-		arg.EndTime,
-		arg.Location,
+func (q *Queries) CreateCalendarEvent(ctx context.Context, arg CreateCalendarEventParams) (CalendarEvent, error) {
+	row := q.db.QueryRow(ctx, createCalendarEvent,
+		arg.OrganizerEmployeeID,
+		arg.CreatedByEmployeeID,
+		arg.Kind,
+		arg.Status,
+		arg.Title,
 		arg.Description,
+		arg.Location,
 		arg.Color,
-		arg.RecurrenceType,
-		arg.RecurrenceInterval,
-		arg.RecurrenceEndDate,
+		arg.StartAt,
+		arg.EndAt,
+		arg.Timezone,
+		arg.Rrule,
+		arg.RecurringEventID,
+		arg.RecurrenceID,
 	)
-	var i AppointmentTemplate
+	var i CalendarEvent
 	err := row.Scan(
 		&i.ID,
-		&i.CreatorEmployeeID,
-		&i.StartTime,
-		&i.EndTime,
-		&i.Location,
-		&i.Description,
-		&i.Color,
-		&i.RecurrenceType,
-		&i.RecurrenceInterval,
-		&i.RecurrenceEndDate,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
-}
-
-const deleteAppointment = `-- name: DeleteAppointment :exec
-DELETE FROM scheduled_appointments
-WHERE id = $1
-`
-
-func (q *Queries) DeleteAppointment(ctx context.Context, id uuid.UUID) error {
-	_, err := q.db.Exec(ctx, deleteAppointment, id)
-	return err
-}
-
-const deleteAppointmentClients = `-- name: DeleteAppointmentClients :exec
-DELETE FROM appointment_clients
-WHERE appointment_id = $1
-`
-
-func (q *Queries) DeleteAppointmentClients(ctx context.Context, appointmentID uuid.UUID) error {
-	_, err := q.db.Exec(ctx, deleteAppointmentClients, appointmentID)
-	return err
-}
-
-const deleteAppointmentParticipants = `-- name: DeleteAppointmentParticipants :exec
-DELETE FROM appointment_participants
-WHERE appointment_id = $1
-`
-
-func (q *Queries) DeleteAppointmentParticipants(ctx context.Context, appointmentID uuid.UUID) error {
-	_, err := q.db.Exec(ctx, deleteAppointmentParticipants, appointmentID)
-	return err
-}
-
-const getAppointmentClients = `-- name: GetAppointmentClients :many
-
-
-
-SELECT
-    ac.appointment_id,
-    cd.id AS client_id,
-    cd.first_name,
-    cd.last_name
-FROM
-    appointment_clients ac
-JOIN
-    client_details cd ON ac.client_id = cd.id
-WHERE
-    ac.appointment_id = ANY($1::uuid[]) -- Filter by appointment ID
-ORDER BY
-    cd.last_name, cd.first_name
-`
-
-type GetAppointmentClientsRow struct {
-	AppointmentID uuid.UUID `json:"appointment_id"`
-	ClientID      uuid.UUID `json:"client_id"`
-	FirstName     string    `json:"first_name"`
-	LastName      string    `json:"last_name"`
-}
-
-// Optional ordering
-func (q *Queries) GetAppointmentClients(ctx context.Context, appointmentIds []uuid.UUID) ([]GetAppointmentClientsRow, error) {
-	rows, err := q.db.Query(ctx, getAppointmentClients, appointmentIds)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []GetAppointmentClientsRow{}
-	for rows.Next() {
-		var i GetAppointmentClientsRow
-		if err := rows.Scan(
-			&i.AppointmentID,
-			&i.ClientID,
-			&i.FirstName,
-			&i.LastName,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const getAppointmentParticipants = `-- name: GetAppointmentParticipants :many
-SELECT
-    ap.appointment_id,
-    ep.id AS employee_id,
-    ep.first_name,
-    ep.last_name
-FROM
-    appointment_participants ap
-JOIN
-    employee_profile ep ON ap.employee_id = ep.id
-WHERE
-    ap.appointment_id = ANY($1::uuid[]) -- Filter by appointment ID
-ORDER BY
-    ep.last_name, ep.first_name
-`
-
-type GetAppointmentParticipantsRow struct {
-	AppointmentID uuid.UUID `json:"appointment_id"`
-	EmployeeID    uuid.UUID `json:"employee_id"`
-	FirstName     string    `json:"first_name"`
-	LastName      string    `json:"last_name"`
-}
-
-func (q *Queries) GetAppointmentParticipants(ctx context.Context, appointmentIds []uuid.UUID) ([]GetAppointmentParticipantsRow, error) {
-	rows, err := q.db.Query(ctx, getAppointmentParticipants, appointmentIds)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []GetAppointmentParticipantsRow{}
-	for rows.Next() {
-		var i GetAppointmentParticipantsRow
-		if err := rows.Scan(
-			&i.AppointmentID,
-			&i.EmployeeID,
-			&i.FirstName,
-			&i.LastName,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const getAppointmentTemplate = `-- name: GetAppointmentTemplate :one
-
-
-
-
-SELECT id, creator_employee_id, start_time, end_time, location, description, color, recurrence_type, recurrence_interval, recurrence_end_date, created_at, updated_at FROM appointment_templates
-WHERE id = $1
-LIMIT 1
-`
-
-// The array of client_ids
-func (q *Queries) GetAppointmentTemplate(ctx context.Context, id uuid.UUID) (AppointmentTemplate, error) {
-	row := q.db.QueryRow(ctx, getAppointmentTemplate, id)
-	var i AppointmentTemplate
-	err := row.Scan(
-		&i.ID,
-		&i.CreatorEmployeeID,
-		&i.StartTime,
-		&i.EndTime,
-		&i.Location,
-		&i.Description,
-		&i.Color,
-		&i.RecurrenceType,
-		&i.RecurrenceInterval,
-		&i.RecurrenceEndDate,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
-}
-
-const getScheduledAppointmentByID = `-- name: GetScheduledAppointmentByID :one
-SELECT
-    sa.id,
-    sa.appointment_templates_id,
-    sa.creator_employee_id,
-    creator.first_name AS creator_first_name, -- Alias creator details
-    creator.last_name AS creator_last_name,   -- Alias creator details
-    sa.start_time,
-    sa.end_time,
-    sa.location,
-    sa.description,
-    sa.color,
-    sa.status,
-    sa.is_confirmed,
-    sa.confirmed_by_employee_id,
-    confirmer.first_name AS confirmer_first_name, -- Alias confirmer details
-    confirmer.last_name AS confirmer_last_name,   -- Alias confirmer details
-    sa.confirmed_at,
-    sa.created_at,
-    sa.updated_at
-FROM
-    scheduled_appointments sa
-LEFT JOIN
-    employee_profile creator ON sa.creator_employee_id = creator.id -- Join for creator
-LEFT JOIN
-    employee_profile confirmer ON sa.confirmed_by_employee_id = confirmer.id -- Join for confirmer
-WHERE
-    sa.id = $1 -- Filter by appointment ID
-LIMIT 1
-`
-
-type GetScheduledAppointmentByIDRow struct {
-	ID                     uuid.UUID             `json:"id"`
-	AppointmentTemplatesID *uuid.UUID            `json:"appointment_templates_id"`
-	CreatorEmployeeID      *uuid.UUID            `json:"creator_employee_id"`
-	CreatorFirstName       *string               `json:"creator_first_name"`
-	CreatorLastName        *string               `json:"creator_last_name"`
-	StartTime              pgtype.Timestamp      `json:"start_time"`
-	EndTime                pgtype.Timestamp      `json:"end_time"`
-	Location               *string               `json:"location"`
-	Description            *string               `json:"description"`
-	Color                  *string               `json:"color"`
-	Status                 AppointmentStatusEnum `json:"status"`
-	IsConfirmed            bool                  `json:"is_confirmed"`
-	ConfirmedByEmployeeID  *uuid.UUID            `json:"confirmed_by_employee_id"`
-	ConfirmerFirstName     *string               `json:"confirmer_first_name"`
-	ConfirmerLastName      *string               `json:"confirmer_last_name"`
-	ConfirmedAt            pgtype.Timestamp      `json:"confirmed_at"`
-	CreatedAt              pgtype.Timestamp      `json:"created_at"`
-	UpdatedAt              pgtype.Timestamp      `json:"updated_at"`
-}
-
-func (q *Queries) GetScheduledAppointmentByID(ctx context.Context, id uuid.UUID) (GetScheduledAppointmentByIDRow, error) {
-	row := q.db.QueryRow(ctx, getScheduledAppointmentByID, id)
-	var i GetScheduledAppointmentByIDRow
-	err := row.Scan(
-		&i.ID,
-		&i.AppointmentTemplatesID,
-		&i.CreatorEmployeeID,
-		&i.CreatorFirstName,
-		&i.CreatorLastName,
-		&i.StartTime,
-		&i.EndTime,
-		&i.Location,
-		&i.Description,
-		&i.Color,
+		&i.OrganizerEmployeeID,
+		&i.CreatedByEmployeeID,
+		&i.Kind,
 		&i.Status,
-		&i.IsConfirmed,
-		&i.ConfirmedByEmployeeID,
-		&i.ConfirmerFirstName,
-		&i.ConfirmerLastName,
-		&i.ConfirmedAt,
+		&i.Title,
+		&i.Description,
+		&i.Location,
+		&i.Color,
+		&i.StartAt,
+		&i.EndAt,
+		&i.Timezone,
+		&i.Rrule,
+		&i.RecurringEventID,
+		&i.RecurrenceID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
 	return i, err
+}
+
+const deleteAttendeesByEventID = `-- name: DeleteAttendeesByEventID :exec
+DELETE FROM calendar_event_attendees
+WHERE event_id = $1
+`
+
+func (q *Queries) DeleteAttendeesByEventID(ctx context.Context, eventID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteAttendeesByEventID, eventID)
+	return err
+}
+
+const deleteRemindersByEventID = `-- name: DeleteRemindersByEventID :exec
+DELETE FROM calendar_event_reminders
+WHERE event_id = $1
+`
+
+func (q *Queries) DeleteRemindersByEventID(ctx context.Context, eventID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteRemindersByEventID, eventID)
+	return err
+}
+
+const getVisibleEventByID = `-- name: GetVisibleEventByID :one
+SELECT ce.id, ce.organizer_employee_id, ce.created_by_employee_id, ce.kind, ce.status, ce.title, ce.description, ce.location, ce.color, ce.start_at, ce.end_at, ce.timezone, ce.rrule, ce.recurring_event_id, ce.recurrence_id, ce.created_at, ce.updated_at
+FROM calendar_events ce
+WHERE ce.id = $1
+  AND (
+      ce.organizer_employee_id = $2
+      OR EXISTS (
+          SELECT 1
+          FROM calendar_event_attendees cea
+          WHERE cea.event_id = ce.id
+            AND cea.employee_id = $2
+      )
+  )
+LIMIT 1
+`
+
+type GetVisibleEventByIDParams struct {
+	ID         uuid.UUID `json:"id"`
+	EmployeeID uuid.UUID `json:"employee_id"`
+}
+
+func (q *Queries) GetVisibleEventByID(ctx context.Context, arg GetVisibleEventByIDParams) (CalendarEvent, error) {
+	row := q.db.QueryRow(ctx, getVisibleEventByID, arg.ID, arg.EmployeeID)
+	var i CalendarEvent
+	err := row.Scan(
+		&i.ID,
+		&i.OrganizerEmployeeID,
+		&i.CreatedByEmployeeID,
+		&i.Kind,
+		&i.Status,
+		&i.Title,
+		&i.Description,
+		&i.Location,
+		&i.Color,
+		&i.StartAt,
+		&i.EndAt,
+		&i.Timezone,
+		&i.Rrule,
+		&i.RecurringEventID,
+		&i.RecurrenceID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const listAttendeesByEventIDs = `-- name: ListAttendeesByEventIDs :many
+SELECT event_id, employee_id, client_id
+FROM calendar_event_attendees
+WHERE event_id = ANY($1::uuid[])
+`
+
+type ListAttendeesByEventIDsRow struct {
+	EventID    uuid.UUID  `json:"event_id"`
+	EmployeeID *uuid.UUID `json:"employee_id"`
+	ClientID   *uuid.UUID `json:"client_id"`
+}
+
+func (q *Queries) ListAttendeesByEventIDs(ctx context.Context, eventIds []uuid.UUID) ([]ListAttendeesByEventIDsRow, error) {
+	rows, err := q.db.Query(ctx, listAttendeesByEventIDs, eventIds)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListAttendeesByEventIDsRow{}
+	for rows.Next() {
+		var i ListAttendeesByEventIDsRow
+		if err := rows.Scan(&i.EventID, &i.EmployeeID, &i.ClientID); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listClientAppointmentsInRange = `-- name: ListClientAppointmentsInRange :many
 SELECT
-    sa.id AS appointment_id,
-    sa.start_time,
-    sa.end_time,
-    sa.location,
-    sa.description,
-    sa.color,
-    sa.status,
-    sa.creator_employee_id, -- Include creator info if needed
-    sa.created_at
-    -- No 'involvement_type' needed as clients are always participants in this context
+    ce.id AS appointment_id,
+    ce.start_at AS start_time,
+    ce.end_at AS end_time,
+    ce.location,
+    ce.description,
+    ce.color,
+    ce.status,
+    ce.organizer_employee_id AS creator_employee_id,
+    ce.created_at
 FROM
-    scheduled_appointments sa
+    calendar_events ce
 JOIN
-    appointment_clients ac ON sa.id = ac.appointment_id
+    calendar_event_attendees cea ON ce.id = cea.event_id
 WHERE
-    ac.client_id = $1
-    -- Check for overlap: Appointment starts before the range ends AND appointment ends after the range starts
-    AND sa.start_time < $2
-    AND sa.end_time > $3
-
+    ce.kind = 'appointment'
+    AND ce.status <> 'cancelled'
+    AND cea.client_id = $1
+    AND ce.start_at < $2
+    AND ce.end_at > $3
 ORDER BY
-    sa.start_time
+    ce.start_at
 `
 
 type ListClientAppointmentsInRangeParams struct {
-	ClientID  uuid.UUID        `json:"client_id"`
-	EndDate   pgtype.Timestamp `json:"end_date"`
-	StartDate pgtype.Timestamp `json:"start_date"`
+	ClientID  *uuid.UUID         `json:"client_id"`
+	EndDate   pgtype.Timestamptz `json:"end_date"`
+	StartDate pgtype.Timestamptz `json:"start_date"`
 }
 
 type ListClientAppointmentsInRangeRow struct {
-	AppointmentID     uuid.UUID             `json:"appointment_id"`
-	StartTime         pgtype.Timestamp      `json:"start_time"`
-	EndTime           pgtype.Timestamp      `json:"end_time"`
-	Location          *string               `json:"location"`
-	Description       *string               `json:"description"`
-	Color             *string               `json:"color"`
-	Status            AppointmentStatusEnum `json:"status"`
-	CreatorEmployeeID *uuid.UUID            `json:"creator_employee_id"`
-	CreatedAt         pgtype.Timestamp      `json:"created_at"`
+	AppointmentID     uuid.UUID               `json:"appointment_id"`
+	StartTime         pgtype.Timestamptz      `json:"start_time"`
+	EndTime           pgtype.Timestamptz      `json:"end_time"`
+	Location          *string                 `json:"location"`
+	Description       *string                 `json:"description"`
+	Color             *string                 `json:"color"`
+	Status            CalendarEventStatusEnum `json:"status"`
+	CreatorEmployeeID uuid.UUID               `json:"creator_employee_id"`
+	CreatedAt         pgtype.Timestamptz      `json:"created_at"`
 }
 
-// Define the parameters for the query
-// client_id: The ID of the client whose appointments are being queried.
-// start_date: The beginning of the time range to search within (inclusive).
-// end_date: The end of the time range to search within (exclusive).
-// Order the results by start time
 func (q *Queries) ListClientAppointmentsInRange(ctx context.Context, arg ListClientAppointmentsInRangeParams) ([]ListClientAppointmentsInRangeRow, error) {
 	rows, err := q.db.Query(ctx, listClientAppointmentsInRange, arg.ClientID, arg.EndDate, arg.StartDate)
 	if err != nil {
@@ -497,52 +366,47 @@ func (q *Queries) ListClientAppointmentsInRange(ctx context.Context, arg ListCli
 
 const listClientAppointmentsStartingInRange = `-- name: ListClientAppointmentsStartingInRange :many
 SELECT
-    sa.id AS appointment_id,
-    sa.start_time,
-    sa.end_time,
-    sa.location,
-    sa.description,
-    sa.color,
-    sa.status,
-    sa.creator_employee_id, -- Include creator info if needed
-    sa.created_at
+    ce.id AS appointment_id,
+    ce.start_at AS start_time,
+    ce.end_at AS end_time,
+    ce.location,
+    ce.description,
+    ce.color,
+    ce.status,
+    ce.organizer_employee_id AS creator_employee_id,
+    ce.created_at
 FROM
-    scheduled_appointments sa
+    calendar_events ce
 JOIN
-    appointment_clients ac ON sa.id = ac.appointment_id
+    calendar_event_attendees cea ON ce.id = cea.event_id
 WHERE
-    ac.client_id = $1
-    -- Only include appointments that START within the specified range
-    AND sa.start_time >= $2
-    AND sa.start_time < $3
-
+    ce.kind = 'appointment'
+    AND ce.status <> 'cancelled'
+    AND cea.client_id = $1
+    AND ce.start_at >= $2
+    AND ce.start_at < $3
 ORDER BY
-    sa.start_time
+    ce.start_at
 `
 
 type ListClientAppointmentsStartingInRangeParams struct {
-	ClientID  uuid.UUID        `json:"client_id"`
-	StartDate pgtype.Timestamp `json:"start_date"`
-	EndDate   pgtype.Timestamp `json:"end_date"`
+	ClientID  *uuid.UUID         `json:"client_id"`
+	StartDate pgtype.Timestamptz `json:"start_date"`
+	EndDate   pgtype.Timestamptz `json:"end_date"`
 }
 
 type ListClientAppointmentsStartingInRangeRow struct {
-	AppointmentID     uuid.UUID             `json:"appointment_id"`
-	StartTime         pgtype.Timestamp      `json:"start_time"`
-	EndTime           pgtype.Timestamp      `json:"end_time"`
-	Location          *string               `json:"location"`
-	Description       *string               `json:"description"`
-	Color             *string               `json:"color"`
-	Status            AppointmentStatusEnum `json:"status"`
-	CreatorEmployeeID *uuid.UUID            `json:"creator_employee_id"`
-	CreatedAt         pgtype.Timestamp      `json:"created_at"`
+	AppointmentID     uuid.UUID               `json:"appointment_id"`
+	StartTime         pgtype.Timestamptz      `json:"start_time"`
+	EndTime           pgtype.Timestamptz      `json:"end_time"`
+	Location          *string                 `json:"location"`
+	Description       *string                 `json:"description"`
+	Color             *string                 `json:"color"`
+	Status            CalendarEventStatusEnum `json:"status"`
+	CreatorEmployeeID uuid.UUID               `json:"creator_employee_id"`
+	CreatedAt         pgtype.Timestamptz      `json:"created_at"`
 }
 
-// Define the parameters for the query
-// client_id: The ID of the client whose appointments are being queried.
-// start_date: The beginning of the time range to search within (inclusive).
-// end_date: The end of the time range to search within (exclusive).
-// Order the results by start time
 func (q *Queries) ListClientAppointmentsStartingInRange(ctx context.Context, arg ListClientAppointmentsStartingInRangeParams) ([]ListClientAppointmentsStartingInRangeRow, error) {
 	rows, err := q.db.Query(ctx, listClientAppointmentsStartingInRange, arg.ClientID, arg.StartDate, arg.EndDate)
 	if err != nil {
@@ -575,78 +439,54 @@ func (q *Queries) ListClientAppointmentsStartingInRange(ctx context.Context, arg
 
 const listEmployeeAppointmentsInRange = `-- name: ListEmployeeAppointmentsInRange :many
 SELECT
-    sa.id AS appointment_id,
-    sa.start_time,
-    sa.end_time,
-    sa.location,
-    sa.description,
-    sa.color,
-    sa.status,
-    sa.is_confirmed,
-    sa.creator_employee_id,
-    sa.created_at,
-    'CREATOR' AS involvement_type -- Indicate the employee created this appointment
+    ce.id AS appointment_id,
+    ce.start_at AS start_time,
+    ce.end_at AS end_time,
+    ce.location,
+    ce.description,
+    ce.color,
+    ce.status,
+    FALSE AS is_confirmed,
+    ce.organizer_employee_id AS creator_employee_id,
+    ce.created_at,
+    CASE
+        WHEN ce.organizer_employee_id = $1 THEN 'CREATOR'
+        ELSE 'PARTICIPANT'
+    END AS involvement_type
 FROM
-    scheduled_appointments sa
+    calendar_events ce
+LEFT JOIN
+    calendar_event_attendees cea ON ce.id = cea.event_id
 WHERE
-    sa.creator_employee_id = $1
-    -- Check for overlap: Appointment starts before the range ends AND appointment ends after the range starts
-    AND sa.start_time < $2
-    AND sa.end_time > $3
-
-UNION -- Combine with participant appointments, removing duplicates
-
-SELECT
-    sa.id AS appointment_id,
-    sa.start_time,
-    sa.end_time,
-    sa.location,
-    sa.description,
-    sa.color,
-    sa.status,
-    sa.is_confirmed,
-    sa.creator_employee_id, -- Still show who created it
-    sa.created_at,
-    'PARTICIPANT' AS involvement_type -- Indicate the employee is a participant
-FROM
-    scheduled_appointments sa
-JOIN
-    appointment_participants ap ON sa.id = ap.appointment_id
-WHERE
-    ap.employee_id = $1
-    -- Check for overlap: Appointment starts before the range ends AND appointment ends after the range starts
-    AND sa.start_time < $2
-    AND sa.end_time > $3
-
+    ce.kind = 'appointment'
+    AND ce.status <> 'cancelled'
+    AND (ce.organizer_employee_id = $1 OR cea.employee_id = $1)
+    AND ce.start_at < $2
+    AND ce.end_at > $3
 ORDER BY
-    start_time
+    ce.start_at
 `
 
 type ListEmployeeAppointmentsInRangeParams struct {
-	EmployeeID *uuid.UUID       `json:"employee_id"`
-	EndDate    pgtype.Timestamp `json:"end_date"`
-	StartDate  pgtype.Timestamp `json:"start_date"`
+	EmployeeID uuid.UUID          `json:"employee_id"`
+	EndDate    pgtype.Timestamptz `json:"end_date"`
+	StartDate  pgtype.Timestamptz `json:"start_date"`
 }
 
 type ListEmployeeAppointmentsInRangeRow struct {
-	AppointmentID     uuid.UUID             `json:"appointment_id"`
-	StartTime         pgtype.Timestamp      `json:"start_time"`
-	EndTime           pgtype.Timestamp      `json:"end_time"`
-	Location          *string               `json:"location"`
-	Description       *string               `json:"description"`
-	Color             *string               `json:"color"`
-	Status            AppointmentStatusEnum `json:"status"`
-	IsConfirmed       bool                  `json:"is_confirmed"`
-	CreatorEmployeeID *uuid.UUID            `json:"creator_employee_id"`
-	CreatedAt         pgtype.Timestamp      `json:"created_at"`
-	InvolvementType   string                `json:"involvement_type"`
+	AppointmentID     uuid.UUID               `json:"appointment_id"`
+	StartTime         pgtype.Timestamptz      `json:"start_time"`
+	EndTime           pgtype.Timestamptz      `json:"end_time"`
+	Location          *string                 `json:"location"`
+	Description       *string                 `json:"description"`
+	Color             *string                 `json:"color"`
+	Status            CalendarEventStatusEnum `json:"status"`
+	IsConfirmed       bool                    `json:"is_confirmed"`
+	CreatorEmployeeID uuid.UUID               `json:"creator_employee_id"`
+	CreatedAt         pgtype.Timestamptz      `json:"created_at"`
+	InvolvementType   string                  `json:"involvement_type"`
 }
 
-// Define the parameters for the query
-// employee_id: The ID of the employee whose appointments are being queried.
-// start_date: The beginning of the time range to search within.
-// end_date: The end of the time range to search within.
-// Order the combined results by start time
 func (q *Queries) ListEmployeeAppointmentsInRange(ctx context.Context, arg ListEmployeeAppointmentsInRangeParams) ([]ListEmployeeAppointmentsInRangeRow, error) {
 	rows, err := q.db.Query(ctx, listEmployeeAppointmentsInRange, arg.EmployeeID, arg.EndDate, arg.StartDate)
 	if err != nil {
@@ -679,51 +519,298 @@ func (q *Queries) ListEmployeeAppointmentsInRange(ctx context.Context, arg ListE
 	return items, nil
 }
 
-const updateAppointment = `-- name: UpdateAppointment :one
-UPDATE scheduled_appointments
-SET
-    start_time = COALESCE($2, start_time),
-    end_time = COALESCE($3, end_time),
-    location = COALESCE ($4, location),
-    description = COALESCE ($5, description),
-    color = COALESCE ($6, color),
-    updated_at = NOW()
-WHERE id = $1
-RETURNING id, appointment_templates_id, creator_employee_id, start_time, end_time, location, description, status, color, is_confirmed, confirmed_by_employee_id, confirmed_at, created_at, updated_at
+const listRemindersByEventID = `-- name: ListRemindersByEventID :many
+SELECT id, minutes_before, remind_at
+FROM calendar_event_reminders
+WHERE event_id = $1
+ORDER BY created_at ASC
 `
 
-type UpdateAppointmentParams struct {
-	ID          uuid.UUID        `json:"id"`
-	StartTime   pgtype.Timestamp `json:"start_time"`
-	EndTime     pgtype.Timestamp `json:"end_time"`
-	Location    *string          `json:"location"`
-	Description *string          `json:"description"`
-	Color       *string          `json:"color"`
+type ListRemindersByEventIDRow struct {
+	ID            uuid.UUID          `json:"id"`
+	MinutesBefore *int32             `json:"minutes_before"`
+	RemindAt      pgtype.Timestamptz `json:"remind_at"`
 }
 
-func (q *Queries) UpdateAppointment(ctx context.Context, arg UpdateAppointmentParams) (ScheduledAppointment, error) {
-	row := q.db.QueryRow(ctx, updateAppointment,
-		arg.ID,
-		arg.StartTime,
-		arg.EndTime,
-		arg.Location,
+func (q *Queries) ListRemindersByEventID(ctx context.Context, eventID uuid.UUID) ([]ListRemindersByEventIDRow, error) {
+	rows, err := q.db.Query(ctx, listRemindersByEventID, eventID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListRemindersByEventIDRow{}
+	for rows.Next() {
+		var i ListRemindersByEventIDRow
+		if err := rows.Scan(&i.ID, &i.MinutesBefore, &i.RemindAt); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listSeriesExceptions = `-- name: ListSeriesExceptions :many
+SELECT id, organizer_employee_id, created_by_employee_id, kind, status, title, description, location, color, start_at, end_at, timezone, rrule, recurring_event_id, recurrence_id, created_at, updated_at
+FROM calendar_events
+WHERE recurring_event_id = ANY($1::uuid[])
+`
+
+func (q *Queries) ListSeriesExceptions(ctx context.Context, seriesIds []uuid.UUID) ([]CalendarEvent, error) {
+	rows, err := q.db.Query(ctx, listSeriesExceptions, seriesIds)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []CalendarEvent{}
+	for rows.Next() {
+		var i CalendarEvent
+		if err := rows.Scan(
+			&i.ID,
+			&i.OrganizerEmployeeID,
+			&i.CreatedByEmployeeID,
+			&i.Kind,
+			&i.Status,
+			&i.Title,
+			&i.Description,
+			&i.Location,
+			&i.Color,
+			&i.StartAt,
+			&i.EndAt,
+			&i.Timezone,
+			&i.Rrule,
+			&i.RecurringEventID,
+			&i.RecurrenceID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listVisibleMasterEvents = `-- name: ListVisibleMasterEvents :many
+SELECT ce.id, ce.organizer_employee_id, ce.created_by_employee_id, ce.kind, ce.status, ce.title, ce.description, ce.location, ce.color, ce.start_at, ce.end_at, ce.timezone, ce.rrule, ce.recurring_event_id, ce.recurrence_id, ce.created_at, ce.updated_at
+FROM calendar_events ce
+WHERE ce.recurring_event_id IS NULL
+  AND ce.status <> 'cancelled'
+  AND (
+      ce.organizer_employee_id = $1
+      OR EXISTS (
+          SELECT 1
+          FROM calendar_event_attendees cea
+          WHERE cea.event_id = ce.id
+            AND cea.employee_id = $1
+      )
+  )
+  AND (
+      (ce.rrule IS NULL AND ce.start_at < $2 AND ce.end_at > $3)
+      OR
+      (ce.rrule IS NOT NULL AND ce.start_at < $2)
+  )
+`
+
+type ListVisibleMasterEventsParams struct {
+	EmployeeID uuid.UUID          `json:"employee_id"`
+	EndAt      pgtype.Timestamptz `json:"end_at"`
+	StartAt    pgtype.Timestamptz `json:"start_at"`
+}
+
+func (q *Queries) ListVisibleMasterEvents(ctx context.Context, arg ListVisibleMasterEventsParams) ([]CalendarEvent, error) {
+	rows, err := q.db.Query(ctx, listVisibleMasterEvents, arg.EmployeeID, arg.EndAt, arg.StartAt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []CalendarEvent{}
+	for rows.Next() {
+		var i CalendarEvent
+		if err := rows.Scan(
+			&i.ID,
+			&i.OrganizerEmployeeID,
+			&i.CreatedByEmployeeID,
+			&i.Kind,
+			&i.Status,
+			&i.Title,
+			&i.Description,
+			&i.Location,
+			&i.Color,
+			&i.StartAt,
+			&i.EndAt,
+			&i.Timezone,
+			&i.Rrule,
+			&i.RecurringEventID,
+			&i.RecurrenceID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const updateCalendarEvent = `-- name: UpdateCalendarEvent :exec
+UPDATE calendar_events
+SET
+    title = COALESCE($1, title),
+    description = COALESCE($2, description),
+    location = COALESCE($3, location),
+    color = COALESCE($4, color),
+    start_at = COALESCE($5, start_at),
+    end_at = COALESCE($6, end_at),
+    rrule = CASE
+        WHEN $7::TEXT IS NOT NULL THEN $7
+        ELSE rrule
+    END,
+    updated_at = now()
+WHERE id = $8
+`
+
+type UpdateCalendarEventParams struct {
+	Title       *string            `json:"title"`
+	Description *string            `json:"description"`
+	Location    *string            `json:"location"`
+	Color       *string            `json:"color"`
+	StartAt     pgtype.Timestamptz `json:"start_at"`
+	EndAt       pgtype.Timestamptz `json:"end_at"`
+	Rrule       *string            `json:"rrule"`
+	ID          uuid.UUID          `json:"id"`
+}
+
+func (q *Queries) UpdateCalendarEvent(ctx context.Context, arg UpdateCalendarEventParams) error {
+	_, err := q.db.Exec(ctx, updateCalendarEvent,
+		arg.Title,
 		arg.Description,
+		arg.Location,
 		arg.Color,
+		arg.StartAt,
+		arg.EndAt,
+		arg.Rrule,
+		arg.ID,
 	)
-	var i ScheduledAppointment
+	return err
+}
+
+const updateCalendarEventRRule = `-- name: UpdateCalendarEventRRule :exec
+UPDATE calendar_events
+SET rrule = $1, updated_at = now()
+WHERE id = $2
+`
+
+type UpdateCalendarEventRRuleParams struct {
+	Rrule *string   `json:"rrule"`
+	ID    uuid.UUID `json:"id"`
+}
+
+func (q *Queries) UpdateCalendarEventRRule(ctx context.Context, arg UpdateCalendarEventRRuleParams) error {
+	_, err := q.db.Exec(ctx, updateCalendarEventRRule, arg.Rrule, arg.ID)
+	return err
+}
+
+const upsertCalendarEventOverride = `-- name: UpsertCalendarEventOverride :one
+INSERT INTO calendar_events (
+    organizer_employee_id,
+    created_by_employee_id,
+    kind,
+    status,
+    title,
+    description,
+    location,
+    color,
+    start_at,
+    end_at,
+    timezone,
+    recurring_event_id,
+    recurrence_id
+) VALUES (
+    $1,
+    $2,
+    $3,
+    $4,
+    $5,
+    $6,
+    $7,
+    $8,
+    $9,
+    $10,
+    $11,
+    $12,
+    $13
+)
+ON CONFLICT (recurring_event_id, recurrence_id)
+DO UPDATE SET
+    title = EXCLUDED.title,
+    description = EXCLUDED.description,
+    location = EXCLUDED.location,
+    color = EXCLUDED.color,
+    start_at = EXCLUDED.start_at,
+    end_at = EXCLUDED.end_at,
+    status = EXCLUDED.status,
+    updated_at = now()
+RETURNING id, organizer_employee_id, created_by_employee_id, kind, status, title, description, location, color, start_at, end_at, timezone, rrule, recurring_event_id, recurrence_id, created_at, updated_at
+`
+
+type UpsertCalendarEventOverrideParams struct {
+	OrganizerEmployeeID uuid.UUID               `json:"organizer_employee_id"`
+	CreatedByEmployeeID uuid.UUID               `json:"created_by_employee_id"`
+	Kind                CalendarEventKindEnum   `json:"kind"`
+	Status              CalendarEventStatusEnum `json:"status"`
+	Title               string                  `json:"title"`
+	Description         *string                 `json:"description"`
+	Location            *string                 `json:"location"`
+	Color               *string                 `json:"color"`
+	StartAt             pgtype.Timestamptz      `json:"start_at"`
+	EndAt               pgtype.Timestamptz      `json:"end_at"`
+	Timezone            string                  `json:"timezone"`
+	RecurringEventID    *uuid.UUID              `json:"recurring_event_id"`
+	RecurrenceID        pgtype.Timestamptz      `json:"recurrence_id"`
+}
+
+func (q *Queries) UpsertCalendarEventOverride(ctx context.Context, arg UpsertCalendarEventOverrideParams) (CalendarEvent, error) {
+	row := q.db.QueryRow(ctx, upsertCalendarEventOverride,
+		arg.OrganizerEmployeeID,
+		arg.CreatedByEmployeeID,
+		arg.Kind,
+		arg.Status,
+		arg.Title,
+		arg.Description,
+		arg.Location,
+		arg.Color,
+		arg.StartAt,
+		arg.EndAt,
+		arg.Timezone,
+		arg.RecurringEventID,
+		arg.RecurrenceID,
+	)
+	var i CalendarEvent
 	err := row.Scan(
 		&i.ID,
-		&i.AppointmentTemplatesID,
-		&i.CreatorEmployeeID,
-		&i.StartTime,
-		&i.EndTime,
-		&i.Location,
-		&i.Description,
+		&i.OrganizerEmployeeID,
+		&i.CreatedByEmployeeID,
+		&i.Kind,
 		&i.Status,
+		&i.Title,
+		&i.Description,
+		&i.Location,
 		&i.Color,
-		&i.IsConfirmed,
-		&i.ConfirmedByEmployeeID,
-		&i.ConfirmedAt,
+		&i.StartAt,
+		&i.EndAt,
+		&i.Timezone,
+		&i.Rrule,
+		&i.RecurringEventID,
+		&i.RecurrenceID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)

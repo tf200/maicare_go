@@ -4,24 +4,21 @@
 permissions:
     # Appointments & Cards
     - name: APPOINTMENT.CREATE
-      resource: /appointments
-      method: [POST] # create new appointment
+      resource: /events
+      method: [POST] # create new event
     - name: APPOINTMENT.DELETE
-      resource: /appointments
-      method: [DELETE] # remove appointment
+      resource: /events
+      method: [DELETE] # remove event
     - name: APPOINTMENT.UPDATE
-      resource: /appointments
-      method: [PUT] # edit appointment
+      resource: /events
+      method: [PATCH] # edit event
     - name: APPOINTMENT.VIEW
-      resource: /appointments
-      method: [GET] # list / read appointment(s)
-    - name: APPOINTMENT.CONFIRM
-      resource: /appointments/confirm
-      method: [POST] # confirm appointment (e.g. by client)
+      resource: /events
+      method: [GET, POST] # read/list events
+    - name: APPOINTMENT.VIEW_ALL
+      resource: /events/all
+      method: [POST] # list events for any employee
 
-    - name: APPOINTMENT_CARD.CREATE
-      resource: /appointment_cards
-      method: [POST]
     - name: APPOINTMENT_CARD.DELETE
       resource: /appointment_cards
       method: [DELETE]
@@ -407,8 +404,7 @@ roles:
           - APPOINTMENT.DELETE
           - APPOINTMENT.UPDATE
           - APPOINTMENT.VIEW
-          - APPOINTMENT.CONFIRM
-          - APPOINTMENT_CARD.CREATE
+          - APPOINTMENT.VIEW_ALL
           - APPOINTMENT_CARD.DELETE
           - APPOINTMENT_CARD.UPDATE
           - APPOINTMENT_CARD.VIEW
@@ -523,7 +519,6 @@ roles:
           - APPOINTMENT.DELETE
           - APPOINTMENT.UPDATE
           - APPOINTMENT.VIEW
-          - APPOINTMENT_CARD.CREATE
           - APPOINTMENT_CARD.DELETE
           - APPOINTMENT_CARD.UPDATE
           - APPOINTMENT_CARD.VIEW

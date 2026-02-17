@@ -16,7 +16,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestCreateAppointmentCardApi(t *testing.T) {
+func TestUpsertAppointmentCardApi(t *testing.T) {
 	client := createRandomClientDetails(t)
 	_, user := createRandomEmployee(t)
 
@@ -32,7 +32,7 @@ func TestCreateAppointmentCardApi(t *testing.T) {
 				addAuthorization(t, request, tokenMaker, infra.AuthorizationTypeBearer, user.ID, time.Minute)
 			},
 			buildRequest: func() (*http.Request, error) {
-				appointmentReq := clientp.CreateAppointmentCardRequest{
+				appointmentReq := clientp.UpdateAppointmentCardRequest{
 					GeneralInformation:     []string{"Client is doing well", "No concerns raised"},
 					ImportantContacts:      []string{"Mother - 555-123-4567", "Case Worker - 555-987-6543"},
 					HouseholdInfo:          []string{"Lives with mother and younger sibling", "Stable home environment"},
@@ -48,15 +48,15 @@ func TestCreateAppointmentCardApi(t *testing.T) {
 				data, err := json.Marshal(appointmentReq)
 				require.NoError(t, err)
 
-				url := fmt.Sprintf("/clients/%d/appointment_cards", client.ID)
-				req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(data))
+				url := fmt.Sprintf("/clients/%s/appointment_cards", client.ID)
+				req, err := http.NewRequest(http.MethodPut, url, bytes.NewReader(data))
 				require.NoError(t, err)
 				req.Header.Set("Content-Type", "application/json")
 				return req, nil
 			},
 			checkResponse: func(recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusCreated, recorder.Code)
-				var appointmentCard Response[clientp.CreateAppointmentCardResponse]
+				require.Equal(t, http.StatusOK, recorder.Code)
+				var appointmentCard Response[clientp.UpdateAppointmentCardResponse]
 				err := json.Unmarshal(recorder.Body.Bytes(), &appointmentCard)
 				require.NoError(t, err)
 				require.NotEmpty(t, appointmentCard.Data)
@@ -77,6 +77,28 @@ func TestCreateAppointmentCardApi(t *testing.T) {
 		})
 
 	}
+}
+
+func TestGetAppointmentCardApiWhenMissingReturnsEmpty(t *testing.T) {
+	client := createRandomClientDetails(t)
+	_, user := createRandomEmployee(t)
+
+	url := fmt.Sprintf("/clients/%s/appointment_cards", client.ID)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	require.NoError(t, err)
+	addAuthorization(t, req, testServer.tokenMaker, infra.AuthorizationTypeBearer, user.ID, time.Minute)
+
+	recorder := httptest.NewRecorder()
+	testServer.router.ServeHTTP(recorder, req)
+
+	require.Equal(t, http.StatusOK, recorder.Code)
+
+	var response Response[any]
+	err = json.Unmarshal(recorder.Body.Bytes(), &response)
+	require.NoError(t, err)
+	require.True(t, response.Success)
+	require.Equal(t, "Appointment card not found", response.Message)
+	require.Nil(t, response.Data)
 }
 
 // TODO: Add tests for other API endpoints

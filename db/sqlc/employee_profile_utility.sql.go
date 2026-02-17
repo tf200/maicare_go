@@ -96,6 +96,32 @@ func (q *Queries) ListEmployeesWithContractHours(ctx context.Context, dollar_1 [
 	return items, nil
 }
 
+const listUserIDsByEmployeeIDs = `-- name: ListUserIDsByEmployeeIDs :many
+SELECT user_id
+FROM employee_profile
+WHERE id = ANY($1::uuid[])
+`
+
+func (q *Queries) ListUserIDsByEmployeeIDs(ctx context.Context, dollar_1 []uuid.UUID) ([]uuid.UUID, error) {
+	rows, err := q.db.Query(ctx, listUserIDsByEmployeeIDs, dollar_1)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []uuid.UUID{}
+	for rows.Next() {
+		var user_id uuid.UUID
+		if err := rows.Scan(&user_id); err != nil {
+			return nil, err
+		}
+		items = append(items, user_id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const searchEmployeesByNameOrEmail = `-- name: SearchEmployeesByNameOrEmail :many
 SELECT
     id,

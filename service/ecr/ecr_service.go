@@ -29,6 +29,11 @@ func (s *ecrService) DischargeOverview(ctx *gin.Context, req DischargeOverviewRe
 
 	overviewRes := []DischargeOverviewResponse{}
 	for _, item := range overview {
+		contractStatus := string(item.ContractStatus)
+		var contractStatusPtr *string
+		if contractStatus != "" {
+			contractStatusPtr = &contractStatus
+		}
 		overviewRes = append(overviewRes, DischargeOverviewResponse{
 			ID:                 item.ID,
 			FirstName:          item.FirstName,
@@ -38,7 +43,7 @@ func (s *ecrService) DischargeOverview(ctx *gin.Context, req DischargeOverviewRe
 			StatusChangeReason: item.StatusChangeReason,
 			StatusChangeDate:   item.StatusChangeDate.Time,
 			ContractEndDate:    item.ContractEndDate.Time,
-			ContractStatus:     db.ContractStatusPtrFromEnum(item.ContractStatus),
+			ContractStatus:     contractStatusPtr,
 			DepartureReason:    item.DepartureReason,
 			FollowUpPlan:       item.FollowUpPlan,
 			DischargeType:      item.DischargeType,
@@ -186,7 +191,7 @@ func (s *ecrService) ListLatestPayments(ctx context.Context) ([]ListLatestPaymen
 }
 
 func (s *ecrService) ListUpcomingAppointments(ctx context.Context, employeeID uuid.UUID) ([]ListUpcomingAppointmentsResponse, error) {
-	appointments, err := s.Store.ListUpcomingAppointments(ctx, &employeeID)
+	appointments, err := s.Store.ListUpcomingAppointments(ctx, employeeID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListUpcomingAppointments", "Failed to list upcoming appointments", zap.Error(err))
 		return nil, err

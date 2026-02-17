@@ -55,47 +55,132 @@ func (ns NullAdmissionTypeEnum) Value() (driver.Value, error) {
 	return string(ns.AdmissionTypeEnum), nil
 }
 
-type AppointmentStatusEnum string
+type AttendeeResponseEnum string
 
 const (
-	AppointmentStatusEnumPENDING   AppointmentStatusEnum = "PENDING"
-	AppointmentStatusEnumCONFIRMED AppointmentStatusEnum = "CONFIRMED"
-	AppointmentStatusEnumCANCELLED AppointmentStatusEnum = "CANCELLED"
+	AttendeeResponseEnumNeedsAction AttendeeResponseEnum = "needs_action"
+	AttendeeResponseEnumAccepted    AttendeeResponseEnum = "accepted"
+	AttendeeResponseEnumDeclined    AttendeeResponseEnum = "declined"
+	AttendeeResponseEnumTentative   AttendeeResponseEnum = "tentative"
 )
 
-func (e *AppointmentStatusEnum) Scan(src interface{}) error {
+func (e *AttendeeResponseEnum) Scan(src interface{}) error {
 	switch s := src.(type) {
 	case []byte:
-		*e = AppointmentStatusEnum(s)
+		*e = AttendeeResponseEnum(s)
 	case string:
-		*e = AppointmentStatusEnum(s)
+		*e = AttendeeResponseEnum(s)
 	default:
-		return fmt.Errorf("unsupported scan type for AppointmentStatusEnum: %T", src)
+		return fmt.Errorf("unsupported scan type for AttendeeResponseEnum: %T", src)
 	}
 	return nil
 }
 
-type NullAppointmentStatusEnum struct {
-	AppointmentStatusEnum AppointmentStatusEnum `json:"appointment_status_enum"`
-	Valid                 bool                  `json:"valid"` // Valid is true if AppointmentStatusEnum is not NULL
+type NullAttendeeResponseEnum struct {
+	AttendeeResponseEnum AttendeeResponseEnum `json:"attendee_response_enum"`
+	Valid                bool                 `json:"valid"` // Valid is true if AttendeeResponseEnum is not NULL
 }
 
 // Scan implements the Scanner interface.
-func (ns *NullAppointmentStatusEnum) Scan(value interface{}) error {
+func (ns *NullAttendeeResponseEnum) Scan(value interface{}) error {
 	if value == nil {
-		ns.AppointmentStatusEnum, ns.Valid = "", false
+		ns.AttendeeResponseEnum, ns.Valid = "", false
 		return nil
 	}
 	ns.Valid = true
-	return ns.AppointmentStatusEnum.Scan(value)
+	return ns.AttendeeResponseEnum.Scan(value)
 }
 
 // Value implements the driver Valuer interface.
-func (ns NullAppointmentStatusEnum) Value() (driver.Value, error) {
+func (ns NullAttendeeResponseEnum) Value() (driver.Value, error) {
 	if !ns.Valid {
 		return nil, nil
 	}
-	return string(ns.AppointmentStatusEnum), nil
+	return string(ns.AttendeeResponseEnum), nil
+}
+
+type CalendarEventKindEnum string
+
+const (
+	CalendarEventKindEnumAppointment CalendarEventKindEnum = "appointment"
+	CalendarEventKindEnumReminder    CalendarEventKindEnum = "reminder"
+)
+
+func (e *CalendarEventKindEnum) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = CalendarEventKindEnum(s)
+	case string:
+		*e = CalendarEventKindEnum(s)
+	default:
+		return fmt.Errorf("unsupported scan type for CalendarEventKindEnum: %T", src)
+	}
+	return nil
+}
+
+type NullCalendarEventKindEnum struct {
+	CalendarEventKindEnum CalendarEventKindEnum `json:"calendar_event_kind_enum"`
+	Valid                 bool                  `json:"valid"` // Valid is true if CalendarEventKindEnum is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullCalendarEventKindEnum) Scan(value interface{}) error {
+	if value == nil {
+		ns.CalendarEventKindEnum, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.CalendarEventKindEnum.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullCalendarEventKindEnum) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.CalendarEventKindEnum), nil
+}
+
+type CalendarEventStatusEnum string
+
+const (
+	CalendarEventStatusEnumConfirmed CalendarEventStatusEnum = "confirmed"
+	CalendarEventStatusEnumCancelled CalendarEventStatusEnum = "cancelled"
+)
+
+func (e *CalendarEventStatusEnum) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = CalendarEventStatusEnum(s)
+	case string:
+		*e = CalendarEventStatusEnum(s)
+	default:
+		return fmt.Errorf("unsupported scan type for CalendarEventStatusEnum: %T", src)
+	}
+	return nil
+}
+
+type NullCalendarEventStatusEnum struct {
+	CalendarEventStatusEnum CalendarEventStatusEnum `json:"calendar_event_status_enum"`
+	Valid                   bool                    `json:"valid"` // Valid is true if CalendarEventStatusEnum is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullCalendarEventStatusEnum) Scan(value interface{}) error {
+	if value == nil {
+		ns.CalendarEventStatusEnum, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.CalendarEventStatusEnum.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullCalendarEventStatusEnum) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.CalendarEventStatusEnum), nil
 }
 
 type CareTypeEnum string
@@ -1430,6 +1515,7 @@ const (
 	NotificationTypeEnumIncidentReport          NotificationTypeEnum = "incident_report"
 	NotificationTypeEnumClientContractReminder  NotificationTypeEnum = "client_contract_reminder"
 	NotificationTypeEnumNewScheduleNotification NotificationTypeEnum = "new_schedule_notification"
+	NotificationTypeEnumSystemReminder          NotificationTypeEnum = "system_reminder"
 )
 
 func (e *NotificationTypeEnum) Scan(src interface{}) error {
@@ -1786,49 +1872,6 @@ func (ns NullRecurrenceRiskEnum) Value() (driver.Value, error) {
 	return string(ns.RecurrenceRiskEnum), nil
 }
 
-type RecurrenceTypeEnum string
-
-const (
-	RecurrenceTypeEnumDAILY   RecurrenceTypeEnum = "DAILY"
-	RecurrenceTypeEnumWEEKLY  RecurrenceTypeEnum = "WEEKLY"
-	RecurrenceTypeEnumMONTHLY RecurrenceTypeEnum = "MONTHLY"
-)
-
-func (e *RecurrenceTypeEnum) Scan(src interface{}) error {
-	switch s := src.(type) {
-	case []byte:
-		*e = RecurrenceTypeEnum(s)
-	case string:
-		*e = RecurrenceTypeEnum(s)
-	default:
-		return fmt.Errorf("unsupported scan type for RecurrenceTypeEnum: %T", src)
-	}
-	return nil
-}
-
-type NullRecurrenceTypeEnum struct {
-	RecurrenceTypeEnum RecurrenceTypeEnum `json:"recurrence_type_enum"`
-	Valid              bool               `json:"valid"` // Valid is true if RecurrenceTypeEnum is not NULL
-}
-
-// Scan implements the Scanner interface.
-func (ns *NullRecurrenceTypeEnum) Scan(value interface{}) error {
-	if value == nil {
-		ns.RecurrenceTypeEnum, ns.Valid = "", false
-		return nil
-	}
-	ns.Valid = true
-	return ns.RecurrenceTypeEnum.Scan(value)
-}
-
-// Value implements the driver Valuer interface.
-func (ns NullRecurrenceTypeEnum) Value() (driver.Value, error) {
-	if !ns.Valid {
-		return nil, nil
-	}
-	return string(ns.RecurrenceTypeEnum), nil
-}
-
 type RelationStatusEnum string
 
 const (
@@ -1869,6 +1912,47 @@ func (ns NullRelationStatusEnum) Value() (driver.Value, error) {
 		return nil, nil
 	}
 	return string(ns.RelationStatusEnum), nil
+}
+
+type ReminderChannelEnum string
+
+const (
+	ReminderChannelEnumInApp ReminderChannelEnum = "in_app"
+)
+
+func (e *ReminderChannelEnum) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = ReminderChannelEnum(s)
+	case string:
+		*e = ReminderChannelEnum(s)
+	default:
+		return fmt.Errorf("unsupported scan type for ReminderChannelEnum: %T", src)
+	}
+	return nil
+}
+
+type NullReminderChannelEnum struct {
+	ReminderChannelEnum ReminderChannelEnum `json:"reminder_channel_enum"`
+	Valid               bool                `json:"valid"` // Valid is true if ReminderChannelEnum is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullReminderChannelEnum) Scan(value interface{}) error {
+	if value == nil {
+		ns.ReminderChannelEnum, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.ReminderChannelEnum.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullReminderChannelEnum) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.ReminderChannelEnum), nil
 }
 
 type SenderTypesEnum string
@@ -1982,38 +2066,8 @@ type AppointmentCard struct {
 	SchoolInternship       []string           `json:"school_internship"`
 	Travel                 []string           `json:"travel"`
 	Leave                  []string           `json:"leave"`
-	FileUrl                *string            `json:"file_url"`
 	CreatedAt              pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt              pgtype.Timestamptz `json:"updated_at"`
-}
-
-type AppointmentClient struct {
-	AppointmentClientID uuid.UUID        `json:"appointment_client_id"`
-	AppointmentID       uuid.UUID        `json:"appointment_id"`
-	ClientID            uuid.UUID        `json:"client_id"`
-	AddedAt             pgtype.Timestamp `json:"added_at"`
-}
-
-type AppointmentParticipant struct {
-	AppointmentParticipantID uuid.UUID        `json:"appointment_participant_id"`
-	AppointmentID            uuid.UUID        `json:"appointment_id"`
-	EmployeeID               uuid.UUID        `json:"employee_id"`
-	AddedAt                  pgtype.Timestamp `json:"added_at"`
-}
-
-type AppointmentTemplate struct {
-	ID                 uuid.UUID          `json:"id"`
-	CreatorEmployeeID  uuid.UUID          `json:"creator_employee_id"`
-	StartTime          pgtype.Timestamp   `json:"start_time"`
-	EndTime            pgtype.Timestamp   `json:"end_time"`
-	Location           *string            `json:"location"`
-	Description        *string            `json:"description"`
-	Color              *string            `json:"color"`
-	RecurrenceType     RecurrenceTypeEnum `json:"recurrence_type"`
-	RecurrenceInterval *int32             `json:"recurrence_interval"`
-	RecurrenceEndDate  pgtype.Date        `json:"recurrence_end_date"`
-	CreatedAt          pgtype.Timestamp   `json:"created_at"`
-	UpdatedAt          pgtype.Timestamp   `json:"updated_at"`
 }
 
 type AssignedEmployee struct {
@@ -2064,6 +2118,45 @@ type Audit struct {
 	UserAgent    *string            `json:"user_agent"`
 	HashPrev     string             `json:"hash_prev"`
 	HashSelf     string             `json:"hash_self"`
+}
+
+type CalendarEvent struct {
+	ID                  uuid.UUID               `json:"id"`
+	OrganizerEmployeeID uuid.UUID               `json:"organizer_employee_id"`
+	CreatedByEmployeeID uuid.UUID               `json:"created_by_employee_id"`
+	Kind                CalendarEventKindEnum   `json:"kind"`
+	Status              CalendarEventStatusEnum `json:"status"`
+	Title               string                  `json:"title"`
+	Description         *string                 `json:"description"`
+	Location            *string                 `json:"location"`
+	Color               *string                 `json:"color"`
+	StartAt             pgtype.Timestamptz      `json:"start_at"`
+	EndAt               pgtype.Timestamptz      `json:"end_at"`
+	Timezone            string                  `json:"timezone"`
+	Rrule               *string                 `json:"rrule"`
+	RecurringEventID    *uuid.UUID              `json:"recurring_event_id"`
+	RecurrenceID        pgtype.Timestamptz      `json:"recurrence_id"`
+	CreatedAt           pgtype.Timestamptz      `json:"created_at"`
+	UpdatedAt           pgtype.Timestamptz      `json:"updated_at"`
+}
+
+type CalendarEventAttendee struct {
+	ID         uuid.UUID            `json:"id"`
+	EventID    uuid.UUID            `json:"event_id"`
+	EmployeeID *uuid.UUID           `json:"employee_id"`
+	ClientID   *uuid.UUID           `json:"client_id"`
+	Email      *string              `json:"email"`
+	Response   AttendeeResponseEnum `json:"response"`
+	CreatedAt  pgtype.Timestamptz   `json:"created_at"`
+}
+
+type CalendarEventReminder struct {
+	ID            uuid.UUID           `json:"id"`
+	EventID       uuid.UUID           `json:"event_id"`
+	Channel       ReminderChannelEnum `json:"channel"`
+	MinutesBefore *int32              `json:"minutes_before"`
+	RemindAt      pgtype.Timestamptz  `json:"remind_at"`
+	CreatedAt     pgtype.Timestamptz  `json:"created_at"`
 }
 
 type Certification struct {
@@ -2844,23 +2937,6 @@ type Schedule struct {
 	CreatedByEmployeeID uuid.UUID        `json:"created_by_employee_id"`
 	CreatedAt           pgtype.Timestamp `json:"created_at"`
 	UpdatedAt           pgtype.Timestamp `json:"updated_at"`
-}
-
-type ScheduledAppointment struct {
-	ID                     uuid.UUID             `json:"id"`
-	AppointmentTemplatesID *uuid.UUID            `json:"appointment_templates_id"`
-	CreatorEmployeeID      *uuid.UUID            `json:"creator_employee_id"`
-	StartTime              pgtype.Timestamp      `json:"start_time"`
-	EndTime                pgtype.Timestamp      `json:"end_time"`
-	Location               *string               `json:"location"`
-	Description            *string               `json:"description"`
-	Status                 AppointmentStatusEnum `json:"status"`
-	Color                  *string               `json:"color"`
-	IsConfirmed            bool                  `json:"is_confirmed"`
-	ConfirmedByEmployeeID  *uuid.UUID            `json:"confirmed_by_employee_id"`
-	ConfirmedAt            pgtype.Timestamp      `json:"confirmed_at"`
-	CreatedAt              pgtype.Timestamp      `json:"created_at"`
-	UpdatedAt              pgtype.Timestamp      `json:"updated_at"`
 }
 
 type Sender struct {

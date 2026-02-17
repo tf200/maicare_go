@@ -1,22 +1,13 @@
 package pdf
 
 import (
-	"bytes"
 	"context"
-	"embed"
 	"fmt"
-	"html/template"
 	"mime/multipart"
 	"time"
 
-	"maicare_go/bucket"
-
-	"github.com/SebastiaanKlippert/go-wkhtmltopdf"
 	"github.com/google/uuid"
 )
-
-//go:embed templates/appointment_card.html
-var appointmentCardTemplateFS embed.FS
 
 type AppointmentCard struct {
 	ID                     uuid.UUID
@@ -36,54 +27,45 @@ type AppointmentCard struct {
 	Leave                  []string
 }
 
+func (s *pdfService) GenerateAppointmentCardPDF(_ context.Context, cardData AppointmentCard) ([]byte, error) {
+	return s.generateAppointmentCardPDFBytes(cardData)
+}
+
 func (s *pdfService) generateAppointmentCardPDF(appointmentCardData AppointmentCard) (multipart.File, error) {
-	// Parse and execute HTML template
-	templ, err := template.ParseFS(appointmentCardTemplateFS, "templates/appointment_card.html")
+	pdfBytes, err := s.generateAppointmentCardPDFBytes(appointmentCardData)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse template: %w", err)
+		return nil, err
+	}
+	return toMultipartFile(pdfBytes), nil
+}
+
+func (s *pdfService) generateAppointmentCardPDFBytes(appointmentCardData AppointmentCard) ([]byte, error) {
+	headerLines := []string{
+		fmt.Sprintf("Client: %s", appointmentCardData.ClientName),
+		fmt.Sprintf("Date: %s", appointmentCardData.Date),
+		fmt.Sprintf("Mentor: %s", fallbackString(appointmentCardData.Mentor, "N/A")),
 	}
 
-	var body bytes.Buffer
-	if err := templ.Execute(&body, appointmentCardData); err != nil {
-		return nil, fmt.Errorf("failed to execute template: %w", err)
+	sections := []documentSection{
+		{Title: "Algemene Informatie", Lines: appointmentCardData.GeneralInformation},
+		{Title: "Belangrijke Contacten", Lines: appointmentCardData.ImportantContacts},
+		{Title: "Huishouden", Lines: appointmentCardData.HouseholdInfo},
+		{Title: "Organisatie Afspraken", Lines: appointmentCardData.OrganizationAgreements},
+		{Title: "Jeugdreclassering Afspraken", Lines: appointmentCardData.YouthOfficerAgreements},
+		{Title: "Behandel Afspraken", Lines: appointmentCardData.TreatmentAgreements},
+		{Title: "Rookregels", Lines: appointmentCardData.SmokingRules},
+		{Title: "Werk", Lines: appointmentCardData.Work},
+		{Title: "School/Stage", Lines: appointmentCardData.SchoolInternship},
+		{Title: "Reizen", Lines: appointmentCardData.Travel},
+		{Title: "Verlof", Lines: appointmentCardData.Leave},
 	}
 
-	// Create PDF generator
-	pdfg, err := wkhtmltopdf.NewPDFGenerator()
+	pdfBytes, err := buildSectionsPDF("Afsprakenkaart", headerLines, sections)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create PDF generator: %w", err)
+		return nil, fmt.Errorf("failed to generate appointment card pdf: %w", err)
 	}
 
-	// Set global options
-	pdfg.Dpi.Set(300)
-	pdfg.Orientation.Set(wkhtmltopdf.OrientationPortrait)
-	pdfg.Grayscale.Set(false)
-
-	// Create a new input page from our HTML
-	page := wkhtmltopdf.NewPageReader(bytes.NewReader(body.Bytes()))
-
-	// Set page options
-	page.EnableLocalFileAccess.Set(true)
-	page.LoadErrorHandling.Set("ignore")
-
-	// Add page to generator
-	pdfg.AddPage(page)
-
-	// Generate PDF
-	err = pdfg.Create()
-	if err != nil {
-		return nil, fmt.Errorf("failed to create PDF: %w", err)
-	}
-
-	// Get the generated PDF as a byte slice
-	pdfBytes := pdfg.Bytes()
-
-	// Wrap the byte slice in our InMemoryFile to satisfy the interface
-	file := &bucket.InMemoryFile{
-		Reader: bytes.NewReader(pdfBytes),
-	}
-
-	return file, nil
+	return pdfBytes, nil
 }
 
 // UploadIncidentPDF uploads a PDF to B2 with a generated filename
@@ -116,4 +98,11 @@ func (s *pdfService) GenerateAndUploadAppointmentCardPDF(ctx context.Context, ca
 	}
 
 	return fileURL, nil
+}
+
+func fallbackString(value, fallback string) string {
+	if value == "" {
+		return fallback
+	}
+	return value
 }

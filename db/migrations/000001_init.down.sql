@@ -9,10 +9,14 @@ DROP TABLE IF EXISTS consent_declaration CASCADE;
 DROP TABLE IF EXISTS risk_assessment CASCADE;
 DROP TABLE IF EXISTS collaboration_agreement CASCADE;
 DROP TABLE IF EXISTS appointment_card CASCADE;
+-- Backward-compatibility: legacy appointment tables
 DROP TABLE IF EXISTS appointment_clients CASCADE;
 DROP TABLE IF EXISTS appointment_participants CASCADE;
 DROP TABLE IF EXISTS scheduled_appointments CASCADE;
 DROP TABLE IF EXISTS appointment_templates CASCADE;
+DROP TABLE IF EXISTS calendar_event_reminders CASCADE;
+DROP TABLE IF EXISTS calendar_event_attendees CASCADE;
+DROP TABLE IF EXISTS calendar_events CASCADE;
 DROP TABLE IF EXISTS schedules CASCADE;
 DROP TABLE IF EXISTS ai_generated_reports CASCADE;
 DROP TABLE IF EXISTS progress_report CASCADE;
@@ -94,6 +98,11 @@ DROP SEQUENCE IF EXISTS client_filenumber_seq;
 -- ==========================================
 -- TYPES (ENUMS)
 -- ==========================================
+DROP TYPE IF EXISTS reminder_channel_enum CASCADE;
+DROP TYPE IF EXISTS attendee_response_enum CASCADE;
+DROP TYPE IF EXISTS calendar_event_status_enum CASCADE;
+DROP TYPE IF EXISTS calendar_event_kind_enum CASCADE;
+-- Backward-compatibility: legacy appointment enums
 DROP TYPE IF EXISTS appointment_status_enum CASCADE;
 DROP TYPE IF EXISTS recurrence_type_enum CASCADE;
 DROP TYPE IF EXISTS emotional_state_enum CASCADE;

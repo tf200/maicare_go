@@ -77,9 +77,3 @@ type ProcessRegistrationFormEmailPayload struct {
 	Link         string   `json:"link"`
 	To           []string `json:"to"`
 }
-
-type AppointmentPayload struct {
-	AppointmentTemplateID  uuid.UUID   `json:"appointment_template_id"`
-	ParticipantEmployeeIDs []uuid.UUID `json:"participant_employee_ids"`
-	ClientIDs              []uuid.UUID `json:"client_ids"`
-}
