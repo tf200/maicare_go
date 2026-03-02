@@ -61,6 +61,12 @@ WHERE
 GROUP BY 
     o.id, o.name;
 
+-- name: GetGlobalOrganisationCounts :one
+SELECT
+    COALESCE(COUNT(l.id), 0)::BIGINT AS total_locations,
+    COALESCE(SUM(l.capacity), 0)::BIGINT AS total_capacity
+FROM location l;
+
 
 -- name: UpdateOrganisation :one
 UPDATE organisations

@@ -16,26 +16,30 @@ INSERT INTO progress_report (
 SELECT 
     pr.*,
     COUNT(*) OVER() AS total_count,
-    e.first_name AS employee_first_name,
-    e.last_name AS employee_last_name,
+    COALESCE(e.first_name, '') AS employee_first_name,
+    COALESCE(e.last_name, '') AS employee_last_name,
     u.profile_picture AS employee_profile_picture
 FROM progress_report pr
-JOIN employee_profile e ON pr.employee_id = e.id
-Join custom_User u ON e.user_id = u.id
-WHERE pr.client_id = $1
+LEFT JOIN employee_profile e ON pr.employee_id = e.id
+LEFT JOIN custom_User u ON e.user_id = u.id
+WHERE pr.client_id = sqlc.arg('client_id')
+  AND (
+    sqlc.narg('type')::progress_report_type_enum IS NULL
+    OR pr.type = sqlc.narg('type')::progress_report_type_enum
+  )
 ORDER BY pr.date DESC
-LIMIT $2 OFFSET $3;
+LIMIT sqlc.arg('limit') OFFSET sqlc.arg('offset');
 
 
 -- name: GetProgressReport :one
 SELECT 
     pr.*,
-    e.first_name AS employee_first_name,
-    e.last_name AS employee_last_name,
+    COALESCE(e.first_name, '') AS employee_first_name,
+    COALESCE(e.last_name, '') AS employee_last_name,
     u.profile_picture AS employee_profile_picture
 FROM progress_report pr
-JOIN employee_profile e ON pr.employee_id = e.id
-JOIN custom_User u ON e.user_id = u.id
+LEFT JOIN employee_profile e ON pr.employee_id = e.id
+LEFT JOIN custom_User u ON e.user_id = u.id
 WHERE pr.id = $1 LIMIT 1;
 
 -- name: UpdateProgressReport :one
@@ -92,8 +96,6 @@ SELECT
     agr.*
 FROM ai_generated_reports agr
 WHERE agr.id = $1 LIMIT 1;
-
-
 
 
 

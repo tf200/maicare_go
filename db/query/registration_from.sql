@@ -189,6 +189,7 @@ SET
     care_assisted_independent_living = COALESCE(sqlc.narg('care_assisted_independent_living'), care_assisted_independent_living),
     care_room_training_center = COALESCE(sqlc.narg('care_room_training_center'), care_room_training_center),
     care_ambulatory_guidance = COALESCE(sqlc.narg('care_ambulatory_guidance'), care_ambulatory_guidance),
+    application_reason = COALESCE(sqlc.narg('application_reason'), application_reason),
     client_goals = COALESCE(sqlc.narg('client_goals'), client_goals),
     risk_aggressive_behavior = COALESCE(sqlc.narg('risk_aggressive_behavior'), risk_aggressive_behavior),
     risk_suicidal_selfharm = COALESCE(sqlc.narg('risk_suicidal_selfharm'), risk_suicidal_selfharm),
@@ -202,14 +203,9 @@ SET
     risk_other = COALESCE(sqlc.narg('risk_other'), risk_other),
     risk_other_description = COALESCE(sqlc.narg('risk_other_description'), risk_other_description),
     risk_additional_notes = COALESCE(sqlc.narg('risk_additional_notes'), risk_additional_notes),
-    document_referral = COALESCE(sqlc.narg('document_referral'), document_referral),
-    document_education_report = COALESCE(sqlc.narg('document_education_report'), document_education_report),
-    document_psychiatric_report = COALESCE(sqlc.narg('document_psychiatric_report'), document_psychiatric_report),
-    document_diagnosis = COALESCE(sqlc.narg('document_diagnosis'), document_diagnosis),
-    document_safety_plan = COALESCE(sqlc.narg('document_safety_plan'), document_safety_plan),
-    document_id_copy = COALESCE(sqlc.narg('document_id_copy'), document_id_copy),
     application_date = COALESCE(sqlc.narg('application_date'), application_date),
-    referrer_signature = COALESCE(sqlc.narg('referrer_signature'), referrer_signature)
+    referrer_signature = COALESCE(sqlc.narg('referrer_signature'), referrer_signature),
+    updated_at = CURRENT_TIMESTAMP
 WHERE id = sqlc.arg('id')
 RETURNING *;
 

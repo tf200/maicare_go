@@ -13,6 +13,7 @@ type CreateShiftApiRequest struct {
 type CreateShiftApiResponse struct {
 	ID         uuid.UUID `json:"id"`
 	LocationID uuid.UUID `json:"location_id"`
+	Slot       int16     `json:"slot"`
 	ShiftName  string    `json:"shift"`
 	StartTime  string    `json:"start_time"`
 	EndTime    string    `json:"end_time"`
@@ -29,6 +30,7 @@ type UpdateShiftApiRequest struct {
 type UpdateShiftApiResponse struct {
 	ID         uuid.UUID `json:"id"`
 	LocationID uuid.UUID `json:"location_id"`
+	Slot       int16     `json:"slot"`
 	ShiftName  string    `json:"shift"`
 	StartTime  string    `json:"start_time"`
 	EndTime    string    `json:"end_time"`
@@ -38,6 +40,7 @@ type UpdateShiftApiResponse struct {
 type ListShiftsByLocationIDResponse struct {
 	ID         uuid.UUID `json:"id"`
 	LocationID uuid.UUID `json:"location_id"`
+	Slot       int16     `json:"slot"`
 	ShiftName  string    `json:"shift"`
 	StartTime  string    `json:"start_time"`
 	EndTime    string    `json:"end_time"`

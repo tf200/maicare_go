@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"mime/multipart"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"time"
+
+	"maicare_go/util"
 
 	"github.com/google/uuid"
 )
@@ -30,15 +31,9 @@ func GenerateUniqueFilename(originalFilename string) string {
 	uuid := uuid.New().String()[:8]
 
 	return fmt.Sprintf("%s_%s_%s%s",
-		sanitizeFilename(nameWithoutExt),
+		util.SanitizeFilename(nameWithoutExt, 0),
 		timestamp,
 		uuid,
 		ext,
 	)
-}
-
-func sanitizeFilename(filename string) string {
-	// Replace any character that's not alphanumeric, dash, or underscore with underscore
-	reg := regexp.MustCompile(`[^a-zA-Z0-9-_]+`)
-	return reg.ReplaceAllString(filename, "_")
 }

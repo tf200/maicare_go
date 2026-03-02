@@ -7,13 +7,14 @@ import (
 	db "maicare_go/db/sqlc"
 	"maicare_go/logger"
 	"maicare_go/pagination"
+	"maicare_go/util"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
-func (s *organizationService) ListOrgLocations(ctx *gin.Context, organizationID uuid.UUID, req ListLocationsRequest) (*pagination.Response[ListLocationsResponse], error) {
+func (s *organizationService) ListOrgLocations(ctx *gin.Context, organizationID uuid.UUID, req ListLocationsRequest) (*pagination.Response[ListOrgLocationsResponse], error) {
 	search := ""
 	if req.Search != nil {
 		search = *req.Search
@@ -33,11 +34,29 @@ func (s *organizationService) ListOrgLocations(ctx *gin.Context, organizationID 
 		return nil, fmt.Errorf("failed to list locations")
 	}
 
-	response := []ListLocationsResponse{}
+	response := []ListOrgLocationsResponse{}
 	var totalCount int64
 	for _, loc := range locations {
+		shifts, err := s.Store.GetShiftsByLocationID(ctx, loc.ID)
+		if err != nil {
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListOrgLocationsApi", "Failed to get shifts by location", zap.Error(err), zap.String("location_id", loc.ID.String()))
+			return nil, fmt.Errorf("failed to list locations")
+		}
+
+		locationShifts := make([]ListShiftsByLocationIDResponse, len(shifts))
+		for i, shift := range shifts {
+			locationShifts[i] = ListShiftsByLocationIDResponse{
+				ID:         shift.ID,
+				LocationID: shift.LocationID,
+				Slot:       shift.Slot,
+				ShiftName:  shift.ShiftName,
+				StartTime:  util.PgTimeToString(shift.StartTime),
+				EndTime:    util.PgTimeToString(shift.EndTime),
+			}
+		}
+
 		totalCount = loc.TotalCount
-		response = append(response, ListLocationsResponse{
+		response = append(response, ListOrgLocationsResponse{
 			ID:                  loc.ID,
 			Name:                loc.Name,
 			Street:              loc.Street,
@@ -59,6 +78,7 @@ func (s *organizationService) ListOrgLocations(ctx *gin.Context, organizationID 
 			}(),
 			CreatedAt: loc.CreatedAt.Time,
 			UpdatedAt: loc.UpdatedAt.Time,
+			Shifts:    locationShifts,
 		})
 	}
 
@@ -90,6 +110,24 @@ func (s *organizationService) ListAllLocations(ctx *gin.Context, req ListAllLoca
 
 	response := make([]ListLocationsResponse, len(locations))
 	for i, loc := range locations {
+		shifts, err := s.Store.GetShiftsByLocationID(ctx, loc.ID)
+		if err != nil {
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListAllLocationsApi", "Failed to get shifts by location", zap.Error(err), zap.String("location_id", loc.ID.String()))
+			return nil, fmt.Errorf("failed to list all locations")
+		}
+
+		locationShifts := make([]ListShiftsByLocationIDResponse, len(shifts))
+		for j, shift := range shifts {
+			locationShifts[j] = ListShiftsByLocationIDResponse{
+				ID:         shift.ID,
+				LocationID: shift.LocationID,
+				Slot:       shift.Slot,
+				ShiftName:  shift.ShiftName,
+				StartTime:  util.PgTimeToString(shift.StartTime),
+				EndTime:    util.PgTimeToString(shift.EndTime),
+			}
+		}
+
 		response[i] = ListLocationsResponse{
 			ID:                  loc.ID,
 			Name:                loc.Name,
@@ -112,6 +150,7 @@ func (s *organizationService) ListAllLocations(ctx *gin.Context, req ListAllLoca
 			}(),
 			CreatedAt: loc.CreatedAt.Time,
 			UpdatedAt: loc.UpdatedAt.Time,
+			Shifts:    locationShifts,
 		}
 	}
 

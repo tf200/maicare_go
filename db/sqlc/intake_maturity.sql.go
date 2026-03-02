@@ -125,6 +125,16 @@ func (q *Queries) CreateIntakeTopicAssessmentsBatch(ctx context.Context, arg Cre
 	return items, nil
 }
 
+const deleteIntakeTopicAssessmentsByIntakeForm = `-- name: DeleteIntakeTopicAssessmentsByIntakeForm :exec
+DELETE FROM intake_topic_assessments
+WHERE intake_form_id = $1
+`
+
+func (q *Queries) DeleteIntakeTopicAssessmentsByIntakeForm(ctx context.Context, intakeFormID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteIntakeTopicAssessmentsByIntakeForm, intakeFormID)
+	return err
+}
+
 const deleteIntakeTopicsAssessment = `-- name: DeleteIntakeTopicsAssessment :exec
 DELETE FROM intake_topic_assessments
 WHERE id = $1
@@ -221,6 +231,22 @@ func (q *Queries) GetIntakeTopicsAssessments(ctx context.Context, intakeFormID u
 	return items, nil
 }
 
+const hasActiveClientByIntakeFormID = `-- name: HasActiveClientByIntakeFormID :one
+SELECT EXISTS (
+    SELECT 1
+    FROM client_details cd
+    WHERE cd.intake_form_id = $1
+      AND cd.status <> 'out_of_care'
+)
+`
+
+func (q *Queries) HasActiveClientByIntakeFormID(ctx context.Context, intakeFormID *uuid.UUID) (bool, error) {
+	row := q.db.QueryRow(ctx, hasActiveClientByIntakeFormID, intakeFormID)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
 const listIntakeTopicsAssessmentsByIntake = `-- name: ListIntakeTopicsAssessmentsByIntake :many
 SELECT
     ima.id, ima.intake_form_id, ima.topic_id, ima.current_level, ima.proposed_goals, ima.notes, ima.created_at,
@@ -276,6 +302,19 @@ func (q *Queries) ListIntakeTopicsAssessmentsByIntake(ctx context.Context, arg L
 		return nil, err
 	}
 	return items, nil
+}
+
+const lockIntakeFormByID = `-- name: LockIntakeFormByID :one
+SELECT id
+FROM intake_forms
+WHERE id = $1
+FOR UPDATE
+`
+
+func (q *Queries) LockIntakeFormByID(ctx context.Context, id uuid.UUID) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, lockIntakeFormByID, id)
+	err := row.Scan(&id)
+	return id, err
 }
 
 const updateIntakeTopicsAssessment = `-- name: UpdateIntakeTopicsAssessment :one

@@ -50,6 +50,7 @@ func (server *Server) CreateProgressReportApi(ctx *gin.Context) {
 // @Param id path uuid true "Client ID"
 // @Param page query int false "Page number"
 // @Param page_size query int false "Page size"
+// @Param type query string false "Filter by report type" Enums(morning_report,evening_report,night_report,shift_report,one_to_one_report,process_report,contact_journal,other)
 // @Success 200 {object} Response[pagination.Response[[]clientp.ListProgressReportsResponse]]
 // @Failure 400,404 {object} Response[any]
 // @Router /clients/{id}/progress_reports [get]
@@ -224,7 +225,7 @@ func (server *Server) ConfirmProgressReportApi(ctx *gin.Context) {
 		return
 	}
 
-	result, err := server.businessService.ClientService.ConfirmAiProgressReport(ctx, clientID, &req, uuid.Nil)
+	result, err := server.businessService.ClientService.ConfirmAiProgressReport(ctx, clientID, &req)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return

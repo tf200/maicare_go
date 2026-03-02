@@ -3,6 +3,7 @@ package api
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	_ "maicare_go/pagination" // for swagger
 	clientp "maicare_go/service/client"
@@ -295,6 +296,40 @@ func (server *Server) PutClientInCareApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
+// PutClientOutOfCareApi moves an in-care client out of care
+// @Summary Put client out of care
+// @Tags clients
+// @Accept json
+// @Produce json
+// @Param id path uuid true "Client ID"
+// @Param request body clientp.PutClientOutOfCareRequest true "Put out of care payload"
+// @Success 200 {object} Response[clientp.PutClientOutOfCareResponse]
+// @Failure 400,404,500 {object} Response[any]
+// @Router /clients/{id}/put-out-of-care [put]
+func (server *Server) PutClientOutOfCareApi(ctx *gin.Context) {
+	id := ctx.Param("id")
+	clientID, err := uuid.Parse(id)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	var req clientp.PutClientOutOfCareRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	result, err := server.businessService.ClientService.PutClientOutOfCare(ctx, req, clientID)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(result, "Client moved out of care successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
 // ListStatusHistoryApi lists status history of a client
 // @Summary List status history of a client
 // @Tags clients
@@ -542,6 +577,35 @@ func (server *Server) ListLocationTransferRequestsApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
+// GetGoalEvaluationApi gets a single goal evaluation by ID.
+// @Summary Get goal evaluation by ID
+// @Tags evaluations
+// @Produce json
+// @Param evaluation_id path string true "Evaluation ID"
+// @Success 200 {object} Response[clientp.GoalEvaluationResponse]
+// @Failure 400,404,500 {object} Response[any]
+// @Router /evaluations/{evaluation_id} [get]
+func (server *Server) GetGoalEvaluationApi(ctx *gin.Context) {
+	evaluationID, err := uuid.Parse(ctx.Param("evaluation_id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid evaluation ID")))
+		return
+	}
+
+	result, err := server.businessService.ClientService.GetGoalEvaluation(ctx, evaluationID)
+	if err != nil {
+		if strings.Contains(err.Error(), "not found") {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(result, "Goal evaluation fetched successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
 // ListUpcomingEvaluationsApi lists upcoming evaluations for the logged-in coordinator
 // @Summary List upcoming evaluations for coordinator
 // @Tags evaluations
@@ -596,6 +660,110 @@ func (server *Server) GetGoalEvaluationBootstrapApi(ctx *gin.Context) {
 	}
 
 	res := SuccessResponse(result, "Goal evaluation bootstrap fetched successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
+// GetClientGoalsForEvaluationPageApi returns client goals data for the evaluation page.
+// @Summary Get client goals for evaluation page
+// @Tags evaluations
+// @Produce json
+// @Param id path string true "Client ID"
+// @Success 200 {object} Response[clientp.GetClientGoalsForEvaluationPageResponse]
+// @Failure 400,500 {object} Response[any]
+// @Router /clients/{id}/goals [get]
+func (server *Server) GetClientGoalsForEvaluationPageApi(ctx *gin.Context) {
+	clientID, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid client ID")))
+		return
+	}
+
+	payload, err := GetAuthPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
+	result, err := server.businessService.ClientService.GetClientGoalsForEvaluationPage(ctx, clientID, payload.EmployeeID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(result, "Client goals for evaluation page fetched successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
+// ListClientSubmittedEvaluationsApi lists submitted evaluations for a client.
+// @Summary List submitted evaluations by client
+// @Tags evaluations
+// @Produce json
+// @Param id path string true "Client ID"
+// @Param page query int true "Page number"
+// @Param page_size query int true "Page size"
+// @Success 200 {object} Response[pagination.Response[clientp.ListClientSubmittedEvaluationsResponse]]
+// @Failure 400,500 {object} Response[any]
+// @Router /clients/{id}/evaluations/submitted [get]
+func (server *Server) ListClientSubmittedEvaluationsApi(ctx *gin.Context) {
+	clientID, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid client ID")))
+		return
+	}
+
+	var req clientp.ListClientSubmittedEvaluationsRequest
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	result, err := server.businessService.ClientService.ListClientSubmittedEvaluations(ctx, clientID, req)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(result, "Client submitted evaluations fetched successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
+// ListGoalEvaluationHistoryApi lists completed evaluation history points for a goal.
+// @Summary List goal evaluation history
+// @Tags evaluations
+// @Produce json
+// @Param id path string true "Client ID"
+// @Param goal_id path string true "Goal ID"
+// @Param page query int true "Page number"
+// @Param page_size query int true "Page size"
+// @Success 200 {object} Response[pagination.Response[clientp.ListGoalEvaluationHistoryResponse]]
+// @Failure 400,500 {object} Response[any]
+// @Router /clients/{id}/goals/{goal_id}/history [get]
+func (server *Server) ListGoalEvaluationHistoryApi(ctx *gin.Context) {
+	clientID, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid client ID")))
+		return
+	}
+
+	goalID, err := uuid.Parse(ctx.Param("goal_id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid goal ID")))
+		return
+	}
+
+	var req clientp.ListGoalEvaluationHistoryRequest
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	result, err := server.businessService.ClientService.ListGoalEvaluationHistory(ctx, clientID, goalID, req)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(result, "Goal evaluation history fetched successfully")
 	ctx.JSON(http.StatusOK, res)
 }
 

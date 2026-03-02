@@ -1,24 +1,37 @@
 -- name: ListAllIncidents :many
 SELECT 
-    i.*,
+    i.id,
+    i.occurred_at,
+    i.incident_type,
+    i.severity_of_incident,
+    i.is_confirmed,
     c.first_name AS client_first_name,
+    c.bsn AS client_bsn,
     c.last_name AS client_last_name,
     e.first_name AS employee_first_name,
-    e.last_name AS employee_last_name
+    e.last_name AS employee_last_name,
+    l.name AS location_name
 FROM 
     incident i
 JOIN 
     client_details c ON i.client_id = c.id
 JOIN 
     employee_profile e ON i.employee_id = e.id
+JOIN
+    location l ON i.location_id = l.id
 WHERE 
-    i.soft_delete = false
-    AND (
+    (
         sqlc.arg('is_confirmed')::boolean IS NULL 
         OR i.is_confirmed = sqlc.arg('is_confirmed')::boolean
     )
+    AND (
+        sqlc.narg('search')::text IS NULL
+        OR sqlc.narg('search')::text = ''
+        OR c.first_name ILIKE '%' || sqlc.narg('search')::text || '%'
+        OR c.last_name ILIKE '%' || sqlc.narg('search')::text || '%'
+    )
 ORDER BY 
-    i.incident_date DESC
+    i.occurred_at DESC
 LIMIT $1
 OFFSET $2;
 
@@ -26,8 +39,14 @@ OFFSET $2;
 -- name: CountAllIncidents :one
 SELECT COUNT(*) as total_count
 FROM incident i
-WHERE i.soft_delete = false
-AND (
+JOIN client_details c ON i.client_id = c.id
+WHERE (
     sqlc.arg('is_confirmed')::boolean IS NULL 
     OR i.is_confirmed = sqlc.arg('is_confirmed')::boolean
+)
+AND (
+    sqlc.narg('search')::text IS NULL
+    OR sqlc.narg('search')::text = ''
+    OR c.first_name ILIKE '%' || sqlc.narg('search')::text || '%'
+    OR c.last_name ILIKE '%' || sqlc.narg('search')::text || '%'
 );

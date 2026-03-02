@@ -101,6 +101,21 @@ ORDER BY
 LIMIT $1 OFFSET $2;
 
 
+-- name: GetIntakeFormTotals :one
+SELECT
+    COUNT(*) FILTER (
+        WHERE i.intake_conclusion = 'further_investigation'::intake_conclusion_enum
+    )::bigint AS further_investigation_total,
+    COUNT(*) FILTER (
+        WHERE NOT EXISTS (
+            SELECT 1
+            FROM intake_topic_assessments ita
+            WHERE ita.intake_form_id = i.id
+        )
+    )::bigint AS without_goals_total
+FROM intake_forms i;
+
+
 
 -- name: GetIntakeFormDetails :one
 SELECT
@@ -147,4 +162,41 @@ SET
     intake_conclusion_notes = COALESCE(sqlc.narg('intake_conclusion_notes'), intake_conclusion_notes),
     updated_at = NOW()
 WHERE id = $1
+RETURNING *;
+
+
+-- name: UpdateIntakeForm :one
+UPDATE intake_forms
+SET
+    date_of_intake = COALESCE(sqlc.narg('date_of_intake'), date_of_intake),
+    care_type = COALESCE(sqlc.narg('care_type'), care_type),
+    intake_participants = COALESCE(sqlc.narg('intake_participants'), intake_participants),
+    family_situation = CASE
+        WHEN @clear_family_situation::boolean THEN NULL
+        ELSE COALESCE(sqlc.narg('family_situation'), family_situation)
+    END,
+    psychological_state = CASE
+        WHEN @clear_psychological_state::boolean THEN NULL
+        ELSE COALESCE(sqlc.narg('psychological_state'), psychological_state)
+    END,
+    self_sufficiency = COALESCE(sqlc.narg('self_sufficiency'), self_sufficiency),
+    sender_id = CASE
+        WHEN @clear_sender_id::boolean THEN NULL
+        ELSE COALESCE(sqlc.narg('sender_id'), sender_id)
+    END,
+    assigned_location_id = CASE
+        WHEN @clear_assigned_location_id::boolean THEN NULL
+        ELSE COALESCE(sqlc.narg('assigned_location_id'), assigned_location_id)
+    END,
+    risk_assessment = CASE
+        WHEN @clear_risk_assessment::boolean THEN NULL
+        ELSE COALESCE(sqlc.narg('risk_assessment'), risk_assessment)
+    END,
+    evaluation_intervals_weeks = COALESCE(sqlc.narg('evaluation_intervals_weeks'), evaluation_intervals_weeks),
+    signature = CASE
+        WHEN @clear_signature::boolean THEN NULL
+        ELSE COALESCE(sqlc.narg('signature'), signature)
+    END,
+    updated_at = NOW()
+WHERE id = @id
 RETURNING *;

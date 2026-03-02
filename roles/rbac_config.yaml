@@ -19,6 +19,10 @@ permissions:
       resource: /events/all
       method: [POST] # list events for any employee
 
+    - name: APPOINTMENT.WORK_APPROVAL.UPDATE
+      resource: /events/work_approval
+      method: [PUT] # approve/reject worked hours on an appointment
+
     - name: APPOINTMENT_CARD.DELETE
       resource: /appointment_cards
       method: [DELETE]
@@ -405,6 +409,7 @@ roles:
           - APPOINTMENT.UPDATE
           - APPOINTMENT.VIEW
           - APPOINTMENT.VIEW_ALL
+          - APPOINTMENT.WORK_APPROVAL.UPDATE
           - APPOINTMENT_CARD.DELETE
           - APPOINTMENT_CARD.UPDATE
           - APPOINTMENT_CARD.VIEW

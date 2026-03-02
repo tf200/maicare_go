@@ -16,10 +16,8 @@ func (s *invoiceService) SendInvoiceReminder(ctx context.Context, invoiceID uuid
 			zap.Error(err), zap.String("invoiceID", invoiceID.String()))
 		return err
 	}
-	if senderID != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "SendInvoiceReminder", "Sending reminder email",
-			zap.String("invoiceID", invoiceID.String()), zap.String("senderID", senderID.String()))
-		// Logic to send reminder email using senderID
-	}
+	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "SendInvoiceReminder", "Sending reminder email",
+		zap.String("invoiceID", invoiceID.String()), zap.String("senderID", senderID.String()))
+	// Logic to send reminder email using senderID
 	return nil
 }

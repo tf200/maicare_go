@@ -19,7 +19,8 @@ const (
 
 	// Task Type Names
 	TypeEmailDelivery                = "email:deliver"
-	TypeIncidentProcess              = "incident:process"      // Renamed for clarity
+	TypeIncidentProcess              = "incident:process" // Renamed for clarity
+	TypeIncidentConfirmedEmail       = "incident:confirmed_email"
 	TypeNotificationSend             = "notification:send"     // Renamed for clarity
 	TypeAcceptedRegistration         = "accepted:registration" // Renamed for clarity
 	TypeProcessRegistrationFormEmail = "email:process_registration_form"
@@ -82,6 +83,29 @@ func (c *AsynqClient) EnqueueIncident(
 		return fmt.Errorf("client.EnqueueContext failed: %v", err)
 	}
 	log.Printf("task enqueued: id=%s queue=%s", info.ID, info.Queue)
+	return nil
+}
+
+func (c *AsynqClient) EnqueueIncidentConfirmedEmail(
+	ctx context.Context,
+	payload IncidentConfirmedEmailPayload,
+	opts ...asynq.Option,
+) error {
+	jsonPayload, err := json.Marshal(payload)
+	if err != nil {
+		return fmt.Errorf("EnqueueIncidentConfirmedEmail: json.Marshal failed: %w", err)
+	}
+
+	if len(opts) == 0 {
+		opts = append(opts, asynq.Queue(QueueDefault), asynq.MaxRetry(5))
+	}
+
+	task := asynq.NewTask(TypeIncidentConfirmedEmail, jsonPayload)
+	info, err := c.client.EnqueueContext(ctx, task, opts...)
+	if err != nil {
+		return fmt.Errorf("EnqueueIncidentConfirmedEmail: client.EnqueueContext failed: %w", err)
+	}
+	log.Printf("Incident confirmed email task enqueued: id=%s queue=%s", info.ID, info.Queue)
 	return nil
 }
 

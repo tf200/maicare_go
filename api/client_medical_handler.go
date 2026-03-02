@@ -2,14 +2,36 @@ package api
 
 import (
 	"net/http"
-	"time"
 
-	_ "maicare_go/pagination"
 	clientp "maicare_go/service/client"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
+
+// GetClientMedicalOverviewApi returns diagnoses + active medication orders
+// @Summary Get client medical overview
+// @Tags client_Medical
+// @Produce json
+// @Param id path uuid true "Client ID"
+// @Success 200 {object} Response[clientp.ClientMedicalOverviewResponse]
+// @Failure 400,404 {object} Response[any]
+// @Router /clients/{id}/medical/overview [get]
+func (server *Server) GetClientMedicalOverviewApi(ctx *gin.Context) {
+	clientID, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	result, err := server.businessService.ClientService.GetClientMedicalOverview(ctx, clientID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, SuccessResponse(result, "Client medical overview fetched successfully"))
+}
 
 // CreateClientDiagnosisApi creates a client diagnosis
 // @Summary Create a client diagnosis
@@ -18,12 +40,11 @@ import (
 // @Produce json
 // @Param id path uuid true "Client ID"
 // @Param request body clientp.CreateClientDiagnosisRequest true "Client diagnosis data"
-// @Success 201 {object} Response[clientp.CreateClientDiagnosisResponse]
+// @Success 201 {object} Response[clientp.ClientDiagnosisResponse]
 // @Failure 400,404 {object} Response[any]
-// @Router /clients/{id}/diagnosis [post]
+// @Router /clients/{id}/medical/diagnoses [post]
 func (server *Server) CreateClientDiagnosisApi(ctx *gin.Context) {
-	id := ctx.Param("id")
-	clientID, err := uuid.Parse(id)
+	clientID, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -41,25 +62,22 @@ func (server *Server) CreateClientDiagnosisApi(ctx *gin.Context) {
 		return
 	}
 
-	res := SuccessResponse(result, "Client diagnosis created successfully")
-
-	ctx.JSON(http.StatusCreated, res)
+	ctx.JSON(http.StatusCreated, SuccessResponse(result, "Client diagnosis created successfully"))
 }
 
-// ListClientDiagnosesApi lists all client diagnoses
-// @Summary List all client diagnoses
+// ListClientDiagnosesApi lists client diagnoses
+// @Summary List client diagnoses
 // @Tags client_Medical
 // @Accept json
 // @Produce json
 // @Param id path uuid true "Client ID"
 // @Param page query int false "Page number"
 // @Param page_size query int false "Page size"
-// @Success 200 {object} Response[pagination.Response[clientp.ListClientDiagnosesResponse]]
+// @Success 200 {object} Response[pagination.Response[clientp.ClientDiagnosisResponse]]
 // @Failure 400,404 {object} Response[any]
-// @Router /clients/{id}/diagnosis [get]
+// @Router /clients/{id}/medical/diagnoses [get]
 func (server *Server) ListClientDiagnosesApi(ctx *gin.Context) {
-	id := ctx.Param("id")
-	clientID, err := uuid.Parse(id)
+	clientID, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -77,8 +95,7 @@ func (server *Server) ListClientDiagnosesApi(ctx *gin.Context) {
 		return
 	}
 
-	res := SuccessResponse(pag, "Client diagnoses fetched successfully")
-	ctx.JSON(http.StatusOK, res)
+	ctx.JSON(http.StatusOK, SuccessResponse(pag, "Client diagnoses fetched successfully"))
 }
 
 // GetClientDiagnosisApi gets a client diagnosis
@@ -87,25 +104,28 @@ func (server *Server) ListClientDiagnosesApi(ctx *gin.Context) {
 // @Produce json
 // @Param id path uuid true "Client ID"
 // @Param diagnosis_id path uuid true "Diagnosis ID"
-// @Success 200 {object} Response[clientp.GetClientDiagnosisResponse]
+// @Success 200 {object} Response[clientp.ClientDiagnosisResponse]
 // @Failure 400,404 {object} Response[any]
-// @Router /clients/{id}/diagnosis/{diagnosis_id} [get]
+// @Router /clients/{id}/medical/diagnoses/{diagnosis_id} [get]
 func (server *Server) GetClientDiagnosisApi(ctx *gin.Context) {
-	id := ctx.Param("diagnosis_id")
-	diagnosisID, err := uuid.Parse(id)
+	clientID, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	diagnosisID, err := uuid.Parse(ctx.Param("diagnosis_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
-	diagnosis, err := server.businessService.ClientService.GetClientDiagnosis(ctx, diagnosisID)
+	result, err := server.businessService.ClientService.GetClientDiagnosis(ctx, clientID, diagnosisID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	res := SuccessResponse(diagnosis, "Client diagnosis fetched successfully")
-	ctx.JSON(http.StatusOK, res)
+	ctx.JSON(http.StatusOK, SuccessResponse(result, "Client diagnosis fetched successfully"))
 }
 
 // UpdateClientDiagnosisApi updates a client diagnosis
@@ -116,12 +136,16 @@ func (server *Server) GetClientDiagnosisApi(ctx *gin.Context) {
 // @Param id path uuid true "Client ID"
 // @Param diagnosis_id path uuid true "Diagnosis ID"
 // @Param request body clientp.UpdateClientDiagnosisRequest true "Client diagnosis data"
-// @Success 200 {object} Response[clientp.UpdateClientDiagnosisResponse]
+// @Success 200 {object} Response[clientp.ClientDiagnosisResponse]
 // @Failure 400,404 {object} Response[any]
-// @Router /clients/{id}/diagnosis/{diagnosis_id} [put]
+// @Router /clients/{id}/medical/diagnoses/{diagnosis_id} [put]
 func (server *Server) UpdateClientDiagnosisApi(ctx *gin.Context) {
-	id := ctx.Param("diagnosis_id")
-	diagnosisID, err := uuid.Parse(id)
+	clientID, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	diagnosisID, err := uuid.Parse(ctx.Param("diagnosis_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -133,15 +157,13 @@ func (server *Server) UpdateClientDiagnosisApi(ctx *gin.Context) {
 		return
 	}
 
-	diagnosis, err := server.businessService.ClientService.UpdateClientDiagnosis(ctx, req, diagnosisID)
+	result, err := server.businessService.ClientService.UpdateClientDiagnosis(ctx, req, clientID, diagnosisID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	res := SuccessResponse(diagnosis, "Client diagnosis updated successfully")
-
-	ctx.JSON(http.StatusOK, res)
+	ctx.JSON(http.StatusOK, SuccessResponse(result, "Client diagnosis updated successfully"))
 }
 
 // DeleteClientDiagnosisApi deletes a client diagnosis
@@ -150,202 +172,193 @@ func (server *Server) UpdateClientDiagnosisApi(ctx *gin.Context) {
 // @Produce json
 // @Param id path uuid true "Client ID"
 // @Param diagnosis_id path uuid true "Diagnosis ID"
-// @Success 200 {object} Response[any]
+// @Success 200 {object} Response[clientp.DeleteClientDiagnosisResponse]
 // @Failure 400,404 {object} Response[any]
-// @Router /clients/{id}/diagnosis/{diagnosis_id} [delete]
+// @Router /clients/{id}/medical/diagnoses/{diagnosis_id} [delete]
 func (server *Server) DeleteClientDiagnosisApi(ctx *gin.Context) {
-	id := ctx.Param("diagnosis_id")
-	diagnosisID, err := uuid.Parse(id)
+	clientID, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	diagnosisID, err := uuid.Parse(ctx.Param("diagnosis_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
-	diag, err := server.businessService.ClientService.DeleteClientDiagnosis(ctx, diagnosisID)
+	result, err := server.businessService.ClientService.DeleteClientDiagnosis(ctx, clientID, diagnosisID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	res := SuccessResponse(diag, "Client diagnosis deleted successfully")
-
-	ctx.JSON(http.StatusOK, res)
+	ctx.JSON(http.StatusOK, SuccessResponse(result, "Client diagnosis deleted successfully"))
 }
 
-// CreateClientMedicationApi creates a client medication
-// @Summary Create a client medication
+// CreateClientMedicationOrderApi creates a medication order
+// @Summary Create a medication order
 // @Tags client_Medical
 // @Accept json
 // @Produce json
 // @Param id path uuid true "Client ID"
-// @Param diagnosis_id path uuid true "Diagnosis ID"
-// @Param request body clientp.CreateClientMedicationRequest true "Client medication data"
-// @Success 201 {object} Response[clientp.CreateClientMedicationResponse]
+// @Param request body clientp.CreateClientMedicationOrderRequest true "Medication order data"
+// @Success 201 {object} Response[clientp.ClientMedicationOrderResponse]
 // @Failure 400,404 {object} Response[any]
-// @Router /clients/{id}/diagnosis/{diagnosis_id}/medications [post]
-func (server *Server) CreateClientMedicationApi(ctx *gin.Context) {
-	id := ctx.Param("diagnosis_id")
-	diagnosisID, err := uuid.Parse(id)
+// @Router /clients/{id}/medical/medication-orders [post]
+func (server *Server) CreateClientMedicationOrderApi(ctx *gin.Context) {
+	clientID, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
-	var req clientp.CreateClientMedicationRequest
+	var req clientp.CreateClientMedicationOrderRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-	result, err := server.businessService.ClientService.CreateClientMedication(ctx, req, &diagnosisID)
+
+	result, err := server.businessService.ClientService.CreateClientMedicationOrder(ctx, req, clientID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	res := SuccessResponse(result, "Client medication created successfully")
-
-	ctx.JSON(http.StatusCreated, res)
+	ctx.JSON(http.StatusCreated, SuccessResponse(result, "Medication order created successfully"))
 }
 
-// ListClientMedicationsResponse defines the response for listing client medications
-type ListClientMedicationsResponse struct {
-	ID               int64     `json:"id"`
-	DiagnosisID      *int64    `json:"diagnosis_id"`
-	Name             string    `json:"name"`
-	Dosage           string    `json:"dosage"`
-	StartDate        time.Time `json:"start_date"`
-	EndDate          time.Time `json:"end_date"`
-	Notes            *string   `json:"notes"`
-	SelfAdministered bool      `json:"self_administered"`
-	AdministeredByID *int64    `json:"administered_by_id"`
-	IsCritical       bool      `json:"is_critical"`
-	UpdatedAt        time.Time `json:"updated_at"`
-	CreatedAt        time.Time `json:"created_at"`
-}
-
-// ListClientMedicationsApi lists all client medications
-// @Summary List all client medications
+// ListClientMedicationOrdersApi lists medication orders
+// @Summary List medication orders
 // @Tags client_Medical
 // @Accept json
 // @Produce json
 // @Param id path uuid true "Client ID"
-// @Param diagnosis_id path uuid true "Diagnosis ID"
 // @Param page query int false "Page number"
 // @Param page_size query int false "Page size"
-// @Success 200 {object} Response[pagination.Response[clientp.ListClientMedicationsResponse]]
+// @Param status query string false "Filter by status"
+// @Param admin_mode query string false "Filter by admin mode"
+// @Param diagnosis_id query uuid false "Filter by diagnosis"
+// @Param search query string false "Search"
+// @Success 200 {object} Response[pagination.Response[clientp.ClientMedicationOrderResponse]]
 // @Failure 400,404 {object} Response[any]
-// @Router /clients/{id}/diagnosis/{diagnosis_id}/medications [get]
-func (server *Server) ListClientMedicationsApi(ctx *gin.Context) {
-	id := ctx.Param("diagnosis_id")
-	diagnosisID, err := uuid.Parse(id)
+// @Router /clients/{id}/medical/medication-orders [get]
+func (server *Server) ListClientMedicationOrdersApi(ctx *gin.Context) {
+	clientID, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
-	var req clientp.ListClientMedicationsRequest
+	var req clientp.ListClientMedicationOrdersRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
-	pag, err := server.businessService.ClientService.ListMedicationsByDiagnosisID(ctx, req, &diagnosisID)
+	pag, err := server.businessService.ClientService.ListClientMedicationOrders(ctx, req, clientID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	res := SuccessResponse(pag, "Client medications fetched successfully")
-	ctx.JSON(http.StatusOK, res)
+
+	ctx.JSON(http.StatusOK, SuccessResponse(pag, "Medication orders fetched successfully"))
 }
 
-// GetClientMedicationApi gets a client medication
-// @Summary Get a client medication
+// GetClientMedicationOrderApi gets a medication order
+// @Summary Get a medication order
 // @Tags client_Medical
 // @Produce json
 // @Param id path uuid true "Client ID"
-// @Param medication_id path uuid true "Medication ID"
-// @Param diagnosis_id path uuid true "Diagnosis ID"
-// @Success 200 {object} Response[clientp.GetClientMedicationResponse]
+// @Param order_id path uuid true "Order ID"
+// @Success 200 {object} Response[clientp.ClientMedicationOrderResponse]
 // @Failure 400,404 {object} Response[any]
-// @Router /clients/{id}/diagnosis/{diagnosis_id}/medications/{medication_id} [get]
-func (server *Server) GetClientMedicationApi(ctx *gin.Context) {
-	id := ctx.Param("medication_id")
-	medicationID, err := uuid.Parse(id)
+// @Router /clients/{id}/medical/medication-orders/{order_id} [get]
+func (server *Server) GetClientMedicationOrderApi(ctx *gin.Context) {
+	clientID, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-	medication, err := server.businessService.ClientService.GetClientMedication(ctx, medicationID)
+	orderID, err := uuid.Parse(ctx.Param("order_id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	result, err := server.businessService.ClientService.GetClientMedicationOrder(ctx, clientID, orderID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
-	res := SuccessResponse(medication, "Client medication fetched successfully")
-	ctx.JSON(http.StatusOK, res)
+
+	ctx.JSON(http.StatusOK, SuccessResponse(result, "Medication order fetched successfully"))
 }
 
-// UpdateClientMedicationApi updates a client medication
-// @Summary Update a client medication
+// UpdateClientMedicationOrderApi updates a medication order
+// @Summary Update a medication order
 // @Tags client_Medical
 // @Accept json
 // @Produce json
 // @Param id path uuid true "Client ID"
-// @Param diagnosis_id path uuid true "Diagnosis ID"
-// @Param medication_id path uuid true "Medication ID"
-// @Param request body clientp.UpdateClientMedicationRequest true "Client medication data"
-// @Success 200 {object} Response[clientp.UpdateClientMedicationResponse]
+// @Param order_id path uuid true "Order ID"
+// @Param request body clientp.UpdateClientMedicationOrderRequest true "Medication order data"
+// @Success 200 {object} Response[clientp.ClientMedicationOrderResponse]
 // @Failure 400,404 {object} Response[any]
-// @Router /clients/{id}/diagnosis/{diagnosis_id}/medications/{medication_id} [put]
-func (server *Server) UpdateClientMedicationApi(ctx *gin.Context) {
-	id := ctx.Param("medication_id")
-	medicationID, err := uuid.Parse(id)
+// @Router /clients/{id}/medical/medication-orders/{order_id} [put]
+func (server *Server) UpdateClientMedicationOrderApi(ctx *gin.Context) {
+	clientID, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	orderID, err := uuid.Parse(ctx.Param("order_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
-	var req clientp.UpdateClientMedicationRequest
+	var req clientp.UpdateClientMedicationOrderRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
-	result, err := server.businessService.ClientService.UpdateClientMedication(ctx, req, medicationID)
+	result, err := server.businessService.ClientService.UpdateClientMedicationOrder(ctx, req, clientID, orderID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	res := SuccessResponse(result, "Client medication updated successfully")
-
-	ctx.JSON(http.StatusOK, res)
+	ctx.JSON(http.StatusOK, SuccessResponse(result, "Medication order updated successfully"))
 }
 
-// DeleteClientMedicationApi deletes a client medication
-// @Summary Delete a client medication
+// DeleteClientMedicationOrderApi deletes a medication order
+// @Summary Delete a medication order
 // @Tags client_Medical
 // @Produce json
 // @Param id path uuid true "Client ID"
-// @Param diagnosis_id path uuid true "Diagnosis ID"
-// @Param medication_id path uuid true "Medication ID"
-// @Success 200 {object} Response[any]
+// @Param order_id path uuid true "Order ID"
+// @Success 200 {object} Response[clientp.DeleteClientMedicationOrderResponse]
 // @Failure 400,404 {object} Response[any]
-// @Router /clients/{id}/medications/{medication_id} [delete]
-func (server *Server) DeleteClientMedicationApi(ctx *gin.Context) {
-	id := ctx.Param("medication_id")
-	medicationID, err := uuid.Parse(id)
+// @Router /clients/{id}/medical/medication-orders/{order_id} [delete]
+func (server *Server) DeleteClientMedicationOrderApi(ctx *gin.Context) {
+	clientID, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	orderID, err := uuid.Parse(ctx.Param("order_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
-	err = server.businessService.ClientService.DeleteClientMedication(ctx, medicationID)
+	result, err := server.businessService.ClientService.DeleteClientMedicationOrder(ctx, clientID, orderID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	res := SuccessResponse[any](nil, "Client medication deleted successfully")
-
-	ctx.JSON(http.StatusOK, res)
+	ctx.JSON(http.StatusOK, SuccessResponse(result, "Medication order deleted successfully"))
 }

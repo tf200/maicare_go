@@ -124,6 +124,19 @@ func (s *organizationService) GetOrganizationCounts(ctx context.Context, organiz
 	}, nil
 }
 
+func (s *organizationService) GetGlobalOrganizationCounts(ctx context.Context) (*GetGlobalOrganisationCountResponse, error) {
+	counts, err := s.Store.GetGlobalOrganisationCounts(ctx)
+	if err != nil {
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetGlobalOrganisationCountApi", "Failed to get global organisation counts", zap.Error(err))
+		return nil, fmt.Errorf("failed to get global organisation counts")
+	}
+
+	return &GetGlobalOrganisationCountResponse{
+		TotalLocations: counts.TotalLocations,
+		TotalCapacity:  counts.TotalCapacity,
+	}, nil
+}
+
 func (s *organizationService) UpdateOrganization(ctx context.Context, organizationID uuid.UUID, req UpdateOrganisationRequest) (*GetOrganisationResponse, error) {
 	organization, err := s.Store.UpdateOrganisation(ctx, db.UpdateOrganisationParams{
 		ID:                  organizationID,

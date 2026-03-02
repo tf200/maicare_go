@@ -52,6 +52,41 @@ func (q *Queries) GetUserIDByEmployeeID(ctx context.Context, id uuid.UUID) (uuid
 	return user_id, err
 }
 
+const listEmployeeNamesByIDs = `-- name: ListEmployeeNamesByIDs :many
+SELECT
+    id,
+    first_name,
+    last_name
+FROM employee_profile
+WHERE id = ANY($1::uuid[])
+`
+
+type ListEmployeeNamesByIDsRow struct {
+	ID        uuid.UUID `json:"id"`
+	FirstName string    `json:"first_name"`
+	LastName  string    `json:"last_name"`
+}
+
+func (q *Queries) ListEmployeeNamesByIDs(ctx context.Context, employeeIds []uuid.UUID) ([]ListEmployeeNamesByIDsRow, error) {
+	rows, err := q.db.Query(ctx, listEmployeeNamesByIDs, employeeIds)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListEmployeeNamesByIDsRow{}
+	for rows.Next() {
+		var i ListEmployeeNamesByIDsRow
+		if err := rows.Scan(&i.ID, &i.FirstName, &i.LastName); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listEmployeesWithContractHours = `-- name: ListEmployeesWithContractHours :many
 SELECT
     id,

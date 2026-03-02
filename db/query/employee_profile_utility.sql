@@ -49,3 +49,11 @@ FROM employee_profile
 WHERE id = ANY($1::uuid[])
 AND contract_hours IS NOT NULL
 AND contract_hours > 0;
+
+-- name: ListEmployeeNamesByIDs :many
+SELECT
+    id,
+    first_name,
+    last_name
+FROM employee_profile
+WHERE id = ANY(sqlc.arg(employee_ids)::uuid[]);

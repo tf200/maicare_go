@@ -2365,7 +2365,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/clients/{id}/incidents/{incident_id}": {
+        "/incidents/{incident_id}": {
             "get": {
                 "produces": [
                     "application/json"
@@ -2483,7 +2483,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/clients/{id}/incidents/{incident_id}/file": {
+        "/incidents/{incident_id}/file": {
             "get": {
                 "produces": [
                     "application/json"

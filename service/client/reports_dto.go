@@ -34,6 +34,7 @@ type CreateProgressReportResponse struct {
 // ListProgressReportsRequest defines the request payload for ListProgressReports API
 type ListProgressReportsRequest struct {
 	pagination.Request
+	Type *string `form:"type" binding:"omitempty,oneof=morning_report evening_report night_report shift_report one_to_one_report process_report contact_journal other"`
 }
 
 // ListProgressReportsResponse defines the response payload for ListProgressReports API
@@ -42,7 +43,6 @@ type ListProgressReportsResponse struct {
 	ClientID               uuid.UUID  `json:"client_id"`
 	Date                   time.Time  `json:"date"`
 	Title                  *string    `json:"title"`
-	ReportText             string     `json:"report_text"`
 	EmployeeID             *uuid.UUID `json:"employee_id"`
 	Type                   string     `json:"type"`
 	EmotionalState         string     `json:"emotional_state"`

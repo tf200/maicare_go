@@ -57,22 +57,6 @@ func runMigrations(dbSource string, migrationsPath string) error {
 	return nil
 }
 
-func registerEnumTypes(ctx context.Context, conn *pgx.Conn) error {
-	intakeParticipants, err := conn.LoadType(ctx, "intake_participants_enum")
-	if err != nil {
-		return fmt.Errorf("failed to load intake_participants_enum: %w", err)
-	}
-	conn.TypeMap().RegisterType(intakeParticipants)
-
-	intakeParticipantsArray, err := conn.LoadType(ctx, "_intake_participants_enum")
-	if err != nil {
-		return fmt.Errorf("failed to load _intake_participants_enum: %w", err)
-	}
-	conn.TypeMap().RegisterType(intakeParticipantsArray)
-
-	return nil
-}
-
 func main() {
 	// Add context for graceful shutdown
 	ctx, cancel := context.WithCancel(context.Background())
@@ -93,7 +77,7 @@ func main() {
 		log.Fatalf("unable to parse database config: %v", err)
 	}
 	poolConfig.AfterConnect = func(ctx context.Context, conn *pgx.Conn) error {
-		return registerEnumTypes(ctx, conn)
+		return db.RegisterEnumTypes(ctx, conn)
 	}
 	// Configure connection pool settings
 	poolConfig.MaxConns = 30                      // Maximum connections

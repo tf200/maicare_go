@@ -37,6 +37,60 @@ INSERT INTO contract (
 )
 RETURNING *;
 
+-- ==========================================
+-- Invoicing Helpers
+-- ==========================================
+
+-- name: ListInvoiceTargetsForPeriod :many
+-- Returns distinct (sender_id, client_id) pairs that have at least one approved contract overlapping the billing period.
+SELECT DISTINCT
+    c.sender_id,
+    c.client_id
+FROM contract c
+WHERE c.status = 'approved'
+  AND c.start_date < sqlc.arg(period_end)
+  AND c.end_date > sqlc.arg(period_start);
+
+-- name: ListApprovedContractsForClientSenderInPeriod :many
+-- Returns all approved contracts for a (client, sender) overlapping the billing period.
+SELECT
+    c.id,
+    c.type_id,
+    c.status,
+    c.approved_at,
+    c.start_date,
+    c.end_date,
+    c.vat,
+    c.price,
+    c.price_time_unit,
+    c.hours,
+    c.hours_type,
+    c.care_name,
+    c.care_type,
+    c.client_id,
+    c.sender_id,
+    c.financing_act,
+    c.financing_option,
+    c.updated_at,
+    c.created_at
+FROM contract c
+WHERE c.status = 'approved'
+  AND c.client_id = sqlc.arg(client_id)
+  AND c.sender_id = sqlc.arg(sender_id)
+  AND c.start_date < sqlc.arg(period_end)
+  AND c.end_date > sqlc.arg(period_start)
+ORDER BY c.created_at DESC;
+
+-- name: ListClientSendersForPeriod :many
+-- Returns distinct senders for a client that have at least one approved contract overlapping the billing period.
+SELECT DISTINCT
+    c.sender_id
+FROM contract c
+WHERE c.status = 'approved'
+  AND c.client_id = sqlc.arg(client_id)
+  AND c.start_date < sqlc.arg(period_end)
+  AND c.end_date > sqlc.arg(period_start);
+
 -- name: ListClientContracts :many
 WITH client_contracts AS (
     SELECT
@@ -241,46 +295,40 @@ RETURNING *;
 
 
 -- name: GetBillablePeriodsForContract :many
+-- Important: do NOT use contract.updated_at as a status effective date.
+-- Any non-status update would shift the "approved" start forward and underbill.
 WITH raw_status_changes AS (
   SELECT
-    (new_values->>'status')::contract_status_enum AS status,
-    changed_at AS effective_date
-  FROM contract_audit
-  WHERE contract_id = sqlc.arg(contract_id)
-    AND new_values->>'status' IS NOT NULL
-  
-  UNION ALL
-  
-  SELECT
-    status,
-    updated_at
-  FROM contract
-  WHERE id = sqlc.arg(contract_id)
+    (ca.new_values->>'status')::contract_status_enum AS status,
+    ca.changed_at AS effective_date
+  FROM contract_audit ca
+  WHERE ca.contract_id = sqlc.arg(contract_id)
+    AND ca.new_values->>'status' IS NOT NULL
 ),
 
--- Deduplicate identical status within 1 second windows
+-- Deduplicate identical status within 1 second windows (protects against rapid double updates)
 status_history AS (
   SELECT
     status,
     MIN(effective_date) AS effective_date
   FROM raw_status_changes
   GROUP BY status, EXTRACT(EPOCH FROM effective_date)::INTEGER
-  ORDER BY MIN(effective_date)
 ),
 
-approved_periods AS (
+status_periods AS (
   SELECT
+    status,
     effective_date AS period_start,
     LEAD(effective_date, 1) OVER (ORDER BY effective_date) AS period_end
   FROM status_history
-  WHERE status = 'approved'
 )
 
 SELECT
   GREATEST(period_start, sqlc.arg(invoice_start_date))::TIMESTAMPTZ AS billable_start,
   LEAST(COALESCE(period_end, sqlc.arg(invoice_end_date)), sqlc.arg(invoice_end_date))::TIMESTAMPTZ AS billable_end
-FROM approved_periods
-WHERE period_start < sqlc.arg(invoice_end_date)
+FROM status_periods
+WHERE status = 'approved'
+  AND period_start < sqlc.arg(invoice_end_date)
   AND COALESCE(period_end, 'infinity'::TIMESTAMPTZ) > sqlc.arg(invoice_start_date);
 
 

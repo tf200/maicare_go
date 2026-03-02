@@ -2,6 +2,7 @@ package clientp
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"maicare_go/async/aclient"
@@ -18,48 +19,86 @@ import (
 	"go.uber.org/zap"
 )
 
-func (s *clientService) CreateIncident(ctx context.Context, req CreateIncidentRequest, clientID uuid.UUID) (*CreateIncidentResponse, error) {
+func toInformedParties(values []string) []db.InformedPartyEnum {
+	result := make([]db.InformedPartyEnum, 0, len(values))
+	for _, value := range values {
+		result = append(result, db.InformedPartyEnum(value))
+	}
+	return result
+}
+
+func informedPartiesToStrings(values []db.InformedPartyEnum) []string {
+	result := make([]string, 0, len(values))
+	for _, value := range values {
+		result = append(result, string(value))
+	}
+	return result
+}
+
+func toCauseCategories(values []string) []db.IncidentCauseCategoryEnum {
+	result := make([]db.IncidentCauseCategoryEnum, 0, len(values))
+	for _, value := range values {
+		result = append(result, db.IncidentCauseCategoryEnum(value))
+	}
+	return result
+}
+
+func causeCategoriesToStrings(values []db.IncidentCauseCategoryEnum) []string {
+	result := make([]string, 0, len(values))
+	for _, value := range values {
+		result = append(result, string(value))
+	}
+	return result
+}
+
+func toFollowUpActions(values []string) []db.IncidentFollowUpActionEnum {
+	result := make([]db.IncidentFollowUpActionEnum, 0, len(values))
+	for _, value := range values {
+		result = append(result, db.IncidentFollowUpActionEnum(value))
+	}
+	return result
+}
+
+func followUpActionsToStrings(values []db.IncidentFollowUpActionEnum) []string {
+	result := make([]string, 0, len(values))
+	for _, value := range values {
+		result = append(result, string(value))
+	}
+	return result
+}
+
+func nullIncidentTypeFromPtr(ptr *string) db.NullIncidentTypeEnum {
+	if ptr == nil {
+		return db.NullIncidentTypeEnum{Valid: false}
+	}
+	return db.NullIncidentTypeEnum{IncidentTypeEnum: db.IncidentTypeEnum(*ptr), Valid: true}
+}
+
+func (s *clientService) CreateIncident(ctx context.Context, req CreateIncidentRequest) (*CreateIncidentResponse, error) {
 	arg := db.CreateIncidentParams{
 		EmployeeID:              req.EmployeeID,
 		LocationID:              req.LocationID,
 		ReporterInvolvement:     db.IncidentReporterInvolvementEnum(req.ReporterInvolvement),
-		InformWho:               req.InformWho,
-		IncidentDate:            pgtype.Date{Time: req.IncidentDate, Valid: true},
-		RuntimeIncident:         req.RuntimeIncident,
-		IncidentType:            req.IncidentType,
-		PassingAway:             req.PassingAway,
-		SelfHarm:                req.SelfHarm,
-		Violence:                req.Violence,
-		FireWaterDamage:         req.FireWaterDamage,
-		Accident:                req.Accident,
-		ClientAbsence:           req.ClientAbsence,
-		Medicines:               req.Medicines,
-		Organization:            req.Organization,
-		UseProhibitedSubstances: req.UseProhibitedSubstances,
-		OtherNotifications:      req.OtherNotifications,
+		InformedParties:         toInformedParties(req.InformedParties),
+		OccurredAt:              pgtype.Timestamptz{Time: req.OccurredAt, Valid: true},
+		IncidentType:            db.IncidentTypeEnum(req.IncidentType),
 		SeverityOfIncident:      db.SeverityOfIncidentEnum(req.SeverityOfIncident),
 		IncidentExplanation:     req.IncidentExplanation,
 		RecurrenceRisk:          db.RecurrenceRiskEnum(req.RecurrenceRisk),
 		IncidentPreventSteps:    req.IncidentPreventSteps,
 		IncidentTakenMeasures:   req.IncidentTakenMeasures,
-		Technical:               req.Technical,
-		Organizational:          req.Organizational,
-		MeseWorker:              req.MeseWorker,
-		ClientOptions:           req.ClientOptions,
-		OtherCause:              req.OtherCause,
+		CauseCategories:         toCauseCategories(req.CauseCategories),
 		CauseExplanation:        req.CauseExplanation,
 		PhysicalInjury:          db.PhysicalInjuryEnum(req.PhysicalInjury),
 		PhysicalInjuryDesc:      req.PhysicalInjuryDesc,
 		PsychologicalDamage:     db.PsychologicalDamageEnum(req.PsychologicalDamage),
 		PsychologicalDamageDesc: req.PsychologicalDamageDesc,
 		NeededConsultation:      db.NeededConsultationEnum(req.NeededConsultation),
-		Succession:              req.Succession,
-		SuccessionDesc:          req.SuccessionDesc,
-		Other:                   req.Other,
-		OtherDesc:               req.OtherDesc,
-		AdditionalAppointments:  req.AdditionalAppointments,
-		EmployeeAbsenteeism:     req.EmployeeAbsenteeism,
-		ClientID:                clientID,
+		FollowUpActions:         toFollowUpActions(req.FollowUpActions),
+		FollowUpNotes:           req.FollowUpNotes,
+		IsEmployeeAbsent:        req.IsEmployeeAbsent,
+		AdditionalDetails:       req.AdditionalDetails,
+		ClientID:                req.ClientID,
 		Emails:                  req.Emails,
 	}
 
@@ -75,57 +114,6 @@ func (s *clientService) CreateIncident(ctx context.Context, req CreateIncidentRe
 	}
 
 	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "CreateIncident", "Incident created successfully", zap.String("IncidentID", incident.ID.String()))
-
-	err = s.asynqClient.EnqueueIncident(aclient.IncidentPayload{
-		ID:                      incident.ID,
-		EmployeeID:              incident.EmployeeID,
-		EmployeeFirstName:       util.DerefString(incident.EmployeeFirstName),
-		EmployeeLastName:        util.DerefString(incident.EmployeeLastName),
-		LocationID:              incident.LocationID,
-		ReporterInvolvement:     string(incident.ReporterInvolvement),
-		InformWho:               req.InformWho,
-		IncidentDate:            incident.IncidentDate.Time,
-		RuntimeIncident:         incident.RuntimeIncident,
-		IncidentType:            incident.IncidentType,
-		PassingAway:             incident.PassingAway,
-		SelfHarm:                incident.SelfHarm,
-		Violence:                incident.Violence,
-		FireWaterDamage:         incident.FireWaterDamage,
-		Accident:                incident.Accident,
-		ClientAbsence:           incident.ClientAbsence,
-		Medicines:               incident.Medicines,
-		Organization:            incident.Organization,
-		UseProhibitedSubstances: incident.UseProhibitedSubstances,
-		OtherNotifications:      incident.OtherNotifications,
-		SeverityOfIncident:      string(incident.SeverityOfIncident),
-		IncidentExplanation:     incident.IncidentExplanation,
-		RecurrenceRisk:          string(incident.RecurrenceRisk),
-		IncidentPreventSteps:    incident.IncidentPreventSteps,
-		IncidentTakenMeasures:   incident.IncidentTakenMeasures,
-		Technical:               req.Technical,
-		Organizational:          req.Organizational,
-		MeseWorker:              req.MeseWorker,
-		ClientOptions:           req.ClientOptions,
-		OtherCause:              incident.OtherCause,
-		CauseExplanation:        incident.CauseExplanation,
-		PhysicalInjury:          string(incident.PhysicalInjury),
-		PhysicalInjuryDesc:      incident.PhysicalInjuryDesc,
-		PsychologicalDamage:     string(incident.PsychologicalDamage),
-		PsychologicalDamageDesc: incident.PsychologicalDamageDesc,
-		NeededConsultation:      string(incident.NeededConsultation),
-		Succession:              req.Succession,
-		SuccessionDesc:          incident.SuccessionDesc,
-		Other:                   incident.Other,
-		OtherDesc:               incident.OtherDesc,
-		AdditionalAppointments:  incident.AdditionalAppointments,
-		EmployeeAbsenteeism:     incident.EmployeeAbsenteeism,
-		ClientID:                incident.ClientID,
-		LocationName:            util.DerefString(incident.LocationName),
-		To:                      incident.Emails,
-	}, ctx)
-	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateIncident", "Failed to enqueue incident email task", zap.Error(err))
-	}
 
 	receipients, err := s.Store.GetAllAdminUsers(ctx)
 	if err != nil {
@@ -148,13 +136,20 @@ func (s *clientService) CreateIncident(ctx context.Context, req CreateIncidentRe
 				ClientLastName:     util.DerefString(incident.ClientLastName),
 				SeverityOfIncident: string(incident.SeverityOfIncident),
 			}
+			message := fmt.Sprintf(
+				"New incident reported for %s %s (%s)",
+				notificationData.ClientFirstName,
+				notificationData.ClientLastName,
+				notificationData.SeverityOfIncident,
+			)
 			err = s.asynqClient.EnqueueNotificationTask(ctx, notification.NotificationPayload{
 				RecipientUserIDs: recipientUserIDs,
-				Type:             notification.TypeNewClientAssignment,
+				Type:             notification.TypeIncidentReport,
 				Data: notification.NotificationData{
 					NewIncidentReport: &notificationData,
 				},
 				CreatedAt: time.Now(),
+				Message:   message,
 			})
 			if err != nil {
 				s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateIncident", "Failed to enqueue incident notification task", zap.Error(err))
@@ -168,45 +163,27 @@ func (s *clientService) CreateIncident(ctx context.Context, req CreateIncidentRe
 		EmployeeID:              incident.EmployeeID,
 		LocationID:              incident.LocationID,
 		ReporterInvolvement:     string(incident.ReporterInvolvement),
-		InformWho:               incident.InformWho,
-		IncidentDate:            incident.IncidentDate.Time,
-		RuntimeIncident:         incident.RuntimeIncident,
-		IncidentType:            incident.IncidentType,
-		PassingAway:             incident.PassingAway,
-		SelfHarm:                incident.SelfHarm,
-		Violence:                incident.Violence,
-		FireWaterDamage:         incident.FireWaterDamage,
-		Accident:                incident.Accident,
-		ClientAbsence:           incident.ClientAbsence,
-		Medicines:               incident.Medicines,
-		Organization:            incident.Organization,
-		UseProhibitedSubstances: incident.UseProhibitedSubstances,
-		OtherNotifications:      incident.OtherNotifications,
+		InformedParties:         informedPartiesToStrings(incident.InformedParties),
+		OccurredAt:              incident.OccurredAt.Time,
+		IncidentType:            string(incident.IncidentType),
 		SeverityOfIncident:      string(incident.SeverityOfIncident),
 		IncidentExplanation:     incident.IncidentExplanation,
 		RecurrenceRisk:          string(incident.RecurrenceRisk),
 		IncidentPreventSteps:    incident.IncidentPreventSteps,
 		IncidentTakenMeasures:   incident.IncidentTakenMeasures,
-		Technical:               incident.Technical,
-		Organizational:          incident.Organizational,
-		MeseWorker:              incident.MeseWorker,
-		ClientOptions:           incident.ClientOptions,
-		OtherCause:              incident.OtherCause,
+		CauseCategories:         causeCategoriesToStrings(incident.CauseCategories),
 		CauseExplanation:        incident.CauseExplanation,
 		PhysicalInjury:          string(incident.PhysicalInjury),
 		PhysicalInjuryDesc:      incident.PhysicalInjuryDesc,
 		PsychologicalDamage:     string(incident.PsychologicalDamage),
 		PsychologicalDamageDesc: incident.PsychologicalDamageDesc,
 		NeededConsultation:      string(incident.NeededConsultation),
-		Succession:              incident.Succession,
-		SuccessionDesc:          incident.SuccessionDesc,
-		Other:                   incident.Other,
-		OtherDesc:               incident.OtherDesc,
-		AdditionalAppointments:  incident.AdditionalAppointments,
-		EmployeeAbsenteeism:     incident.EmployeeAbsenteeism,
+		FollowUpActions:         followUpActionsToStrings(incident.FollowUpActions),
+		FollowUpNotes:           incident.FollowUpNotes,
+		IsEmployeeAbsent:        incident.IsEmployeeAbsent,
+		AdditionalDetails:       incident.AdditionalDetails,
 		ClientID:                incident.ClientID,
 		Emails:                  incident.Emails,
-		SoftDelete:              incident.SoftDelete,
 		UpdatedAt:               incident.UpdatedAt.Time,
 		CreatedAt:               incident.CreatedAt.Time,
 	}
@@ -241,56 +218,15 @@ func (s *clientService) ListIncidents(ctx *gin.Context, req ListIncidentsRequest
 	var incidentResponses []ListIncidentsResponse
 	for _, incident := range incidents {
 		incidentResponses = append(incidentResponses, ListIncidentsResponse{
-			ID:                      incident.ID,
-			EmployeeID:              incident.EmployeeID,
-			EmployeeFirstName:       incident.EmployeeFirstName,
-			EmployeeLastName:        incident.EmployeeLastName,
-			LocationID:              incident.LocationID,
-			ReporterInvolvement:     string(incident.ReporterInvolvement),
-			InformWho:               incident.InformWho,
-			IncidentDate:            incident.IncidentDate.Time,
-			RuntimeIncident:         incident.RuntimeIncident,
-			IncidentType:            incident.IncidentType,
-			PassingAway:             incident.PassingAway,
-			SelfHarm:                incident.SelfHarm,
-			Violence:                incident.Violence,
-			FireWaterDamage:         incident.FireWaterDamage,
-			Accident:                incident.Accident,
-			ClientAbsence:           incident.ClientAbsence,
-			Medicines:               incident.Medicines,
-			Organization:            incident.Organization,
-			UseProhibitedSubstances: incident.UseProhibitedSubstances,
-			OtherNotifications:      incident.OtherNotifications,
-			SeverityOfIncident:      string(incident.SeverityOfIncident),
-			IncidentExplanation:     incident.IncidentExplanation,
-			RecurrenceRisk:          string(incident.RecurrenceRisk),
-			IncidentPreventSteps:    incident.IncidentPreventSteps,
-			IncidentTakenMeasures:   incident.IncidentTakenMeasures,
-			Technical:               incident.Technical,
-			Organizational:          incident.Organizational,
-			MeseWorker:              incident.MeseWorker,
-			ClientOptions:           incident.ClientOptions,
-			OtherCause:              incident.OtherCause,
-			CauseExplanation:        incident.CauseExplanation,
-			PhysicalInjury:          string(incident.PhysicalInjury),
-			PhysicalInjuryDesc:      incident.PhysicalInjuryDesc,
-			PsychologicalDamage:     string(incident.PsychologicalDamage),
-			PsychologicalDamageDesc: incident.PsychologicalDamageDesc,
-			NeededConsultation:      string(incident.NeededConsultation),
-			Succession:              incident.Succession,
-			SuccessionDesc:          incident.SuccessionDesc,
-			Other:                   incident.Other,
-			OtherDesc:               incident.OtherDesc,
-			AdditionalAppointments:  incident.AdditionalAppointments,
-			EmployeeAbsenteeism:     incident.EmployeeAbsenteeism,
-			ClientID:                incident.ClientID,
-			Emails:                  incident.Emails,
-			SoftDelete:              incident.SoftDelete,
-			UpdatedAt:               incident.UpdatedAt.Time,
-			CreatedAt:               incident.CreatedAt.Time,
-			IsConfirmed:             incident.IsConfirmed,
-			EmployeeProfilePicture:  incident.EmployeeProfilePicture,
-			LocationName:            incident.LocationName,
+			ID:                     incident.ID,
+			OccurredAt:             incident.OccurredAt.Time,
+			IncidentType:           string(incident.IncidentType),
+			SeverityOfIncident:     string(incident.SeverityOfIncident),
+			IsConfirmed:            incident.IsConfirmed,
+			EmployeeFirstName:      incident.EmployeeFirstName,
+			EmployeeLastName:       incident.EmployeeLastName,
+			EmployeeProfilePicture: incident.EmployeeProfilePicture,
+			LocationName:           incident.LocationName,
 		})
 	}
 
@@ -317,44 +253,26 @@ func (s *clientService) GetIncident(ctx context.Context, incidentID uuid.UUID) (
 		EmployeeLastName:        incident.EmployeeLastName,
 		LocationID:              incident.LocationID,
 		ReporterInvolvement:     string(incident.ReporterInvolvement),
-		InformWho:               incident.InformWho,
-		IncidentDate:            incident.IncidentDate.Time,
-		RuntimeIncident:         incident.RuntimeIncident,
-		IncidentType:            incident.IncidentType,
-		PassingAway:             incident.PassingAway,
-		SelfHarm:                incident.SelfHarm,
-		Violence:                incident.Violence,
-		FireWaterDamage:         incident.FireWaterDamage,
-		Accident:                incident.Accident,
-		ClientAbsence:           incident.ClientAbsence,
-		Medicines:               incident.Medicines,
-		Organization:            incident.Organization,
-		UseProhibitedSubstances: incident.UseProhibitedSubstances,
-		OtherNotifications:      incident.OtherNotifications,
+		InformedParties:         informedPartiesToStrings(incident.InformedParties),
+		OccurredAt:              incident.OccurredAt.Time,
+		IncidentType:            string(incident.IncidentType),
 		SeverityOfIncident:      string(incident.SeverityOfIncident),
 		IncidentExplanation:     incident.IncidentExplanation,
 		RecurrenceRisk:          string(incident.RecurrenceRisk),
 		IncidentPreventSteps:    incident.IncidentPreventSteps,
 		IncidentTakenMeasures:   incident.IncidentTakenMeasures,
-		Technical:               incident.Technical,
-		Organizational:          incident.Organizational,
-		MeseWorker:              incident.MeseWorker,
-		ClientOptions:           incident.ClientOptions,
-		OtherCause:              incident.OtherCause,
+		CauseCategories:         causeCategoriesToStrings(incident.CauseCategories),
 		CauseExplanation:        incident.CauseExplanation,
 		PhysicalInjury:          string(incident.PhysicalInjury),
 		PhysicalInjuryDesc:      incident.PhysicalInjuryDesc,
 		PsychologicalDamage:     string(incident.PsychologicalDamage),
 		PsychologicalDamageDesc: incident.PsychologicalDamageDesc,
 		NeededConsultation:      string(incident.NeededConsultation),
-		Succession:              incident.Succession,
-		SuccessionDesc:          incident.SuccessionDesc,
-		Other:                   incident.Other,
-		OtherDesc:               incident.OtherDesc,
-		AdditionalAppointments:  incident.AdditionalAppointments,
-		EmployeeAbsenteeism:     incident.EmployeeAbsenteeism,
+		FollowUpActions:         followUpActionsToStrings(incident.FollowUpActions),
+		FollowUpNotes:           incident.FollowUpNotes,
+		IsEmployeeAbsent:        incident.IsEmployeeAbsent,
+		AdditionalDetails:       incident.AdditionalDetails,
 		ClientID:                incident.ClientID,
-		SoftDelete:              incident.SoftDelete,
 		UpdatedAt:               incident.UpdatedAt.Time,
 		CreatedAt:               incident.CreatedAt.Time,
 		IsConfirmed:             incident.IsConfirmed,
@@ -370,43 +288,26 @@ func (s *clientService) UpdateIncident(ctx context.Context, req UpdateIncidentRe
 		EmployeeID:              req.EmployeeID,
 		LocationID:              req.LocationID,
 		ReporterInvolvement:     db.NullIncidentReporterInvolvementFromPtr(req.ReporterInvolvement),
-		IncidentDate:            pgtype.Date{Time: req.IncidentDate, Valid: true},
-		RuntimeIncident:         req.RuntimeIncident,
-		IncidentType:            req.IncidentType,
-		PassingAway:             req.PassingAway,
-		SelfHarm:                req.SelfHarm,
-		Violence:                req.Violence,
-		FireWaterDamage:         req.FireWaterDamage,
-		Accident:                req.Accident,
-		ClientAbsence:           req.ClientAbsence,
-		Medicines:               req.Medicines,
-		Organization:            req.Organization,
-		UseProhibitedSubstances: req.UseProhibitedSubstances,
-		OtherNotifications:      req.OtherNotifications,
+		InformedParties:         toInformedParties(req.InformedParties),
+		OccurredAt:              pgtype.Timestamptz{Time: req.OccurredAt, Valid: true},
+		IncidentType:            nullIncidentTypeFromPtr(req.IncidentType),
 		SeverityOfIncident:      db.NullSeverityOfIncidentFromPtr(req.SeverityOfIncident),
 		IncidentExplanation:     req.IncidentExplanation,
 		RecurrenceRisk:          db.NullRecurrenceRiskFromPtr(req.RecurrenceRisk),
 		IncidentPreventSteps:    req.IncidentPreventSteps,
 		IncidentTakenMeasures:   req.IncidentTakenMeasures,
-		OtherCause:              req.OtherCause,
+		CauseCategories:         toCauseCategories(req.CauseCategories),
 		CauseExplanation:        req.CauseExplanation,
 		PhysicalInjury:          db.NullPhysicalInjuryFromPtr(req.PhysicalInjury),
 		PhysicalInjuryDesc:      req.PhysicalInjuryDesc,
 		PsychologicalDamage:     db.NullPsychologicalDamageFromPtr(req.PsychologicalDamage),
 		PsychologicalDamageDesc: req.PsychologicalDamageDesc,
 		NeededConsultation:      db.NullNeededConsultationFromPtr(req.NeededConsultation),
-		SuccessionDesc:          req.SuccessionDesc,
-		Other:                   req.Other,
-		OtherDesc:               req.OtherDesc,
-		AdditionalAppointments:  req.AdditionalAppointments,
-		EmployeeAbsenteeism:     req.EmployeeAbsenteeism,
+		FollowUpActions:         toFollowUpActions(req.FollowUpActions),
+		FollowUpNotes:           req.FollowUpNotes,
+		IsEmployeeAbsent:        req.IsEmployeeAbsent,
+		AdditionalDetails:       req.AdditionalDetails,
 		Emails:                  req.Emails,
-		InformWho:               req.InformWho,
-		Succession:              req.Succession,
-		Technical:               req.Technical,
-		Organizational:          req.Organizational,
-		MeseWorker:              req.MeseWorker,
-		ClientOptions:           req.ClientOptions,
 	}
 	var incident db.Incident
 	err := s.Store.ExecTx(ctx, func(q *db.Queries) error {
@@ -420,99 +321,32 @@ func (s *clientService) UpdateIncident(ctx context.Context, req UpdateIncidentRe
 	}
 
 	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "UpdateIncident", "Incident updated successfully", zap.String("IncidentID", incident.ID.String()))
-	err = s.asynqClient.EnqueueIncident(aclient.IncidentPayload{
-		ID:                      incident.ID,
-		EmployeeID:              incident.EmployeeID,
-		EmployeeFirstName:       "",
-		EmployeeLastName:        "",
-		LocationID:              incident.LocationID,
-		ReporterInvolvement:     string(incident.ReporterInvolvement),
-		InformWho:               incident.InformWho,
-		IncidentDate:            incident.IncidentDate.Time,
-		RuntimeIncident:         incident.RuntimeIncident,
-		IncidentType:            incident.IncidentType,
-		PassingAway:             incident.PassingAway,
-		SelfHarm:                incident.SelfHarm,
-		Violence:                incident.Violence,
-		FireWaterDamage:         incident.FireWaterDamage,
-		Accident:                incident.Accident,
-		ClientAbsence:           incident.ClientAbsence,
-		Medicines:               incident.Medicines,
-		Organization:            incident.Organization,
-		UseProhibitedSubstances: incident.UseProhibitedSubstances,
-		OtherNotifications:      incident.OtherNotifications,
-		SeverityOfIncident:      string(incident.SeverityOfIncident),
-		IncidentExplanation:     incident.IncidentExplanation,
-		RecurrenceRisk:          string(incident.RecurrenceRisk),
-		IncidentPreventSteps:    incident.IncidentPreventSteps,
-		IncidentTakenMeasures:   incident.IncidentTakenMeasures,
-		Technical:               incident.Technical,
-		Organizational:          incident.Organizational,
-		MeseWorker:              incident.MeseWorker,
-		ClientOptions:           incident.ClientOptions,
-		OtherCause:              incident.OtherCause,
-		CauseExplanation:        incident.CauseExplanation,
-		PhysicalInjury:          string(incident.PhysicalInjury),
-		PhysicalInjuryDesc:      incident.PhysicalInjuryDesc,
-		PsychologicalDamage:     string(incident.PsychologicalDamage),
-		PsychologicalDamageDesc: incident.PsychologicalDamageDesc,
-		NeededConsultation:      string(incident.NeededConsultation),
-		Succession:              incident.Succession,
-		SuccessionDesc:          incident.SuccessionDesc,
-		Other:                   incident.Other,
-		OtherDesc:               incident.OtherDesc,
-		AdditionalAppointments:  incident.AdditionalAppointments,
-		EmployeeAbsenteeism:     incident.EmployeeAbsenteeism,
-		ClientID:                incident.ClientID,
-		LocationName:            "",
-		To:                      incident.Emails,
-	}, ctx)
-	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateIncident", "Failed to enqueue incident email task", zap.Error(err))
-	}
+
 	response := &UpdateIncidentResponse{
 		ID:                      incident.ID,
 		EmployeeID:              incident.EmployeeID,
 		LocationID:              incident.LocationID,
 		ReporterInvolvement:     string(incident.ReporterInvolvement),
-		InformWho:               incident.InformWho,
-		IncidentDate:            incident.IncidentDate.Time,
-		RuntimeIncident:         incident.RuntimeIncident,
-		IncidentType:            incident.IncidentType,
-		PassingAway:             incident.PassingAway,
-		SelfHarm:                incident.SelfHarm,
-		Violence:                incident.Violence,
-		FireWaterDamage:         incident.FireWaterDamage,
-		Accident:                incident.Accident,
-		ClientAbsence:           incident.ClientAbsence,
-		Medicines:               incident.Medicines,
-		Organization:            incident.Organization,
-		UseProhibitedSubstances: incident.UseProhibitedSubstances,
-		OtherNotifications:      incident.OtherNotifications,
+		InformedParties:         informedPartiesToStrings(incident.InformedParties),
+		OccurredAt:              incident.OccurredAt.Time,
+		IncidentType:            string(incident.IncidentType),
 		SeverityOfIncident:      string(incident.SeverityOfIncident),
 		IncidentExplanation:     incident.IncidentExplanation,
 		RecurrenceRisk:          string(incident.RecurrenceRisk),
 		IncidentPreventSteps:    incident.IncidentPreventSteps,
 		IncidentTakenMeasures:   incident.IncidentTakenMeasures,
-		Technical:               incident.Technical,
-		Organizational:          incident.Organizational,
-		MeseWorker:              incident.MeseWorker,
-		ClientOptions:           incident.ClientOptions,
-		OtherCause:              incident.OtherCause,
+		CauseCategories:         causeCategoriesToStrings(incident.CauseCategories),
 		CauseExplanation:        incident.CauseExplanation,
 		PhysicalInjury:          string(incident.PhysicalInjury),
 		PhysicalInjuryDesc:      incident.PhysicalInjuryDesc,
 		PsychologicalDamage:     string(incident.PsychologicalDamage),
 		PsychologicalDamageDesc: incident.PsychologicalDamageDesc,
 		NeededConsultation:      string(incident.NeededConsultation),
-		Succession:              incident.Succession,
-		SuccessionDesc:          incident.SuccessionDesc,
-		Other:                   incident.Other,
-		OtherDesc:               incident.OtherDesc,
-		AdditionalAppointments:  incident.AdditionalAppointments,
-		EmployeeAbsenteeism:     incident.EmployeeAbsenteeism,
+		FollowUpActions:         followUpActionsToStrings(incident.FollowUpActions),
+		FollowUpNotes:           incident.FollowUpNotes,
+		IsEmployeeAbsent:        incident.IsEmployeeAbsent,
+		AdditionalDetails:       incident.AdditionalDetails,
 		ClientID:                incident.ClientID,
-		SoftDelete:              incident.SoftDelete,
 		UpdatedAt:               incident.UpdatedAt.Time,
 		CreatedAt:               incident.CreatedAt.Time,
 		IsConfirmed:             incident.IsConfirmed,
@@ -534,7 +368,7 @@ func (s *clientService) DeleteIncident(ctx context.Context, incidentID uuid.UUID
 	return nil
 }
 
-func (s *clientService) GenerateIncidentFile(ctx context.Context, incidentID uuid.UUID) (*GenerateIncidentFileResponse, error) {
+func (s *clientService) GenerateIncidentFile(ctx context.Context, incidentID uuid.UUID) ([]byte, string, error) {
 	var incident db.GetIncidentRow
 	err := s.Store.ExecTx(ctx, func(q *db.Queries) error {
 		var err error
@@ -543,7 +377,7 @@ func (s *clientService) GenerateIncidentFile(ctx context.Context, incidentID uui
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GenerateIncidentFile", "Failed to get incident", zap.Error(err))
-		return nil, err
+		return nil, "", err
 	}
 
 	incidentData := pdf.IncidentReportData{
@@ -553,78 +387,48 @@ func (s *clientService) GenerateIncidentFile(ctx context.Context, incidentID uui
 		EmployeeLastName:        incident.EmployeeLastName,
 		LocationID:              incident.LocationID,
 		ReporterInvolvement:     string(incident.ReporterInvolvement),
-		InformWho:               incident.InformWho,
-		IncidentDate:            incident.IncidentDate.Time,
-		RuntimeIncident:         incident.RuntimeIncident,
-		IncidentType:            incident.IncidentType,
-		PassingAway:             incident.PassingAway,
-		SelfHarm:                incident.SelfHarm,
-		Violence:                incident.Violence,
-		FireWaterDamage:         incident.FireWaterDamage,
-		Accident:                incident.Accident,
-		ClientAbsence:           incident.ClientAbsence,
-		Medicines:               incident.Medicines,
-		Organization:            incident.Organization,
-		UseProhibitedSubstances: incident.UseProhibitedSubstances,
-		OtherNotifications:      incident.OtherNotifications,
+		InformedParties:         informedPartiesToStrings(incident.InformedParties),
+		OccurredAt:              incident.OccurredAt.Time,
+		IncidentType:            string(incident.IncidentType),
 		SeverityOfIncident:      string(incident.SeverityOfIncident),
 		IncidentExplanation:     incident.IncidentExplanation,
 		RecurrenceRisk:          string(incident.RecurrenceRisk),
 		IncidentPreventSteps:    incident.IncidentPreventSteps,
 		IncidentTakenMeasures:   incident.IncidentTakenMeasures,
-		Technical:               incident.Technical,
-		Organizational:          incident.Organizational,
-		MeseWorker:              incident.MeseWorker,
-		ClientOptions:           incident.ClientOptions,
-		OtherCause:              incident.OtherCause,
+		CauseCategories:         causeCategoriesToStrings(incident.CauseCategories),
 		CauseExplanation:        incident.CauseExplanation,
 		PhysicalInjury:          string(incident.PhysicalInjury),
 		PhysicalInjuryDesc:      incident.PhysicalInjuryDesc,
 		PsychologicalDamage:     string(incident.PsychologicalDamage),
 		PsychologicalDamageDesc: incident.PsychologicalDamageDesc,
 		NeededConsultation:      string(incident.NeededConsultation),
-		Succession:              incident.Succession,
-		SuccessionDesc:          incident.SuccessionDesc,
-		Other:                   incident.Other,
-		OtherDesc:               incident.OtherDesc,
-		AdditionalAppointments:  incident.AdditionalAppointments,
-		EmployeeAbsenteeism:     incident.EmployeeAbsenteeism,
+		FollowUpActions:         followUpActionsToStrings(incident.FollowUpActions),
+		FollowUpNotes:           incident.FollowUpNotes,
+		IsEmployeeAbsent:        incident.IsEmployeeAbsent,
+		AdditionalDetails:       incident.AdditionalDetails,
 		ClientID:                incident.ClientID,
 		ClientFirstName:         incident.ClientFirstName,
 		ClientLastName:          incident.ClientLastName,
 		LocationName:            incident.LocationName,
 	}
-	fileKey, err := s.PDFService.GenerateAndUploadIncidentPDF(ctx, incidentData)
-	if err != nil && fileKey == "" {
+	pdfBytes, err := s.PDFService.GenerateIncidentPDF(ctx, incidentData)
+	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GenerateIncidentFile", "Failed to generate incident PDF", zap.Error(err))
-		return nil, err
+		return nil, "", err
 	}
 
-	var incidentWithUpdatedFileUrl *string
-	err = s.Store.ExecTx(ctx, func(q *db.Queries) error {
-		var err error
-		incidentWithUpdatedFileUrl, err = q.UpdateIncidentFileUrl(ctx, db.UpdateIncidentFileUrlParams{
-			ID:      incident.ID,
-			FileUrl: &fileKey,
-		})
-		return err
-	})
-	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GenerateIncidentFile", "Failed to update incident file URL", zap.Error(err))
-		return nil, err
-	}
-	response := &GenerateIncidentFileResponse{
-		FileUrl: s.GenerateResponsePresignedURL(incidentWithUpdatedFileUrl, ctx),
-		ID:      incident.ID,
-	}
-	return response, nil
+	fileName := fmt.Sprintf("incident_report_%s.pdf", incident.ID.String())
+	return pdfBytes, fileName, nil
 }
 
-func (s *clientService) ConfirmIncident(ctx context.Context, incidentID uuid.UUID) (*ConfirmIncidentResponse, error) {
-	var incident db.ConfirmIncidentRow
+func (s *clientService) ConfirmIncident(ctx context.Context, incidentID uuid.UUID, confirmedByUserID uuid.UUID) (*ConfirmIncidentResponse, error) {
+	var rowsAffected int64
 	err := s.Store.ExecTx(ctx, func(q *db.Queries) error {
 		var err error
-		incident, err = q.ConfirmIncident(ctx, incidentID)
+		rowsAffected, err = q.ConfirmIncident(ctx, db.ConfirmIncidentParams{
+			ID:          incidentID,
+			ConfirmedBy: &confirmedByUserID,
+		})
 		return err
 	})
 	if err != nil {
@@ -632,12 +436,20 @@ func (s *clientService) ConfirmIncident(ctx context.Context, incidentID uuid.UUI
 		return nil, err
 	}
 
+	if rowsAffected == 0 {
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "ConfirmIncident", "Incident already confirmed", zap.String("IncidentID", incidentID.String()))
+		return &ConfirmIncidentResponse{ID: incidentID, FileUrl: nil}, nil
+	}
+
+	if enqueueErr := s.asynqClient.EnqueueIncidentConfirmedEmail(ctx, aclient.IncidentConfirmedEmailPayload{IncidentID: incidentID}); enqueueErr != nil {
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ConfirmIncident", "Failed to enqueue incident confirmation email task", zap.Error(enqueueErr), zap.String("incident_id", incidentID.String()))
+	}
+
 	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "ConfirmIncident", "Incident confirmed successfully", zap.String("IncidentID", incidentID.String()))
 	return &ConfirmIncidentResponse{
-		FileUrl: s.GenerateResponsePresignedURL(incident.FileUrl, ctx),
-		ID:      incident.ID,
+		FileUrl: nil,
+		ID:      incidentID,
 	}, nil
-	// TODO: Send notification to the party responsivle for the client
 }
 
 func (s *clientService) ListAllIncidents(ctx *gin.Context, req *ListAllIncidentsRequest) (*pagination.Response[ListAllIncidentsResponse], error) {
@@ -646,6 +458,7 @@ func (s *clientService) ListAllIncidents(ctx *gin.Context, req *ListAllIncidents
 		Limit:       params.Limit,
 		Offset:      params.Offset,
 		IsConfirmed: req.IsConfirmed,
+		Search:      req.Search,
 	}
 	var incidents []db.ListAllIncidentsRow
 	var count int64
@@ -655,7 +468,10 @@ func (s *clientService) ListAllIncidents(ctx *gin.Context, req *ListAllIncidents
 		if err != nil {
 			return err
 		}
-		count, err = q.CountAllIncidents(ctx, req.IsConfirmed)
+		count, err = q.CountAllIncidents(ctx, db.CountAllIncidentsParams{
+			IsConfirmed: req.IsConfirmed,
+			Search:      req.Search,
+		})
 		return err
 	})
 	if err != nil {
@@ -666,51 +482,17 @@ func (s *clientService) ListAllIncidents(ctx *gin.Context, req *ListAllIncidents
 	response := []ListAllIncidentsResponse{}
 	for _, incident := range incidents {
 		response = append(response, ListAllIncidentsResponse{
-			ID:                      incident.ID,
-			EmployeeID:              incident.EmployeeID,
-			LocationID:              incident.LocationID,
-			ReporterInvolvement:     string(incident.ReporterInvolvement),
-			IncidentDate:            incident.IncidentDate.Time,
-			RuntimeIncident:         incident.RuntimeIncident,
-			IncidentType:            incident.IncidentType,
-			PassingAway:             incident.PassingAway,
-			SelfHarm:                incident.SelfHarm,
-			Violence:                incident.Violence,
-			FireWaterDamage:         incident.FireWaterDamage,
-			Accident:                incident.Accident,
-			ClientAbsence:           incident.ClientAbsence,
-			Medicines:               incident.Medicines,
-			Organization:            incident.Organization,
-			UseProhibitedSubstances: incident.UseProhibitedSubstances,
-			OtherNotifications:      incident.OtherNotifications,
-			SeverityOfIncident:      string(incident.SeverityOfIncident),
-			IncidentExplanation:     incident.IncidentExplanation,
-			RecurrenceRisk:          string(incident.RecurrenceRisk),
-			IncidentPreventSteps:    incident.IncidentPreventSteps,
-			IncidentTakenMeasures:   incident.IncidentTakenMeasures,
-			OtherCause:              incident.OtherCause,
-			CauseExplanation:        incident.CauseExplanation,
-			PhysicalInjury:          string(incident.PhysicalInjury),
-			PhysicalInjuryDesc:      incident.PhysicalInjuryDesc,
-			PsychologicalDamage:     string(incident.PsychologicalDamage),
-			PsychologicalDamageDesc: incident.PsychologicalDamageDesc,
-			NeededConsultation:      string(incident.NeededConsultation),
-			SuccessionDesc:          incident.SuccessionDesc,
-			Other:                   incident.Other,
-			OtherDesc:               incident.OtherDesc,
-			AdditionalAppointments:  incident.AdditionalAppointments,
-			EmployeeAbsenteeism:     incident.EmployeeAbsenteeism,
-			ClientID:                incident.ClientID,
-			SoftDelete:              incident.SoftDelete,
-			UpdatedAt:               incident.UpdatedAt.Time,
-			CreatedAt:               incident.CreatedAt.Time,
-			IsConfirmed:             incident.IsConfirmed,
-			FileUrl:                 incident.FileUrl,
-			Emails:                  incident.Emails,
-			ClientFirstName:         incident.ClientFirstName,
-			ClientLastName:          incident.ClientLastName,
-			EmployeeFirstName:       incident.EmployeeFirstName,
-			EmployeeLastName:        incident.EmployeeLastName,
+			ID:                 incident.ID,
+			OccurredAt:         incident.OccurredAt.Time,
+			IncidentType:       string(incident.IncidentType),
+			SeverityOfIncident: string(incident.SeverityOfIncident),
+			IsConfirmed:        incident.IsConfirmed,
+			ClientFirstName:    incident.ClientFirstName,
+			ClientLastName:     incident.ClientLastName,
+			ClientBSN:          incident.ClientBsn,
+			EmployeeFirstName:  incident.EmployeeFirstName,
+			EmployeeLastName:   incident.EmployeeLastName,
+			LocationName:       incident.LocationName,
 		})
 	}
 

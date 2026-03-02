@@ -1,11 +1,12 @@
 -- name: CreateShift :one
 INSERT INTO location_shift (
     location_id,
+    slot,
     shift_name,
     start_time,
     end_time
 ) VALUES (
-    $1, $2, $3, $4
+    $1, $2, $3, $4, $5
 ) RETURNING *;
 
 -- name: UpdateShift :one
@@ -31,7 +32,8 @@ WHERE id = $1;
 
 -- name: GetShiftsByLocationID :many
 SELECT * FROM location_shift
-WHERE location_id = $1;
+WHERE location_id = $1
+ORDER BY slot;
 
 
 

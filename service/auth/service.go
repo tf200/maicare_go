@@ -26,7 +26,7 @@ type AuthService interface {
 	Login(req LoginUserRequest, clientIP string, userAgent string, ctx context.Context) (*LoginUserResponse, error)
 	RefreshToken(req RefreshTokenRequest, ctx context.Context) (*RefreshTokenResponse, error)
 	SetupTwoFA(userID uuid.UUID, ctx context.Context) (*Setup2FAResponse, error)
-	VerifyTwoFAToken(req Verify2FARequest, ctx context.Context) (*LoginUserResponse, error)
+	VerifyTwoFAToken(req Verify2FARequest, clientIP string, userAgent string, ctx context.Context) (*LoginUserResponse, error)
 	Logout(req LogoutRequest, ctx context.Context) error
 	ChangePassword(req ChangePasswordRequest, userID uuid.UUID, ctx context.Context) error
 	EnableTwoFA(req Enable2FARequest, userID uuid.UUID, ctx context.Context) (*Enable2FAResponse, error)

@@ -339,6 +339,33 @@ func (q *Queries) GetIntakeFormDetails(ctx context.Context, id uuid.UUID) (GetIn
 	return i, err
 }
 
+const getIntakeFormTotals = `-- name: GetIntakeFormTotals :one
+SELECT
+    COUNT(*) FILTER (
+        WHERE i.intake_conclusion = 'further_investigation'::intake_conclusion_enum
+    )::bigint AS further_investigation_total,
+    COUNT(*) FILTER (
+        WHERE NOT EXISTS (
+            SELECT 1
+            FROM intake_topic_assessments ita
+            WHERE ita.intake_form_id = i.id
+        )
+    )::bigint AS without_goals_total
+FROM intake_forms i
+`
+
+type GetIntakeFormTotalsRow struct {
+	FurtherInvestigationTotal int64 `json:"further_investigation_total"`
+	WithoutGoalsTotal         int64 `json:"without_goals_total"`
+}
+
+func (q *Queries) GetIntakeFormTotals(ctx context.Context) (GetIntakeFormTotalsRow, error) {
+	row := q.db.QueryRow(ctx, getIntakeFormTotals)
+	var i GetIntakeFormTotalsRow
+	err := row.Scan(&i.FurtherInvestigationTotal, &i.WithoutGoalsTotal)
+	return i, err
+}
+
 const listIntakeForms = `-- name: ListIntakeForms :many
 SELECT
     i.id,
@@ -469,6 +496,108 @@ type UpdateIntakeConclusionParams struct {
 
 func (q *Queries) UpdateIntakeConclusion(ctx context.Context, arg UpdateIntakeConclusionParams) (IntakeForm, error) {
 	row := q.db.QueryRow(ctx, updateIntakeConclusion, arg.ID, arg.IntakeConclusion, arg.IntakeConclusionNotes)
+	var i IntakeForm
+	err := row.Scan(
+		&i.ID,
+		&i.RegistrationFormID,
+		&i.DateOfIntake,
+		&i.CareType,
+		&i.IntakeParticipants,
+		&i.FamilySituation,
+		&i.PsychologicalState,
+		&i.SelfSufficiency,
+		&i.SenderID,
+		&i.AssignedLocationID,
+		&i.RiskAssessment,
+		&i.IntakeConclusion,
+		&i.IntakeConclusionNotes,
+		&i.EvaluationIntervalsWeeks,
+		&i.Signature,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const updateIntakeForm = `-- name: UpdateIntakeForm :one
+UPDATE intake_forms
+SET
+    date_of_intake = COALESCE($1, date_of_intake),
+    care_type = COALESCE($2, care_type),
+    intake_participants = COALESCE($3, intake_participants),
+    family_situation = CASE
+        WHEN $4::boolean THEN NULL
+        ELSE COALESCE($5, family_situation)
+    END,
+    psychological_state = CASE
+        WHEN $6::boolean THEN NULL
+        ELSE COALESCE($7, psychological_state)
+    END,
+    self_sufficiency = COALESCE($8, self_sufficiency),
+    sender_id = CASE
+        WHEN $9::boolean THEN NULL
+        ELSE COALESCE($10, sender_id)
+    END,
+    assigned_location_id = CASE
+        WHEN $11::boolean THEN NULL
+        ELSE COALESCE($12, assigned_location_id)
+    END,
+    risk_assessment = CASE
+        WHEN $13::boolean THEN NULL
+        ELSE COALESCE($14, risk_assessment)
+    END,
+    evaluation_intervals_weeks = COALESCE($15, evaluation_intervals_weeks),
+    signature = CASE
+        WHEN $16::boolean THEN NULL
+        ELSE COALESCE($17, signature)
+    END,
+    updated_at = NOW()
+WHERE id = $18
+RETURNING id, registration_form_id, date_of_intake, care_type, intake_participants, family_situation, psychological_state, self_sufficiency, sender_id, assigned_location_id, risk_assessment, intake_conclusion, intake_conclusion_notes, evaluation_intervals_weeks, signature, created_at, updated_at
+`
+
+type UpdateIntakeFormParams struct {
+	DateOfIntake             pgtype.Timestamptz       `json:"date_of_intake"`
+	CareType                 NullIntakeCareTypeEnum   `json:"care_type"`
+	IntakeParticipants       []IntakeParticipantsEnum `json:"intake_participants"`
+	ClearFamilySituation     bool                     `json:"clear_family_situation"`
+	FamilySituation          *string                  `json:"family_situation"`
+	ClearPsychologicalState  bool                     `json:"clear_psychological_state"`
+	PsychologicalState       *string                  `json:"psychological_state"`
+	SelfSufficiency          *int32                   `json:"self_sufficiency"`
+	ClearSenderID            bool                     `json:"clear_sender_id"`
+	SenderID                 *uuid.UUID               `json:"sender_id"`
+	ClearAssignedLocationID  bool                     `json:"clear_assigned_location_id"`
+	AssignedLocationID       *uuid.UUID               `json:"assigned_location_id"`
+	ClearRiskAssessment      bool                     `json:"clear_risk_assessment"`
+	RiskAssessment           *string                  `json:"risk_assessment"`
+	EvaluationIntervalsWeeks *int32                   `json:"evaluation_intervals_weeks"`
+	ClearSignature           bool                     `json:"clear_signature"`
+	Signature                *string                  `json:"signature"`
+	ID                       uuid.UUID                `json:"id"`
+}
+
+func (q *Queries) UpdateIntakeForm(ctx context.Context, arg UpdateIntakeFormParams) (IntakeForm, error) {
+	row := q.db.QueryRow(ctx, updateIntakeForm,
+		arg.DateOfIntake,
+		arg.CareType,
+		arg.IntakeParticipants,
+		arg.ClearFamilySituation,
+		arg.FamilySituation,
+		arg.ClearPsychologicalState,
+		arg.PsychologicalState,
+		arg.SelfSufficiency,
+		arg.ClearSenderID,
+		arg.SenderID,
+		arg.ClearAssignedLocationID,
+		arg.AssignedLocationID,
+		arg.ClearRiskAssessment,
+		arg.RiskAssessment,
+		arg.EvaluationIntervalsWeeks,
+		arg.ClearSignature,
+		arg.Signature,
+		arg.ID,
+	)
 	var i IntakeForm
 	err := row.Scan(
 		&i.ID,

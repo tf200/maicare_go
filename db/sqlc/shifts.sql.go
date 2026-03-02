@@ -33,16 +33,18 @@ func (q *Queries) CheckAllShiftsExist(ctx context.Context, arg CheckAllShiftsExi
 const createShift = `-- name: CreateShift :one
 INSERT INTO location_shift (
     location_id,
+    slot,
     shift_name,
     start_time,
     end_time
 ) VALUES (
-    $1, $2, $3, $4
-) RETURNING id, location_id, shift_name, start_time, end_time, created_at, updated_at
+    $1, $2, $3, $4, $5
+) RETURNING id, location_id, slot, shift_name, start_time, end_time, created_at, updated_at
 `
 
 type CreateShiftParams struct {
 	LocationID uuid.UUID   `json:"location_id"`
+	Slot       int16       `json:"slot"`
 	ShiftName  string      `json:"shift_name"`
 	StartTime  pgtype.Time `json:"start_time"`
 	EndTime    pgtype.Time `json:"end_time"`
@@ -51,6 +53,7 @@ type CreateShiftParams struct {
 func (q *Queries) CreateShift(ctx context.Context, arg CreateShiftParams) (LocationShift, error) {
 	row := q.db.QueryRow(ctx, createShift,
 		arg.LocationID,
+		arg.Slot,
 		arg.ShiftName,
 		arg.StartTime,
 		arg.EndTime,
@@ -59,6 +62,7 @@ func (q *Queries) CreateShift(ctx context.Context, arg CreateShiftParams) (Locat
 	err := row.Scan(
 		&i.ID,
 		&i.LocationID,
+		&i.Slot,
 		&i.ShiftName,
 		&i.StartTime,
 		&i.EndTime,
@@ -79,7 +83,7 @@ func (q *Queries) DeleteShift(ctx context.Context, id uuid.UUID) error {
 }
 
 const getShiftByID = `-- name: GetShiftByID :one
-SELECT id, location_id, shift_name, start_time, end_time, created_at, updated_at FROM location_shift
+SELECT id, location_id, slot, shift_name, start_time, end_time, created_at, updated_at FROM location_shift
 WHERE id = $1
 LIMIT 1
 `
@@ -90,6 +94,7 @@ func (q *Queries) GetShiftByID(ctx context.Context, id uuid.UUID) (LocationShift
 	err := row.Scan(
 		&i.ID,
 		&i.LocationID,
+		&i.Slot,
 		&i.ShiftName,
 		&i.StartTime,
 		&i.EndTime,
@@ -100,8 +105,9 @@ func (q *Queries) GetShiftByID(ctx context.Context, id uuid.UUID) (LocationShift
 }
 
 const getShiftsByLocationID = `-- name: GetShiftsByLocationID :many
-SELECT id, location_id, shift_name, start_time, end_time, created_at, updated_at FROM location_shift
+SELECT id, location_id, slot, shift_name, start_time, end_time, created_at, updated_at FROM location_shift
 WHERE location_id = $1
+ORDER BY slot
 `
 
 func (q *Queries) GetShiftsByLocationID(ctx context.Context, locationID uuid.UUID) ([]LocationShift, error) {
@@ -116,6 +122,7 @@ func (q *Queries) GetShiftsByLocationID(ctx context.Context, locationID uuid.UUI
 		if err := rows.Scan(
 			&i.ID,
 			&i.LocationID,
+			&i.Slot,
 			&i.ShiftName,
 			&i.StartTime,
 			&i.EndTime,
@@ -140,7 +147,7 @@ SET
     end_time = COALESCE($4, end_time),
     updated_at = NOW()
 WHERE id = $1
-RETURNING id, location_id, shift_name, start_time, end_time, created_at, updated_at
+RETURNING id, location_id, slot, shift_name, start_time, end_time, created_at, updated_at
 `
 
 type UpdateShiftParams struct {
@@ -161,6 +168,7 @@ func (q *Queries) UpdateShift(ctx context.Context, arg UpdateShiftParams) (Locat
 	err := row.Scan(
 		&i.ID,
 		&i.LocationID,
+		&i.Slot,
 		&i.ShiftName,
 		&i.StartTime,
 		&i.EndTime,

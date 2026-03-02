@@ -15,6 +15,7 @@ import (
 // @Tags incidents
 // @Produce json
 // @Param is_confirmed query bool false "Filter by confirmation status"
+// @Param search query string false "Search by client first or last name"
 // @Param page query int false "Page number"
 // @Param page_size query int false "Number of items per page"
 // @Success 200 {object} Response[pagination.Response[clientp.ListAllIncidentsResponse]]

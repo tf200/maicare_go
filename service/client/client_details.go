@@ -541,6 +541,8 @@ func (s *clientService) GetClientDetails(ctx context.Context, clientID uuid.UUID
 	}
 
 	var care *ClientInCareResponse
+	var dischargeSchedule *ClientDischargeScheduleResponse
+	var dischargeSummary *ClientDischargeSummaryResponse
 	var contractSummary *ClientContractSummaryResponse
 	var evaluationSummary *ClientEvaluationSummaryResponse
 	if client.Status == db.ClientStatusEnumInCare {
@@ -671,6 +673,58 @@ func (s *clientService) GetClientDetails(ctx context.Context, clientID uuid.UUID
 		}
 	}
 
+	if client.Status == db.ClientStatusEnumScheduledOutOfCare {
+		dischargeDate := util.DatePtr(client.DischargeDate)
+		var dischargeReason *string
+		if client.DischargeReason.Valid {
+			reason := string(client.DischargeReason.DischargeReasonEnum)
+			dischargeReason = &reason
+		}
+
+		var daysUntilDischarge *int32
+		isDue := false
+		if client.DischargeDate.Valid {
+			today := time.Now().UTC()
+			todayDate := time.Date(today.Year(), today.Month(), today.Day(), 0, 0, 0, 0, time.UTC)
+			dischargeDay := time.Date(client.DischargeDate.Time.Year(), client.DischargeDate.Time.Month(), client.DischargeDate.Time.Day(), 0, 0, 0, 0, time.UTC)
+			days := int32(dischargeDay.Sub(todayDate).Hours() / 24)
+			daysUntilDischarge = &days
+			isDue = days <= 0
+		}
+
+		missingFinalEvaluation := strings.TrimSpace(derefString(client.FinalEvaluation)) == ""
+		dischargeSchedule = &ClientDischargeScheduleResponse{
+			DischargeDate:          dischargeDate,
+			DischargeReason:        dischargeReason,
+			FinalEvaluation:        client.FinalEvaluation,
+			DaysUntilDischarge:     daysUntilDischarge,
+			IsDue:                  isDue,
+			MissingFinalEvaluation: missingFinalEvaluation,
+		}
+
+		if isDue && missingFinalEvaluation {
+			alerts = append(alerts, ClientPageAlert{
+				Code:     "discharge_due_missing_final_evaluation",
+				Severity: "warning",
+				Message:  "Discharge is due but final evaluation is missing",
+			})
+		}
+	}
+
+	if client.Status == db.ClientStatusEnumOutOfCare {
+		var dischargeReason *string
+		if client.DischargeReason.Valid {
+			reason := string(client.DischargeReason.DischargeReasonEnum)
+			dischargeReason = &reason
+		}
+
+		dischargeSummary = &ClientDischargeSummaryResponse{
+			DischargeDate:   util.DatePtr(client.DischargeDate),
+			DischargeReason: dischargeReason,
+			FinalEvaluation: client.FinalEvaluation,
+		}
+	}
+
 	var statusTimeline *ClientStatusTimelineResponse
 	if latestStatusHistory.LastChangeReason != nil || latestStatusHistory.LastChangedAt.Valid || latestStatusHistory.LastStatus != "" {
 		var lastChangedAt *time.Time
@@ -732,6 +786,8 @@ func (s *clientService) GetClientDetails(ctx context.Context, clientID uuid.UUID
 		},
 		Care:              care,
 		CareSchedule:      careSchedule,
+		DischargeSchedule: dischargeSchedule,
+		DischargeSummary:  dischargeSummary,
 		Sender:            sender,
 		Coordinator:       coordinator,
 		ContractSummary:   contractSummary,

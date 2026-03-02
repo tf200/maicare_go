@@ -133,12 +133,12 @@ func (q *Queries) GetAiGeneratedReport(ctx context.Context, id uuid.UUID) (AiGen
 const getProgressReport = `-- name: GetProgressReport :one
 SELECT 
     pr.id, pr.client_id, pr.date, pr.title, pr.report_text, pr.employee_id, pr.type, pr.emotional_state, pr.created_at,
-    e.first_name AS employee_first_name,
-    e.last_name AS employee_last_name,
+    COALESCE(e.first_name, '') AS employee_first_name,
+    COALESCE(e.last_name, '') AS employee_last_name,
     u.profile_picture AS employee_profile_picture
 FROM progress_report pr
-JOIN employee_profile e ON pr.employee_id = e.id
-JOIN custom_User u ON e.user_id = u.id
+LEFT JOIN employee_profile e ON pr.employee_id = e.id
+LEFT JOIN custom_User u ON e.user_id = u.id
 WHERE pr.id = $1 LIMIT 1
 `
 
@@ -280,21 +280,26 @@ const listProgressReports = `-- name: ListProgressReports :many
 SELECT 
     pr.id, pr.client_id, pr.date, pr.title, pr.report_text, pr.employee_id, pr.type, pr.emotional_state, pr.created_at,
     COUNT(*) OVER() AS total_count,
-    e.first_name AS employee_first_name,
-    e.last_name AS employee_last_name,
+    COALESCE(e.first_name, '') AS employee_first_name,
+    COALESCE(e.last_name, '') AS employee_last_name,
     u.profile_picture AS employee_profile_picture
 FROM progress_report pr
-JOIN employee_profile e ON pr.employee_id = e.id
-Join custom_User u ON e.user_id = u.id
+LEFT JOIN employee_profile e ON pr.employee_id = e.id
+LEFT JOIN custom_User u ON e.user_id = u.id
 WHERE pr.client_id = $1
+  AND (
+    $2::progress_report_type_enum IS NULL
+    OR pr.type = $2::progress_report_type_enum
+  )
 ORDER BY pr.date DESC
-LIMIT $2 OFFSET $3
+LIMIT $4 OFFSET $3
 `
 
 type ListProgressReportsParams struct {
-	ClientID uuid.UUID `json:"client_id"`
-	Limit    int32     `json:"limit"`
-	Offset   int32     `json:"offset"`
+	ClientID uuid.UUID                  `json:"client_id"`
+	Type     NullProgressReportTypeEnum `json:"type"`
+	Offset   int32                      `json:"offset"`
+	Limit    int32                      `json:"limit"`
 }
 
 type ListProgressReportsRow struct {
@@ -314,7 +319,12 @@ type ListProgressReportsRow struct {
 }
 
 func (q *Queries) ListProgressReports(ctx context.Context, arg ListProgressReportsParams) ([]ListProgressReportsRow, error) {
-	rows, err := q.db.Query(ctx, listProgressReports, arg.ClientID, arg.Limit, arg.Offset)
+	rows, err := q.db.Query(ctx, listProgressReports,
+		arg.ClientID,
+		arg.Type,
+		arg.Offset,
+		arg.Limit,
+	)
 	if err != nil {
 		return nil, err
 	}

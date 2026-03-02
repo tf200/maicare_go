@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"context"
 	"embed"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"html/template"
 	"log"
+	"strings"
 	"time"
 
 	brevo "github.com/getbrevo/brevo-go/lib"
@@ -254,7 +256,9 @@ func (b *BrevoConf) SendIncident(ctx context.Context, to []string, data Incident
 		return errors.New("invalid API key")
 	}
 
-	tmpl, err := template.ParseFS(incidentTemplateFS, "templates/incident.html")
+	tmpl, err := template.New("incident.html").Funcs(template.FuncMap{
+		"toLower": strings.ToLower,
+	}).ParseFS(incidentTemplateFS, "templates/incident.html")
 	if err != nil {
 		return fmt.Errorf("failed to parse HTML template: %w", err)
 	}
@@ -281,6 +285,77 @@ func (b *BrevoConf) SendIncident(ctx context.Context, to []string, data Incident
 		To:          recipients,
 		Subject:     "Incident Report",
 		HtmlContent: htmlContent,
+	}
+	result, response, err := b.client.TransactionalEmailsApi.SendTransacEmail(ctx, emailContent)
+	if err != nil {
+		return fmt.Errorf("failed to send email: %w", err)
+	}
+
+	if response.StatusCode != 201 {
+		return fmt.Errorf("failed to send email, status code: %d", response.StatusCode)
+	}
+	log.Printf("Email sent to %s", to)
+	log.Printf("Response: %s", result)
+	log.Printf("Response Status Code: %d", response.StatusCode)
+	log.Printf("Response Headers: %v", response.Header)
+	log.Printf("Response Body: %s", response.Body)
+
+	return nil
+}
+
+func (b *BrevoConf) SendIncidentWithAttachment(ctx context.Context, to []string, data Incident, attachmentName string, attachmentBytes []byte) error {
+	if len(to) == 0 {
+		return errors.New("no recipient addresses provided")
+	}
+	if b.SenderName == "" || b.Senderemail == "" {
+		return errors.New("invalid sender configuration")
+	}
+	if b.ApiKey == "" {
+		return errors.New("invalid API key")
+	}
+	if attachmentName == "" {
+		return errors.New("invalid attachment name")
+	}
+	if len(attachmentBytes) == 0 {
+		return errors.New("empty attachment")
+	}
+
+	tmpl, err := template.New("incident.html").Funcs(template.FuncMap{
+		"toLower": strings.ToLower,
+	}).ParseFS(incidentTemplateFS, "templates/incident.html")
+	if err != nil {
+		return fmt.Errorf("failed to parse HTML template: %w", err)
+	}
+
+	var body bytes.Buffer
+	if err := tmpl.Execute(&body, data); err != nil {
+		return fmt.Errorf("failed to execute template: %w", err)
+	}
+
+	htmlContent := body.String()
+	sender := brevo.SendSmtpEmailSender{
+		Name:  b.SenderName,
+		Email: b.Senderemail,
+	}
+	recipients := make([]brevo.SendSmtpEmailTo, 0, len(to))
+	for _, recipient := range to {
+		recipients = append(recipients, brevo.SendSmtpEmailTo{
+			Email: recipient,
+			Name:  recipient,
+		})
+	}
+
+	attachment := brevo.SendSmtpEmailAttachment{
+		Content: base64.StdEncoding.EncodeToString(attachmentBytes),
+		Name:    attachmentName,
+	}
+
+	emailContent := brevo.SendSmtpEmail{
+		Sender:      &sender,
+		To:          recipients,
+		Subject:     "Incident Report",
+		HtmlContent: htmlContent,
+		Attachment:  []brevo.SendSmtpEmailAttachment{attachment},
 	}
 	result, response, err := b.client.TransactionalEmailsApi.SendTransacEmail(ctx, emailContent)
 	if err != nil {

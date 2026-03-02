@@ -186,3 +186,13 @@ emergency_contact_emails AS (
 SELECT employee_email FROM employee_emails
 UNION
 SELECT contact_email FROM emergency_contact_emails;
+
+
+-- name: ListIncidentReportRecipientEmails :many
+SELECT cec.email
+FROM client_emergency_contact cec
+WHERE cec.client_id = $1
+  AND cec.incidents_reports = TRUE
+  AND cec.is_verified = TRUE
+  AND cec.email IS NOT NULL
+ORDER BY cec.created_at ASC;

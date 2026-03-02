@@ -61,6 +61,17 @@ JOIN client_goals g ON ei.goal_id = g.id
 WHERE ei.evaluation_id = $1
 ORDER BY g.sort_order;
 
+-- name: GetGoalEvaluationByID :one
+SELECT
+    e.*,
+    ep.first_name AS creator_first_name,
+    ep.last_name AS creator_last_name
+FROM client_goal_evaluations e
+LEFT JOIN employee_profile ep
+    ON ep.id = e.created_by_employee_id
+WHERE e.id = $1
+LIMIT 1;
+
 -- name: ListUpcomingEvaluationsForCoordinator :many
 SELECT
     c.id AS client_id,
@@ -171,6 +182,20 @@ WHERE e.client_id = $1
 ORDER BY e.updated_at DESC
 LIMIT 1;
 
+-- name: GetCurrentCycleDraftEvaluationByClientAndEmployee :one
+SELECT
+    e.*
+FROM client_goal_evaluations e
+JOIN client_details c
+    ON c.id = e.client_id
+WHERE e.client_id = $1
+  AND e.created_by_employee_id = $2
+  AND e.status = 'draft'
+  AND c.next_evaluation_date IS NOT NULL
+  AND e.evaluation_date = c.next_evaluation_date
+ORDER BY e.updated_at DESC
+LIMIT 1;
+
 -- name: GetLatestCompletedEvaluationByClient :one
 SELECT
     e.id,
@@ -188,6 +213,33 @@ WHERE e.client_id = $1
 ORDER BY e.evaluation_date DESC, e.updated_at DESC
 LIMIT 1;
 
+-- name: ListSubmittedEvaluationsByClient :many
+SELECT
+    e.id,
+    e.client_id,
+    e.evaluation_date,
+    e.updated_at AS submitted_at,
+    e.created_by_employee_id,
+    ep.first_name AS creator_first_name,
+    ep.last_name AS creator_last_name,
+    COALESCE(di.filled_goals_count, 0)::int4 AS filled_goals_count,
+    COALESCE(di.total_goals_count, 0)::int4 AS total_goals_count,
+    COUNT(*) OVER() AS total_count
+FROM client_goal_evaluations e
+LEFT JOIN employee_profile ep
+    ON ep.id = e.created_by_employee_id
+LEFT JOIN LATERAL (
+    SELECT
+        COUNT(*) FILTER (WHERE i.progress <> 'no_progress') AS filled_goals_count,
+        COUNT(*) AS total_goals_count
+    FROM client_goal_evaluation_items i
+    WHERE i.evaluation_id = e.id
+) di ON true
+WHERE e.client_id = $1
+  AND e.status = 'completed'
+ORDER BY e.evaluation_date DESC, e.updated_at DESC
+LIMIT $2 OFFSET $3;
+
 -- name: ListLatestCompletedGoalProgressByClient :many
 SELECT DISTINCT ON (i.goal_id)
     i.goal_id,
@@ -198,3 +250,30 @@ JOIN client_goal_evaluations e ON e.id = i.evaluation_id
 WHERE e.client_id = $1
   AND e.status = 'completed'
 ORDER BY i.goal_id, e.evaluation_date DESC, e.updated_at DESC;
+
+-- name: ListGoalEvaluationHistoryByClientAndGoal :many
+SELECT
+    e.id AS evaluation_id,
+    e.evaluation_date,
+    e.updated_at AS submitted_at,
+    i.progress,
+    i.notes,
+    e.created_by_employee_id,
+    ep.first_name AS creator_first_name,
+    ep.last_name AS creator_last_name,
+    e.period_start,
+    e.period_end,
+    COUNT(*) OVER() AS total_count
+FROM client_goal_evaluation_items i
+JOIN client_goal_evaluations e
+    ON e.id = i.evaluation_id
+JOIN client_goals g
+    ON g.id = i.goal_id
+LEFT JOIN employee_profile ep
+    ON ep.id = e.created_by_employee_id
+WHERE e.client_id = $1
+  AND i.goal_id = $2
+  AND g.client_id = $1
+  AND e.status = 'completed'
+ORDER BY e.evaluation_date DESC, e.updated_at DESC
+LIMIT $3 OFFSET $4;

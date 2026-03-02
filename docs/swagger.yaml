@@ -10966,7 +10966,7 @@ paths:
       summary: Create an incident
       tags:
       - incidents
-  /clients/{id}/incidents/{incident_id}:
+  /incidents/{incident_id}:
     delete:
       produces:
       - application/json
@@ -11043,7 +11043,7 @@ paths:
       summary: Update an incident
       tags:
       - incidents
-  /clients/{id}/incidents/{incident_id}/file:
+  /incidents/{incident_id}/file:
     get:
       produces:
       - application/json

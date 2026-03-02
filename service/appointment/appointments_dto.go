@@ -76,6 +76,12 @@ type EventResponse struct {
 	ID                  uuid.UUID          `json:"id"`
 	Kind                EventKind          `json:"kind"`
 	Status              string             `json:"status"`
+	WorkApprovalStatus  string             `json:"work_approval_status"`
+	WorkApprovedBy      *uuid.UUID         `json:"work_approved_by"`
+	WorkApprovedAt      *time.Time         `json:"work_approved_at"`
+	WorkRejectedBy      *uuid.UUID         `json:"work_rejected_by"`
+	WorkRejectedAt      *time.Time         `json:"work_rejected_at"`
+	WorkRejectionReason *string            `json:"work_rejection_reason"`
 	Title               string             `json:"title"`
 	Description         *string            `json:"description"`
 	Location            *string            `json:"location"`
@@ -103,8 +109,74 @@ type EventOccurrenceResponse struct {
 	Color               *string     `json:"color"`
 	StartAt             time.Time   `json:"start_at"`
 	EndAt               time.Time   `json:"end_at"`
+	WorkApprovalStatus  string      `json:"work_approval_status"`
 	RecurrenceID        *time.Time  `json:"recurrence_id"`
 	IsRecurringInstance bool        `json:"is_recurring_instance"`
 	AttendeeEmployeeIDs []uuid.UUID `json:"attendee_employee_ids"`
 	AttendeeClientIDs   []uuid.UUID `json:"attendee_client_ids"`
+}
+
+type SetEventWorkApprovalRequest struct {
+	// If set for a recurring master event, approval is applied to this specific occurrence
+	// by creating/updating an override row (recurring_event_id + recurrence_id).
+	RecurrenceID *time.Time `json:"recurrence_id"`
+
+	// One of: pending, approved, rejected
+	Status string `json:"status" binding:"required,oneof=pending approved rejected"`
+
+	// Required when rejecting
+	RejectionReason *string `json:"rejection_reason"`
+}
+
+type ListWorkApprovalQueueRequest struct {
+	StartAt time.Time `json:"start_at" binding:"required"`
+	EndAt   time.Time `json:"end_at" binding:"required"`
+
+	// Optional employee filter. Matches organizer or attendee employees.
+	EmployeeIDs []uuid.UUID `json:"employee_ids"`
+
+	// If true, only include occurrences that have ended (default true).
+	OnlyEnded *bool `json:"only_ended"`
+
+	// Pagination (applied after expansion/sort).
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
+}
+
+type IDName struct {
+	ID   uuid.UUID `json:"id"`
+	Name string    `json:"name"`
+}
+
+type WorkApprovalQueueItem struct {
+	// For recurring occurrences, this is the master event ID to call approval endpoints with.
+	EventID uuid.UUID `json:"event_id"`
+	// Non-nil for recurring occurrences.
+	RecurrenceID *time.Time `json:"recurrence_id"`
+
+	StartAt time.Time `json:"start_at"`
+	EndAt   time.Time `json:"end_at"`
+
+	OrganizerEmployeeID uuid.UUID `json:"-"`
+	OrganizerEmployee   IDName    `json:"organizer_employee"`
+
+	AttendeeEmployeeIDs []uuid.UUID `json:"-"`
+	AttendeeEmployees   []IDName    `json:"attendee_employees"`
+
+	AttendeeClientIDs []uuid.UUID `json:"-"`
+	AttendeeClients   []IDName    `json:"attendee_clients"`
+
+	WorkApprovalStatus string `json:"work_approval_status"`
+	IsConfirmed        bool   `json:"is_confirmed"`
+
+	Title       string  `json:"title"`
+	Description *string `json:"description"`
+	Location    *string `json:"location"`
+
+	CreatedAt time.Time `json:"created_at"`
+}
+
+type ListWorkApprovalQueueResponse struct {
+	Items []WorkApprovalQueueItem `json:"items"`
+	Total int32                   `json:"total"`
 }

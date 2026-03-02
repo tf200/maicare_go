@@ -37,6 +37,27 @@ JOIN topics t ON inserted.topic_id = t.id
 ORDER BY t.topic_name;
 
 
+-- name: LockIntakeFormByID :one
+SELECT id
+FROM intake_forms
+WHERE id = $1
+FOR UPDATE;
+
+
+-- name: HasActiveClientByIntakeFormID :one
+SELECT EXISTS (
+    SELECT 1
+    FROM client_details cd
+    WHERE cd.intake_form_id = $1
+      AND cd.status <> 'out_of_care'
+);
+
+
+-- name: DeleteIntakeTopicAssessmentsByIntakeForm :exec
+DELETE FROM intake_topic_assessments
+WHERE intake_form_id = $1;
+
+
 
 -- name: GetIntakeTopicsAssessments :many
 SELECT

@@ -15,12 +15,16 @@ type AppointmentService interface {
 	GetEvent(ctx context.Context, eventID uuid.UUID, employeeID uuid.UUID) (*EventResponse, error)
 	UpdateEvent(ctx context.Context, eventID uuid.UUID, req *UpdateEventRequest, employeeID uuid.UUID) (*EventResponse, error)
 	DeleteEvent(ctx context.Context, eventID uuid.UUID, req DeleteEventRequest, employeeID uuid.UUID) error
+
+	SetEventWorkApproval(ctx context.Context, eventID uuid.UUID, req *SetEventWorkApprovalRequest, actorEmployeeID, actorUserID uuid.UUID) error
+	ListWorkApprovalQueue(ctx context.Context, req *ListWorkApprovalQueueRequest) (*ListWorkApprovalQueueResponse, error)
 }
 
 type appointmentService struct {
 	*deps.ServiceDependencies
 	asynqClient aclient.AsynqClientInterface
 }
+
 
 func NewAppointmentService(deps *deps.ServiceDependencies, asynqClient aclient.AsynqClientInterface) AppointmentService {
 	return &appointmentService{

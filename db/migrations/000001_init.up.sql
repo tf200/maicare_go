@@ -394,6 +394,7 @@ CREATE TABLE location (
     house_number_addition VARCHAR(20) NULL,
     postal_code VARCHAR(20) NOT NULL,
     city VARCHAR(100) NOT NULL,
+    timezone TEXT NOT NULL DEFAULT 'Europe/Amsterdam',
     capacity INTEGER NULL,
     location_type location_type_enum NOT NULL DEFAULT 'other',
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -419,11 +420,13 @@ CREATE TABLE room (
 CREATE TABLE location_shift (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     location_id UUID NOT NULL REFERENCES location(id) ON DELETE CASCADE,
+    slot SMALLINT NOT NULL CHECK (slot BETWEEN 1 AND 4),
     shift_name VARCHAR(50) NOT NULL,
     start_time TIME NOT NULL,
     end_time TIME NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(location_id, slot),
     UNIQUE(location_id, shift_name)
 );
 
@@ -431,11 +434,11 @@ CREATE TABLE location_shift (
 CREATE OR REPLACE FUNCTION insert_default_shifts()
 RETURNS TRIGGER AS $$
 BEGIN
-    INSERT INTO location_shift (location_id, shift_name, start_time, end_time)
+    INSERT INTO location_shift (location_id, slot, shift_name, start_time, end_time)
     VALUES
-        (NEW.id, 'Ochtenddienst', TIME '07:30:00', TIME '15:30:00'),
-        (NEW.id, 'Avonddienst', TIME '15:00:00', TIME '23:00:00'),
-        (NEW.id, 'Slaapdienst of Waakdienst', TIME '23:00:00', TIME '07:30:00');
+        (NEW.id, 1, 'Ochtenddienst', TIME '07:30:00', TIME '15:30:00'),
+        (NEW.id, 2, 'Avonddienst', TIME '15:00:00', TIME '23:00:00'),
+        (NEW.id, 3, 'Slaapdienst of Waakdienst', TIME '23:00:00', TIME '07:30:00');
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -854,6 +857,15 @@ CREATE TYPE client_status_enum AS ENUM (
     'out_of_care'
 );
 
+CREATE TYPE discharge_reason_enum AS ENUM (
+    'treatment_completed',
+    'terminated_by_mutual_agreement',
+    'terminated_by_client',
+    'terminated_by_provider',
+    'terminated_due_to_external_factors',
+    'other'
+);
+
 
 -- Clients living Situation ENUM
 CREATE TYPE client_living_situation_enum AS ENUM ('home', 'foster_care', 'youth_care_institution', 'other');
@@ -897,6 +909,9 @@ CREATE TABLE client_details (
     care_start_date DATE NULL,
     last_evaluation_anchor_date DATE NULL,
     next_evaluation_date DATE NULL,
+    discharge_date DATE NULL,
+    discharge_reason discharge_reason_enum NULL,
+    final_evaluation TEXT NULL,
     sender_id UUID NULL REFERENCES sender(id) ON DELETE SET NULL DEFAULT NULL,
     location_id UUID NULL REFERENCES location(id) ON DELETE SET NULL DEFAULT NULL,
     -- departure_reason VARCHAR(255) NULL, -- Not needed now
@@ -954,6 +969,26 @@ CREATE TABLE client_details (
         CHECK (
             status <> 'on_waiting_list'
             OR (care_start_date IS NULL AND placed_in_care_at IS NULL)
+        ),
+    CONSTRAINT client_details_discharge_fields_match_status
+        CHECK (
+            (
+                status = 'out_of_care'
+                AND discharge_date IS NOT NULL
+                AND discharge_reason IS NOT NULL
+                AND final_evaluation IS NOT NULL
+            )
+            OR (
+                status = 'scheduled_out_of_care'
+                AND discharge_date IS NOT NULL
+                AND discharge_reason IS NOT NULL
+            )
+            OR (
+                status NOT IN ('scheduled_out_of_care', 'out_of_care')
+                AND discharge_date IS NULL
+                AND discharge_reason IS NULL
+                AND final_evaluation IS NULL
+            )
         ),
     UNIQUE (intake_form_id)
 );
@@ -1168,22 +1203,44 @@ CREATE INDEX idx_client_status_history_changed_at ON client_status_history(chang
 --     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 -- );
 
--- Client diagnoses
-CREATE TABLE client_diagnosis (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    title VARCHAR(50) NULL,
-    client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
-    diagnosis_code VARCHAR(10) NOT NULL,
-    description TEXT NOT NULL,
-    severity VARCHAR(50) NULL,
-    status VARCHAR(100) NOT NULL,
-    diagnosing_clinician VARCHAR(100) NULL,
-    notes TEXT NULL,
-    created_at TIMESTAMPTZ NULL DEFAULT CURRENT_TIMESTAMP
+-- Client diagnoses (v2)
+CREATE TYPE diagnosis_status_enum AS ENUM (
+    'suspected',
+    'confirmed',
+    'resolved',
+    'ruled_out'
 );
 
-CREATE INDEX client_diagnosis_client_id_idx ON client_diagnosis(client_id);
-CREATE INDEX client_diagnosis_diagnosis_code_idx ON client_diagnosis(diagnosis_code);
+CREATE TYPE diagnosis_severity_enum AS ENUM ('mild', 'moderate', 'severe', 'unknown');
+
+CREATE TABLE client_diagnosis (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
+
+    code_system TEXT NOT NULL,
+    code TEXT NOT NULL,
+    title TEXT NULL,
+    description TEXT NULL,
+
+    status diagnosis_status_enum NOT NULL DEFAULT 'confirmed',
+    severity diagnosis_severity_enum NOT NULL DEFAULT 'unknown',
+
+    diagnosed_on DATE NULL,
+    resolved_on DATE NULL,
+    diagnosing_clinician TEXT NULL,
+    notes TEXT NULL,
+
+    created_by_employee_id UUID NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
+    updated_by_employee_id UUID NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    archived_at TIMESTAMPTZ NULL,
+
+    CONSTRAINT client_diagnosis_dates CHECK (resolved_on IS NULL OR diagnosed_on IS NULL OR resolved_on >= diagnosed_on)
+);
+
+CREATE INDEX client_diagnosis_client_status_idx ON client_diagnosis(client_id, status);
+CREATE INDEX client_diagnosis_client_code_idx ON client_diagnosis(client_id, code_system, code);
 
 
 
@@ -1226,22 +1283,78 @@ CREATE TABLE client_documents (
 CREATE INDEX client_documents_user_id_idx ON client_documents(client_id);
 CREATE INDEX client_documents_label_idx ON client_documents(label);
 
--- Client medications
-CREATE TABLE client_medication (
+-- Client medication orders (v2)
+CREATE TYPE medication_order_status_enum AS ENUM ('active', 'paused', 'stopped', 'completed');
+CREATE TYPE medication_admin_mode_enum AS ENUM ('self', 'staff', 'shared');
+
+CREATE TABLE client_medication_order (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    diagnosis_id UUID NULL REFERENCES client_diagnosis(id) ON DELETE CASCADE,
-    name VARCHAR(100) NOT NULL,
-    dosage VARCHAR(100) NOT NULL,
+    client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
+    diagnosis_id UUID NULL REFERENCES client_diagnosis(id) ON DELETE SET NULL,
+
+    medication_name TEXT NOT NULL,
+    dosage_text TEXT NOT NULL,
+
+    dose_amount NUMERIC NULL,
+    dose_unit TEXT NULL,
+    route TEXT NULL,
+    frequency_text TEXT NULL,
+    schedule JSONB NOT NULL DEFAULT '[]',
+
+    is_prn BOOLEAN NOT NULL DEFAULT FALSE,
+    prn_indication TEXT NULL,
+    max_doses_per_24h INT NULL,
+
     start_date DATE NOT NULL,
     end_date DATE NULL,
-    notes TEXT NULL,
-    self_administered BOOLEAN NOT NULL DEFAULT TRUE,
-    slots JSONB NULL DEFAULT '[]',
-    administered_by_id UUID NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
+    status medication_order_status_enum NOT NULL DEFAULT 'active',
+
+    admin_mode medication_admin_mode_enum NOT NULL DEFAULT 'self',
+    responsible_employee_id UUID NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
+
     is_critical BOOLEAN NOT NULL DEFAULT FALSE,
+    notes TEXT NULL,
+    source_attachment_uuid UUID NULL REFERENCES attachment_file(uuid) ON DELETE SET NULL,
+
+    created_by_employee_id UUID NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
+    updated_by_employee_id UUID NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_at TIMESTAMPTZ NULL DEFAULT CURRENT_TIMESTAMP
+    archived_at TIMESTAMPTZ NULL,
+
+    CONSTRAINT client_med_order_dates CHECK (end_date IS NULL OR end_date >= start_date),
+    CONSTRAINT client_med_order_admin_responsible CHECK (
+        (admin_mode IN ('staff', 'shared') AND responsible_employee_id IS NOT NULL)
+        OR (admin_mode = 'self' AND responsible_employee_id IS NULL)
+    ),
+    CONSTRAINT client_med_order_prn_rules CHECK (
+        (is_prn = FALSE)
+        OR (is_prn = TRUE AND prn_indication IS NOT NULL)
+    )
 );
+
+CREATE INDEX client_med_order_client_status_idx ON client_medication_order(client_id, status);
+CREATE INDEX client_med_order_client_dates_idx ON client_medication_order(client_id, start_date DESC);
+CREATE INDEX client_med_order_diag_idx ON client_medication_order(diagnosis_id);
+
+-- Auto-update updated_at on row updates
+CREATE OR REPLACE FUNCTION set_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = CURRENT_TIMESTAMP;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_set_updated_at_client_diagnosis
+BEFORE UPDATE ON client_diagnosis
+FOR EACH ROW
+EXECUTE FUNCTION set_updated_at();
+
+CREATE TRIGGER trigger_set_updated_at_client_medication_order
+BEFORE UPDATE ON client_medication_order
+FOR EACH ROW
+EXECUTE FUNCTION set_updated_at();
 
 -- Client location transfer status ENUM
 CREATE TYPE  client_location_transfer_status_enum AS ENUM ('pending', 'approved', 'rejected');
@@ -1460,6 +1573,34 @@ CREATE TYPE invoice_status_enum AS ENUM (
 );
 -- Invoice type ENUM
 CREATE TYPE invoice_type_enum AS ENUM ('standard', 'credit_note');
+
+-- Invoice source ENUM (how the invoice was created)
+CREATE TYPE invoice_source_enum AS ENUM ('auto', 'manual', 'imported');
+
+-- Invoice line type ENUM (what kind of line it is)
+CREATE TYPE invoice_line_type_enum AS ENUM ('contract', 'manual', 'adjustment');
+
+-- Invoice run status ENUM (batch generation)
+CREATE TYPE invoice_run_status_enum AS ENUM ('running', 'completed', 'completed_with_errors', 'failed');
+CREATE TYPE invoice_run_item_status_enum AS ENUM ('created', 'skipped', 'failed');
+
+-- Batch run (4-ISO-week automation)
+CREATE TABLE invoice_run (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    billing_cycle TEXT NOT NULL, -- e.g. 'iso_4_week'
+    period_start TIMESTAMPTZ NOT NULL,
+    period_end TIMESTAMPTZ NOT NULL,
+    timezone TEXT NOT NULL DEFAULT 'UTC',
+    dry_run BOOLEAN NOT NULL DEFAULT FALSE,
+    status invoice_run_status_enum NOT NULL DEFAULT 'running',
+    params JSONB NOT NULL DEFAULT '{}'::jsonb,
+    started_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    finished_at TIMESTAMPTZ NULL,
+    created_by UUID NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
+    CHECK (period_start < period_end)
+);
+
+CREATE INDEX invoice_run_period_idx ON invoice_run(period_start, period_end);
 -- Main invoice table
 CREATE TABLE invoice (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -1469,21 +1610,67 @@ CREATE TABLE invoice (
     due_date DATE NOT NULL,
     status invoice_status_enum NOT NULL DEFAULT 'concept',
     invoice_type invoice_type_enum NOT NULL DEFAULT 'standard',
+    source invoice_source_enum NOT NULL DEFAULT 'manual',
     original_invoice_id UUID NULL REFERENCES invoice(id) ON DELETE SET NULL,
-    invoice_details JSONB NULL DEFAULT '[]',
-    total_amount DECIMAL(20,2) NOT NULL DEFAULT 0,
+    replaces_invoice_id UUID NULL REFERENCES invoice(id) ON DELETE SET NULL,
+
+    -- Billing window (used for auto-generation idempotency)
+    period_start TIMESTAMPTZ NULL,
+    period_end TIMESTAMPTZ NULL,
+    billing_cycle TEXT NULL, -- e.g. 'iso_4_week'
+    billing_timezone TEXT NOT NULL DEFAULT 'UTC',
+
+    -- Optional snapshots at issuance time (avoid depending on mutable sender/client details)
+    bill_to_snapshot JSONB NOT NULL DEFAULT '{}'::jsonb,
+    client_snapshot JSONB NOT NULL DEFAULT '{}'::jsonb,
+
+    currency CHAR(3) NOT NULL DEFAULT 'EUR',
+    details_snapshot JSONB NOT NULL DEFAULT '[]',
+    net_total_amount NUMERIC(20,2) NOT NULL DEFAULT 0,
+    vat_total_amount NUMERIC(20,2) NOT NULL DEFAULT 0,
+    gross_total_amount NUMERIC(20,2) NOT NULL DEFAULT 0,
     pdf_attachment_id UUID NULL UNIQUE REFERENCES attachment_file("uuid") ON DELETE SET NULL,
     extra_content JSONB NULL DEFAULT '{}',
     client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
-    sender_id UUID NULL REFERENCES sender(id) ON DELETE SET NULL,
+    sender_id UUID NOT NULL REFERENCES sender(id) ON DELETE RESTRICT,
     warning_count INTEGER NOT NULL DEFAULT 0,
+    run_id UUID NULL REFERENCES invoice_run(id) ON DELETE SET NULL,
+    locked_at TIMESTAMPTZ NULL,
+    calc_version INTEGER NOT NULL DEFAULT 1,
+    calc_metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CHECK ((period_start IS NULL AND period_end IS NULL) OR (period_start < period_end)),
+    CHECK (invoice_type <> 'credit_note' OR original_invoice_id IS NOT NULL)
 );
 
 CREATE INDEX invoice_invoice_number_idx ON invoice(invoice_number);
 CREATE INDEX invoice_client_id_idx ON invoice(client_id);
 CREATE INDEX invoice_status_idx ON invoice(status);
+CREATE INDEX invoice_sender_id_idx ON invoice(sender_id);
+CREATE INDEX invoice_period_idx ON invoice(period_start, period_end);
+
+-- Only one active auto standard invoice per (sender, client, period)
+CREATE UNIQUE INDEX invoice_auto_standard_period_uq
+ON invoice(sender_id, client_id, period_start, period_end)
+WHERE source = 'auto' AND invoice_type = 'standard' AND status <> 'canceled';
+
+CREATE TABLE invoice_run_item (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    run_id UUID NOT NULL REFERENCES invoice_run(id) ON DELETE CASCADE,
+    client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
+    sender_id UUID NOT NULL REFERENCES sender(id) ON DELETE RESTRICT,
+    status invoice_run_item_status_enum NOT NULL DEFAULT 'created',
+    invoice_id UUID NULL REFERENCES invoice(id) ON DELETE SET NULL,
+    error TEXT NULL,
+    warnings JSONB NOT NULL DEFAULT '[]'::jsonb,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (run_id, client_id, sender_id)
+);
+
+CREATE INDEX invoice_run_item_run_idx ON invoice_run_item(run_id);
+CREATE INDEX invoice_run_item_client_idx ON invoice_run_item(client_id);
+CREATE INDEX invoice_run_item_sender_idx ON invoice_run_item(sender_id);
 
 -- Invoice audit table
 -- Invoice audit operations ENUM
@@ -1586,23 +1773,44 @@ CREATE INDEX idx_invoice_payment_history_invoice_id ON invoice_payment_history(i
 CREATE INDEX idx_invoice_payment_history_payment_date ON invoice_payment_history(payment_date);
 CREATE INDEX idx_invoice_payment_history_payment_status ON invoice_payment_history(payment_status);
 
--- Invoice-Contract relationship
-CREATE TABLE invoice_contract (
+-- Canonical invoice lines (queryable & enforceable), replaces invoice_contract and JSON-only models
+CREATE TABLE invoice_line (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    invoice_id UUID NULL REFERENCES invoice(id) ON DELETE SET NULL,
+    invoice_id UUID NOT NULL REFERENCES invoice(id) ON DELETE CASCADE,
+    client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
+    sender_id UUID NOT NULL REFERENCES sender(id) ON DELETE RESTRICT,
+
+    line_no INTEGER NOT NULL,
+    line_type invoice_line_type_enum NOT NULL DEFAULT 'contract',
+
     contract_id UUID NULL REFERENCES contract(id) ON DELETE SET NULL,
-    pre_vat_total DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-    vat_rate DECIMAL(5,2) NOT NULL DEFAULT 20.00,
-    vat_amount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-    total_amount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-    updated TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+
+    service_type TEXT NOT NULL, -- e.g. 'accommodation' | 'ambulante'
+    description TEXT NOT NULL,
+
+    period_start TIMESTAMPTZ NULL,
+    period_end TIMESTAMPTZ NULL,
+
+    quantity NUMERIC(20,4) NOT NULL DEFAULT 0,
+    unit TEXT NOT NULL, -- e.g. 'day' | 'hour' | 'minute' | 'item'
+    unit_price NUMERIC(20,4) NOT NULL DEFAULT 0,
+
+    net_amount NUMERIC(20,2) NOT NULL DEFAULT 0,
+    vat_rate NUMERIC(5,2) NOT NULL DEFAULT 0,
+    vat_amount NUMERIC(20,2) NOT NULL DEFAULT 0,
+    gross_amount NUMERIC(20,2) NOT NULL DEFAULT 0,
+
+    metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    UNIQUE (invoice_id, line_no),
+    CHECK ((period_start IS NULL AND period_end IS NULL) OR (period_start < period_end))
 );
 
-CREATE INDEX invoice_contract_invoice_id_idx ON invoice_contract(invoice_id);
-CREATE INDEX invoice_contract_contract_id_idx ON invoice_contract(contract_id);
-CREATE INDEX invoice_contract_updated_idx ON invoice_contract(updated);
-CREATE INDEX invoice_contract_created_idx ON invoice_contract(created);
+CREATE INDEX invoice_line_invoice_id_idx ON invoice_line(invoice_id);
+CREATE INDEX invoice_line_client_id_idx ON invoice_line(client_id);
+CREATE INDEX invoice_line_sender_id_idx ON invoice_line(sender_id);
+CREATE INDEX invoice_line_contract_id_idx ON invoice_line(contract_id);
 
 -- ==========================================
 -- CARE PLANS & ASSESSMENTS
@@ -1624,6 +1832,19 @@ This flow is replaced by client_goals + client_goal_evaluations.
 -- Incident reports
 -- Incident reporter involvement ENUM
 CREATE TYPE incident_reporter_involvement_enum AS ENUM ('directly_involved', 'witness', 'found_afterwards', 'alarmed');
+-- Incident category ENUM (primary incident classification)
+CREATE TYPE incident_type_enum AS ENUM (
+    'passing_away',
+    'self_harm',
+    'violence',
+    'fire_water_damage',
+    'accident',
+    'client_absence',
+    'medicines',
+    'organization',
+    'use_prohibited_substances',
+    'other'
+);
 -- Severity of incident ENUM
 CREATE TYPE severity_of_incident_enum AS ENUM ('near_incident', 'less_serious', 'serious', 'fatal');
 -- Recurrence risk ENUM
@@ -1634,59 +1855,77 @@ CREATE TYPE physical_injury_enum AS ENUM ('no_injuries', 'not_noticeable_yet', '
 CREATE TYPE psychological_damage_enum AS ENUM ('no', 'not_noticeable_yet', 'drowsiness', 'unrest', 'other');
 -- Needed consultation ENUM
 CREATE TYPE needed_consultation_enum AS ENUM ('no', 'not_clear', 'hospitalization', 'consult_gp');
+-- Parties that can be informed about an incident
+CREATE TYPE informed_party_enum AS ENUM (
+    'parents_guardians',
+    'care_coordinator',
+    'referrer',
+    'healthcare_provider',
+    'inspectorate',
+    'police',
+    'other'
+);
+-- Cause categories for incident analysis
+CREATE TYPE incident_cause_category_enum AS ENUM (
+    'technical',
+    'organizational',
+    'employee_related',
+    'client_related',
+    'external',
+    'other'
+);
+-- Follow-up actions after incident handling
+CREATE TYPE incident_follow_up_action_enum AS ENUM (
+    'notify_parents_guardians',
+    'notify_referrer',
+    'notify_inspectorate',
+    'medical_consultation',
+    'care_plan_adjustment',
+    'team_evaluation',
+    'other'
+);
 CREATE TABLE incident (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     employee_id UUID NOT NULL REFERENCES employee_profile(id) ON DELETE CASCADE,
     location_id UUID NOT NULL REFERENCES location(id) ON DELETE CASCADE,
+    client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
     reporter_involvement incident_reporter_involvement_enum NOT NULL,
-    inform_who VARCHAR(255)[] NOT NULL DEFAULT '{}',
-    incident_date DATE NOT NULL,
-    runtime_incident VARCHAR(100) NOT NULL,
-    incident_type VARCHAR(100) NOT NULL,
-    passing_away BOOLEAN NOT NULL DEFAULT FALSE,
-    self_harm BOOLEAN NOT NULL DEFAULT FALSE,
-    violence BOOLEAN NOT NULL DEFAULT FALSE,
-    fire_water_damage BOOLEAN NOT NULL DEFAULT FALSE,
-    accident BOOLEAN NOT NULL DEFAULT FALSE,
-    client_absence BOOLEAN NOT NULL DEFAULT FALSE,
-    medicines BOOLEAN NOT NULL DEFAULT FALSE,
-    organization BOOLEAN NOT NULL DEFAULT FALSE,
-    use_prohibited_substances BOOLEAN NOT NULL DEFAULT FALSE,
-    other_notifications BOOLEAN NOT NULL DEFAULT FALSE,
+    informed_parties informed_party_enum[] NOT NULL DEFAULT '{}',
+    occurred_at TIMESTAMPTZ NOT NULL,
+    incident_type incident_type_enum NOT NULL,
     severity_of_incident severity_of_incident_enum NOT NULL,
     incident_explanation TEXT NULL,
     recurrence_risk recurrence_risk_enum NOT NULL,
     incident_prevent_steps TEXT NULL,
     incident_taken_measures TEXT NULL,
-    technical VARCHAR(255)[] NOT NULL DEFAULT '{}',
-    organizational VARCHAR(255)[] NOT NULL DEFAULT '{}',
-    mese_worker VARCHAR(255)[] NOT NULL DEFAULT '{}',
-    client_options VARCHAR(255)[] NOT NULL DEFAULT '{}',
-    other_cause VARCHAR(100) NULL,
-    cause_explanation TEXT NULL DEFAULT '',
+    cause_categories incident_cause_category_enum[] NOT NULL DEFAULT '{}',
+    cause_explanation TEXT NULL,
     physical_injury physical_injury_enum NOT NULL,
-    physical_injury_desc TEXT NULL DEFAULT '',
+    physical_injury_desc TEXT NULL,
     psychological_damage psychological_damage_enum NOT NULL,
-    psychological_damage_desc TEXT NULL DEFAULT '',
+    psychological_damage_desc TEXT NULL,
     needed_consultation needed_consultation_enum NOT NULL,
-    succession VARCHAR(255)[] NOT NULL DEFAULT '{}',
-    succession_desc TEXT NULL DEFAULT '',
-    other BOOLEAN NOT NULL DEFAULT FALSE,
-    other_desc VARCHAR(100) NULL,
-    additional_appointments TEXT NULL DEFAULT '',
-    employee_absenteeism VARCHAR(100) NOT NULL DEFAULT '',
-    client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
-    soft_delete BOOLEAN NOT NULL DEFAULT FALSE,
+    follow_up_actions incident_follow_up_action_enum[] NOT NULL DEFAULT '{}',
+    follow_up_notes TEXT NULL,
+    is_employee_absent BOOLEAN NOT NULL DEFAULT FALSE,
+    additional_details TEXT NULL,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     is_confirmed BOOLEAN NOT NULL DEFAULT FALSE,
     file_url VARCHAR(255) NULL,
-    emails TEXT[] NULL DEFAULT '{}'
+    emails TEXT[] NULL DEFAULT '{}',
+    confirmed_at TIMESTAMPTZ NULL,
+    confirmed_by UUID NULL REFERENCES custom_user(id) ON DELETE SET NULL,
+    confirmation_email_sent_at TIMESTAMPTZ NULL
 );
 
 CREATE INDEX incident_client_id_idx ON incident(client_id);
 CREATE INDEX incident_location_id_idx ON incident(location_id);
-CREATE INDEX incident_soft_delete_idx ON incident(soft_delete);
+
+CREATE TRIGGER trigger_set_updated_at_incident
+BEFORE UPDATE ON incident
+FOR EACH ROW
+EXECUTE FUNCTION set_updated_at();
 
 -- Employee assignments
 CREATE TABLE assignment (
@@ -1762,20 +2001,39 @@ CREATE TABLE ai_generated_reports (
 CREATE TABLE schedules (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     employee_id UUID NOT NULL REFERENCES employee_profile(id),
-    color VARCHAR(20) DEFAULT '#0000FF',
     location_id UUID NOT NULL REFERENCES location(id),
     location_shift_id UUID NULL REFERENCES location_shift(id),
+    shift_name_snapshot VARCHAR(50) NULL,
+    shift_start_time_snapshot TIME NULL,
+    shift_end_time_snapshot TIME NULL,
     is_custom BOOLEAN NOT NULL DEFAULT FALSE,
-    start_datetime TIMESTAMP NOT NULL,
-    end_datetime TIMESTAMP NOT NULL,
+    start_datetime TIMESTAMPTZ NOT NULL,
+    end_datetime TIMESTAMPTZ NOT NULL,
     created_by_employee_id UUID NOT NULL REFERENCES employee_profile(id),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT valid_timeframe CHECK (end_datetime > start_datetime)
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT valid_timeframe CHECK (end_datetime > start_datetime),
+    CONSTRAINT schedules_custom_shift_link_consistency CHECK (
+        (is_custom = TRUE AND location_shift_id IS NULL)
+        OR (is_custom = FALSE AND location_shift_id IS NOT NULL)
+    ),
+    CONSTRAINT schedules_shift_snapshot_consistency CHECK (
+        (location_shift_id IS NULL
+         AND shift_name_snapshot IS NULL
+         AND shift_start_time_snapshot IS NULL
+         AND shift_end_time_snapshot IS NULL)
+        OR
+        (location_shift_id IS NOT NULL
+         AND shift_name_snapshot IS NOT NULL
+         AND shift_start_time_snapshot IS NOT NULL
+         AND shift_end_time_snapshot IS NOT NULL)
+    )
 );
 
 CREATE TYPE calendar_event_kind_enum AS ENUM ('appointment', 'reminder');
 CREATE TYPE calendar_event_status_enum AS ENUM ('confirmed', 'cancelled');
+-- Work approval status for appointments (hours are counted/billed only after admin approval)
+CREATE TYPE calendar_event_work_approval_status_enum AS ENUM ('pending', 'approved', 'rejected');
 CREATE TYPE attendee_response_enum AS ENUM ('needs_action', 'accepted', 'declined', 'tentative');
 CREATE TYPE reminder_channel_enum AS ENUM ('in_app');
 
@@ -1785,6 +2043,12 @@ CREATE TABLE calendar_events (
     created_by_employee_id UUID NOT NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
     kind calendar_event_kind_enum NOT NULL,
     status calendar_event_status_enum NOT NULL DEFAULT 'confirmed',
+    work_approval_status calendar_event_work_approval_status_enum NOT NULL DEFAULT 'pending',
+    work_approved_by UUID NULL REFERENCES custom_user(id) ON DELETE SET NULL,
+    work_approved_at TIMESTAMPTZ NULL,
+    work_rejected_by UUID NULL REFERENCES custom_user(id) ON DELETE SET NULL,
+    work_rejected_at TIMESTAMPTZ NULL,
+    work_rejection_reason TEXT NULL,
     title TEXT NOT NULL DEFAULT '',
     description TEXT NULL,
     location TEXT NULL,
@@ -1812,6 +2076,29 @@ CREATE INDEX idx_calendar_events_organizer_start ON calendar_events(organizer_em
 CREATE INDEX idx_calendar_events_start ON calendar_events(start_at);
 CREATE UNIQUE INDEX uq_calendar_events_exception ON calendar_events(recurring_event_id, recurrence_id)
     WHERE recurring_event_id IS NOT NULL;
+
+-- If appointment times change, previously approved hours should be re-approved.
+CREATE OR REPLACE FUNCTION calendar_event_reset_work_approval_on_time_change()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.kind = 'appointment' THEN
+        IF (NEW.start_at IS DISTINCT FROM OLD.start_at) OR (NEW.end_at IS DISTINCT FROM OLD.end_at) THEN
+            NEW.work_approval_status := 'pending';
+            NEW.work_approved_by := NULL;
+            NEW.work_approved_at := NULL;
+            NEW.work_rejected_by := NULL;
+            NEW.work_rejected_at := NULL;
+            NEW.work_rejection_reason := NULL;
+        END IF;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_calendar_event_reset_work_approval
+BEFORE UPDATE ON calendar_events
+FOR EACH ROW
+EXECUTE FUNCTION calendar_event_reset_work_approval_on_time_change();
 
 CREATE TABLE calendar_event_attendees (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -1851,6 +2138,54 @@ CREATE TABLE calendar_event_reminders (
 );
 
 CREATE INDEX idx_event_reminders_event ON calendar_event_reminders(event_id);
+
+-- ==========================================
+-- INVOICE SOURCES (APPOINTMENTS)
+-- ==========================================
+
+-- Links invoice lines to the underlying appointments billed for a client.
+-- Billing rule: "start-within" period selection should be enforced by the application query logic.
+CREATE TABLE invoice_line_calendar_event (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    invoice_line_id UUID NOT NULL REFERENCES invoice_line(id) ON DELETE CASCADE,
+    calendar_event_id UUID NOT NULL REFERENCES calendar_events(id) ON DELETE RESTRICT,
+    client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
+
+    -- Snapshot values used for billing (do not depend on mutable calendar_events rows later)
+    start_at TIMESTAMPTZ NOT NULL,
+    end_at TIMESTAMPTZ NOT NULL,
+    minutes_billed NUMERIC(20,4) NOT NULL,
+
+    metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    UNIQUE (invoice_line_id, calendar_event_id, client_id),
+    CHECK (end_at > start_at),
+    CHECK (minutes_billed >= 0)
+);
+
+CREATE INDEX invoice_line_calendar_event_line_idx ON invoice_line_calendar_event(invoice_line_id);
+CREATE INDEX invoice_line_calendar_event_event_idx ON invoice_line_calendar_event(calendar_event_id);
+CREATE INDEX invoice_line_calendar_event_client_idx ON invoice_line_calendar_event(client_id);
+
+-- Prevents double-billing the same appointment for the same client (unless voided via credit/cancel).
+CREATE TABLE billed_calendar_event (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    calendar_event_id UUID NOT NULL REFERENCES calendar_events(id) ON DELETE RESTRICT,
+    client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
+    invoice_id UUID NOT NULL REFERENCES invoice(id) ON DELETE RESTRICT,
+    invoice_line_id UUID NOT NULL REFERENCES invoice_line(id) ON DELETE RESTRICT,
+    voided_at TIMESTAMPTZ NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE UNIQUE INDEX billed_calendar_event_active_uq
+    ON billed_calendar_event(calendar_event_id, client_id)
+    WHERE voided_at IS NULL;
+
+CREATE INDEX billed_calendar_event_invoice_idx ON billed_calendar_event(invoice_id);
+CREATE INDEX billed_calendar_event_line_idx ON billed_calendar_event(invoice_line_id);
+CREATE INDEX billed_calendar_event_client_idx ON billed_calendar_event(client_id);
 
 -- ==========================================
 -- FORMS & DOCUMENTATION
@@ -2159,12 +2494,12 @@ CREATE OR REPLACE FUNCTION get_client_id_from_goal_evaluation(eval_id UUID) RETU
     SELECT client_id FROM client_goal_evaluations WHERE id = eval_id;
 $$ LANGUAGE sql STABLE;
 
-CREATE OR REPLACE FUNCTION get_client_id_from_diagnosis(diag_id UUID) RETURNS UUID AS $$
-    SELECT client_id FROM client_diagnosis WHERE id = diag_id;
-$$ LANGUAGE sql STABLE;
-
 CREATE OR REPLACE FUNCTION get_client_id_from_contract(cont_id UUID) RETURNS UUID AS $$
     SELECT client_id FROM contract WHERE id = cont_id;
+$$ LANGUAGE sql STABLE;
+
+CREATE OR REPLACE FUNCTION get_client_id_from_invoice(inv_id UUID) RETURNS UUID AS $$
+    SELECT client_id FROM invoice WHERE id = inv_id;
 $$ LANGUAGE sql STABLE;
 
 CREATE OR REPLACE FUNCTION get_client_id_from_registration_form(reg_id UUID) RETURNS UUID AS $$
@@ -2183,7 +2518,7 @@ BEGIN
 
     EXECUTE format('CREATE POLICY coordinator_select ON %I FOR SELECT USING (is_admin() OR is_coordinator())', table_name);
     EXECUTE format('CREATE POLICY coordinator_insert ON %I FOR INSERT WITH CHECK (is_admin() OR is_coordinator())', table_name);
-    EXECUTE format('CREATE POLICY coordinator_update ON %I FOR UPDATE USING (is_admin() OR is_coordinator()) WITH CHECK (is_admin() OR is_coordinator())', table_name);
+    EXECUTE format('CREATE POLICY coordinator_update ON %I FOR UPDATE USING (is_admin() OR is_assigned_coordinator(%s)) WITH CHECK (is_admin() OR is_assigned_coordinator(%s))', table_name, client_id_col, client_id_col);
     EXECUTE format('CREATE POLICY coordinator_delete ON %I FOR DELETE USING (is_admin() OR is_assigned_coordinator(%s))', table_name, client_id_col);
 END;
 $$ LANGUAGE plpgsql;
@@ -2195,14 +2530,20 @@ SELECT apply_client_rls('incident');
 SELECT apply_client_rls('client_documents');
 SELECT apply_client_rls('client_status_history');
 SELECT apply_client_rls('client_diagnosis');
+SELECT apply_client_rls('client_medication_order');
 SELECT apply_client_rls('client_emergency_contact');
 SELECT apply_client_rls('client_location_transfer');
-SELECT apply_client_rls('contract');
-SELECT apply_client_rls('invoice');
-SELECT apply_client_rls('assignment');
-SELECT apply_client_rls('assigned_employee');
-SELECT apply_client_rls('ai_generated_reports');
-SELECT apply_client_rls('calendar_event_attendees');
+	SELECT apply_client_rls('contract');
+	SELECT apply_client_rls('invoice');
+	SELECT apply_client_rls('invoice_run_item');
+	SELECT apply_client_rls('invoice_line');
+	SELECT apply_client_rls('invoice_line_calendar_event');
+	SELECT apply_client_rls('billed_calendar_event');
+	SELECT apply_client_rls('invoice_payment_history', 'get_client_id_from_invoice(invoice_id)');
+	SELECT apply_client_rls('assignment');
+	SELECT apply_client_rls('assigned_employee');
+	SELECT apply_client_rls('ai_generated_reports');
+	SELECT apply_client_rls('calendar_event_attendees');
 SELECT apply_client_rls('appointment_card');
 SELECT apply_client_rls('collaboration_agreement');
 SELECT apply_client_rls('risk_assessment');
@@ -2218,8 +2559,7 @@ SELECT apply_client_rls('client_goal_evaluations');
 SELECT apply_client_rls('registration_form', 'get_client_id_from_registration_form(id)');
 SELECT apply_client_rls('intake_forms', 'get_client_id_from_registration_form(registration_form_id)');
 
--- Medication
-SELECT apply_client_rls('client_medication', 'get_client_id_from_diagnosis(diagnosis_id)');
+-- Medication orders have direct client_id
 
 -- Contract sub-tables
 SELECT apply_client_rls('client_agreement', 'get_client_id_from_contract(contract_id)');

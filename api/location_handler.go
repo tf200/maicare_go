@@ -118,6 +118,24 @@ func (server *Server) GetOrganisationCountApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
+// @Summary Get global organization counts
+// @Description Get total location count and total capacity across all organizations
+// @Tags organizations
+// @Produce json
+// @Success 200 {object} Response[organization.GetGlobalOrganisationCountResponse]
+// @Failure 500 {object} Response[any]
+// @Router /organisations/count [get]
+func (server *Server) GetGlobalOrganisationCountApi(ctx *gin.Context) {
+	counts, err := server.businessService.OrganizationService.GetGlobalOrganizationCounts(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, fmt.Errorf("failed to get global organization counts"))
+		return
+	}
+
+	res := SuccessResponse(counts, "Global organization counts retrieved successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
 // @Summary Update an organization
 // @Description Update an organization by ID
 // @Tags organizations
@@ -187,7 +205,7 @@ func (server *Server) DeleteOrganisationApi(ctx *gin.Context) {
 // @Param page_size query int false "Page size"
 // @Param name query string false "Search by location name"
 // @Produce json
-// @Success 200 {object} Response[pagination.Response[organization.ListLocationsResponse]]
+// @Success 200 {object} Response[pagination.Response[organization.ListOrgLocationsResponse]]
 // @Failure 400 {object} Response[any] "Bad request"
 // @Failure 401 {object} Response[any] "Unauthorized"
 // @Failure 500 {object} Response[any] "Internal server error"

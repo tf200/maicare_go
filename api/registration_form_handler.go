@@ -11,6 +11,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 )
 
 // @Summary Create Registration Form
@@ -22,7 +23,7 @@ import (
 // @Success 200 {object} clientp.CreateRegistrationFormResponse
 // @Failure 400 {object} Response[any]
 // @Failure 500 {object} Response[any]
-// @Router /registration_form [post]
+// @Router /registration_forms [post]
 func (server *Server) CreateRegistrationFormApi(ctx *gin.Context) {
 	var req clientp.CreateRegistrationFormRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil && !errors.Is(err, io.EOF) {
@@ -46,7 +47,7 @@ func (server *Server) CreateRegistrationFormApi(ctx *gin.Context) {
 // @Produce json
 // @Param page query int false "Page number"
 // @Param page_size query int false "Page size"
-// @Param status query string false "Form status" Enums(pending, approved, rejected)
+// @Param status query string false "Form status" Enums(pending, processed, rejected)
 // @Param risk_aggressive_behavior query bool false "Risk aggressive behavior"
 // @Param risk_suicidal_selfharm query bool false "Risk suicidal self-harm"
 // @Param risk_substance_abuse query bool false "Risk substance abuse"
@@ -59,7 +60,7 @@ func (server *Server) CreateRegistrationFormApi(ctx *gin.Context) {
 // @Success 200 {object} Response[pagination.Response[clientp.ListRegistrationFormsResponse]]
 // @Failure 400 {object}  Response[any]
 // @Failure 500 {object}  Response[any]
-// @Router /registration_form [get]
+// @Router /registration_forms [get]
 func (server *Server) ListRegistrationFormsApi(ctx *gin.Context) {
 	var req clientp.ListRegistrationFormsRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
@@ -85,7 +86,7 @@ func (server *Server) ListRegistrationFormsApi(ctx *gin.Context) {
 // @Failure 400 {object} Response[any]
 // @Failure 404 {object} Response[any]
 // @Failure 500 {object} Response[any]
-// @Router /registration_form/{id} [get]
+// @Router /registration_forms/{id} [get]
 func (server *Server) GetRegistrationFormApi(ctx *gin.Context) {
 	rfId, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
@@ -95,6 +96,10 @@ func (server *Server) GetRegistrationFormApi(ctx *gin.Context) {
 
 	response, err := server.businessService.ClientService.GetRegistrationFormB(ctx, rfId)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
@@ -113,7 +118,7 @@ func (server *Server) GetRegistrationFormApi(ctx *gin.Context) {
 // @Failure 400 {object} Response[any]
 // @Failure 404 {object} Response[any]
 // @Failure 500 {object} Response[any]
-// @Router /registration_form/{id} [put]
+// @Router /registration_forms/{id} [put]
 func (server *Server) UpdateRegistrationFormApi(ctx *gin.Context) {
 	rfId, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
@@ -129,6 +134,10 @@ func (server *Server) UpdateRegistrationFormApi(ctx *gin.Context) {
 
 	response, err := server.businessService.ClientService.UpdateRegistrationForm(ctx, &req, rfId)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
@@ -145,7 +154,7 @@ func (server *Server) UpdateRegistrationFormApi(ctx *gin.Context) {
 // @Failure 400 {object} Response[any]
 // @Failure 404 {object} Response[any]
 // @Failure 500 {object} Response[any]
-// @Router /registration_form/{id} [delete]
+// @Router /registration_forms/{id} [delete]
 func (server *Server) DeleteRegistrationFormApi(ctx *gin.Context) {
 	rfId, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
@@ -173,7 +182,7 @@ func (server *Server) DeleteRegistrationFormApi(ctx *gin.Context) {
 // @Failure 400 {object} Response[any]
 // @Failure 404 {object} Response[any]
 // @Failure 500 {object} Response[any]
-// @Router /registration_form/{id}/process [post]
+// @Router /registration_forms/{id}/process [post]
 func (server *Server) ProcessRegistrationFormApi(ctx *gin.Context) {
 	var req clientp.ProcessRegistrationFormRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -273,7 +282,7 @@ func (server *Server) SelectIntakeDateApi(ctx *gin.Context) {
 // @Failure 400 {object} Response[any]
 // @Failure 404 {object} Response[any]
 // @Failure 500 {object} Response[any]
-// @Router /registration_form/{id}/status [post]
+// @Router /registration_forms/{id}/status [post]
 func (server *Server) UpdateRegistrationFormStatusApi(ctx *gin.Context) {
 	var req clientp.UpdateRegistrationFormStatusRequest
 

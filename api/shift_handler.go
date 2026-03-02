@@ -1,6 +1,7 @@
 package api
 
 import (
+	"errors"
 	"net/http"
 
 	"maicare_go/service/organization"
@@ -36,6 +37,10 @@ func (server *Server) CreateShiftApi(ctx *gin.Context) {
 
 	shift, err := server.businessService.OrganizationService.CreateShift(ctx, &req, locationID)
 	if err != nil {
+		if errors.Is(err, organization.ErrLocationShiftLimitReached) {
+			ctx.JSON(http.StatusBadRequest, errorResponse(err))
+			return
+		}
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}

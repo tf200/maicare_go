@@ -60,6 +60,14 @@ SELECT * FROM client_details
 WHERE intake_form_id = $1
 LIMIT 1;
 
+-- name: ListClientNamesByIDs :many
+SELECT
+    id,
+    first_name,
+    last_name
+FROM client_details
+WHERE id = ANY(sqlc.arg(client_ids)::uuid[]);
+
 
 -- name: ListClientDetails :many
 SELECT
@@ -274,7 +282,7 @@ ORDER BY label;
 -- name: GetClientPageCounts :one
 SELECT
     (SELECT COUNT(*)::bigint FROM contract c WHERE c.client_id = $1) AS contracts_count,
-    (SELECT COUNT(*)::bigint FROM incident i WHERE i.client_id = $1 AND i.soft_delete = FALSE) AS incidents_count,
+    (SELECT COUNT(*)::bigint FROM incident i WHERE i.client_id = $1) AS incidents_count,
     (SELECT COUNT(*)::bigint FROM progress_report pr WHERE pr.client_id = $1) AS reports_count,
     (SELECT COUNT(*)::bigint FROM client_goal_evaluations e WHERE e.client_id = $1) AS evaluations_count,
     (SELECT COUNT(*)::bigint FROM client_documents d WHERE d.client_id = $1) AS documents_count,
@@ -402,6 +410,16 @@ SET
 WHERE id = $1
 RETURNING *;
 
+-- name: PutClientOutOfCare :one
+UPDATE client_details
+SET
+    status = $2,
+    discharge_date = $3,
+    discharge_reason = $4,
+    final_evaluation = $5
+WHERE id = $1
+RETURNING *;
+
 -- name: CountActiveGoalsByClientID :one
 SELECT COUNT(*)
 FROM client_goals
@@ -455,6 +473,46 @@ history AS (
     FROM updated u
 )
 SELECT id FROM updated;
+
+-- name: ActivateDueScheduledOutOfCareClients :many
+WITH due_clients AS (
+    SELECT id
+    FROM client_details
+    WHERE status = 'scheduled_out_of_care'
+      AND discharge_date IS NOT NULL
+      AND discharge_date <= CURRENT_DATE
+      AND final_evaluation IS NOT NULL
+),
+updated AS (
+    UPDATE client_details cd
+    SET status = 'out_of_care'
+    FROM due_clients dc
+    WHERE cd.id = dc.id
+    RETURNING cd.id
+),
+history AS (
+    INSERT INTO client_status_history (
+        client_id,
+        old_status,
+        new_status,
+        reason
+    )
+    SELECT
+        u.id,
+        'scheduled_out_of_care',
+        'out_of_care',
+        'auto_transition_discharge_date_reached'
+    FROM updated u
+)
+SELECT id FROM updated;
+
+-- name: ListDueScheduledOutOfCareMissingFinalEvaluation :many
+SELECT id
+FROM client_details
+WHERE status = 'scheduled_out_of_care'
+  AND discharge_date IS NOT NULL
+  AND discharge_date <= CURRENT_DATE
+  AND final_evaluation IS NULL;
 
 
 

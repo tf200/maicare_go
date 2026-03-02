@@ -167,19 +167,11 @@ func (q *Queries) DeleteContractType(ctx context.Context, id uuid.UUID) error {
 const getBillablePeriodsForContract = `-- name: GetBillablePeriodsForContract :many
 WITH raw_status_changes AS (
   SELECT
-    (new_values->>'status')::contract_status_enum AS status,
-    changed_at AS effective_date
-  FROM contract_audit
-  WHERE contract_id = $3
-    AND new_values->>'status' IS NOT NULL
-  
-  UNION ALL
-  
-  SELECT
-    status,
-    updated_at
-  FROM contract
-  WHERE id = $3
+    (ca.new_values->>'status')::contract_status_enum AS status,
+    ca.changed_at AS effective_date
+  FROM contract_audit ca
+  WHERE ca.contract_id = $3
+    AND ca.new_values->>'status' IS NOT NULL
 ),
 
 status_history AS (
@@ -188,22 +180,22 @@ status_history AS (
     MIN(effective_date) AS effective_date
   FROM raw_status_changes
   GROUP BY status, EXTRACT(EPOCH FROM effective_date)::INTEGER
-  ORDER BY MIN(effective_date)
 ),
 
-approved_periods AS (
+status_periods AS (
   SELECT
+    status,
     effective_date AS period_start,
     LEAD(effective_date, 1) OVER (ORDER BY effective_date) AS period_end
   FROM status_history
-  WHERE status = 'approved'
 )
 
 SELECT
   GREATEST(period_start, $1)::TIMESTAMPTZ AS billable_start,
   LEAST(COALESCE(period_end, $2), $2)::TIMESTAMPTZ AS billable_end
-FROM approved_periods
-WHERE period_start < $2
+FROM status_periods
+WHERE status = 'approved'
+  AND period_start < $2
   AND COALESCE(period_end, 'infinity'::TIMESTAMPTZ) > $1
 `
 
@@ -218,7 +210,9 @@ type GetBillablePeriodsForContractRow struct {
 	BillableEnd   pgtype.Timestamptz `json:"billable_end"`
 }
 
-// Deduplicate identical status within 1 second windows
+// Important: do NOT use contract.updated_at as a status effective date.
+// Any non-status update would shift the "approved" start forward and underbill.
+// Deduplicate identical status within 1 second windows (protects against rapid double updates)
 func (q *Queries) GetBillablePeriodsForContract(ctx context.Context, arg GetBillablePeriodsForContractParams) ([]GetBillablePeriodsForContractRow, error) {
 	rows, err := q.db.Query(ctx, getBillablePeriodsForContract, arg.InvoiceStartDate, arg.InvoiceEndDate, arg.ContractID)
 	if err != nil {
@@ -463,6 +457,111 @@ func (q *Queries) GetSenderContracts(ctx context.Context, senderID uuid.UUID) ([
 	return items, nil
 }
 
+const listApprovedContractsForClientSenderInPeriod = `-- name: ListApprovedContractsForClientSenderInPeriod :many
+SELECT
+    c.id,
+    c.type_id,
+    c.status,
+    c.approved_at,
+    c.start_date,
+    c.end_date,
+    c.vat,
+    c.price,
+    c.price_time_unit,
+    c.hours,
+    c.hours_type,
+    c.care_name,
+    c.care_type,
+    c.client_id,
+    c.sender_id,
+    c.financing_act,
+    c.financing_option,
+    c.updated_at,
+    c.created_at
+FROM contract c
+WHERE c.status = 'approved'
+  AND c.client_id = $1
+  AND c.sender_id = $2
+  AND c.start_date < $3
+  AND c.end_date > $4
+ORDER BY c.created_at DESC
+`
+
+type ListApprovedContractsForClientSenderInPeriodParams struct {
+	ClientID    uuid.UUID          `json:"client_id"`
+	SenderID    uuid.UUID          `json:"sender_id"`
+	PeriodEnd   pgtype.Timestamptz `json:"period_end"`
+	PeriodStart pgtype.Timestamptz `json:"period_start"`
+}
+
+type ListApprovedContractsForClientSenderInPeriodRow struct {
+	ID              uuid.UUID           `json:"id"`
+	TypeID          *uuid.UUID          `json:"type_id"`
+	Status          ContractStatusEnum  `json:"status"`
+	ApprovedAt      pgtype.Timestamptz  `json:"approved_at"`
+	StartDate       pgtype.Timestamptz  `json:"start_date"`
+	EndDate         pgtype.Timestamptz  `json:"end_date"`
+	Vat             *int32              `json:"vat"`
+	Price           float64             `json:"price"`
+	PriceTimeUnit   PriceTimeUnitEnum   `json:"price_time_unit"`
+	Hours           *float64            `json:"hours"`
+	HoursType       NullHoursTypeEnum   `json:"hours_type"`
+	CareName        string              `json:"care_name"`
+	CareType        CareTypeEnum        `json:"care_type"`
+	ClientID        uuid.UUID           `json:"client_id"`
+	SenderID        uuid.UUID           `json:"sender_id"`
+	FinancingAct    FinancingActEnum    `json:"financing_act"`
+	FinancingOption FinancingOptionEnum `json:"financing_option"`
+	UpdatedAt       pgtype.Timestamptz  `json:"updated_at"`
+	CreatedAt       pgtype.Timestamptz  `json:"created_at"`
+}
+
+// Returns all approved contracts for a (client, sender) overlapping the billing period.
+func (q *Queries) ListApprovedContractsForClientSenderInPeriod(ctx context.Context, arg ListApprovedContractsForClientSenderInPeriodParams) ([]ListApprovedContractsForClientSenderInPeriodRow, error) {
+	rows, err := q.db.Query(ctx, listApprovedContractsForClientSenderInPeriod,
+		arg.ClientID,
+		arg.SenderID,
+		arg.PeriodEnd,
+		arg.PeriodStart,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListApprovedContractsForClientSenderInPeriodRow{}
+	for rows.Next() {
+		var i ListApprovedContractsForClientSenderInPeriodRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.TypeID,
+			&i.Status,
+			&i.ApprovedAt,
+			&i.StartDate,
+			&i.EndDate,
+			&i.Vat,
+			&i.Price,
+			&i.PriceTimeUnit,
+			&i.Hours,
+			&i.HoursType,
+			&i.CareName,
+			&i.CareType,
+			&i.ClientID,
+			&i.SenderID,
+			&i.FinancingAct,
+			&i.FinancingOption,
+			&i.UpdatedAt,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listClientContracts = `-- name: ListClientContracts :many
 WITH client_contracts AS (
     SELECT
@@ -527,6 +626,43 @@ func (q *Queries) ListClientContracts(ctx context.Context, arg ListClientContrac
 			return nil, err
 		}
 		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listClientSendersForPeriod = `-- name: ListClientSendersForPeriod :many
+SELECT DISTINCT
+    c.sender_id
+FROM contract c
+WHERE c.status = 'approved'
+  AND c.client_id = $1
+  AND c.start_date < $2
+  AND c.end_date > $3
+`
+
+type ListClientSendersForPeriodParams struct {
+	ClientID    uuid.UUID          `json:"client_id"`
+	PeriodEnd   pgtype.Timestamptz `json:"period_end"`
+	PeriodStart pgtype.Timestamptz `json:"period_start"`
+}
+
+// Returns distinct senders for a client that have at least one approved contract overlapping the billing period.
+func (q *Queries) ListClientSendersForPeriod(ctx context.Context, arg ListClientSendersForPeriodParams) ([]uuid.UUID, error) {
+	rows, err := q.db.Query(ctx, listClientSendersForPeriod, arg.ClientID, arg.PeriodEnd, arg.PeriodStart)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []uuid.UUID{}
+	for rows.Next() {
+		var sender_id uuid.UUID
+		if err := rows.Scan(&sender_id); err != nil {
+			return nil, err
+		}
+		items = append(items, sender_id)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -782,6 +918,51 @@ func (q *Queries) ListContractsTobeReminded(ctx context.Context) ([]ListContract
 			&i.ReminderDate,
 			&i.LastReminderDate,
 		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listInvoiceTargetsForPeriod = `-- name: ListInvoiceTargetsForPeriod :many
+
+SELECT DISTINCT
+    c.sender_id,
+    c.client_id
+FROM contract c
+WHERE c.status = 'approved'
+  AND c.start_date < $1
+  AND c.end_date > $2
+`
+
+type ListInvoiceTargetsForPeriodParams struct {
+	PeriodEnd   pgtype.Timestamptz `json:"period_end"`
+	PeriodStart pgtype.Timestamptz `json:"period_start"`
+}
+
+type ListInvoiceTargetsForPeriodRow struct {
+	SenderID uuid.UUID `json:"sender_id"`
+	ClientID uuid.UUID `json:"client_id"`
+}
+
+// ==========================================
+// Invoicing Helpers
+// ==========================================
+// Returns distinct (sender_id, client_id) pairs that have at least one approved contract overlapping the billing period.
+func (q *Queries) ListInvoiceTargetsForPeriod(ctx context.Context, arg ListInvoiceTargetsForPeriodParams) ([]ListInvoiceTargetsForPeriodRow, error) {
+	rows, err := q.db.Query(ctx, listInvoiceTargetsForPeriod, arg.PeriodEnd, arg.PeriodStart)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListInvoiceTargetsForPeriodRow{}
+	for rows.Next() {
+		var i ListInvoiceTargetsForPeriodRow
+		if err := rows.Scan(&i.SenderID, &i.ClientID); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

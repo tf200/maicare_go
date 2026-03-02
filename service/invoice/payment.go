@@ -24,7 +24,7 @@ func (s *invoiceService) CreatePayment(ctx context.Context, invoiceID uuid.UUID,
 	}
 	defer tx.Rollback(ctx)
 
-	_, err = tx.Exec(ctx, fmt.Sprintf("SET LOCAL myapp.current_employee_id = %d", employeeID))
+	_, err = tx.Exec(ctx, "SELECT set_config('myapp.current_employee_id', $1, true)", employeeID.String())
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreatePayment", "Failed to set current employee ID", zap.Error(err), zap.String("invoice_id", invoiceID.String()))
 		return nil, fmt.Errorf("failed to set current employee ID: %v", err)
@@ -64,7 +64,7 @@ func (s *invoiceService) CreatePayment(ctx context.Context, invoiceID uuid.UUID,
 			return nil, fmt.Errorf("failed to get total completed payment: %v", err)
 		}
 
-		newInvoiceStatus, err = DetermineInvoiceStatus(getInvoice.TotalAmount, totalPaid)
+		newInvoiceStatus, err = DetermineInvoiceStatus(getInvoice.GrossTotalAmount, totalPaid)
 		if err != nil {
 			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreatePayment", "Failed to determine invoice status", zap.Error(err), zap.String("invoice_id", invoiceID.String()))
 			return nil, fmt.Errorf("failed to determine invoice status: %v", err)
@@ -169,7 +169,7 @@ func (s *invoiceService) UpdatePayment(ctx context.Context, invoiceID uuid.UUID,
 	}
 	defer tx.Rollback(ctx)
 
-	_, err = tx.Exec(ctx, fmt.Sprintf("SET LOCAL myapp.current_employee_id = %d", employeeID))
+	_, err = tx.Exec(ctx, "SELECT set_config('myapp.current_employee_id', $1, true)", employeeID.String())
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdatePayment", "Failed to set current employee ID", zap.Error(err), zap.String("payment_id", paymentID.String()))
 		return nil, fmt.Errorf("failed to set current employee ID: %v", err)
@@ -271,7 +271,7 @@ func (s *invoiceService) DeletePayment(ctx context.Context, invoiceID uuid.UUID,
 		return nil, fmt.Errorf("failed to begin transaction: %v", err)
 	}
 	defer tx.Rollback(ctx)
-	_, err = tx.Exec(ctx, fmt.Sprintf("SET LOCAL myapp.current_employee_id = %d", employeeID))
+	_, err = tx.Exec(ctx, "SELECT set_config('myapp.current_employee_id', $1, true)", employeeID.String())
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeletePayment", "Failed to set current employee ID", zap.Error(err), zap.String("payment_id", paymentID.String()))
 		return nil, fmt.Errorf("failed to set current employee ID: %v", err)

@@ -22,6 +22,7 @@ func (server *Server) setupClientRoutes(baseRouter *gin.RouterGroup) {
 
 		clientsGroup.PUT("/:id/status", server.RBACMiddleware("CLIENT.STATUS.UPDATE"), server.UpdateClientStatusApi)
 		clientsGroup.PUT("/:id/put-in-care", server.RBACMiddleware("CLIENT.STATUS.UPDATE"), server.PutClientInCareApi)
+		clientsGroup.PUT("/:id/put-out-of-care", server.RBACMiddleware("CLIENT.STATUS.UPDATE"), server.PutClientOutOfCareApi)
 		clientsGroup.GET("/:id/status_history", server.RBACMiddleware("CLIENT.VIEW"), server.ListStatusHistoryApi)
 
 		clientsGroup.POST("/:id/documents", server.RBACMiddleware("CLIENT.CREATE"), server.AddClientDocumentApi)
@@ -31,6 +32,9 @@ func (server *Server) setupClientRoutes(baseRouter *gin.RouterGroup) {
 		clientsGroup.GET("/:id/missing_documents", server.RBACMiddleware("CLIENT.CREATE"), server.GetMissingClientDocumentsApi)
 
 		clientsGroup.GET("/:id/evaluations/bootstrap", server.RBACMiddleware("CLIENT.VIEW"), server.GetGoalEvaluationBootstrapApi)
+		clientsGroup.GET("/:id/goals", server.RBACMiddleware("CLIENT.VIEW"), server.GetClientGoalsForEvaluationPageApi)
+		clientsGroup.GET("/:id/goals/:goal_id/history", server.RBACMiddleware("CLIENT.VIEW"), server.ListGoalEvaluationHistoryApi)
+		clientsGroup.GET("/:id/evaluations/submitted", server.RBACMiddleware("CLIENT.VIEW"), server.ListClientSubmittedEvaluationsApi)
 		clientsGroup.POST("/:id/evaluations", server.RBACMiddleware("CLIENT.UPDATE"), server.CreateGoalEvaluationApi)
 
 		clientsGroup.POST("/:id/location_transfer", server.RBACMiddleware("CLIENT.UPDATE"), server.RequestLocationTransferApi)
@@ -42,5 +46,6 @@ func (server *Server) setupClientRoutes(baseRouter *gin.RouterGroup) {
 		evaluationsGroup.GET("/upcoming", server.RBACMiddleware("CLIENT.VIEW"), server.ListUpcomingEvaluationsApi)
 		evaluationsGroup.GET("/recent-submitted", server.RBACMiddleware("CLIENT.VIEW"), server.ListRecentSubmittedEvaluationsApi)
 		evaluationsGroup.GET("/recent-drafts", server.RBACMiddleware("CLIENT.VIEW"), server.ListRecentDraftEvaluationsApi)
+		evaluationsGroup.GET("/:evaluation_id", server.RBACMiddleware("CLIENT.VIEW"), server.GetGoalEvaluationApi)
 	}
 }

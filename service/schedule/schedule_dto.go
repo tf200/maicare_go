@@ -8,10 +8,10 @@ import (
 
 // CreateScheduleRequest represents the request body for creating a schedule.
 type CreateScheduleRequest struct {
-	EmployeeID uuid.UUID `json:"employee_id"`
-	LocationID uuid.UUID `json:"location_id"`
-	IsCustom   bool      `json:"is_custom" example:"true"`          // true for custom schedule, false for preset shift
-	Color      *string   `json:"color,omitempty" example:"#FF5733"` // Optional color for the schedule
+	EmployeeIDs []uuid.UUID `json:"employee_ids"`
+	LocationID  uuid.UUID   `json:"location_id"`
+	IsCustom    bool        `json:"is_custom" example:"true"`                   // true for custom schedule, false for preset shift
+	Recurrence  *string     `json:"recurrence,omitempty" example:"end_of_week"` // none (default), end_of_week, end_of_month
 
 	// For custom schedules (required when is_custom = true)
 	StartDatetime *time.Time `json:"start_datetime,omitempty" example:"2023-10-01T09:00:00Z"`
@@ -30,7 +30,6 @@ type CreateScheduleResponse struct {
 	LocationName  string    `json:"location_name"`
 	StartDatetime time.Time `json:"start_datetime"`
 	EndDatetime   time.Time `json:"end_datetime"`
-	Color         *string   `json:"color"`
 	CreatedAt     time.Time `json:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at"`
 
@@ -39,42 +38,34 @@ type CreateScheduleResponse struct {
 	ShiftName       *string    `json:"shift_name,omitempty"`
 }
 
-// GetMonthlySchedulesByLocationApi retrieves the monthly schedules for a specific location.
-type GetMonthlySchedulesByLocationRequest struct {
-	Year  int32 `form:"year"`
-	Month int32 `form:"month"`
+const (
+	CreateScheduleRecurrenceNone       = "none"
+	CreateScheduleRecurrenceEndOfWeek  = "end_of_week"
+	CreateScheduleRecurrenceEndOfMonth = "end_of_month"
+)
+
+// GetSchedulesByLocationInRangeRequest retrieves schedules for a location within a date range.
+type GetSchedulesByLocationInRangeRequest struct {
+	StartDate string `form:"start_date" binding:"required" example:"2026-02-01"`
+	EndDate   string `form:"end_date" binding:"required" example:"2026-02-29"`
 }
 
 // Shift represents a work shift for an employee.
 type Shift struct {
-	ShiftID           uuid.UUID  `json:"shift_id"`
+	ScheduleID        uuid.UUID  `json:"schedule_id"`
 	EmployeeID        uuid.UUID  `json:"employee_id"`
 	EmployeeFirstName string     `json:"employee_first_name"`
 	EmployeeLastName  string     `json:"employee_last_name"`
 	StartTime         time.Time  `json:"start_time"`
 	EndTime           time.Time  `json:"end_time"`
 	LocationID        uuid.UUID  `json:"location_id"`
-	Color             *string    `json:"color"` // Optional field for color coding
 	ShiftName         *string    `json:"shift_name,omitempty"`
 	LocationShiftID   *uuid.UUID `json:"location_shift_id,omitempty"` // Optional field for preset shift
 	IsCustom          bool       `json:"is_custom"`                   // Indicates if this is a custom schedule
 }
 
-// GetMonthlySchedulesByLocationResponse represents the response body for monthly schedules.
-type GetMonthlySchedulesByLocationResponse struct {
-	Date   string  `json:"date"`
-	Shifts []Shift `json:"shifts"`
-}
-
-// GetDailySchedulesByLocationApi retrieves the daily schedules for a specific location.
-type GetDailySchedulesByLocationRequest struct {
-	Year  int32 `form:"year" binding:"required"`
-	Month int32 `form:"month" binding:"required"`
-	Day   int32 `form:"day" binding:"required"`
-}
-
-// GetDailySchedulesByLocationResponse represents the response body for daily schedules.
-type GetDailySchedulesByLocationResponse struct {
+// GetSchedulesByLocationInRangeResponse represents schedules grouped by day within range.
+type GetSchedulesByLocationInRangeResponse struct {
 	Date   string  `json:"date"`
 	Shifts []Shift `json:"shifts"`
 }
@@ -89,7 +80,6 @@ type GetScheduleByIdResponse struct {
 	LocationName      string     `json:"location_name"`
 	LocationShiftID   *uuid.UUID `json:"location_shift_id,omitempty"` // Optional field for preset shift
 	LocationShiftName *string    `json:"shift_name,omitempty"`        // Optional field for shift name
-	Color             *string    `json:"color"`                       // Optional field for color coding
 	StartDatetime     time.Time  `json:"start_datetime"`
 	EndDatetime       time.Time  `json:"end_datetime"`
 	IsCustom          bool       `json:"is_custom"` // Indicates if this is a custom schedule
@@ -111,7 +101,6 @@ type UpdateScheduleRequest struct {
 	LocationShiftID *uuid.UUID `json:"location_shift_id,omitempty" example:"1"`
 	ShiftDate       *string    `json:"shift_date,omitempty" example:"2023-10-01"` // Date to apply the shift
 
-	Color *string `json:"color,omitempty" example:"#FF5733"`
 }
 
 // UpdateScheduleResponse represents the response body after updating a schedule.
@@ -121,7 +110,6 @@ type UpdateScheduleResponse struct {
 	LocationID    uuid.UUID `json:"location_id"`
 	StartDatetime time.Time `json:"start_datetime"`
 	EndDatetime   time.Time `json:"end_datetime"`
-	Color         *string   `json:"color"`
 	CreatedAt     time.Time `json:"created_at"`
 	UpdatedAt     time.Time `json:"updated_at"`
 	LocationName  string    `json:"location_name"`

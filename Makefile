@@ -1,11 +1,4 @@
 
-SEED_ORGANISATIONS ?= 6
-SEED_LOCATIONS_PER_ORG ?= 2
-SEED_SENDERS ?= 12
-SEED_REGISTRATION_FORMS ?= 25
-SEED_WAITING_LIST_CLIENTS ?= 12
-SEED_IN_CARE_CLIENTS ?= 6
-
 migrateup:
 	migrate -path db/migrations -database "postgresql://maicare:maicare@localhost:5432/maicare?sslmode=disable" -verbose up 1
 
@@ -38,7 +31,7 @@ admin:
 	go run cmd/admin/main.go
 
 seed:
-	go run cmd/seed/main.go -organisations $(SEED_ORGANISATIONS) -locations-per-org $(SEED_LOCATIONS_PER_ORG) -senders $(SEED_SENDERS) -count $(SEED_REGISTRATION_FORMS) -waiting-list-clients $(SEED_WAITING_LIST_CLIENTS) -in-care-clients $(SEED_IN_CARE_CLIENTS)
+	go run ./cmd/seed
 
 
 push:

@@ -20,6 +20,10 @@ type AsynqClientInterface interface {
 		payload IncidentPayload,
 		ctx context.Context,
 		opts ...asynq.Option) error
+	EnqueueIncidentConfirmedEmail(
+		ctx context.Context,
+		payload IncidentConfirmedEmailPayload,
+		opts ...asynq.Option) error
 	EnqueueNotificationTask(
 		ctx context.Context,
 		payload notification.NotificationPayload,

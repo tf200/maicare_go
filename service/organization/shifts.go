@@ -2,6 +2,7 @@ package organization
 
 import (
 	"context"
+	"errors"
 
 	db "maicare_go/db/sqlc"
 	"maicare_go/logger"
@@ -11,7 +12,38 @@ import (
 	"go.uber.org/zap"
 )
 
+var ErrLocationShiftLimitReached = errors.New("location shift limit reached: max 4 shifts per location")
+
 func (s *organizationService) CreateShift(ctx context.Context, req *CreateShiftApiRequest, locationID uuid.UUID) (*CreateShiftApiResponse, error) {
+	existingShifts, err := s.Store.GetShiftsByLocationID(ctx, locationID)
+	if err != nil {
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateShift", "Failed to check existing shifts", zap.Error(err))
+		return nil, err
+	}
+
+	if len(existingShifts) >= 4 {
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateShift", "Location shift limit reached", zap.String("location_id", locationID.String()))
+		return nil, ErrLocationShiftLimitReached
+	}
+
+	usedSlots := make(map[int16]struct{}, len(existingShifts))
+	for _, existingShift := range existingShifts {
+		usedSlots[existingShift.Slot] = struct{}{}
+	}
+
+	var selectedSlot int16
+	for slot := int16(1); slot <= 4; slot++ {
+		if _, exists := usedSlots[slot]; !exists {
+			selectedSlot = slot
+			break
+		}
+	}
+
+	if selectedSlot == 0 {
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateShift", "No available shift slot found", zap.String("location_id", locationID.String()))
+		return nil, ErrLocationShiftLimitReached
+	}
+
 	startTime, err := util.StringToPgTime(req.StartTime)
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateShift", "Invalid start time format", zap.Error(err))
@@ -26,6 +58,7 @@ func (s *organizationService) CreateShift(ctx context.Context, req *CreateShiftA
 
 	shift, err := s.Store.CreateShift(ctx, db.CreateShiftParams{
 		LocationID: locationID,
+		Slot:       selectedSlot,
 		ShiftName:  req.ShiftName,
 		StartTime:  startTime,
 		EndTime:    endTime,
@@ -40,6 +73,7 @@ func (s *organizationService) CreateShift(ctx context.Context, req *CreateShiftA
 	return &CreateShiftApiResponse{
 		ID:         shift.ID,
 		LocationID: shift.LocationID,
+		Slot:       shift.Slot,
 		ShiftName:  shift.ShiftName,
 		StartTime:  util.PgTimeToString(shift.StartTime),
 		EndTime:    util.PgTimeToString(shift.EndTime),
@@ -75,6 +109,7 @@ func (s *organizationService) UpdateShift(ctx context.Context, shiftID uuid.UUID
 	return &UpdateShiftApiResponse{
 		ID:         shift.ID,
 		LocationID: shift.LocationID,
+		Slot:       shift.Slot,
 		ShiftName:  shift.ShiftName,
 		StartTime:  util.PgTimeToString(shift.StartTime),
 		EndTime:    util.PgTimeToString(shift.EndTime),
@@ -102,6 +137,7 @@ func (s *organizationService) ListShiftsByLocationID(ctx context.Context, locati
 		response = append(response, ListShiftsByLocationIDResponse{
 			ID:         shift.ID,
 			LocationID: shift.LocationID,
+			Slot:       shift.Slot,
 			ShiftName:  shift.ShiftName,
 			StartTime:  util.PgTimeToString(shift.StartTime),
 			EndTime:    util.PgTimeToString(shift.EndTime),

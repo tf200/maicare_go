@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"fmt"
 	"maicare_go/infra"
 
 	"github.com/google/uuid"
@@ -30,6 +31,7 @@ func (store *Store) ExecTx(ctx context.Context, fn TxFn) error {
 	}
 
 	employeeID := infra.GetEmployeeID(ctx)
+	fmt.Printf("employeeID: %s\n", employeeID.String())
 
 	if employeeID != uuid.Nil {
 		_, err = tx.Exec(ctx, "SELECT set_config('myapp.current_employee_id', $1, true)", employeeID.String())

@@ -16,10 +16,11 @@ type OrganizationService interface {
 	ListOrganizations(ctx *gin.Context, req ListOrganisationsRequest) (*pagination.Response[ListOrganisationsResponse], error)
 	GetOrganizationByID(ctx context.Context, organizationID uuid.UUID) (*GetOrganisationResponse, error)
 	GetOrganizationCounts(ctx context.Context, organizationID uuid.UUID) (*GetOrganisationCountResponse, error)
+	GetGlobalOrganizationCounts(ctx context.Context) (*GetGlobalOrganisationCountResponse, error)
 	UpdateOrganization(ctx context.Context, organizationID uuid.UUID, req UpdateOrganisationRequest) (*GetOrganisationResponse, error)
 	DeleteOrganization(ctx context.Context, organizationID uuid.UUID) (*DeleteOrganisationResponse, error)
 	// Location methods
-	ListOrgLocations(ctx *gin.Context, organizationID uuid.UUID, req ListLocationsRequest) (*pagination.Response[ListLocationsResponse], error)
+	ListOrgLocations(ctx *gin.Context, organizationID uuid.UUID, req ListLocationsRequest) (*pagination.Response[ListOrgLocationsResponse], error)
 	ListAllLocations(ctx *gin.Context, req ListAllLocationsRequest) (*pagination.Response[ListLocationsResponse], error)
 	CreateLocation(ctx context.Context, organizationID uuid.UUID, req CreateLocationRequest) (*CreateLocationResponse, error)
 	UpdateLocation(ctx context.Context, locationID uuid.UUID, req UpdateLocationRequest) (*UpdateLocationResponse, error)

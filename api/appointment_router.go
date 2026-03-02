@@ -10,5 +10,7 @@ func (server *Server) setupAppointmentRoutes(baseRouter *gin.RouterGroup) {
 		eventsRouter.GET("/:id", server.RBACMiddleware("APPOINTMENT.VIEW"), server.GetEventApi)
 		eventsRouter.PATCH("/:id", server.RBACMiddleware("APPOINTMENT.UPDATE"), server.UpdateEventApi)
 		eventsRouter.DELETE("/:id", server.RBACMiddleware("APPOINTMENT.DELETE"), server.DeleteEventApi)
+		eventsRouter.PUT("/:id/work_approval", server.RBACMiddleware("APPOINTMENT.WORK_APPROVAL.UPDATE"), server.SetEventWorkApprovalApi)
+		eventsRouter.POST("/work_approval_queue", server.RBACMiddleware("APPOINTMENT.WORK_APPROVAL.UPDATE"), server.ListWorkApprovalQueueApi)
 	}
 }

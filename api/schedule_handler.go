@@ -1,6 +1,7 @@
 package api
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -10,15 +11,16 @@ import (
 	"github.com/google/uuid"
 )
 
-// @Summary Create a new schedule
-// @Description Create a new schedule for an employee at a specific location. Supports both custom schedules and preset shifts.
+// @Summary Create new schedules
+// @Description Create schedules for one or more employees at a specific location. Supports both custom schedules and preset shifts.
 // @Description Set is_custom=true and provide start_datetime/end_datetime for custom schedules
 // @Description Set is_custom=false and provide location_shift_id/shift_date for preset shifts
+// @Description Optional recurrence supports: none (default), end_of_week, end_of_month
 // @Tags Schedule
 // @Accept json
 // @Produce json
 // @Param request body schedule.CreateScheduleRequest true "Create Schedule Request"
-// @Success 200 {object} Response[schedule.CreateScheduleResponse] "Schedule created successfully"
+// @Success 200 {object} Response[[]schedule.CreateScheduleResponse] "Schedules created successfully"
 // @Failure 400 {object} Response[any] "Bad Request"
 // @Failure 500 {object} Response[any] "Internal Server Error"
 // @Router /schedules [post]
@@ -35,79 +37,45 @@ func (server *Server) CreateScheduleApi(ctx *gin.Context) {
 		return
 	}
 
-	schedule, err := server.businessService.ScheduleService.CreateSchedule(ctx, payload.EmployeeID, &req)
+	schedules, err := server.businessService.ScheduleService.CreateSchedule(ctx, payload.EmployeeID, &req)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create schedule: %w", err)))
 		return
 	}
 
-	res := SuccessResponse(schedule, "Schedule created successfully")
+	res := SuccessResponse(schedules, "Schedules created successfully")
 	ctx.JSON(http.StatusOK, res)
 }
 
-// @Summary Get monthly schedules by location
-// @Description Get all schedules for a specific location for a given month and year
+// @Summary Get schedules by location in date range
+// @Description Get location schedules grouped by day for the specified inclusive date range
 // @Tags Schedule
 // @Produce json
 // @Param id path uuid true "Location ID"
-// @Param year query int true "Year"
-// @Param month query int true "Month"
-// @Success 200 {object} Response[[]schedule.GetMonthlySchedulesByLocationResponse] "Monthly schedules retrieved successfully"
+// @Param start_date query string true "Start date (YYYY-MM-DD)"
+// @Param end_date query string true "End date (YYYY-MM-DD)"
+// @Success 200 {object} Response[[]schedule.GetSchedulesByLocationInRangeResponse] "Schedules retrieved successfully"
 // @Failure 400 {object} Response[any] "Bad Request"
 // @Failure 500 {object} Response[any] "Internal Server Error"
-// @Router /locations/{id}/monthly_schedules [get]
-func (server *Server) GetMonthlySchedulesByLocationApi(ctx *gin.Context) {
+// @Router /locations/{id}/schedules [get]
+func (server *Server) GetSchedulesByLocationInRangeApi(ctx *gin.Context) {
 	locationID, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-	var req schedule.GetMonthlySchedulesByLocationRequest
+	var req schedule.GetSchedulesByLocationInRangeRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-	response, err := server.businessService.ScheduleService.GetMonthlySchedulesByLocation(ctx, locationID, &req)
+	response, err := server.businessService.ScheduleService.GetSchedulesByLocationInRange(ctx, locationID, &req)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to get monthly schedules: %w", err)))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to get schedules by range: %w", err)))
 		return
 	}
 
 	res := SuccessResponse(response, "Schedules retrieved successfully")
-	ctx.JSON(http.StatusOK, res)
-}
-
-// @Summary Get daily schedules by location
-// @Description Get all schedules for a specific location for a given day
-// @Tags Schedule
-// @Produce json
-// @Param id path uuid true "Location ID"
-// @Param year query int true "Year"
-// @Param month query int true "Month"
-// @Param day query int true "Day"
-// @Success 200 {object} Response[schedule.GetDailySchedulesByLocationResponse] "Daily schedules retrieved successfully"
-// @Failure 400 {object} Response[any] "Bad Request"
-// @Failure 500 {object} Response[any] "Internal Server Error"
-// @Router /locations/{id}/daily_schedules [get]
-func (server *Server) GetDailySchedulesByLocationApi(ctx *gin.Context) {
-	locationID, err := uuid.Parse(ctx.Param("id"))
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-
-	var req schedule.GetDailySchedulesByLocationRequest
-	if err := ctx.ShouldBindQuery(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-	response, err := server.businessService.ScheduleService.GetDailySchedulesByLocation(ctx, locationID, &req)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to get daily schedules: %w", err)))
-		return
-	}
-
-	res := SuccessResponse(response, "Daily schedules retrieved successfully")
 	ctx.JSON(http.StatusOK, res)
 }
 
@@ -226,6 +194,10 @@ func (server *Server) AutoGenerateSchedulesApi(ctx *gin.Context) {
 
 	generatedSchedule, err := server.businessService.ScheduleService.AutoGenerateSchedules(ctx, &req)
 	if err != nil {
+		if errors.Is(err, schedule.ErrWeekNotEmpty) {
+			ctx.JSON(http.StatusConflict, errorResponse(err))
+			return
+		}
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to auto-generate schedules: %w", err)))
 		return
 	}
@@ -260,6 +232,10 @@ func (server *Server) SaveGeneratedSchedulesApi(ctx *gin.Context) {
 
 	err = server.businessService.ScheduleService.SaveGeneratedSchedules(ctx, payload.EmployeeID, &req)
 	if err != nil {
+		if errors.Is(err, schedule.ErrWeekNotEmpty) {
+			ctx.JSON(http.StatusConflict, errorResponse(err))
+			return
+		}
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to save generated schedules: %w", err)))
 		return
 	}

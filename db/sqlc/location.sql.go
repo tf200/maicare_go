@@ -24,7 +24,7 @@ INSERT INTO location (
     capacity
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8
-) RETURNING id, organisation_id, name, street, house_number, house_number_addition, postal_code, city, capacity, location_type, created_at, updated_at
+) RETURNING id, organisation_id, name, street, house_number, house_number_addition, postal_code, city, timezone, capacity, location_type, created_at, updated_at
 `
 
 type CreateLocationParams struct {
@@ -59,6 +59,7 @@ func (q *Queries) CreateLocation(ctx context.Context, arg CreateLocationParams) 
 		&i.HouseNumberAddition,
 		&i.PostalCode,
 		&i.City,
+		&i.Timezone,
 		&i.Capacity,
 		&i.LocationType,
 		&i.CreatedAt,
@@ -132,7 +133,7 @@ func (q *Queries) CreateOrganisation(ctx context.Context, arg CreateOrganisation
 const deleteLocation = `-- name: DeleteLocation :one
 DELETE FROM location
 WHERE id = $1
-RETURNING id, organisation_id, name, street, house_number, house_number_addition, postal_code, city, capacity, location_type, created_at, updated_at
+RETURNING id, organisation_id, name, street, house_number, house_number_addition, postal_code, city, timezone, capacity, location_type, created_at, updated_at
 `
 
 func (q *Queries) DeleteLocation(ctx context.Context, id uuid.UUID) (Location, error) {
@@ -147,6 +148,7 @@ func (q *Queries) DeleteLocation(ctx context.Context, id uuid.UUID) (Location, e
 		&i.HouseNumberAddition,
 		&i.PostalCode,
 		&i.City,
+		&i.Timezone,
 		&i.Capacity,
 		&i.LocationType,
 		&i.CreatedAt,
@@ -182,8 +184,27 @@ func (q *Queries) DeleteOrganisation(ctx context.Context, id uuid.UUID) (Organis
 	return i, err
 }
 
+const getGlobalOrganisationCounts = `-- name: GetGlobalOrganisationCounts :one
+SELECT
+    COALESCE(COUNT(l.id), 0)::BIGINT AS total_locations,
+    COALESCE(SUM(l.capacity), 0)::BIGINT AS total_capacity
+FROM location l
+`
+
+type GetGlobalOrganisationCountsRow struct {
+	TotalLocations int64 `json:"total_locations"`
+	TotalCapacity  int64 `json:"total_capacity"`
+}
+
+func (q *Queries) GetGlobalOrganisationCounts(ctx context.Context) (GetGlobalOrganisationCountsRow, error) {
+	row := q.db.QueryRow(ctx, getGlobalOrganisationCounts)
+	var i GetGlobalOrganisationCountsRow
+	err := row.Scan(&i.TotalLocations, &i.TotalCapacity)
+	return i, err
+}
+
 const getLocation = `-- name: GetLocation :one
-SELECT id, organisation_id, name, street, house_number, house_number_addition, postal_code, city, capacity, location_type, created_at, updated_at FROM location
+SELECT id, organisation_id, name, street, house_number, house_number_addition, postal_code, city, timezone, capacity, location_type, created_at, updated_at FROM location
 WHERE id = $1
 `
 
@@ -199,6 +220,7 @@ func (q *Queries) GetLocation(ctx context.Context, id uuid.UUID) (Location, erro
 		&i.HouseNumberAddition,
 		&i.PostalCode,
 		&i.City,
+		&i.Timezone,
 		&i.Capacity,
 		&i.LocationType,
 		&i.CreatedAt,
@@ -295,7 +317,7 @@ func (q *Queries) GetOrganisationCounts(ctx context.Context, id uuid.UUID) (GetO
 }
 
 const listAllLocations = `-- name: ListAllLocations :many
-SELECT l.id, l.organisation_id, l.name, l.street, l.house_number, l.house_number_addition, l.postal_code, l.city, l.capacity, l.location_type, l.created_at, l.updated_at,
+SELECT l.id, l.organisation_id, l.name, l.street, l.house_number, l.house_number_addition, l.postal_code, l.city, l.timezone, l.capacity, l.location_type, l.created_at, l.updated_at,
        COUNT(c.id) AS client_count
 FROM location l
 LEFT JOIN client_details c ON l.id = c.location_id
@@ -312,6 +334,7 @@ type ListAllLocationsRow struct {
 	HouseNumberAddition *string            `json:"house_number_addition"`
 	PostalCode          string             `json:"postal_code"`
 	City                string             `json:"city"`
+	Timezone            string             `json:"timezone"`
 	Capacity            *int32             `json:"capacity"`
 	LocationType        LocationTypeEnum   `json:"location_type"`
 	CreatedAt           pgtype.Timestamptz `json:"created_at"`
@@ -337,6 +360,7 @@ func (q *Queries) ListAllLocations(ctx context.Context) ([]ListAllLocationsRow, 
 			&i.HouseNumberAddition,
 			&i.PostalCode,
 			&i.City,
+			&i.Timezone,
 			&i.Capacity,
 			&i.LocationType,
 			&i.CreatedAt,
@@ -354,7 +378,7 @@ func (q *Queries) ListAllLocations(ctx context.Context) ([]ListAllLocationsRow, 
 }
 
 const listAllLocationsPaginated = `-- name: ListAllLocationsPaginated :many
-SELECT l.id, l.organisation_id, l.name, l.street, l.house_number, l.house_number_addition, l.postal_code, l.city, l.capacity, l.location_type, l.created_at, l.updated_at,
+SELECT l.id, l.organisation_id, l.name, l.street, l.house_number, l.house_number_addition, l.postal_code, l.city, l.timezone, l.capacity, l.location_type, l.created_at, l.updated_at,
        COUNT(c.id) AS client_count,
        COUNT(*) OVER() AS total_count
 FROM location l
@@ -380,6 +404,7 @@ type ListAllLocationsPaginatedRow struct {
 	HouseNumberAddition *string            `json:"house_number_addition"`
 	PostalCode          string             `json:"postal_code"`
 	City                string             `json:"city"`
+	Timezone            string             `json:"timezone"`
 	Capacity            *int32             `json:"capacity"`
 	LocationType        LocationTypeEnum   `json:"location_type"`
 	CreatedAt           pgtype.Timestamptz `json:"created_at"`
@@ -406,6 +431,7 @@ func (q *Queries) ListAllLocationsPaginated(ctx context.Context, arg ListAllLoca
 			&i.HouseNumberAddition,
 			&i.PostalCode,
 			&i.City,
+			&i.Timezone,
 			&i.Capacity,
 			&i.LocationType,
 			&i.CreatedAt,
@@ -424,7 +450,7 @@ func (q *Queries) ListAllLocationsPaginated(ctx context.Context, arg ListAllLoca
 }
 
 const listLocations = `-- name: ListLocations :many
-SELECT l.id, l.organisation_id, l.name, l.street, l.house_number, l.house_number_addition, l.postal_code, l.city, l.capacity, l.location_type, l.created_at, l.updated_at,
+SELECT l.id, l.organisation_id, l.name, l.street, l.house_number, l.house_number_addition, l.postal_code, l.city, l.timezone, l.capacity, l.location_type, l.created_at, l.updated_at,
     COUNT(c.id) AS client_count
 FROM location l
 LEFT JOIN client_details c ON l.id = c.location_id
@@ -441,6 +467,7 @@ type ListLocationsRow struct {
 	HouseNumberAddition *string            `json:"house_number_addition"`
 	PostalCode          string             `json:"postal_code"`
 	City                string             `json:"city"`
+	Timezone            string             `json:"timezone"`
 	Capacity            *int32             `json:"capacity"`
 	LocationType        LocationTypeEnum   `json:"location_type"`
 	CreatedAt           pgtype.Timestamptz `json:"created_at"`
@@ -466,6 +493,7 @@ func (q *Queries) ListLocations(ctx context.Context, organisationID uuid.UUID) (
 			&i.HouseNumberAddition,
 			&i.PostalCode,
 			&i.City,
+			&i.Timezone,
 			&i.Capacity,
 			&i.LocationType,
 			&i.CreatedAt,
@@ -483,7 +511,7 @@ func (q *Queries) ListLocations(ctx context.Context, organisationID uuid.UUID) (
 }
 
 const listLocationsPaginated = `-- name: ListLocationsPaginated :many
-SELECT l.id, l.organisation_id, l.name, l.street, l.house_number, l.house_number_addition, l.postal_code, l.city, l.capacity, l.location_type, l.created_at, l.updated_at,
+SELECT l.id, l.organisation_id, l.name, l.street, l.house_number, l.house_number_addition, l.postal_code, l.city, l.timezone, l.capacity, l.location_type, l.created_at, l.updated_at,
     COUNT(c.id) AS client_count,
     COUNT(*) OVER() AS total_count
 FROM location l
@@ -511,6 +539,7 @@ type ListLocationsPaginatedRow struct {
 	HouseNumberAddition *string            `json:"house_number_addition"`
 	PostalCode          string             `json:"postal_code"`
 	City                string             `json:"city"`
+	Timezone            string             `json:"timezone"`
 	Capacity            *int32             `json:"capacity"`
 	LocationType        LocationTypeEnum   `json:"location_type"`
 	CreatedAt           pgtype.Timestamptz `json:"created_at"`
@@ -542,6 +571,7 @@ func (q *Queries) ListLocationsPaginated(ctx context.Context, arg ListLocationsP
 			&i.HouseNumberAddition,
 			&i.PostalCode,
 			&i.City,
+			&i.Timezone,
 			&i.Capacity,
 			&i.LocationType,
 			&i.CreatedAt,
@@ -703,7 +733,7 @@ SET
     city = COALESCE($7, city),
     capacity = COALESCE($8, capacity)
 WHERE id = $1
-RETURNING id, organisation_id, name, street, house_number, house_number_addition, postal_code, city, capacity, location_type, created_at, updated_at
+RETURNING id, organisation_id, name, street, house_number, house_number_addition, postal_code, city, timezone, capacity, location_type, created_at, updated_at
 `
 
 type UpdateLocationParams struct {
@@ -738,6 +768,7 @@ func (q *Queries) UpdateLocation(ctx context.Context, arg UpdateLocationParams) 
 		&i.HouseNumberAddition,
 		&i.PostalCode,
 		&i.City,
+		&i.Timezone,
 		&i.Capacity,
 		&i.LocationType,
 		&i.CreatedAt,

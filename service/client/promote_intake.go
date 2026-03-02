@@ -19,6 +19,11 @@ func (s *clientService) PromoteIntakeToClient(ctx context.Context, req *PromoteI
 	var result PromoteIntakeToClientResponse
 
 	err := s.Store.ExecTx(ctx, func(q *db.Queries) error {
+		if _, err := q.LockIntakeFormByID(ctx, req.IntakeFormID); err != nil {
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "PromoteIntakeToClient", "Failed to lock intake form", zap.Error(err))
+			return err
+		}
+
 		// 1. Get the intake form
 		intakeForm, err := q.GetIntakeForm(ctx, req.IntakeFormID)
 		if err != nil {

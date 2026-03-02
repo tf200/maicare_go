@@ -44,6 +44,37 @@ func (s *clientService) CreateGoalEvaluation(ctx context.Context, clientID uuid.
 	return response, nil
 }
 
+func (s *clientService) GetGoalEvaluation(ctx context.Context, evaluationID uuid.UUID) (*GoalEvaluationResponse, error) {
+	evaluation, err := s.Store.GetGoalEvaluationByID(ctx, evaluationID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, fmt.Errorf("goal evaluation not found")
+		}
+		return nil, fmt.Errorf("failed to get evaluation: %w", err)
+	}
+
+	items, err := s.Store.GetGoalEvaluationItems(ctx, evaluationID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load evaluation items: %w", err)
+	}
+
+	res := mapGoalEvaluationToResponse(db.ClientGoalEvaluation{
+		ID:                      evaluation.ID,
+		ClientID:                evaluation.ClientID,
+		EvaluationDate:          evaluation.EvaluationDate,
+		PeriodStart:             evaluation.PeriodStart,
+		PeriodEnd:               evaluation.PeriodEnd,
+		EvaluationIntervalWeeks: evaluation.EvaluationIntervalWeeks,
+		Status:                  evaluation.Status,
+		OverallNotes:            evaluation.OverallNotes,
+		CreatedByEmployeeID:     evaluation.CreatedByEmployeeID,
+		CreatedAt:               evaluation.CreatedAt,
+		UpdatedAt:               evaluation.UpdatedAt,
+	}, items)
+	res.CreatorName = composeCreatorName(evaluation.CreatorFirstName, evaluation.CreatorLastName)
+	return res, nil
+}
+
 type goalEvaluationSubmitBlockedError struct {
 	message string
 }
@@ -533,6 +564,152 @@ func (s *clientService) GetGoalEvaluationBootstrap(ctx context.Context, clientID
 	}
 
 	return response, nil
+}
+
+func (s *clientService) GetClientGoalsForEvaluationPage(ctx context.Context, clientID uuid.UUID, employeeID uuid.UUID) (*GetClientGoalsForEvaluationPageResponse, error) {
+	client, err := s.Store.GetClientDetails(ctx, clientID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get client details: %w", err)
+	}
+
+	response := &GetClientGoalsForEvaluationPageResponse{
+		Goals: []ClientGoalForEvaluationPageResponse{},
+	}
+
+	if client.NextEvaluationDate.Valid {
+		nextDate := client.NextEvaluationDate.Time
+		response.NextEvaluationDate = &nextDate
+	}
+
+	coordinatorRows, err := s.Store.GetClientCoordinator(ctx, clientID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get client coordinator: %w", err)
+	}
+	response.IsResponsibleEmployee = len(coordinatorRows) > 0 && coordinatorRows[0].EmployeeID == employeeID
+
+	activeGoals, err := s.Store.ListActiveGoalsByClientID(ctx, clientID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list active goals: %w", err)
+	}
+
+	latestProgressRows, err := s.Store.ListLatestCompletedGoalProgressByClient(ctx, clientID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list latest completed goal progress: %w", err)
+	}
+
+	latestProgressByGoal := make(map[uuid.UUID]db.ListLatestCompletedGoalProgressByClientRow, len(latestProgressRows))
+	for _, row := range latestProgressRows {
+		latestProgressByGoal[row.GoalID] = row
+	}
+
+	response.Goals = make([]ClientGoalForEvaluationPageResponse, 0, len(activeGoals))
+	for _, goal := range activeGoals {
+		goalResponse := ClientGoalForEvaluationPageResponse{
+			ID:        goal.ID,
+			TopicName: goal.TopicNameSnapshot,
+			Title:     goal.Title,
+			Priority:  string(goal.Priority),
+		}
+
+		if latestGoalProgress, ok := latestProgressByGoal[goal.ID]; ok {
+			p := string(latestGoalProgress.Progress)
+			goalResponse.LastEvaluationProgress = &p
+		}
+
+		response.Goals = append(response.Goals, goalResponse)
+	}
+
+	draftEval, err := s.Store.GetCurrentCycleDraftEvaluationByClientAndEmployee(ctx, db.GetCurrentCycleDraftEvaluationByClientAndEmployeeParams{
+		ClientID:            clientID,
+		CreatedByEmployeeID: &employeeID,
+	})
+	if err != nil {
+		if !errors.Is(err, pgx.ErrNoRows) {
+			return nil, fmt.Errorf("failed to get current cycle draft evaluation: %w", err)
+		}
+		return response, nil
+	}
+
+	response.MyDraftEvaluationID = &draftEval.ID
+	return response, nil
+}
+
+func (s *clientService) ListClientSubmittedEvaluations(ctx *gin.Context, clientID uuid.UUID, req ListClientSubmittedEvaluationsRequest) (*pagination.Response[ListClientSubmittedEvaluationsResponse], error) {
+	params := req.GetParams()
+
+	rows, err := s.Store.ListSubmittedEvaluationsByClient(ctx, db.ListSubmittedEvaluationsByClientParams{
+		ClientID: clientID,
+		Limit:    params.Limit,
+		Offset:   params.Offset,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to list submitted evaluations: %w", err)
+	}
+
+	if len(rows) == 0 {
+		empty := pagination.NewResponse(ctx, req.Request, []ListClientSubmittedEvaluationsResponse{}, 0)
+		return &empty, nil
+	}
+
+	items := make([]ListClientSubmittedEvaluationsResponse, 0, len(rows))
+	for _, row := range rows {
+		items = append(items, ListClientSubmittedEvaluationsResponse{
+			EvaluationID:        row.ID,
+			EvaluationDate:      row.EvaluationDate.Time,
+			SubmittedAt:         row.SubmittedAt.Time,
+			FilledGoalsCount:    row.FilledGoalsCount,
+			TotalGoalsCount:     row.TotalGoalsCount,
+			CreatedByEmployeeID: row.CreatedByEmployeeID,
+			CreatorName:         composeCreatorName(row.CreatorFirstName, row.CreatorLastName),
+		})
+	}
+
+	pag := pagination.NewResponse(ctx, req.Request, items, rows[0].TotalCount)
+	return &pag, nil
+}
+
+func (s *clientService) ListGoalEvaluationHistory(ctx *gin.Context, clientID uuid.UUID, goalID uuid.UUID, req ListGoalEvaluationHistoryRequest) (*pagination.Response[ListGoalEvaluationHistoryResponse], error) {
+	params := req.GetParams()
+
+	rows, err := s.Store.ListGoalEvaluationHistoryByClientAndGoal(ctx, db.ListGoalEvaluationHistoryByClientAndGoalParams{
+		ClientID: clientID,
+		GoalID:   goalID,
+		Limit:    params.Limit,
+		Offset:   params.Offset,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to list goal evaluation history: %w", err)
+	}
+
+	if len(rows) == 0 {
+		empty := pagination.NewResponse(ctx, req.Request, []ListGoalEvaluationHistoryResponse{}, 0)
+		return &empty, nil
+	}
+
+	items := make([]ListGoalEvaluationHistoryResponse, 0, len(rows))
+	for _, row := range rows {
+		item := ListGoalEvaluationHistoryResponse{
+			EvaluationID:        row.EvaluationID,
+			EvaluationDate:      row.EvaluationDate.Time,
+			SubmittedAt:         row.SubmittedAt.Time,
+			Progress:            string(row.Progress),
+			Notes:               row.Notes,
+			CreatedByEmployeeID: row.CreatedByEmployeeID,
+			CreatorName:         composeCreatorName(row.CreatorFirstName, row.CreatorLastName),
+		}
+		if row.PeriodStart.Valid {
+			t := row.PeriodStart.Time
+			item.PeriodStart = &t
+		}
+		if row.PeriodEnd.Valid {
+			t := row.PeriodEnd.Time
+			item.PeriodEnd = &t
+		}
+		items = append(items, item)
+	}
+
+	pag := pagination.NewResponse(ctx, req.Request, items, rows[0].TotalCount)
+	return &pag, nil
 }
 
 func composeCreatorName(firstName, lastName *string) *string {

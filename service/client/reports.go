@@ -57,6 +57,7 @@ func (s *clientService) ListProgressReports(ctx *gin.Context, req *ListProgressR
 		ClientID: clientID,
 		Limit:    params.Limit,
 		Offset:   params.Offset,
+		Type:     db.NullProgressReportTypeFromPtr(req.Type),
 	}
 	var reports []db.ListProgressReportsRow
 	err := s.Store.ExecTx(ctx, func(q *db.Queries) error {
@@ -82,7 +83,6 @@ func (s *clientService) ListProgressReports(ctx *gin.Context, req *ListProgressR
 			ClientID:               report.ClientID,
 			Date:                   report.Date.Time,
 			Title:                  report.Title,
-			ReportText:             report.ReportText,
 			EmployeeID:             report.EmployeeID,
 			Type:                   string(report.Type),
 			EmotionalState:         string(report.EmotionalState),
@@ -211,7 +211,7 @@ func (s *clientService) GenerateAutoReports(ctx context.Context, req *GenerateAu
 	}, nil
 }
 
-func (s *clientService) ConfirmAiProgressReport(ctx context.Context, clientID uuid.UUID, req *ConfirmProgressReportRequest, reportID uuid.UUID) (*ConfirmProgressReportResponse, error) {
+func (s *clientService) ConfirmAiProgressReport(ctx context.Context, clientID uuid.UUID, req *ConfirmProgressReportRequest) (*ConfirmProgressReportResponse, error) {
 	progressReport := db.CreateAiGeneratedReportParams{
 		ClientID:   clientID,
 		ReportText: req.ReportText,
@@ -225,7 +225,7 @@ func (s *clientService) ConfirmAiProgressReport(ctx context.Context, clientID uu
 		return err
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ConfirmAiProgressReport", "Failed to confirm AI generated progress report", zap.String("report_id", reportID.String()), zap.Error(err))
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ConfirmAiProgressReport", "Failed to confirm AI generated progress report", zap.String("client_id", clientID.String()), zap.Error(err))
 		return nil, err
 	}
 	return &ConfirmProgressReportResponse{
@@ -255,6 +255,11 @@ func (s *clientService) ListAiGeneratedReports(ctx *gin.Context, req *ListAiGene
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "ListAiGeneratedReports", "Failed to list AI generated reports", zap.String("client_id", clientID.String()), zap.Error(err))
 		return nil, err
+	}
+
+	if len(reports) == 0 {
+		emptyResp := pagination.NewResponse(ctx, req.Request, []ListAiGeneratedReportsResponse{}, 0)
+		return &emptyResp, nil
 	}
 
 	result := []ListAiGeneratedReportsResponse{}

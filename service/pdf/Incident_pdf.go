@@ -17,53 +17,38 @@ type IncidentReportData struct {
 	EmployeeLastName        string    `json:"employee_last_name"`
 	LocationID              uuid.UUID `json:"location_id"`
 	ReporterInvolvement     string    `json:"reporter_involvement"`
-	InformWho               []string  `json:"inform_who"`
-	IncidentDate            time.Time `json:"incident_date"`
-	RuntimeIncident         string    `json:"runtime_incident"`
+	InformedParties         []string  `json:"informed_parties"`
+	OccurredAt              time.Time `json:"occurred_at"`
 	IncidentType            string    `json:"incident_type"`
-	PassingAway             bool      `json:"passing_away"`
-	SelfHarm                bool      `json:"self_harm"`
-	Violence                bool      `json:"violence"`
-	FireWaterDamage         bool      `json:"fire_water_damage"`
-	Accident                bool      `json:"accident"`
-	ClientAbsence           bool      `json:"client_absence"`
-	Medicines               bool      `json:"medicines"`
-	Organization            bool      `json:"organization"`
-	UseProhibitedSubstances bool      `json:"use_prohibited_substances"`
-	OtherNotifications      bool      `json:"other_notifications"`
 	SeverityOfIncident      string    `json:"severity_of_incident"`
 	IncidentExplanation     *string   `json:"incident_explanation"`
 	RecurrenceRisk          string    `json:"recurrence_risk"`
 	IncidentPreventSteps    *string   `json:"incident_prevent_steps"`
 	IncidentTakenMeasures   *string   `json:"incident_taken_measures"`
-	Technical               []string  `json:"technical"`
-	Organizational          []string  `json:"organizational"`
-	MeseWorker              []string  `json:"mese_worker"`
-	ClientOptions           []string  `json:"client_options"`
-	OtherCause              *string   `json:"other_cause"`
+	CauseCategories         []string  `json:"cause_categories"`
 	CauseExplanation        *string   `json:"cause_explanation"`
 	PhysicalInjury          string    `json:"physical_injury"`
 	PhysicalInjuryDesc      *string   `json:"physical_injury_desc"`
 	PsychologicalDamage     string    `json:"psychological_damage"`
 	PsychologicalDamageDesc *string   `json:"psychological_damage_desc"`
 	NeededConsultation      string    `json:"needed_consultation"`
-	Succession              []string  `json:"succession"`
-	SuccessionDesc          *string   `json:"succession_desc"`
-	Other                   bool      `json:"other"`
-	OtherDesc               *string   `json:"other_desc"`
-	AdditionalAppointments  *string   `json:"additional_appointments"`
-	EmployeeAbsenteeism     string    `json:"employee_absenteeism"`
+	FollowUpActions         []string  `json:"follow_up_actions"`
+	FollowUpNotes           *string   `json:"follow_up_notes"`
+	IsEmployeeAbsent        bool      `json:"is_employee_absent"`
+	AdditionalDetails       *string   `json:"additional_details"`
 	ClientID                uuid.UUID `json:"client_id"`
 	ClientFirstName         string    `json:"client_firstname"`
 	ClientLastName          string    `json:"client_lastname"`
 	LocationName            string    `json:"location_name"`
 }
 
-// GenerateIncidentPDF generates a PDF from incident data and returns the PDF bytes
-func (s *pdfService) generateIncidentPDF(incidentData IncidentReportData) (multipart.File, error) {
+// GenerateIncidentPDF generates a PDF from incident data and returns the PDF bytes.
+func (s *pdfService) GenerateIncidentPDF(ctx context.Context, incidentData IncidentReportData) ([]byte, error) {
+	_ = ctx
+
 	headerLines := []string{
 		fmt.Sprintf("Incident ID: %s", incidentData.ID),
-		fmt.Sprintf("Incident date: %s", incidentData.IncidentDate.Format(time.RFC3339)),
+		fmt.Sprintf("Occurred at: %s", formatTimeOrNA(incidentData.OccurredAt)),
 		fmt.Sprintf("Location: %s (%s)", incidentData.LocationName, incidentData.LocationID),
 		fmt.Sprintf("Reporter: %s %s (%s)", incidentData.EmployeeFirstName, incidentData.EmployeeLastName, incidentData.EmployeeID),
 		fmt.Sprintf("Client: %s %s (%s)", incidentData.ClientFirstName, incidentData.ClientLastName, incidentData.ClientID),
@@ -74,25 +59,9 @@ func (s *pdfService) generateIncidentPDF(incidentData IncidentReportData) (multi
 			Title: "Incident details",
 			Lines: []string{
 				fmt.Sprintf("Reporter involvement: %s", incidentData.ReporterInvolvement),
-				fmt.Sprintf("Runtime incident: %s", incidentData.RuntimeIncident),
 				fmt.Sprintf("Incident type: %s", incidentData.IncidentType),
 				fmt.Sprintf("Severity: %s", incidentData.SeverityOfIncident),
-				fmt.Sprintf("Inform who: %s", joinOrNA(incidentData.InformWho)),
-			},
-		},
-		{
-			Title: "Incident categories",
-			Lines: []string{
-				fmt.Sprintf("Passing away: %s", yesNo(incidentData.PassingAway)),
-				fmt.Sprintf("Self harm: %s", yesNo(incidentData.SelfHarm)),
-				fmt.Sprintf("Violence: %s", yesNo(incidentData.Violence)),
-				fmt.Sprintf("Fire/water damage: %s", yesNo(incidentData.FireWaterDamage)),
-				fmt.Sprintf("Accident: %s", yesNo(incidentData.Accident)),
-				fmt.Sprintf("Client absence: %s", yesNo(incidentData.ClientAbsence)),
-				fmt.Sprintf("Medicines: %s", yesNo(incidentData.Medicines)),
-				fmt.Sprintf("Organization: %s", yesNo(incidentData.Organization)),
-				fmt.Sprintf("Use prohibited substances: %s", yesNo(incidentData.UseProhibitedSubstances)),
-				fmt.Sprintf("Other notifications: %s", yesNo(incidentData.OtherNotifications)),
+				fmt.Sprintf("Informed parties: %s", joinOrNA(incidentData.InformedParties)),
 			},
 		},
 		{
@@ -107,11 +76,7 @@ func (s *pdfService) generateIncidentPDF(incidentData IncidentReportData) (multi
 		{
 			Title: "Cause analysis",
 			Lines: []string{
-				fmt.Sprintf("Technical: %s", joinOrNA(incidentData.Technical)),
-				fmt.Sprintf("Organizational: %s", joinOrNA(incidentData.Organizational)),
-				fmt.Sprintf("Mese worker: %s", joinOrNA(incidentData.MeseWorker)),
-				fmt.Sprintf("Client options: %s", joinOrNA(incidentData.ClientOptions)),
-				fmt.Sprintf("Other cause: %s", stringOrNA(incidentData.OtherCause)),
+				fmt.Sprintf("Cause categories: %s", joinOrNA(incidentData.CauseCategories)),
 				fmt.Sprintf("Cause explanation: %s", stringOrNA(incidentData.CauseExplanation)),
 			},
 		},
@@ -123,12 +88,10 @@ func (s *pdfService) generateIncidentPDF(incidentData IncidentReportData) (multi
 				fmt.Sprintf("Psychological damage: %s", incidentData.PsychologicalDamage),
 				fmt.Sprintf("Psychological damage description: %s", stringOrNA(incidentData.PsychologicalDamageDesc)),
 				fmt.Sprintf("Needed consultation: %s", incidentData.NeededConsultation),
-				fmt.Sprintf("Succession: %s", joinOrNA(incidentData.Succession)),
-				fmt.Sprintf("Succession description: %s", stringOrNA(incidentData.SuccessionDesc)),
-				fmt.Sprintf("Other: %s", yesNo(incidentData.Other)),
-				fmt.Sprintf("Other description: %s", stringOrNA(incidentData.OtherDesc)),
-				fmt.Sprintf("Additional appointments: %s", stringOrNA(incidentData.AdditionalAppointments)),
-				fmt.Sprintf("Employee absenteeism: %s", incidentData.EmployeeAbsenteeism),
+				fmt.Sprintf("Follow-up actions: %s", joinOrNA(incidentData.FollowUpActions)),
+				fmt.Sprintf("Follow-up notes: %s", stringOrNA(incidentData.FollowUpNotes)),
+				fmt.Sprintf("Employee absent: %s", yesNo(incidentData.IsEmployeeAbsent)),
+				fmt.Sprintf("Additional details: %s", stringOrNA(incidentData.AdditionalDetails)),
 			},
 		},
 	}
@@ -138,6 +101,15 @@ func (s *pdfService) generateIncidentPDF(incidentData IncidentReportData) (multi
 		return nil, fmt.Errorf("failed to generate incident pdf: %w", err)
 	}
 
+	return pdfBytes, nil
+}
+
+// GenerateIncidentPDF generates a PDF from incident data and returns the PDF bytes
+func (s *pdfService) generateIncidentPDF(incidentData IncidentReportData) (multipart.File, error) {
+	pdfBytes, err := s.GenerateIncidentPDF(context.Background(), incidentData)
+	if err != nil {
+		return nil, err
+	}
 	return toMultipartFile(pdfBytes), nil
 }
 
@@ -191,4 +163,11 @@ func joinOrNA(values []string) string {
 		return "N/A"
 	}
 	return strings.Join(values, "; ")
+}
+
+func formatTimeOrNA(value time.Time) string {
+	if value.IsZero() {
+		return "N/A"
+	}
+	return value.Format(time.RFC3339)
 }

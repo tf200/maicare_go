@@ -86,7 +86,7 @@ func (server *Server) Verify2FAHandler(ctx *gin.Context) {
 		return
 	}
 
-	loginResult, err := server.businessService.AuthService.VerifyTwoFAToken(req, ctx)
+	loginResult, err := server.businessService.AuthService.VerifyTwoFAToken(req, ctx.ClientIP(), ctx.Request.UserAgent(), ctx)
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, errorResponse(fmt.Errorf("2FA verification failed")))
 		return

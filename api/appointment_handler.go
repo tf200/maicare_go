@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"net/http"
 
+	db "maicare_go/db/sqlc"
 	"maicare_go/service/appointment"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 // @Summary Create calendar event
@@ -154,6 +156,34 @@ func (server *Server) UpdateEventApi(ctx *gin.Context) {
 		return
 	}
 
+	// Approved appointments are immutable for non-admins.
+	ev, err := server.businessService.Store.GetCalendarEventByID(ctx, eventID)
+	if err == nil {
+		approved := ev.WorkApprovalStatus == db.CalendarEventWorkApprovalStatusEnumApproved
+
+		// For recurring "single" updates, also block editing an already-approved occurrence override.
+		if !approved && req.Scope == appointment.MutationScopeSingle && req.RecurrenceID != nil && ev.RecurringEventID == nil {
+			if occ, err := server.businessService.Store.GetCalendarEventOverrideByMasterAndRecurrence(ctx, db.GetCalendarEventOverrideByMasterAndRecurrenceParams{
+				MasterEventID: &ev.ID,
+				RecurrenceID:  pgtype.Timestamptz{Time: req.RecurrenceID.UTC(), Valid: true},
+			}); err == nil {
+				approved = occ.WorkApprovalStatus == db.CalendarEventWorkApprovalStatusEnumApproved
+			}
+		}
+
+		if approved {
+			hasPermission, err := server.businessService.AuthService.HasPermission(ctx, payload.UserId, "APPOINTMENT.WORK_APPROVAL.UPDATE")
+			if err != nil {
+				ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to check permissions")))
+				return
+			}
+			if !hasPermission {
+				ctx.JSON(http.StatusForbidden, errorResponse(fmt.Errorf("approved appointments can only be edited by admin")))
+				return
+			}
+		}
+	}
+
 	response, err := server.businessService.AppointmentService.UpdateEvent(ctx, eventID, &req, payload.EmployeeID)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
@@ -194,6 +224,32 @@ func (server *Server) DeleteEventApi(ctx *gin.Context) {
 		return
 	}
 
+	// Approved appointments are immutable for non-admins.
+	ev, err := server.businessService.Store.GetCalendarEventByID(ctx, eventID)
+	if err == nil {
+		approved := ev.WorkApprovalStatus == db.CalendarEventWorkApprovalStatusEnumApproved
+		if !approved && req.Scope == appointment.MutationScopeSingle && req.RecurrenceID != nil && ev.RecurringEventID == nil {
+			if occ, err := server.businessService.Store.GetCalendarEventOverrideByMasterAndRecurrence(ctx, db.GetCalendarEventOverrideByMasterAndRecurrenceParams{
+				MasterEventID: &ev.ID,
+				RecurrenceID:  pgtype.Timestamptz{Time: req.RecurrenceID.UTC(), Valid: true},
+			}); err == nil {
+				approved = occ.WorkApprovalStatus == db.CalendarEventWorkApprovalStatusEnumApproved
+			}
+		}
+
+		if approved {
+			hasPermission, err := server.businessService.AuthService.HasPermission(ctx, payload.UserId, "APPOINTMENT.WORK_APPROVAL.UPDATE")
+			if err != nil {
+				ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to check permissions")))
+				return
+			}
+			if !hasPermission {
+				ctx.JSON(http.StatusForbidden, errorResponse(fmt.Errorf("approved appointments can only be deleted by admin")))
+				return
+			}
+		}
+	}
+
 	err = server.businessService.AppointmentService.DeleteEvent(ctx, eventID, req, payload.EmployeeID)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
@@ -201,4 +257,85 @@ func (server *Server) DeleteEventApi(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, SuccessResponse[any](nil, "Event deleted successfully"))
+}
+
+// @Summary Approve/reject appointment worked hours
+// @Description Admin updates work approval status for an appointment (and optionally a specific recurrence occurrence)
+// @Tags events
+// @Accept json
+// @Produce json
+// @Param id path string true "Event ID"
+// @Param request body appointment.SetEventWorkApprovalRequest true "Set work approval request"
+// @Success 200 {object} Response[any]
+// @Failure 400 {object} Response[any]
+// @Failure 401 {object} Response[any]
+// @Failure 403 {object} Response[any]
+// @Failure 500 {object} Response[any]
+// @Router /events/{id}/work_approval [put]
+func (server *Server) SetEventWorkApprovalApi(ctx *gin.Context) {
+	payload, err := GetAuthPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(fmt.Errorf("unauthorized access")))
+		return
+	}
+
+	eventID, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid event id")))
+		return
+	}
+
+	var req appointment.SetEventWorkApprovalRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body")))
+		return
+	}
+	if req.Status == "rejected" {
+		if req.RejectionReason == nil || len(*req.RejectionReason) == 0 {
+			ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("rejection_reason is required when status is rejected")))
+			return
+		}
+	}
+
+	err = server.businessService.AppointmentService.SetEventWorkApproval(ctx, eventID, &req, payload.EmployeeID, payload.UserId)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, SuccessResponse[any](nil, "Work approval updated successfully"))
+}
+
+// @Summary List work approval queue items (admin)
+// @Description Lists recent appointments across all employees that include at least one client attendee, with approval status.
+// @Tags events
+// @Accept json
+// @Produce json
+// @Param request body appointment.ListWorkApprovalQueueRequest true "List work approval queue request"
+// @Success 200 {object} Response[appointment.ListWorkApprovalQueueResponse]
+// @Failure 400 {object} Response[any]
+// @Failure 401 {object} Response[any]
+// @Failure 403 {object} Response[any]
+// @Failure 500 {object} Response[any]
+// @Router /events/work_approval_queue [post]
+func (server *Server) ListWorkApprovalQueueApi(ctx *gin.Context) {
+	_, err := GetAuthPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(fmt.Errorf("unauthorized access")))
+		return
+	}
+
+	var req appointment.ListWorkApprovalQueueRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body")))
+		return
+	}
+
+	resp, err := server.businessService.AppointmentService.ListWorkApprovalQueue(ctx, &req)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, SuccessResponse(resp, "Work approval queue listed successfully"))
 }

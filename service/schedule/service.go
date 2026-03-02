@@ -10,9 +10,8 @@ import (
 )
 
 type ScheduleService interface {
-	CreateSchedule(ctx context.Context, employeeID uuid.UUID, req *CreateScheduleRequest) (*CreateScheduleResponse, error)
-	GetMonthlySchedulesByLocation(ctx context.Context, locationID uuid.UUID, req *GetMonthlySchedulesByLocationRequest) ([]GetMonthlySchedulesByLocationResponse, error)
-	GetDailySchedulesByLocation(ctx context.Context, locationID uuid.UUID, req *GetDailySchedulesByLocationRequest) (*GetDailySchedulesByLocationResponse, error)
+	CreateSchedule(ctx context.Context, employeeID uuid.UUID, req *CreateScheduleRequest) ([]CreateScheduleResponse, error)
+	GetSchedulesByLocationInRange(ctx context.Context, locationID uuid.UUID, req *GetSchedulesByLocationInRangeRequest) ([]GetSchedulesByLocationInRangeResponse, error)
 	GetScheduleByID(ctx context.Context, scheduleID uuid.UUID) (*GetScheduleByIdResponse, error)
 	UpdateSchedule(ctx context.Context, scheduleID uuid.UUID, updaterEmployeeID uuid.UUID, req *UpdateScheduleRequest) (*UpdateScheduleResponse, error)
 	DeleteSchedule(ctx context.Context, scheduleID uuid.UUID) error

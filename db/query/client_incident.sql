@@ -4,49 +4,31 @@ WITH inserted_incident AS (
         employee_id,
         location_id,
         reporter_involvement,
-        inform_who,
-        incident_date,
-        runtime_incident,
+        informed_parties,
+        occurred_at,
         incident_type,
-        passing_away,
-        self_harm,
-        violence,
-        fire_water_damage,
-        accident,
-        client_absence,
-        medicines,
-        organization,
-        use_prohibited_substances,
-        other_notifications,
         severity_of_incident,
         incident_explanation,
         recurrence_risk,
         incident_prevent_steps,
         incident_taken_measures,
-        technical,
-        organizational,
-        mese_worker,
-        client_options,
-        other_cause,
+        cause_categories,
         cause_explanation,
         physical_injury,
         physical_injury_desc,
         psychological_damage,
         psychological_damage_desc,
         needed_consultation,
-        succession,
-        succession_desc,
-        other,
-        other_desc,
-        additional_appointments,
-        employee_absenteeism,
+        follow_up_actions,
+        follow_up_notes,
+        is_employee_absent,
+        additional_details,
         client_id,
         emails
     ) VALUES (
         $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
         $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
-        $21, $22, $23, $24, $25, $26, $27, $28, $29, $30,
-        $31, $32, $33, $34, $35, $36, $37, $38, $39, $40, $41
+        $21, $22, $23, $24
     ) RETURNING *
 )
 SELECT 
@@ -64,18 +46,22 @@ LEFT JOIN location l ON i.location_id = l.id;
 
 -- name: ListIncidents :many
 SELECT 
-    i.*,
-    COUNT(*) OVER() AS total_count,
+    i.id,
+    i.occurred_at,
+    i.incident_type,
+    i.severity_of_incident,
+    i.is_confirmed,
     e.first_name AS employee_first_name,
     e.last_name AS employee_last_name,
     u.profile_picture AS employee_profile_picture,
-    l.name AS location_name
+    l.name AS location_name,
+    COUNT(*) OVER() AS total_count
 FROM incident i
 JOIN employee_profile e ON i.employee_id = e.id
 JOIN custom_user u ON e.user_id = u.id
 JOIN location l ON i.location_id = l.id
 WHERE i.client_id = $1
-ORDER BY i.incident_date DESC
+ORDER BY i.occurred_at DESC
 LIMIT $2 OFFSET $3;
 
 
@@ -100,42 +86,25 @@ SET
     employee_id = COALESCE(sqlc.narg('employee_id'), employee_id),
     location_id = COALESCE(sqlc.narg('location_id'), location_id),
     reporter_involvement = COALESCE(sqlc.narg('reporter_involvement'), reporter_involvement),
-    inform_who = COALESCE(sqlc.narg('inform_who'), inform_who),
-    incident_date = COALESCE(sqlc.narg('incident_date'), incident_date),
-    runtime_incident = COALESCE(sqlc.narg('runtime_incident'), runtime_incident),
+    informed_parties = COALESCE(sqlc.narg('informed_parties'), informed_parties),
+    occurred_at = COALESCE(sqlc.narg('occurred_at'), occurred_at),
     incident_type = COALESCE(sqlc.narg('incident_type'), incident_type),
-    passing_away = COALESCE(sqlc.narg('passing_away'), passing_away),
-    self_harm = COALESCE(sqlc.narg('self_harm'), self_harm),
-    violence = COALESCE(sqlc.narg('violence'), violence),
-    fire_water_damage = COALESCE(sqlc.narg('fire_water_damage'), fire_water_damage),
-    accident = COALESCE(sqlc.narg('accident'), accident),
-    client_absence = COALESCE(sqlc.narg('client_absence'), client_absence),
-    medicines = COALESCE(sqlc.narg('medicines'), medicines),
-    organization = COALESCE(sqlc.narg('organization'), organization),
-    use_prohibited_substances = COALESCE(sqlc.narg('use_prohibited_substances'), use_prohibited_substances),
-    other_notifications = COALESCE(sqlc.narg('other_notifications'), other_notifications),
     severity_of_incident = COALESCE(sqlc.narg('severity_of_incident'), severity_of_incident),
     incident_explanation = COALESCE(sqlc.narg('incident_explanation'), incident_explanation),
     recurrence_risk = COALESCE(sqlc.narg('recurrence_risk'), recurrence_risk),
     incident_prevent_steps = COALESCE(sqlc.narg('incident_prevent_steps'), incident_prevent_steps),
     incident_taken_measures = COALESCE(sqlc.narg('incident_taken_measures'), incident_taken_measures),
-    technical = COALESCE(sqlc.narg('technical'), technical),
-    organizational = COALESCE(sqlc.narg('organizational'), organizational),
-    mese_worker = COALESCE(sqlc.narg('mese_worker'), mese_worker),
-    client_options = COALESCE(sqlc.narg('client_options'), client_options),
-    other_cause = COALESCE(sqlc.narg('other_cause'), other_cause),
+    cause_categories = COALESCE(sqlc.narg('cause_categories'), cause_categories),
     cause_explanation = COALESCE(sqlc.narg('cause_explanation'), cause_explanation),
     physical_injury = COALESCE(sqlc.narg('physical_injury'), physical_injury),
     physical_injury_desc = COALESCE(sqlc.narg('physical_injury_desc'), physical_injury_desc),
     psychological_damage = COALESCE(sqlc.narg('psychological_damage'), psychological_damage),
     psychological_damage_desc = COALESCE(sqlc.narg('psychological_damage_desc'), psychological_damage_desc),
     needed_consultation = COALESCE(sqlc.narg('needed_consultation'), needed_consultation),
-    succession = COALESCE(sqlc.narg('succession'), succession),
-    succession_desc = COALESCE(sqlc.narg('succession_desc'), succession_desc),
-    other = COALESCE(sqlc.narg('other'), other),
-    other_desc = COALESCE(sqlc.narg('other_desc'), other_desc),
-    additional_appointments = COALESCE(sqlc.narg('additional_appointments'), additional_appointments),
-    employee_absenteeism = COALESCE(sqlc.narg('employee_absenteeism'), employee_absenteeism),
+    follow_up_actions = COALESCE(sqlc.narg('follow_up_actions'), follow_up_actions),
+    follow_up_notes = COALESCE(sqlc.narg('follow_up_notes'), follow_up_notes),
+    is_employee_absent = COALESCE(sqlc.narg('is_employee_absent'), is_employee_absent),
+    additional_details = COALESCE(sqlc.narg('additional_details'), additional_details),
     emails = COALESCE(sqlc.narg('emails'), emails)
 WHERE id = $1
 RETURNING *;
@@ -146,11 +115,21 @@ DELETE FROM incident
 WHERE id = $1;
 
 
--- name: ConfirmIncident :one
+-- name: ConfirmIncident :execrows
 UPDATE incident
-SET is_confirmed = true
+SET
+    is_confirmed = TRUE,
+    confirmed_at = NOW(),
+    confirmed_by = $2
 WHERE id = $1
-RETURNING id, is_confirmed, file_url;
+  AND is_confirmed = FALSE;
+
+
+-- name: MarkIncidentConfirmationEmailSent :execrows
+UPDATE incident
+SET confirmation_email_sent_at = NOW()
+WHERE id = $1
+  AND confirmation_email_sent_at IS NULL;
 
 
 -- name: UpdateIncidentFileUrl :one

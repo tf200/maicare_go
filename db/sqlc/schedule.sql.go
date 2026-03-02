@@ -18,47 +18,53 @@ WITH inserted_schedule AS (
         employee_id,
         location_id,
         location_shift_id,
-        color,
+        shift_name_snapshot,
+        shift_start_time_snapshot,
+        shift_end_time_snapshot,
         is_custom,
         created_by_employee_id,
         start_datetime,
         end_datetime
     ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7, $8
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10
     )
-    RETURNING id, employee_id, color, location_id, location_shift_id, is_custom, start_datetime, end_datetime, created_by_employee_id, created_at, updated_at
+    RETURNING id, employee_id, location_id, location_shift_id, shift_name_snapshot, shift_start_time_snapshot, shift_end_time_snapshot, is_custom, start_datetime, end_datetime, created_by_employee_id, created_at, updated_at
 )
 SELECT 
-    s.id, s.employee_id, s.color, s.location_id, s.location_shift_id, s.is_custom, s.start_datetime, s.end_datetime, s.created_by_employee_id, s.created_at, s.updated_at,
+    s.id, s.employee_id, s.location_id, s.location_shift_id, s.shift_name_snapshot, s.shift_start_time_snapshot, s.shift_end_time_snapshot, s.is_custom, s.start_datetime, s.end_datetime, s.created_by_employee_id, s.created_at, s.updated_at,
     l.name as location_name
 FROM inserted_schedule s
 JOIN location l ON s.location_id = l.id
 `
 
 type CreateScheduleParams struct {
-	EmployeeID          uuid.UUID        `json:"employee_id"`
-	LocationID          uuid.UUID        `json:"location_id"`
-	LocationShiftID     *uuid.UUID       `json:"location_shift_id"`
-	Color               *string          `json:"color"`
-	IsCustom            bool             `json:"is_custom"`
-	CreatedByEmployeeID uuid.UUID        `json:"created_by_employee_id"`
-	StartDatetime       pgtype.Timestamp `json:"start_datetime"`
-	EndDatetime         pgtype.Timestamp `json:"end_datetime"`
+	EmployeeID             uuid.UUID          `json:"employee_id"`
+	LocationID             uuid.UUID          `json:"location_id"`
+	LocationShiftID        *uuid.UUID         `json:"location_shift_id"`
+	ShiftNameSnapshot      *string            `json:"shift_name_snapshot"`
+	ShiftStartTimeSnapshot pgtype.Time        `json:"shift_start_time_snapshot"`
+	ShiftEndTimeSnapshot   pgtype.Time        `json:"shift_end_time_snapshot"`
+	IsCustom               bool               `json:"is_custom"`
+	CreatedByEmployeeID    uuid.UUID          `json:"created_by_employee_id"`
+	StartDatetime          pgtype.Timestamptz `json:"start_datetime"`
+	EndDatetime            pgtype.Timestamptz `json:"end_datetime"`
 }
 
 type CreateScheduleRow struct {
-	ID                  uuid.UUID        `json:"id"`
-	EmployeeID          uuid.UUID        `json:"employee_id"`
-	Color               *string          `json:"color"`
-	LocationID          uuid.UUID        `json:"location_id"`
-	LocationShiftID     *uuid.UUID       `json:"location_shift_id"`
-	IsCustom            bool             `json:"is_custom"`
-	StartDatetime       pgtype.Timestamp `json:"start_datetime"`
-	EndDatetime         pgtype.Timestamp `json:"end_datetime"`
-	CreatedByEmployeeID uuid.UUID        `json:"created_by_employee_id"`
-	CreatedAt           pgtype.Timestamp `json:"created_at"`
-	UpdatedAt           pgtype.Timestamp `json:"updated_at"`
-	LocationName        string           `json:"location_name"`
+	ID                     uuid.UUID          `json:"id"`
+	EmployeeID             uuid.UUID          `json:"employee_id"`
+	LocationID             uuid.UUID          `json:"location_id"`
+	LocationShiftID        *uuid.UUID         `json:"location_shift_id"`
+	ShiftNameSnapshot      *string            `json:"shift_name_snapshot"`
+	ShiftStartTimeSnapshot pgtype.Time        `json:"shift_start_time_snapshot"`
+	ShiftEndTimeSnapshot   pgtype.Time        `json:"shift_end_time_snapshot"`
+	IsCustom               bool               `json:"is_custom"`
+	StartDatetime          pgtype.Timestamptz `json:"start_datetime"`
+	EndDatetime            pgtype.Timestamptz `json:"end_datetime"`
+	CreatedByEmployeeID    uuid.UUID          `json:"created_by_employee_id"`
+	CreatedAt              pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt              pgtype.Timestamptz `json:"updated_at"`
+	LocationName           string             `json:"location_name"`
 }
 
 func (q *Queries) CreateSchedule(ctx context.Context, arg CreateScheduleParams) (CreateScheduleRow, error) {
@@ -66,7 +72,9 @@ func (q *Queries) CreateSchedule(ctx context.Context, arg CreateScheduleParams) 
 		arg.EmployeeID,
 		arg.LocationID,
 		arg.LocationShiftID,
-		arg.Color,
+		arg.ShiftNameSnapshot,
+		arg.ShiftStartTimeSnapshot,
+		arg.ShiftEndTimeSnapshot,
 		arg.IsCustom,
 		arg.CreatedByEmployeeID,
 		arg.StartDatetime,
@@ -76,9 +84,11 @@ func (q *Queries) CreateSchedule(ctx context.Context, arg CreateScheduleParams) 
 	err := row.Scan(
 		&i.ID,
 		&i.EmployeeID,
-		&i.Color,
 		&i.LocationID,
 		&i.LocationShiftID,
+		&i.ShiftNameSnapshot,
+		&i.ShiftStartTimeSnapshot,
+		&i.ShiftEndTimeSnapshot,
 		&i.IsCustom,
 		&i.StartDatetime,
 		&i.EndDatetime,
@@ -100,105 +110,12 @@ func (q *Queries) DeleteSchedule(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
-const getDailySchedulesByLocation = `-- name: GetDailySchedulesByLocation :many
-WITH target_day AS (
-  SELECT make_date($1, $2, $3) AS day
-),
-shift_days AS (
-  SELECT 
-    s.id AS shift_id,
-    s.employee_id,
-    s.location_id,
-    s.color,
-    s.start_datetime,
-    s.end_datetime,
-    s.is_custom,
-    ls.id AS location_shift_id,
-    ls.shift_name,
-    d.day,
-    e.first_name AS employee_first_name,
-    e.last_name AS employee_last_name
-  FROM schedules s
-  LEFT JOIN location_shift ls 
-    ON s.location_shift_id = ls.id
-  JOIN target_day d 
-    ON d.day BETWEEN DATE(s.start_datetime) AND DATE(s.end_datetime)
-  JOIN employee_profile e 
-    ON s.employee_id = e.id
-  WHERE s.location_id = $4
-)
-SELECT shift_id, employee_id, location_id, color, start_datetime, end_datetime, is_custom, location_shift_id, shift_name, day, employee_first_name, employee_last_name
-FROM shift_days
-ORDER BY start_datetime
-`
-
-type GetDailySchedulesByLocationParams struct {
-	Year       int32     `json:"year"`
-	Month      int32     `json:"month"`
-	Day        int32     `json:"day"`
-	LocationID uuid.UUID `json:"location_id"`
-}
-
-type GetDailySchedulesByLocationRow struct {
-	ShiftID           uuid.UUID        `json:"shift_id"`
-	EmployeeID        uuid.UUID        `json:"employee_id"`
-	LocationID        uuid.UUID        `json:"location_id"`
-	Color             *string          `json:"color"`
-	StartDatetime     pgtype.Timestamp `json:"start_datetime"`
-	EndDatetime       pgtype.Timestamp `json:"end_datetime"`
-	IsCustom          bool             `json:"is_custom"`
-	LocationShiftID   *uuid.UUID       `json:"location_shift_id"`
-	ShiftName         *string          `json:"shift_name"`
-	Day               pgtype.Date      `json:"day"`
-	EmployeeFirstName string           `json:"employee_first_name"`
-	EmployeeLastName  string           `json:"employee_last_name"`
-}
-
-func (q *Queries) GetDailySchedulesByLocation(ctx context.Context, arg GetDailySchedulesByLocationParams) ([]GetDailySchedulesByLocationRow, error) {
-	rows, err := q.db.Query(ctx, getDailySchedulesByLocation,
-		arg.Year,
-		arg.Month,
-		arg.Day,
-		arg.LocationID,
-	)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []GetDailySchedulesByLocationRow{}
-	for rows.Next() {
-		var i GetDailySchedulesByLocationRow
-		if err := rows.Scan(
-			&i.ShiftID,
-			&i.EmployeeID,
-			&i.LocationID,
-			&i.Color,
-			&i.StartDatetime,
-			&i.EndDatetime,
-			&i.IsCustom,
-			&i.LocationShiftID,
-			&i.ShiftName,
-			&i.Day,
-			&i.EmployeeFirstName,
-			&i.EmployeeLastName,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const getEmployeeSchedules = `-- name: GetEmployeeSchedules :many
 SELECT 
     s.id,
     s.start_datetime,
     s.end_datetime,
     s.location_id,
-    s.color,
     l.name as location_name,
     'shift'::text as type
 FROM schedules s
@@ -210,19 +127,18 @@ ORDER BY s.start_datetime
 `
 
 type GetEmployeeSchedulesParams struct {
-	EmployeeID  uuid.UUID        `json:"employee_id"`
-	PeriodStart pgtype.Timestamp `json:"period_start"`
-	PeriodEnd   pgtype.Timestamp `json:"period_end"`
+	EmployeeID  uuid.UUID          `json:"employee_id"`
+	PeriodStart pgtype.Timestamptz `json:"period_start"`
+	PeriodEnd   pgtype.Timestamptz `json:"period_end"`
 }
 
 type GetEmployeeSchedulesRow struct {
-	ID            uuid.UUID        `json:"id"`
-	StartDatetime pgtype.Timestamp `json:"start_datetime"`
-	EndDatetime   pgtype.Timestamp `json:"end_datetime"`
-	LocationID    uuid.UUID        `json:"location_id"`
-	Color         *string          `json:"color"`
-	LocationName  string           `json:"location_name"`
-	Type          string           `json:"type"`
+	ID            uuid.UUID          `json:"id"`
+	StartDatetime pgtype.Timestamptz `json:"start_datetime"`
+	EndDatetime   pgtype.Timestamptz `json:"end_datetime"`
+	LocationID    uuid.UUID          `json:"location_id"`
+	LocationName  string             `json:"location_name"`
+	Type          string             `json:"type"`
 }
 
 func (q *Queries) GetEmployeeSchedules(ctx context.Context, arg GetEmployeeSchedulesParams) ([]GetEmployeeSchedulesRow, error) {
@@ -239,7 +155,6 @@ func (q *Queries) GetEmployeeSchedules(ctx context.Context, arg GetEmployeeSched
 			&i.StartDatetime,
 			&i.EndDatetime,
 			&i.LocationID,
-			&i.Color,
 			&i.LocationName,
 			&i.Type,
 		); err != nil {
@@ -253,19 +168,77 @@ func (q *Queries) GetEmployeeSchedules(ctx context.Context, arg GetEmployeeSched
 	return items, nil
 }
 
-const getMonthlySchedulesByLocation = `-- name: GetMonthlySchedulesByLocation :many
-WITH target_month AS (
-  SELECT make_date($1, $2, 1) AS start_date
-)
+const getScheduleById = `-- name: GetScheduleById :one
+SELECT s.id, s.employee_id, s.location_id, s.location_shift_id, s.shift_name_snapshot, s.shift_start_time_snapshot, s.shift_end_time_snapshot, s.is_custom, s.start_datetime, s.end_datetime, s.created_by_employee_id, s.created_at, s.updated_at,
+    e.first_name AS employee_first_name,
+    e.last_name AS employee_last_name,
+    l.name AS location_name,
+    COALESCE(s.shift_name_snapshot, ls.shift_name, 'Custom Shift') AS location_shift_name,
+    ls.id AS location_shift_id
+FROM schedules s
+LEFT JOIN location_shift ls ON s.location_shift_id = ls.id
+JOIN employee_profile e ON s.employee_id = e.id
+JOIN location l ON s.location_id = l.id
+WHERE s.id = $1
+LIMIT 1
+`
+
+type GetScheduleByIdRow struct {
+	ID                     uuid.UUID          `json:"id"`
+	EmployeeID             uuid.UUID          `json:"employee_id"`
+	LocationID             uuid.UUID          `json:"location_id"`
+	LocationShiftID        *uuid.UUID         `json:"location_shift_id"`
+	ShiftNameSnapshot      *string            `json:"shift_name_snapshot"`
+	ShiftStartTimeSnapshot pgtype.Time        `json:"shift_start_time_snapshot"`
+	ShiftEndTimeSnapshot   pgtype.Time        `json:"shift_end_time_snapshot"`
+	IsCustom               bool               `json:"is_custom"`
+	StartDatetime          pgtype.Timestamptz `json:"start_datetime"`
+	EndDatetime            pgtype.Timestamptz `json:"end_datetime"`
+	CreatedByEmployeeID    uuid.UUID          `json:"created_by_employee_id"`
+	CreatedAt              pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt              pgtype.Timestamptz `json:"updated_at"`
+	EmployeeFirstName      string             `json:"employee_first_name"`
+	EmployeeLastName       string             `json:"employee_last_name"`
+	LocationName           string             `json:"location_name"`
+	LocationShiftName      string             `json:"location_shift_name"`
+	LocationShiftID_2      *uuid.UUID         `json:"location_shift_id_2"`
+}
+
+func (q *Queries) GetScheduleById(ctx context.Context, id uuid.UUID) (GetScheduleByIdRow, error) {
+	row := q.db.QueryRow(ctx, getScheduleById, id)
+	var i GetScheduleByIdRow
+	err := row.Scan(
+		&i.ID,
+		&i.EmployeeID,
+		&i.LocationID,
+		&i.LocationShiftID,
+		&i.ShiftNameSnapshot,
+		&i.ShiftStartTimeSnapshot,
+		&i.ShiftEndTimeSnapshot,
+		&i.IsCustom,
+		&i.StartDatetime,
+		&i.EndDatetime,
+		&i.CreatedByEmployeeID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.EmployeeFirstName,
+		&i.EmployeeLastName,
+		&i.LocationName,
+		&i.LocationShiftName,
+		&i.LocationShiftID_2,
+	)
+	return i, err
+}
+
+const getSchedulesByLocationInRange = `-- name: GetSchedulesByLocationInRange :many
 SELECT 
   s.id AS shift_id,
   s.employee_id,
   s.location_id,
   s.start_datetime,
   s.end_datetime,
-  s.color,
-  S.is_custom,
-  ls.shift_name,
+  s.is_custom,
+  COALESCE(s.shift_name_snapshot, ls.shift_name, 'Custom Shift') AS shift_name,
   ls.id AS location_shift_id,
   DATE(s.start_datetime) AS day,
   e.first_name AS employee_first_name,
@@ -275,49 +248,46 @@ LEFT JOIN location_shift ls
   ON s.location_shift_id = ls.id
 JOIN employee_profile e 
   ON s.employee_id = e.id
-WHERE s.location_id = $3
-  AND DATE(s.start_datetime) >= (SELECT start_date FROM target_month)
-  AND DATE(s.start_datetime) < (SELECT start_date + INTERVAL '1 month' FROM target_month)
-ORDER BY DATE(s.start_datetime), s.start_datetime
+WHERE s.location_id = $1
+  AND DATE(s.start_datetime) BETWEEN $2::date AND $3::date
+ORDER BY day, s.start_datetime
 `
 
-type GetMonthlySchedulesByLocationParams struct {
-	Year       int32     `json:"year"`
-	Month      int32     `json:"month"`
-	LocationID uuid.UUID `json:"location_id"`
+type GetSchedulesByLocationInRangeParams struct {
+	LocationID uuid.UUID   `json:"location_id"`
+	StartDate  pgtype.Date `json:"start_date"`
+	EndDate    pgtype.Date `json:"end_date"`
 }
 
-type GetMonthlySchedulesByLocationRow struct {
-	ShiftID           uuid.UUID        `json:"shift_id"`
-	EmployeeID        uuid.UUID        `json:"employee_id"`
-	LocationID        uuid.UUID        `json:"location_id"`
-	StartDatetime     pgtype.Timestamp `json:"start_datetime"`
-	EndDatetime       pgtype.Timestamp `json:"end_datetime"`
-	Color             *string          `json:"color"`
-	IsCustom          bool             `json:"is_custom"`
-	ShiftName         *string          `json:"shift_name"`
-	LocationShiftID   *uuid.UUID       `json:"location_shift_id"`
-	Day               pgtype.Date      `json:"day"`
-	EmployeeFirstName string           `json:"employee_first_name"`
-	EmployeeLastName  string           `json:"employee_last_name"`
+type GetSchedulesByLocationInRangeRow struct {
+	ShiftID           uuid.UUID          `json:"shift_id"`
+	EmployeeID        uuid.UUID          `json:"employee_id"`
+	LocationID        uuid.UUID          `json:"location_id"`
+	StartDatetime     pgtype.Timestamptz `json:"start_datetime"`
+	EndDatetime       pgtype.Timestamptz `json:"end_datetime"`
+	IsCustom          bool               `json:"is_custom"`
+	ShiftName         string             `json:"shift_name"`
+	LocationShiftID   *uuid.UUID         `json:"location_shift_id"`
+	Day               pgtype.Date        `json:"day"`
+	EmployeeFirstName string             `json:"employee_first_name"`
+	EmployeeLastName  string             `json:"employee_last_name"`
 }
 
-func (q *Queries) GetMonthlySchedulesByLocation(ctx context.Context, arg GetMonthlySchedulesByLocationParams) ([]GetMonthlySchedulesByLocationRow, error) {
-	rows, err := q.db.Query(ctx, getMonthlySchedulesByLocation, arg.Year, arg.Month, arg.LocationID)
+func (q *Queries) GetSchedulesByLocationInRange(ctx context.Context, arg GetSchedulesByLocationInRangeParams) ([]GetSchedulesByLocationInRangeRow, error) {
+	rows, err := q.db.Query(ctx, getSchedulesByLocationInRange, arg.LocationID, arg.StartDate, arg.EndDate)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []GetMonthlySchedulesByLocationRow{}
+	items := []GetSchedulesByLocationInRangeRow{}
 	for rows.Next() {
-		var i GetMonthlySchedulesByLocationRow
+		var i GetSchedulesByLocationInRangeRow
 		if err := rows.Scan(
 			&i.ShiftID,
 			&i.EmployeeID,
 			&i.LocationID,
 			&i.StartDatetime,
 			&i.EndDatetime,
-			&i.Color,
 			&i.IsCustom,
 			&i.ShiftName,
 			&i.LocationShiftID,
@@ -335,64 +305,6 @@ func (q *Queries) GetMonthlySchedulesByLocation(ctx context.Context, arg GetMont
 	return items, nil
 }
 
-const getScheduleById = `-- name: GetScheduleById :one
-SELECT s.id, s.employee_id, s.color, s.location_id, s.location_shift_id, s.is_custom, s.start_datetime, s.end_datetime, s.created_by_employee_id, s.created_at, s.updated_at,
-    e.first_name AS employee_first_name,
-    e.last_name AS employee_last_name,
-    l.name AS location_name,
-    ls.shift_name AS location_shift_name,
-    ls.id AS location_shift_id
-FROM schedules s
-LEFT JOIN location_shift ls ON s.location_shift_id = ls.id
-JOIN employee_profile e ON s.employee_id = e.id
-JOIN location l ON s.location_id = l.id
-WHERE s.id = $1
-LIMIT 1
-`
-
-type GetScheduleByIdRow struct {
-	ID                  uuid.UUID        `json:"id"`
-	EmployeeID          uuid.UUID        `json:"employee_id"`
-	Color               *string          `json:"color"`
-	LocationID          uuid.UUID        `json:"location_id"`
-	LocationShiftID     *uuid.UUID       `json:"location_shift_id"`
-	IsCustom            bool             `json:"is_custom"`
-	StartDatetime       pgtype.Timestamp `json:"start_datetime"`
-	EndDatetime         pgtype.Timestamp `json:"end_datetime"`
-	CreatedByEmployeeID uuid.UUID        `json:"created_by_employee_id"`
-	CreatedAt           pgtype.Timestamp `json:"created_at"`
-	UpdatedAt           pgtype.Timestamp `json:"updated_at"`
-	EmployeeFirstName   string           `json:"employee_first_name"`
-	EmployeeLastName    string           `json:"employee_last_name"`
-	LocationName        string           `json:"location_name"`
-	LocationShiftName   *string          `json:"location_shift_name"`
-	LocationShiftID_2   *uuid.UUID       `json:"location_shift_id_2"`
-}
-
-func (q *Queries) GetScheduleById(ctx context.Context, id uuid.UUID) (GetScheduleByIdRow, error) {
-	row := q.db.QueryRow(ctx, getScheduleById, id)
-	var i GetScheduleByIdRow
-	err := row.Scan(
-		&i.ID,
-		&i.EmployeeID,
-		&i.Color,
-		&i.LocationID,
-		&i.LocationShiftID,
-		&i.IsCustom,
-		&i.StartDatetime,
-		&i.EndDatetime,
-		&i.CreatedByEmployeeID,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.EmployeeFirstName,
-		&i.EmployeeLastName,
-		&i.LocationName,
-		&i.LocationShiftName,
-		&i.LocationShiftID_2,
-	)
-	return i, err
-}
-
 const updateSchedule = `-- name: UpdateSchedule :one
 WITH updated_schedule AS (
     UPDATE schedules
@@ -400,42 +312,51 @@ WITH updated_schedule AS (
         employee_id = $2,
         location_id = $3,
         location_shift_id = $4,
-        color = $5,
-        start_datetime = $6,
-        end_datetime = $7
+        start_datetime = $5,
+        end_datetime = $6,
+        shift_name_snapshot = $7,
+        shift_start_time_snapshot = $8,
+        shift_end_time_snapshot = $9,
+        is_custom = $10,
+        updated_at = NOW()
     WHERE schedules.id = $1
-    RETURNING id, employee_id, color, location_id, location_shift_id, is_custom, start_datetime, end_datetime, created_by_employee_id, created_at, updated_at
+    RETURNING id, employee_id, location_id, location_shift_id, shift_name_snapshot, shift_start_time_snapshot, shift_end_time_snapshot, is_custom, start_datetime, end_datetime, created_by_employee_id, created_at, updated_at
 )
 SELECT 
-    s.id, s.employee_id, s.color, s.location_id, s.location_shift_id, s.is_custom, s.start_datetime, s.end_datetime, s.created_by_employee_id, s.created_at, s.updated_at,
+    s.id, s.employee_id, s.location_id, s.location_shift_id, s.shift_name_snapshot, s.shift_start_time_snapshot, s.shift_end_time_snapshot, s.is_custom, s.start_datetime, s.end_datetime, s.created_by_employee_id, s.created_at, s.updated_at,
     l.name as location_name
 FROM updated_schedule s
 JOIN location l ON s.location_id = l.id
 `
 
 type UpdateScheduleParams struct {
-	ID              uuid.UUID        `json:"id"`
-	EmployeeID      uuid.UUID        `json:"employee_id"`
-	LocationID      uuid.UUID        `json:"location_id"`
-	LocationShiftID *uuid.UUID       `json:"location_shift_id"`
-	Color           *string          `json:"color"`
-	StartDatetime   pgtype.Timestamp `json:"start_datetime"`
-	EndDatetime     pgtype.Timestamp `json:"end_datetime"`
+	ID                     uuid.UUID          `json:"id"`
+	EmployeeID             uuid.UUID          `json:"employee_id"`
+	LocationID             uuid.UUID          `json:"location_id"`
+	LocationShiftID        *uuid.UUID         `json:"location_shift_id"`
+	StartDatetime          pgtype.Timestamptz `json:"start_datetime"`
+	EndDatetime            pgtype.Timestamptz `json:"end_datetime"`
+	ShiftNameSnapshot      *string            `json:"shift_name_snapshot"`
+	ShiftStartTimeSnapshot pgtype.Time        `json:"shift_start_time_snapshot"`
+	ShiftEndTimeSnapshot   pgtype.Time        `json:"shift_end_time_snapshot"`
+	IsCustom               bool               `json:"is_custom"`
 }
 
 type UpdateScheduleRow struct {
-	ID                  uuid.UUID        `json:"id"`
-	EmployeeID          uuid.UUID        `json:"employee_id"`
-	Color               *string          `json:"color"`
-	LocationID          uuid.UUID        `json:"location_id"`
-	LocationShiftID     *uuid.UUID       `json:"location_shift_id"`
-	IsCustom            bool             `json:"is_custom"`
-	StartDatetime       pgtype.Timestamp `json:"start_datetime"`
-	EndDatetime         pgtype.Timestamp `json:"end_datetime"`
-	CreatedByEmployeeID uuid.UUID        `json:"created_by_employee_id"`
-	CreatedAt           pgtype.Timestamp `json:"created_at"`
-	UpdatedAt           pgtype.Timestamp `json:"updated_at"`
-	LocationName        string           `json:"location_name"`
+	ID                     uuid.UUID          `json:"id"`
+	EmployeeID             uuid.UUID          `json:"employee_id"`
+	LocationID             uuid.UUID          `json:"location_id"`
+	LocationShiftID        *uuid.UUID         `json:"location_shift_id"`
+	ShiftNameSnapshot      *string            `json:"shift_name_snapshot"`
+	ShiftStartTimeSnapshot pgtype.Time        `json:"shift_start_time_snapshot"`
+	ShiftEndTimeSnapshot   pgtype.Time        `json:"shift_end_time_snapshot"`
+	IsCustom               bool               `json:"is_custom"`
+	StartDatetime          pgtype.Timestamptz `json:"start_datetime"`
+	EndDatetime            pgtype.Timestamptz `json:"end_datetime"`
+	CreatedByEmployeeID    uuid.UUID          `json:"created_by_employee_id"`
+	CreatedAt              pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt              pgtype.Timestamptz `json:"updated_at"`
+	LocationName           string             `json:"location_name"`
 }
 
 func (q *Queries) UpdateSchedule(ctx context.Context, arg UpdateScheduleParams) (UpdateScheduleRow, error) {
@@ -444,17 +365,22 @@ func (q *Queries) UpdateSchedule(ctx context.Context, arg UpdateScheduleParams) 
 		arg.EmployeeID,
 		arg.LocationID,
 		arg.LocationShiftID,
-		arg.Color,
 		arg.StartDatetime,
 		arg.EndDatetime,
+		arg.ShiftNameSnapshot,
+		arg.ShiftStartTimeSnapshot,
+		arg.ShiftEndTimeSnapshot,
+		arg.IsCustom,
 	)
 	var i UpdateScheduleRow
 	err := row.Scan(
 		&i.ID,
 		&i.EmployeeID,
-		&i.Color,
 		&i.LocationID,
 		&i.LocationShiftID,
+		&i.ShiftNameSnapshot,
+		&i.ShiftStartTimeSnapshot,
+		&i.ShiftEndTimeSnapshot,
 		&i.IsCustom,
 		&i.StartDatetime,
 		&i.EndDatetime,

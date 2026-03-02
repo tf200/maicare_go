@@ -15,6 +15,9 @@ import (
 //go:generate mockgen -source=logger.go -destination=../mocks/mock_logger.go -package=mocks
 type Logger interface {
 	LogBusinessEvent(ctx context.Context, level LogLevel, operation, message string, fields ...zap.Field)
+	LogError(ctx context.Context, operation, message string, err error, fields ...zap.Field)
+	LogWarn(ctx context.Context, operation, message string, fields ...zap.Field)
+	LogInfo(ctx context.Context, operation, message string, fields ...zap.Field)
 }
 
 type LogLevel string
@@ -135,4 +138,19 @@ func (l *LoggerImpl) LogBusinessEvent(ctx context.Context, level LogLevel, opera
 	default:
 		l.logger.Info(message, append(allFields, zap.String("unexpected_log_level", string(level)))...)
 	}
+}
+
+func (l *LoggerImpl) LogError(ctx context.Context, operation, message string, err error, fields ...zap.Field) {
+	if err != nil {
+		fields = append(fields, zap.Error(err))
+	}
+	l.LogBusinessEvent(ctx, LogLevelError, operation, message, fields...)
+}
+
+func (l *LoggerImpl) LogWarn(ctx context.Context, operation, message string, fields ...zap.Field) {
+	l.LogBusinessEvent(ctx, LogLevelWarn, operation, message, fields...)
+}
+
+func (l *LoggerImpl) LogInfo(ctx context.Context, operation, message string, fields ...zap.Field) {
+	l.LogBusinessEvent(ctx, LogLevelInfo, operation, message, fields...)
 }

@@ -975,28 +975,24 @@ SET
     care_assisted_independent_living = COALESCE($45, care_assisted_independent_living),
     care_room_training_center = COALESCE($46, care_room_training_center),
     care_ambulatory_guidance = COALESCE($47, care_ambulatory_guidance),
-    client_goals = COALESCE($48, client_goals),
-    risk_aggressive_behavior = COALESCE($49, risk_aggressive_behavior),
-    risk_suicidal_selfharm = COALESCE($50, risk_suicidal_selfharm),
-    risk_substance_abuse = COALESCE($51, risk_substance_abuse),
-    risk_psychiatric_issues = COALESCE($52, risk_psychiatric_issues),
-    risk_criminal_history = COALESCE($53, risk_criminal_history),
-    risk_flight_behavior = COALESCE($54, risk_flight_behavior),
-    risk_weapon_possession = COALESCE($55, risk_weapon_possession),
-    risk_sexual_behavior = COALESCE($56, risk_sexual_behavior),
-    risk_day_night_rhythm = COALESCE($57, risk_day_night_rhythm),
-    risk_other = COALESCE($58, risk_other),
-    risk_other_description = COALESCE($59, risk_other_description),
-    risk_additional_notes = COALESCE($60, risk_additional_notes),
-    document_referral = COALESCE($61, document_referral),
-    document_education_report = COALESCE($62, document_education_report),
-    document_psychiatric_report = COALESCE($63, document_psychiatric_report),
-    document_diagnosis = COALESCE($64, document_diagnosis),
-    document_safety_plan = COALESCE($65, document_safety_plan),
-    document_id_copy = COALESCE($66, document_id_copy),
-    application_date = COALESCE($67, application_date),
-    referrer_signature = COALESCE($68, referrer_signature)
-WHERE id = $69
+    application_reason = COALESCE($48, application_reason),
+    client_goals = COALESCE($49, client_goals),
+    risk_aggressive_behavior = COALESCE($50, risk_aggressive_behavior),
+    risk_suicidal_selfharm = COALESCE($51, risk_suicidal_selfharm),
+    risk_substance_abuse = COALESCE($52, risk_substance_abuse),
+    risk_psychiatric_issues = COALESCE($53, risk_psychiatric_issues),
+    risk_criminal_history = COALESCE($54, risk_criminal_history),
+    risk_flight_behavior = COALESCE($55, risk_flight_behavior),
+    risk_weapon_possession = COALESCE($56, risk_weapon_possession),
+    risk_sexual_behavior = COALESCE($57, risk_sexual_behavior),
+    risk_day_night_rhythm = COALESCE($58, risk_day_night_rhythm),
+    risk_other = COALESCE($59, risk_other),
+    risk_other_description = COALESCE($60, risk_other_description),
+    risk_additional_notes = COALESCE($61, risk_additional_notes),
+    application_date = COALESCE($62, application_date),
+    referrer_signature = COALESCE($63, referrer_signature),
+    updated_at = CURRENT_TIMESTAMP
+WHERE id = $64
 RETURNING id, client_first_name, client_last_name, client_date_of_birth, client_bsn_number, client_gender, client_nationality, client_phone_number, client_email, client_street, client_house_number, client_house_number_addition, client_postal_code, client_city, referrer_first_name, referrer_last_name, referrer_organization, referrer_job_title, referrer_phone_number, referrer_email, guardian1_first_name, guardian1_last_name, guardian1_relationship, guardian1_phone_number, guardian1_email, guardian2_first_name, guardian2_last_name, guardian2_relationship, guardian2_phone_number, guardian2_email, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_currently_enrolled, education_additional_notes, education_level, work_current_employer, work_employer_phone, work_employer_email, work_current_position, work_currently_employed, work_start_date, work_additional_notes, care_protected_living, care_assisted_independent_living, care_room_training_center, care_ambulatory_guidance, application_reason, client_goals, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes, document_referral, document_education_report, document_action_plan, document_psychiatric_report, document_diagnosis, document_safety_plan, document_id_copy, application_date, referrer_signature, form_status, intake_options, intake_token, created_at, updated_at, submitted_at, processed_at, processed_by_employee_id, intake_appointment_datetime, intake_appointment_location, addmission_type, rejection_reason
 `
 
@@ -1048,6 +1044,7 @@ type UpdateRegistrationFormParams struct {
 	CareAssistedIndependentLiving *bool                  `json:"care_assisted_independent_living"`
 	CareRoomTrainingCenter        *bool                  `json:"care_room_training_center"`
 	CareAmbulatoryGuidance        *bool                  `json:"care_ambulatory_guidance"`
+	ApplicationReason             *string                `json:"application_reason"`
 	ClientGoals                   []string               `json:"client_goals"`
 	RiskAggressiveBehavior        *bool                  `json:"risk_aggressive_behavior"`
 	RiskSuicidalSelfharm          *bool                  `json:"risk_suicidal_selfharm"`
@@ -1061,12 +1058,6 @@ type UpdateRegistrationFormParams struct {
 	RiskOther                     *bool                  `json:"risk_other"`
 	RiskOtherDescription          *string                `json:"risk_other_description"`
 	RiskAdditionalNotes           *string                `json:"risk_additional_notes"`
-	DocumentReferral              *uuid.UUID             `json:"document_referral"`
-	DocumentEducationReport       *uuid.UUID             `json:"document_education_report"`
-	DocumentPsychiatricReport     *uuid.UUID             `json:"document_psychiatric_report"`
-	DocumentDiagnosis             *uuid.UUID             `json:"document_diagnosis"`
-	DocumentSafetyPlan            *uuid.UUID             `json:"document_safety_plan"`
-	DocumentIDCopy                *uuid.UUID             `json:"document_id_copy"`
 	ApplicationDate               pgtype.Date            `json:"application_date"`
 	ReferrerSignature             *bool                  `json:"referrer_signature"`
 	ID                            uuid.UUID              `json:"id"`
@@ -1121,6 +1112,7 @@ func (q *Queries) UpdateRegistrationForm(ctx context.Context, arg UpdateRegistra
 		arg.CareAssistedIndependentLiving,
 		arg.CareRoomTrainingCenter,
 		arg.CareAmbulatoryGuidance,
+		arg.ApplicationReason,
 		arg.ClientGoals,
 		arg.RiskAggressiveBehavior,
 		arg.RiskSuicidalSelfharm,
@@ -1134,12 +1126,6 @@ func (q *Queries) UpdateRegistrationForm(ctx context.Context, arg UpdateRegistra
 		arg.RiskOther,
 		arg.RiskOtherDescription,
 		arg.RiskAdditionalNotes,
-		arg.DocumentReferral,
-		arg.DocumentEducationReport,
-		arg.DocumentPsychiatricReport,
-		arg.DocumentDiagnosis,
-		arg.DocumentSafetyPlan,
-		arg.DocumentIDCopy,
 		arg.ApplicationDate,
 		arg.ReferrerSignature,
 		arg.ID,

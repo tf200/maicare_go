@@ -437,7 +437,7 @@ func (s *clientService) UpdateRegistrationForm(ctx context.Context, req *UpdateR
 			return pgtype.Date{Valid: false}
 		}(),
 		ClientBsnNumber:            req.ClientBsnNumber,
-		ClientGender:               db.NullGenderEnum{GenderEnum: db.GenderEnum(*req.ClientGender), Valid: true},
+		ClientGender:               db.NullGenderFromPtr(req.ClientGender),
 		ClientNationality:          req.ClientNationality,
 		ClientPhoneNumber:          req.ClientPhoneNumber,
 		ClientEmail:                req.ClientEmail,
@@ -467,12 +467,13 @@ func (s *clientService) UpdateRegistrationForm(ctx context.Context, req *UpdateR
 		EducationMentorEmail:       req.EducationMentorEmail,
 		EducationCurrentlyEnrolled: req.EducationCurrentlyEnrolled,
 		EducationAdditionalNotes:   req.EducationAdditionalNotes,
-		// EducationLevel:             db.NullClientEducationLevelFromPtr(req.EducationLevel),
-		WorkCurrentEmployer:   req.WorkCurrentEmployer,
-		WorkEmployerPhone:     req.WorkEmployerPhone,
-		WorkEmployerEmail:     req.WorkEmployerEmail,
-		WorkCurrentPosition:   req.WorkCurrentPosition,
-		WorkCurrentlyEmployed: req.WorkCurrentlyEmployed,
+		EducationLevel:             db.NullClientEducationLevelFromPtr(req.EducationLevel),
+		WorkCurrentEmployer:        req.WorkCurrentEmployer,
+		WorkEmployerPhone:          req.WorkEmployerPhone,
+		WorkEmployerEmail:          req.WorkEmployerEmail,
+		WorkCurrentPosition:        req.WorkCurrentPosition,
+		WorkCurrentlyEmployed:      req.WorkCurrentlyEmployed,
+		ApplicationReason:          req.ApplicationReason,
 
 		CareProtectedLiving:           req.CareProtectedLiving,
 		CareAssistedIndependentLiving: req.CareAssistedIndependentLiving,
@@ -491,15 +492,21 @@ func (s *clientService) UpdateRegistrationForm(ctx context.Context, req *UpdateR
 		RiskOther:                     req.RiskOther,
 		RiskOtherDescription:          req.RiskOtherDescription,
 		RiskAdditionalNotes:           req.RiskAdditionalNotes,
-		DocumentReferral:              req.DocumentReferral,
-		DocumentEducationReport:       req.DocumentEducationReport,
-		DocumentPsychiatricReport:     req.DocumentPsychiatricReport,
-		DocumentDiagnosis:             req.DocumentDiagnosis,
-		DocumentSafetyPlan:            req.DocumentSafetyPlan,
-		DocumentIDCopy:                req.DocumentIDCopy,
-		ApplicationDate:               req.ApplicationDate,
 		ReferrerSignature:             req.ReferrerSignature,
 	}
+
+	if req.WorkStartDate != nil {
+		arg.WorkStartDate = pgtype.Date{Time: *req.WorkStartDate, Valid: true}
+	} else {
+		arg.WorkStartDate = pgtype.Date{Valid: false}
+	}
+
+	if req.ApplicationDate != nil {
+		arg.ApplicationDate = pgtype.Date{Time: *req.ApplicationDate, Valid: true}
+	} else {
+		arg.ApplicationDate = pgtype.Date{Valid: false}
+	}
+
 	registrationForm, err := s.Store.UpdateRegistrationForm(ctx, arg)
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "UpdateRegistrationForm", "Failed to update registration form", zap.Error(err), zap.String("FormID", formID.String()))

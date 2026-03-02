@@ -8,7 +8,6 @@ import (
 	"fmt"
 
 	db "maicare_go/db/sqlc"
-	"maicare_go/logger"
 	"maicare_go/util"
 
 	"github.com/google/uuid"
@@ -21,17 +20,17 @@ func (s *authService) SetupTwoFA(userID uuid.UUID, ctx context.Context) (*Setup2
 	user, err := s.Store.GetUserByID(ctx, userID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "SetupTwoFA", "User not found for 2FA setup",
-				zap.String("userID", userID.String()))
+			s.Logger.LogError(ctx, "SetupTwoFA", "User not found for 2FA setup", nil,
+				zap.String("user_id", userID.String()))
 			return nil, ErrUserNotFound
 		}
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "SetupTwoFA", "Database error during user retrieval",
-			zap.String("userID", userID.String()), zap.String("error", err.Error()))
+		s.Logger.LogError(ctx, "SetupTwoFA", "Database error during user retrieval", err,
+			zap.String("user_id", userID.String()))
 		return nil, fmt.Errorf("failed to get user: %v", err)
 	}
 	if user.TwoFactorEnabled {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelWarn, "SetupTwoFA", "2FA already enabled for user",
-			zap.String("userID", userID.String()))
+		s.Logger.LogWarn(ctx, "SetupTwoFA", "2FA already enabled for user",
+			zap.String("user_id", userID.String()))
 		return nil, ErrTwoFaAlreadyEnabled
 	}
 
@@ -40,8 +39,8 @@ func (s *authService) SetupTwoFA(userID uuid.UUID, ctx context.Context) (*Setup2
 		AccountName: user.Email,
 	})
 	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "SetupTwoFA", "Error generating 2FA key",
-			zap.String("userID", userID.String()), zap.String("error", err.Error()))
+		s.Logger.LogError(ctx, "SetupTwoFA", "Error generating 2FA key", err,
+			zap.String("user_id", userID.String()))
 		return nil, fmt.Errorf("failed to generate 2FA key")
 	}
 
@@ -52,22 +51,22 @@ func (s *authService) SetupTwoFA(userID uuid.UUID, ctx context.Context) (*Setup2
 		TwoFactorSecretTemp: &secret,
 	})
 	if err != nil || rows != 1 {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "SetupTwoFA", "Database error saving temp 2FA secret",
-			zap.String("userID", userID.String()), zap.String("error", err.Error()))
+		s.Logger.LogError(ctx, "SetupTwoFA", "Database error saving temp 2FA secret", err,
+			zap.String("user_id", userID.String()))
 		return nil, fmt.Errorf("failed to save temp 2FA secret")
 	}
 
 	qrCode, err := qrcode.Encode(key.URL(), qrcode.Medium, 256)
 	if err != nil {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "SetupTwoFA", "Error generating QR code",
-			zap.String("userID", userID.String()), zap.String("error", err.Error()))
+		s.Logger.LogError(ctx, "SetupTwoFA", "Error generating QR code", err,
+			zap.String("user_id", userID.String()))
 		return nil, fmt.Errorf("failed to generate QR code")
 	}
 
 	qrCodeBase64 := base64.StdEncoding.EncodeToString(qrCode)
 
-	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "SetupTwoFA", "2FA setup initiated",
-		zap.String("userID", userID.String()))
+	s.Logger.LogInfo(ctx, "SetupTwoFA", "2FA setup initiated",
+		zap.String("user_id", userID.String()))
 
 	return &Setup2FAResponse{
 		QrCode: qrCodeBase64,
@@ -79,28 +78,28 @@ func (s *authService) EnableTwoFA(req Enable2FARequest, userID uuid.UUID, ctx co
 	user, err := s.Store.GetUserByID(ctx, userID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			s.Logger.LogBusinessEvent(ctx, logger.LogLevelWarn, "EnableTwoFA", "User not found for 2FA enable",
-				zap.String("userID", userID.String()))
+			s.Logger.LogWarn(ctx, "EnableTwoFA", "User not found for 2FA enable",
+				zap.String("user_id", userID.String()))
 			return nil, ErrUserNotFound
 		}
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "EnableTwoFA", "Database error during user retrieval",
-			zap.String("userID", userID.String()), zap.String("error", err.Error()))
+		s.Logger.LogError(ctx, "EnableTwoFA", "Database error during user retrieval", err,
+			zap.String("user_id", userID.String()))
 		return nil, fmt.Errorf("failed to get user: %v", err)
 	}
 	if user.TwoFactorEnabled {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelWarn, "EnableTwoFA", "2FA already enabled for user",
-			zap.String("userID", userID.String()))
+		s.Logger.LogWarn(ctx, "EnableTwoFA", "2FA already enabled for user",
+			zap.String("user_id", userID.String()))
 		return nil, ErrTwoFaAlreadyEnabled
 	}
 	if user.TwoFactorSecretTemp == nil || *user.TwoFactorSecretTemp == "" {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelWarn, "EnableTwoFA", "No temp 2FA secret found for user",
-			zap.String("userID", userID.String()))
+		s.Logger.LogWarn(ctx, "EnableTwoFA", "No temp 2FA secret found for user",
+			zap.String("user_id", userID.String()))
 		return nil, fmt.Errorf("no temp 2FA secret found")
 	}
 	valid := totp.Validate(req.ValidationCode, *user.TwoFactorSecretTemp)
 	if !valid {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelWarn, "EnableTwoFA", "Invalid 2FA validation code",
-			zap.String("userID", userID.String()))
+		s.Logger.LogWarn(ctx, "EnableTwoFA", "Invalid 2FA validation code",
+			zap.String("user_id", userID.String()))
 		return nil, ErrInvalidTwoFACode
 	}
 
@@ -110,8 +109,8 @@ func (s *authService) EnableTwoFA(req Enable2FARequest, userID uuid.UUID, ctx co
 	for i, code := range recoveryCodes {
 		hashedCode, err := util.HashPassword(code)
 		if err != nil {
-			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "EnableTwoFA", "Error hashing recovery code",
-				zap.String("userID", userID.String()), zap.String("error", err.Error()))
+			s.Logger.LogError(ctx, "EnableTwoFA", "Error hashing recovery code", err,
+				zap.String("user_id", userID.String()))
 			return nil, fmt.Errorf("failed to hash recovery code: %v", err)
 		}
 		hashedRecoveryCodes[i] = hashedCode
@@ -123,13 +122,13 @@ func (s *authService) EnableTwoFA(req Enable2FARequest, userID uuid.UUID, ctx co
 		RecoveryCodes:   hashedRecoveryCodes,
 	})
 	if err != nil || rowsAffected != 1 {
-		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "EnableTwoFA", "Database error enabling 2FA",
-			zap.String("userID", userID.String()), zap.String("error", err.Error()))
+		s.Logger.LogError(ctx, "EnableTwoFA", "Database error enabling 2FA", err,
+			zap.String("user_id", userID.String()))
 		return nil, fmt.Errorf("failed to enable 2FA: %v", err)
 	}
 
-	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "EnableTwoFA", "2FA enabled successfully",
-		zap.String("userID", userID.String()))
+	s.Logger.LogInfo(ctx, "EnableTwoFA", "2FA enabled successfully",
+		zap.String("user_id", userID.String()))
 	return &Enable2FAResponse{
 		RecoveryCodes: recoveryCodes,
 	}, nil

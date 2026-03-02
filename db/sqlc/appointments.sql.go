@@ -30,7 +30,7 @@ func (q *Queries) AddEventClientAttendee(ctx context.Context, arg AddEventClient
 const addEventClientAttendeesBatch = `-- name: AddEventClientAttendeesBatch :exec
 INSERT INTO calendar_event_attendees (event_id, client_id)
 SELECT $1, unnest($2::uuid[])
-ON CONFLICT (event_id, client_id) DO NOTHING
+ON CONFLICT (event_id, client_id) WHERE client_id IS NOT NULL DO NOTHING
 `
 
 type AddEventClientAttendeesBatchParams struct {
@@ -61,7 +61,7 @@ func (q *Queries) AddEventEmployeeAttendee(ctx context.Context, arg AddEventEmpl
 const addEventEmployeeAttendeesBatch = `-- name: AddEventEmployeeAttendeesBatch :exec
 INSERT INTO calendar_event_attendees (event_id, employee_id)
 SELECT $1, unnest($2::uuid[])
-ON CONFLICT (event_id, employee_id) DO NOTHING
+ON CONFLICT (event_id, employee_id) WHERE employee_id IS NOT NULL DO NOTHING
 `
 
 type AddEventEmployeeAttendeesBatchParams struct {
@@ -74,9 +74,10 @@ func (q *Queries) AddEventEmployeeAttendeesBatch(ctx context.Context, arg AddEve
 	return err
 }
 
-const addEventReminder = `-- name: AddEventReminder :exec
+const addEventReminder = `-- name: AddEventReminder :one
 INSERT INTO calendar_event_reminders (event_id, channel, minutes_before, remind_at)
 VALUES ($1, 'in_app', $2, $3)
+RETURNING id, minutes_before, remind_at
 `
 
 type AddEventReminderParams struct {
@@ -85,9 +86,17 @@ type AddEventReminderParams struct {
 	RemindAt      pgtype.Timestamptz `json:"remind_at"`
 }
 
-func (q *Queries) AddEventReminder(ctx context.Context, arg AddEventReminderParams) error {
-	_, err := q.db.Exec(ctx, addEventReminder, arg.EventID, arg.MinutesBefore, arg.RemindAt)
-	return err
+type AddEventReminderRow struct {
+	ID            uuid.UUID          `json:"id"`
+	MinutesBefore *int32             `json:"minutes_before"`
+	RemindAt      pgtype.Timestamptz `json:"remind_at"`
+}
+
+func (q *Queries) AddEventReminder(ctx context.Context, arg AddEventReminderParams) (AddEventReminderRow, error) {
+	row := q.db.QueryRow(ctx, addEventReminder, arg.EventID, arg.MinutesBefore, arg.RemindAt)
+	var i AddEventReminderRow
+	err := row.Scan(&i.ID, &i.MinutesBefore, &i.RemindAt)
+	return i, err
 }
 
 const cancelCalendarEvent = `-- name: CancelCalendarEvent :exec
@@ -133,7 +142,7 @@ INSERT INTO calendar_events (
     $13,
     $14
 )
-RETURNING id, organizer_employee_id, created_by_employee_id, kind, status, title, description, location, color, start_at, end_at, timezone, rrule, recurring_event_id, recurrence_id, created_at, updated_at
+RETURNING id, organizer_employee_id, created_by_employee_id, kind, status, work_approval_status, work_approved_by, work_approved_at, work_rejected_by, work_rejected_at, work_rejection_reason, title, description, location, color, start_at, end_at, timezone, rrule, recurring_event_id, recurrence_id, created_at, updated_at
 `
 
 type CreateCalendarEventParams struct {
@@ -177,6 +186,12 @@ func (q *Queries) CreateCalendarEvent(ctx context.Context, arg CreateCalendarEve
 		&i.CreatedByEmployeeID,
 		&i.Kind,
 		&i.Status,
+		&i.WorkApprovalStatus,
+		&i.WorkApprovedBy,
+		&i.WorkApprovedAt,
+		&i.WorkRejectedBy,
+		&i.WorkRejectedAt,
+		&i.WorkRejectionReason,
 		&i.Title,
 		&i.Description,
 		&i.Location,
@@ -213,8 +228,90 @@ func (q *Queries) DeleteRemindersByEventID(ctx context.Context, eventID uuid.UUI
 	return err
 }
 
+const getCalendarEventByID = `-- name: GetCalendarEventByID :one
+SELECT id, organizer_employee_id, created_by_employee_id, kind, status, work_approval_status, work_approved_by, work_approved_at, work_rejected_by, work_rejected_at, work_rejection_reason, title, description, location, color, start_at, end_at, timezone, rrule, recurring_event_id, recurrence_id, created_at, updated_at
+FROM calendar_events
+WHERE id = $1
+LIMIT 1
+`
+
+func (q *Queries) GetCalendarEventByID(ctx context.Context, id uuid.UUID) (CalendarEvent, error) {
+	row := q.db.QueryRow(ctx, getCalendarEventByID, id)
+	var i CalendarEvent
+	err := row.Scan(
+		&i.ID,
+		&i.OrganizerEmployeeID,
+		&i.CreatedByEmployeeID,
+		&i.Kind,
+		&i.Status,
+		&i.WorkApprovalStatus,
+		&i.WorkApprovedBy,
+		&i.WorkApprovedAt,
+		&i.WorkRejectedBy,
+		&i.WorkRejectedAt,
+		&i.WorkRejectionReason,
+		&i.Title,
+		&i.Description,
+		&i.Location,
+		&i.Color,
+		&i.StartAt,
+		&i.EndAt,
+		&i.Timezone,
+		&i.Rrule,
+		&i.RecurringEventID,
+		&i.RecurrenceID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getCalendarEventOverrideByMasterAndRecurrence = `-- name: GetCalendarEventOverrideByMasterAndRecurrence :one
+SELECT id, organizer_employee_id, created_by_employee_id, kind, status, work_approval_status, work_approved_by, work_approved_at, work_rejected_by, work_rejected_at, work_rejection_reason, title, description, location, color, start_at, end_at, timezone, rrule, recurring_event_id, recurrence_id, created_at, updated_at
+FROM calendar_events
+WHERE recurring_event_id = $1
+  AND recurrence_id = $2
+LIMIT 1
+`
+
+type GetCalendarEventOverrideByMasterAndRecurrenceParams struct {
+	MasterEventID *uuid.UUID         `json:"master_event_id"`
+	RecurrenceID  pgtype.Timestamptz `json:"recurrence_id"`
+}
+
+func (q *Queries) GetCalendarEventOverrideByMasterAndRecurrence(ctx context.Context, arg GetCalendarEventOverrideByMasterAndRecurrenceParams) (CalendarEvent, error) {
+	row := q.db.QueryRow(ctx, getCalendarEventOverrideByMasterAndRecurrence, arg.MasterEventID, arg.RecurrenceID)
+	var i CalendarEvent
+	err := row.Scan(
+		&i.ID,
+		&i.OrganizerEmployeeID,
+		&i.CreatedByEmployeeID,
+		&i.Kind,
+		&i.Status,
+		&i.WorkApprovalStatus,
+		&i.WorkApprovedBy,
+		&i.WorkApprovedAt,
+		&i.WorkRejectedBy,
+		&i.WorkRejectedAt,
+		&i.WorkRejectionReason,
+		&i.Title,
+		&i.Description,
+		&i.Location,
+		&i.Color,
+		&i.StartAt,
+		&i.EndAt,
+		&i.Timezone,
+		&i.Rrule,
+		&i.RecurringEventID,
+		&i.RecurrenceID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getVisibleEventByID = `-- name: GetVisibleEventByID :one
-SELECT ce.id, ce.organizer_employee_id, ce.created_by_employee_id, ce.kind, ce.status, ce.title, ce.description, ce.location, ce.color, ce.start_at, ce.end_at, ce.timezone, ce.rrule, ce.recurring_event_id, ce.recurrence_id, ce.created_at, ce.updated_at
+SELECT ce.id, ce.organizer_employee_id, ce.created_by_employee_id, ce.kind, ce.status, ce.work_approval_status, ce.work_approved_by, ce.work_approved_at, ce.work_rejected_by, ce.work_rejected_at, ce.work_rejection_reason, ce.title, ce.description, ce.location, ce.color, ce.start_at, ce.end_at, ce.timezone, ce.rrule, ce.recurring_event_id, ce.recurrence_id, ce.created_at, ce.updated_at
 FROM calendar_events ce
 WHERE ce.id = $1
   AND (
@@ -243,6 +340,12 @@ func (q *Queries) GetVisibleEventByID(ctx context.Context, arg GetVisibleEventBy
 		&i.CreatedByEmployeeID,
 		&i.Kind,
 		&i.Status,
+		&i.WorkApprovalStatus,
+		&i.WorkApprovedBy,
+		&i.WorkApprovedAt,
+		&i.WorkRejectedBy,
+		&i.WorkRejectedAt,
+		&i.WorkRejectionReason,
 		&i.Title,
 		&i.Description,
 		&i.Location,
@@ -446,7 +549,7 @@ SELECT
     ce.description,
     ce.color,
     ce.status,
-    FALSE AS is_confirmed,
+    (ce.work_approval_status = 'approved') AS is_confirmed,
     ce.organizer_employee_id AS creator_employee_id,
     ce.created_at,
     CASE
@@ -553,7 +656,7 @@ func (q *Queries) ListRemindersByEventID(ctx context.Context, eventID uuid.UUID)
 }
 
 const listSeriesExceptions = `-- name: ListSeriesExceptions :many
-SELECT id, organizer_employee_id, created_by_employee_id, kind, status, title, description, location, color, start_at, end_at, timezone, rrule, recurring_event_id, recurrence_id, created_at, updated_at
+SELECT id, organizer_employee_id, created_by_employee_id, kind, status, work_approval_status, work_approved_by, work_approved_at, work_rejected_by, work_rejected_at, work_rejection_reason, title, description, location, color, start_at, end_at, timezone, rrule, recurring_event_id, recurrence_id, created_at, updated_at
 FROM calendar_events
 WHERE recurring_event_id = ANY($1::uuid[])
 `
@@ -573,6 +676,12 @@ func (q *Queries) ListSeriesExceptions(ctx context.Context, seriesIds []uuid.UUI
 			&i.CreatedByEmployeeID,
 			&i.Kind,
 			&i.Status,
+			&i.WorkApprovalStatus,
+			&i.WorkApprovedBy,
+			&i.WorkApprovedAt,
+			&i.WorkRejectedBy,
+			&i.WorkRejectedAt,
+			&i.WorkRejectionReason,
 			&i.Title,
 			&i.Description,
 			&i.Location,
@@ -596,8 +705,157 @@ func (q *Queries) ListSeriesExceptions(ctx context.Context, seriesIds []uuid.UUI
 	return items, nil
 }
 
+const listSeriesExceptionsStartingInRange = `-- name: ListSeriesExceptionsStartingInRange :many
+SELECT id, organizer_employee_id, created_by_employee_id, kind, status, work_approval_status, work_approved_by, work_approved_at, work_rejected_by, work_rejected_at, work_rejection_reason, title, description, location, color, start_at, end_at, timezone, rrule, recurring_event_id, recurrence_id, created_at, updated_at
+FROM calendar_events
+WHERE recurring_event_id = ANY($1::uuid[])
+  AND kind = 'appointment'
+  AND start_at >= $2
+  AND start_at < $3
+  AND (
+      COALESCE(array_length($4::uuid[], 1), 0) = 0
+      OR organizer_employee_id = ANY($4::uuid[])
+      OR EXISTS (
+          SELECT 1
+          FROM calendar_event_attendees cea
+          WHERE cea.event_id = calendar_events.id
+            AND cea.employee_id = ANY($4::uuid[])
+      )
+  )
+`
+
+type ListSeriesExceptionsStartingInRangeParams struct {
+	SeriesIds   []uuid.UUID        `json:"series_ids"`
+	StartAt     pgtype.Timestamptz `json:"start_at"`
+	EndAt       pgtype.Timestamptz `json:"end_at"`
+	EmployeeIds []uuid.UUID        `json:"employee_ids"`
+}
+
+func (q *Queries) ListSeriesExceptionsStartingInRange(ctx context.Context, arg ListSeriesExceptionsStartingInRangeParams) ([]CalendarEvent, error) {
+	rows, err := q.db.Query(ctx, listSeriesExceptionsStartingInRange,
+		arg.SeriesIds,
+		arg.StartAt,
+		arg.EndAt,
+		arg.EmployeeIds,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []CalendarEvent{}
+	for rows.Next() {
+		var i CalendarEvent
+		if err := rows.Scan(
+			&i.ID,
+			&i.OrganizerEmployeeID,
+			&i.CreatedByEmployeeID,
+			&i.Kind,
+			&i.Status,
+			&i.WorkApprovalStatus,
+			&i.WorkApprovedBy,
+			&i.WorkApprovedAt,
+			&i.WorkRejectedBy,
+			&i.WorkRejectedAt,
+			&i.WorkRejectionReason,
+			&i.Title,
+			&i.Description,
+			&i.Location,
+			&i.Color,
+			&i.StartAt,
+			&i.EndAt,
+			&i.Timezone,
+			&i.Rrule,
+			&i.RecurringEventID,
+			&i.RecurrenceID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listUnbilledClientAppointmentsStartingInRange = `-- name: ListUnbilledClientAppointmentsStartingInRange :many
+
+SELECT
+    ce.id AS appointment_id,
+    ce.start_at AS start_time,
+    ce.end_at AS end_time,
+    ce.timezone,
+    ce.status,
+    ce.organizer_employee_id AS creator_employee_id,
+    ce.created_at
+FROM calendar_events ce
+JOIN calendar_event_attendees cea ON ce.id = cea.event_id
+LEFT JOIN billed_calendar_event bce
+    ON bce.calendar_event_id = ce.id
+   AND bce.client_id = cea.client_id
+   AND bce.voided_at IS NULL
+WHERE ce.kind = 'appointment'
+  AND ce.status <> 'cancelled'
+  AND ce.work_approval_status = 'approved'
+  AND cea.client_id = $1
+  AND ce.start_at >= $2
+  AND ce.start_at < $3
+  AND bce.id IS NULL
+ORDER BY ce.start_at
+`
+
+type ListUnbilledClientAppointmentsStartingInRangeParams struct {
+	ClientID  *uuid.UUID         `json:"client_id"`
+	StartDate pgtype.Timestamptz `json:"start_date"`
+	EndDate   pgtype.Timestamptz `json:"end_date"`
+}
+
+type ListUnbilledClientAppointmentsStartingInRangeRow struct {
+	AppointmentID     uuid.UUID               `json:"appointment_id"`
+	StartTime         pgtype.Timestamptz      `json:"start_time"`
+	EndTime           pgtype.Timestamptz      `json:"end_time"`
+	Timezone          string                  `json:"timezone"`
+	Status            CalendarEventStatusEnum `json:"status"`
+	CreatorEmployeeID uuid.UUID               `json:"creator_employee_id"`
+	CreatedAt         pgtype.Timestamptz      `json:"created_at"`
+}
+
+// ==========================================
+// Invoicing Helpers
+// ==========================================
+// Returns appointments for a client that start within [start_date, end_date) and are not already billed (unless voided).
+func (q *Queries) ListUnbilledClientAppointmentsStartingInRange(ctx context.Context, arg ListUnbilledClientAppointmentsStartingInRangeParams) ([]ListUnbilledClientAppointmentsStartingInRangeRow, error) {
+	rows, err := q.db.Query(ctx, listUnbilledClientAppointmentsStartingInRange, arg.ClientID, arg.StartDate, arg.EndDate)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListUnbilledClientAppointmentsStartingInRangeRow{}
+	for rows.Next() {
+		var i ListUnbilledClientAppointmentsStartingInRangeRow
+		if err := rows.Scan(
+			&i.AppointmentID,
+			&i.StartTime,
+			&i.EndTime,
+			&i.Timezone,
+			&i.Status,
+			&i.CreatorEmployeeID,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listVisibleMasterEvents = `-- name: ListVisibleMasterEvents :many
-SELECT ce.id, ce.organizer_employee_id, ce.created_by_employee_id, ce.kind, ce.status, ce.title, ce.description, ce.location, ce.color, ce.start_at, ce.end_at, ce.timezone, ce.rrule, ce.recurring_event_id, ce.recurrence_id, ce.created_at, ce.updated_at
+SELECT ce.id, ce.organizer_employee_id, ce.created_by_employee_id, ce.kind, ce.status, ce.work_approval_status, ce.work_approved_by, ce.work_approved_at, ce.work_rejected_by, ce.work_rejected_at, ce.work_rejection_reason, ce.title, ce.description, ce.location, ce.color, ce.start_at, ce.end_at, ce.timezone, ce.rrule, ce.recurring_event_id, ce.recurrence_id, ce.created_at, ce.updated_at
 FROM calendar_events ce
 WHERE ce.recurring_event_id IS NULL
   AND ce.status <> 'cancelled'
@@ -638,6 +896,12 @@ func (q *Queries) ListVisibleMasterEvents(ctx context.Context, arg ListVisibleMa
 			&i.CreatedByEmployeeID,
 			&i.Kind,
 			&i.Status,
+			&i.WorkApprovalStatus,
+			&i.WorkApprovedBy,
+			&i.WorkApprovedAt,
+			&i.WorkRejectedBy,
+			&i.WorkRejectedAt,
+			&i.WorkRejectionReason,
 			&i.Title,
 			&i.Description,
 			&i.Location,
@@ -661,7 +925,165 @@ func (q *Queries) ListVisibleMasterEvents(ctx context.Context, arg ListVisibleMa
 	return items, nil
 }
 
-const updateCalendarEvent = `-- name: UpdateCalendarEvent :exec
+const listWorkApprovalQueueOneOffAppointmentsStartingInRange = `-- name: ListWorkApprovalQueueOneOffAppointmentsStartingInRange :many
+
+SELECT ce.id, ce.organizer_employee_id, ce.created_by_employee_id, ce.kind, ce.status, ce.work_approval_status, ce.work_approved_by, ce.work_approved_at, ce.work_rejected_by, ce.work_rejected_at, ce.work_rejection_reason, ce.title, ce.description, ce.location, ce.color, ce.start_at, ce.end_at, ce.timezone, ce.rrule, ce.recurring_event_id, ce.recurrence_id, ce.created_at, ce.updated_at
+FROM calendar_events ce
+WHERE ce.kind = 'appointment'
+  AND ce.status <> 'cancelled'
+  AND ce.recurring_event_id IS NULL
+  AND ce.rrule IS NULL
+  AND ce.start_at >= $1
+  AND ce.start_at < $2
+  AND EXISTS (
+      SELECT 1
+      FROM calendar_event_attendees cea
+      WHERE cea.event_id = ce.id
+        AND cea.client_id IS NOT NULL
+  )
+  AND (
+      COALESCE(array_length($3::uuid[], 1), 0) = 0
+      OR ce.organizer_employee_id = ANY($3::uuid[])
+      OR EXISTS (
+          SELECT 1
+          FROM calendar_event_attendees cea
+          WHERE cea.event_id = ce.id
+            AND cea.employee_id = ANY($3::uuid[])
+      )
+  )
+ORDER BY ce.start_at DESC
+`
+
+type ListWorkApprovalQueueOneOffAppointmentsStartingInRangeParams struct {
+	StartAt     pgtype.Timestamptz `json:"start_at"`
+	EndAt       pgtype.Timestamptz `json:"end_at"`
+	EmployeeIds []uuid.UUID        `json:"employee_ids"`
+}
+
+// ==========================================
+// Work Approval Queue (Admin)
+// ==========================================
+func (q *Queries) ListWorkApprovalQueueOneOffAppointmentsStartingInRange(ctx context.Context, arg ListWorkApprovalQueueOneOffAppointmentsStartingInRangeParams) ([]CalendarEvent, error) {
+	rows, err := q.db.Query(ctx, listWorkApprovalQueueOneOffAppointmentsStartingInRange, arg.StartAt, arg.EndAt, arg.EmployeeIds)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []CalendarEvent{}
+	for rows.Next() {
+		var i CalendarEvent
+		if err := rows.Scan(
+			&i.ID,
+			&i.OrganizerEmployeeID,
+			&i.CreatedByEmployeeID,
+			&i.Kind,
+			&i.Status,
+			&i.WorkApprovalStatus,
+			&i.WorkApprovedBy,
+			&i.WorkApprovedAt,
+			&i.WorkRejectedBy,
+			&i.WorkRejectedAt,
+			&i.WorkRejectionReason,
+			&i.Title,
+			&i.Description,
+			&i.Location,
+			&i.Color,
+			&i.StartAt,
+			&i.EndAt,
+			&i.Timezone,
+			&i.Rrule,
+			&i.RecurringEventID,
+			&i.RecurrenceID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listWorkApprovalQueueRecurringMastersStartingBeforeEnd = `-- name: ListWorkApprovalQueueRecurringMastersStartingBeforeEnd :many
+SELECT ce.id, ce.organizer_employee_id, ce.created_by_employee_id, ce.kind, ce.status, ce.work_approval_status, ce.work_approved_by, ce.work_approved_at, ce.work_rejected_by, ce.work_rejected_at, ce.work_rejection_reason, ce.title, ce.description, ce.location, ce.color, ce.start_at, ce.end_at, ce.timezone, ce.rrule, ce.recurring_event_id, ce.recurrence_id, ce.created_at, ce.updated_at
+FROM calendar_events ce
+WHERE ce.kind = 'appointment'
+  AND ce.status <> 'cancelled'
+  AND ce.recurring_event_id IS NULL
+  AND ce.rrule IS NOT NULL
+  AND ce.start_at < $1
+  AND EXISTS (
+      SELECT 1
+      FROM calendar_event_attendees cea
+      WHERE cea.event_id = ce.id
+        AND cea.client_id IS NOT NULL
+  )
+  AND (
+      COALESCE(array_length($2::uuid[], 1), 0) = 0
+      OR ce.organizer_employee_id = ANY($2::uuid[])
+      OR EXISTS (
+          SELECT 1
+          FROM calendar_event_attendees cea
+          WHERE cea.event_id = ce.id
+            AND cea.employee_id = ANY($2::uuid[])
+      )
+  )
+ORDER BY ce.start_at DESC
+`
+
+type ListWorkApprovalQueueRecurringMastersStartingBeforeEndParams struct {
+	EndAt       pgtype.Timestamptz `json:"end_at"`
+	EmployeeIds []uuid.UUID        `json:"employee_ids"`
+}
+
+func (q *Queries) ListWorkApprovalQueueRecurringMastersStartingBeforeEnd(ctx context.Context, arg ListWorkApprovalQueueRecurringMastersStartingBeforeEndParams) ([]CalendarEvent, error) {
+	rows, err := q.db.Query(ctx, listWorkApprovalQueueRecurringMastersStartingBeforeEnd, arg.EndAt, arg.EmployeeIds)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []CalendarEvent{}
+	for rows.Next() {
+		var i CalendarEvent
+		if err := rows.Scan(
+			&i.ID,
+			&i.OrganizerEmployeeID,
+			&i.CreatedByEmployeeID,
+			&i.Kind,
+			&i.Status,
+			&i.WorkApprovalStatus,
+			&i.WorkApprovedBy,
+			&i.WorkApprovedAt,
+			&i.WorkRejectedBy,
+			&i.WorkRejectedAt,
+			&i.WorkRejectionReason,
+			&i.Title,
+			&i.Description,
+			&i.Location,
+			&i.Color,
+			&i.StartAt,
+			&i.EndAt,
+			&i.Timezone,
+			&i.Rrule,
+			&i.RecurringEventID,
+			&i.RecurrenceID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const updateCalendarEvent = `-- name: UpdateCalendarEvent :one
 UPDATE calendar_events
 SET
     title = COALESCE($1, title),
@@ -676,6 +1098,7 @@ SET
     END,
     updated_at = now()
 WHERE id = $8
+RETURNING id, organizer_employee_id, created_by_employee_id, kind, status, work_approval_status, work_approved_by, work_approved_at, work_rejected_by, work_rejected_at, work_rejection_reason, title, description, location, color, start_at, end_at, timezone, rrule, recurring_event_id, recurrence_id, created_at, updated_at
 `
 
 type UpdateCalendarEventParams struct {
@@ -689,8 +1112,8 @@ type UpdateCalendarEventParams struct {
 	ID          uuid.UUID          `json:"id"`
 }
 
-func (q *Queries) UpdateCalendarEvent(ctx context.Context, arg UpdateCalendarEventParams) error {
-	_, err := q.db.Exec(ctx, updateCalendarEvent,
+func (q *Queries) UpdateCalendarEvent(ctx context.Context, arg UpdateCalendarEventParams) (CalendarEvent, error) {
+	row := q.db.QueryRow(ctx, updateCalendarEvent,
 		arg.Title,
 		arg.Description,
 		arg.Location,
@@ -700,7 +1123,33 @@ func (q *Queries) UpdateCalendarEvent(ctx context.Context, arg UpdateCalendarEve
 		arg.Rrule,
 		arg.ID,
 	)
-	return err
+	var i CalendarEvent
+	err := row.Scan(
+		&i.ID,
+		&i.OrganizerEmployeeID,
+		&i.CreatedByEmployeeID,
+		&i.Kind,
+		&i.Status,
+		&i.WorkApprovalStatus,
+		&i.WorkApprovedBy,
+		&i.WorkApprovedAt,
+		&i.WorkRejectedBy,
+		&i.WorkRejectedAt,
+		&i.WorkRejectionReason,
+		&i.Title,
+		&i.Description,
+		&i.Location,
+		&i.Color,
+		&i.StartAt,
+		&i.EndAt,
+		&i.Timezone,
+		&i.Rrule,
+		&i.RecurringEventID,
+		&i.RecurrenceID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
 
 const updateCalendarEventRRule = `-- name: UpdateCalendarEventRRule :exec
@@ -716,6 +1165,36 @@ type UpdateCalendarEventRRuleParams struct {
 
 func (q *Queries) UpdateCalendarEventRRule(ctx context.Context, arg UpdateCalendarEventRRuleParams) error {
 	_, err := q.db.Exec(ctx, updateCalendarEventRRule, arg.Rrule, arg.ID)
+	return err
+}
+
+const updateCalendarEventWorkApproval = `-- name: UpdateCalendarEventWorkApproval :exec
+UPDATE calendar_events
+SET
+    work_approval_status = $1,
+    work_approved_by = CASE WHEN $1 = 'approved' THEN $2 ELSE NULL END,
+    work_approved_at = CASE WHEN $1 = 'approved' THEN CURRENT_TIMESTAMP ELSE NULL END,
+    work_rejected_by = CASE WHEN $1 = 'rejected' THEN $2 ELSE NULL END,
+    work_rejected_at = CASE WHEN $1 = 'rejected' THEN CURRENT_TIMESTAMP ELSE NULL END,
+    work_rejection_reason = CASE WHEN $1 = 'rejected' THEN $3 ELSE NULL END,
+    updated_at = now()
+WHERE id = $4
+`
+
+type UpdateCalendarEventWorkApprovalParams struct {
+	WorkApprovalStatus CalendarEventWorkApprovalStatusEnum `json:"work_approval_status"`
+	ActorUserID        *uuid.UUID                          `json:"actor_user_id"`
+	RejectionReason    *string                             `json:"rejection_reason"`
+	EventID            uuid.UUID                           `json:"event_id"`
+}
+
+func (q *Queries) UpdateCalendarEventWorkApproval(ctx context.Context, arg UpdateCalendarEventWorkApprovalParams) error {
+	_, err := q.db.Exec(ctx, updateCalendarEventWorkApproval,
+		arg.WorkApprovalStatus,
+		arg.ActorUserID,
+		arg.RejectionReason,
+		arg.EventID,
+	)
 	return err
 }
 
@@ -759,7 +1238,7 @@ DO UPDATE SET
     end_at = EXCLUDED.end_at,
     status = EXCLUDED.status,
     updated_at = now()
-RETURNING id, organizer_employee_id, created_by_employee_id, kind, status, title, description, location, color, start_at, end_at, timezone, rrule, recurring_event_id, recurrence_id, created_at, updated_at
+RETURNING id, organizer_employee_id, created_by_employee_id, kind, status, work_approval_status, work_approved_by, work_approved_at, work_rejected_by, work_rejected_at, work_rejection_reason, title, description, location, color, start_at, end_at, timezone, rrule, recurring_event_id, recurrence_id, created_at, updated_at
 `
 
 type UpsertCalendarEventOverrideParams struct {
@@ -801,6 +1280,12 @@ func (q *Queries) UpsertCalendarEventOverride(ctx context.Context, arg UpsertCal
 		&i.CreatedByEmployeeID,
 		&i.Kind,
 		&i.Status,
+		&i.WorkApprovalStatus,
+		&i.WorkApprovedBy,
+		&i.WorkApprovedAt,
+		&i.WorkRejectedBy,
+		&i.WorkRejectedAt,
+		&i.WorkRejectionReason,
 		&i.Title,
 		&i.Description,
 		&i.Location,

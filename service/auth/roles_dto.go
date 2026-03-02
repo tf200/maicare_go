@@ -35,17 +35,23 @@ type AssignRoleToEmployeeApiResponse struct {
 	RoleID     uuid.UUID `json:"role_id"`
 }
 
+// RoleInfo represents a role in an API response
+type RoleInfo struct {
+	RoleID   uuid.UUID `json:"id"`
+	RoleName string    `json:"name"`
+}
+
+// PermissionInfo represents a permission in an API response
+type PermissionInfo struct {
+	PermissionID       uuid.UUID `json:"id"`
+	PermissionName     string    `json:"name"`
+	PermissionResource string    `json:"resource"`
+}
+
 // ListUserRolesAndPermissionsApiResponse represents a response for ListUserRolesAndPermissionsApi
 type ListUserRolesAndPermissionsApiResponse struct {
-	Roles struct {
-		RoleID   uuid.UUID `json:"id"`
-		RoleName string    `json:"name"`
-	} `json:"roles"`
-	Permissions []struct {
-		PermissionID       uuid.UUID `json:"id"`
-		PermissionName     string    `json:"name"`
-		PermissionResource string    `json:"resource"`
-	} `json:"permissions"`
+	Roles       RoleInfo         `json:"roles"`
+	Permissions []PermissionInfo `json:"permissions"`
 }
 
 // GrantUserPermissionsRequest represents a request for GrantUserPermissionsApi

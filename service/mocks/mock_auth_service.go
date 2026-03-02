@@ -281,16 +281,16 @@ func (mr *MockAuthServiceMockRecorder) SetupTwoFA(userID, ctx any) *gomock.Call 
 }
 
 // VerifyTwoFAToken mocks base method.
-func (m *MockAuthService) VerifyTwoFAToken(req auth.Verify2FARequest, ctx context.Context) (*auth.LoginUserResponse, error) {
+func (m *MockAuthService) VerifyTwoFAToken(req auth.Verify2FARequest, clientIP, userAgent string, ctx context.Context) (*auth.LoginUserResponse, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "VerifyTwoFAToken", req, ctx)
+	ret := m.ctrl.Call(m, "VerifyTwoFAToken", req, clientIP, userAgent, ctx)
 	ret0, _ := ret[0].(*auth.LoginUserResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // VerifyTwoFAToken indicates an expected call of VerifyTwoFAToken.
-func (mr *MockAuthServiceMockRecorder) VerifyTwoFAToken(req, ctx any) *gomock.Call {
+func (mr *MockAuthServiceMockRecorder) VerifyTwoFAToken(req, clientIP, userAgent, ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyTwoFAToken", reflect.TypeOf((*MockAuthService)(nil).VerifyTwoFAToken), req, ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyTwoFAToken", reflect.TypeOf((*MockAuthService)(nil).VerifyTwoFAToken), req, clientIP, userAgent, ctx)
 }

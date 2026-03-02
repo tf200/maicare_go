@@ -9,6 +9,7 @@ func (server *Server) setupLocationRoutes(baseRouter *gin.RouterGroup) {
 	{
 		organizationGroup.POST("/organisations", server.RBACMiddleware("LOCATION.CREATE"), server.CreateOrganisationApi)
 		organizationGroup.GET("/organisations", server.RBACMiddleware("LOCATION.VIEW"), server.ListOrganisationsApi)
+		organizationGroup.GET("/organisations/count", server.RBACMiddleware("LOCATION.VIEW"), server.GetGlobalOrganisationCountApi)
 		organizationGroup.GET("/organisations/:id", server.RBACMiddleware("LOCATION.VIEW"), server.GetOrganisationApi)
 		organizationGroup.GET("/organisations/:id/counts", server.RBACMiddleware("LOCATION.VIEW"), server.GetOrganisationCountApi)
 		organizationGroup.PUT("/organisations/:id", server.RBACMiddleware("LOCATION.UPDATE"), server.UpdateOrganisationApi)

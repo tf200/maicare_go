@@ -13,7 +13,7 @@ const (
 	TypeAppointmentUpdate       = "appointment_update"
 	TypeNewClientAssignment     = "new_client_assigned"
 	TypeClientContractReminder  = "client_contract_reminder"
-	TypeNewIncidentReport       = "new_incident_report"
+	TypeIncidentReport          = "incident_report"
 	TypeNewScheduleNotification = "new_schedule_notification"
 	TypeSystemReminder          = "system_reminder"
 )

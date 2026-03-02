@@ -64,6 +64,59 @@ func (q *Queries) ActivateDueScheduledInCareClients(ctx context.Context) ([]uuid
 	return items, nil
 }
 
+const activateDueScheduledOutOfCareClients = `-- name: ActivateDueScheduledOutOfCareClients :many
+WITH due_clients AS (
+    SELECT id
+    FROM client_details
+    WHERE status = 'scheduled_out_of_care'
+      AND discharge_date IS NOT NULL
+      AND discharge_date <= CURRENT_DATE
+      AND final_evaluation IS NOT NULL
+),
+updated AS (
+    UPDATE client_details cd
+    SET status = 'out_of_care'
+    FROM due_clients dc
+    WHERE cd.id = dc.id
+    RETURNING cd.id
+),
+history AS (
+    INSERT INTO client_status_history (
+        client_id,
+        old_status,
+        new_status,
+        reason
+    )
+    SELECT
+        u.id,
+        'scheduled_out_of_care',
+        'out_of_care',
+        'auto_transition_discharge_date_reached'
+    FROM updated u
+)
+SELECT id FROM updated
+`
+
+func (q *Queries) ActivateDueScheduledOutOfCareClients(ctx context.Context) ([]uuid.UUID, error) {
+	rows, err := q.db.Query(ctx, activateDueScheduledOutOfCareClients)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []uuid.UUID{}
+	for rows.Next() {
+		var id uuid.UUID
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const approveOrRejectClientLocationTransfer = `-- name: ApproveOrRejectClientLocationTransfer :exec
 UPDATE client_location_transfer
 SET
@@ -152,7 +205,7 @@ INSERT INTO client_details (
     $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30,
     $31, $32, $33, $34, $35, $36, $37, $38, $39, $40, $41, $42, $43, $44,
     $45, $46, $47
-) RETURNING id, intake_form_id, registration_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, evaluation_intervals_weeks, care_type, email, phone_number, gender, filenumber, created_at, placed_in_care_at, care_start_date, last_evaluation_anchor_date, next_evaluation_date, sender_id, location_id, street, house_number, house_number_addition, postal_code, city, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, nationality, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes
+) RETURNING id, intake_form_id, registration_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, evaluation_intervals_weeks, care_type, email, phone_number, gender, filenumber, created_at, placed_in_care_at, care_start_date, last_evaluation_anchor_date, next_evaluation_date, discharge_date, discharge_reason, final_evaluation, sender_id, location_id, street, house_number, house_number_addition, postal_code, city, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, nationality, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes
 `
 
 type CreateClientDetailsParams struct {
@@ -278,6 +331,9 @@ func (q *Queries) CreateClientDetails(ctx context.Context, arg CreateClientDetai
 		&i.CareStartDate,
 		&i.LastEvaluationAnchorDate,
 		&i.NextEvaluationDate,
+		&i.DischargeDate,
+		&i.DischargeReason,
+		&i.FinalEvaluation,
 		&i.SenderID,
 		&i.LocationID,
 		&i.Street,
@@ -459,7 +515,7 @@ func (q *Queries) GetAllClientsIDs(ctx context.Context) ([]uuid.UUID, error) {
 }
 
 const getClientByIntakeFormID = `-- name: GetClientByIntakeFormID :one
-SELECT id, intake_form_id, registration_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, evaluation_intervals_weeks, care_type, email, phone_number, gender, filenumber, created_at, placed_in_care_at, care_start_date, last_evaluation_anchor_date, next_evaluation_date, sender_id, location_id, street, house_number, house_number_addition, postal_code, city, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, nationality, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes FROM client_details
+SELECT id, intake_form_id, registration_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, evaluation_intervals_weeks, care_type, email, phone_number, gender, filenumber, created_at, placed_in_care_at, care_start_date, last_evaluation_anchor_date, next_evaluation_date, discharge_date, discharge_reason, final_evaluation, sender_id, location_id, street, house_number, house_number_addition, postal_code, city, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, nationality, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes FROM client_details
 WHERE intake_form_id = $1
 LIMIT 1
 `
@@ -489,6 +545,9 @@ func (q *Queries) GetClientByIntakeFormID(ctx context.Context, intakeFormID *uui
 		&i.CareStartDate,
 		&i.LastEvaluationAnchorDate,
 		&i.NextEvaluationDate,
+		&i.DischargeDate,
+		&i.DischargeReason,
+		&i.FinalEvaluation,
 		&i.SenderID,
 		&i.LocationID,
 		&i.Street,
@@ -602,7 +661,7 @@ func (q *Queries) GetClientCounts(ctx context.Context) (GetClientCountsRow, erro
 }
 
 const getClientDetails = `-- name: GetClientDetails :one
-SELECT c.id, c.intake_form_id, c.registration_form_id, c.first_name, c.last_name, c.date_of_birth, c.identity, c.status, c.bsn, c.bsn_verified_by, c.evaluation_intervals_weeks, c.care_type, c.email, c.phone_number, c.gender, c.filenumber, c.created_at, c.placed_in_care_at, c.care_start_date, c.last_evaluation_anchor_date, c.next_evaluation_date, c.sender_id, c.location_id, c.street, c.house_number, c.house_number_addition, c.postal_code, c.city, c.education_currently_enrolled, c.education_institution, c.education_mentor_name, c.education_mentor_phone, c.education_mentor_email, c.education_additional_notes, c.education_level, c.work_currently_employed, c.work_current_employer, c.work_current_employer_phone, c.work_current_employer_email, c.work_current_position, c.work_start_date, c.work_additional_notes, c.nationality, c.risk_aggressive_behavior, c.risk_suicidal_selfharm, c.risk_substance_abuse, c.risk_psychiatric_issues, c.risk_criminal_history, c.risk_flight_behavior, c.risk_weapon_possession, c.risk_sexual_behavior, c.risk_day_night_rhythm, c.risk_other, c.risk_other_description, c.risk_additional_notes,
+SELECT c.id, c.intake_form_id, c.registration_form_id, c.first_name, c.last_name, c.date_of_birth, c.identity, c.status, c.bsn, c.bsn_verified_by, c.evaluation_intervals_weeks, c.care_type, c.email, c.phone_number, c.gender, c.filenumber, c.created_at, c.placed_in_care_at, c.care_start_date, c.last_evaluation_anchor_date, c.next_evaluation_date, c.discharge_date, c.discharge_reason, c.final_evaluation, c.sender_id, c.location_id, c.street, c.house_number, c.house_number_addition, c.postal_code, c.city, c.education_currently_enrolled, c.education_institution, c.education_mentor_name, c.education_mentor_phone, c.education_mentor_email, c.education_additional_notes, c.education_level, c.work_currently_employed, c.work_current_employer, c.work_current_employer_phone, c.work_current_employer_email, c.work_current_position, c.work_start_date, c.work_additional_notes, c.nationality, c.risk_aggressive_behavior, c.risk_suicidal_selfharm, c.risk_substance_abuse, c.risk_psychiatric_issues, c.risk_criminal_history, c.risk_flight_behavior, c.risk_weapon_possession, c.risk_sexual_behavior, c.risk_day_night_rhythm, c.risk_other, c.risk_other_description, c.risk_additional_notes,
        ep.first_name AS bsn_verified_by_first_name,
        ep.last_name AS bsn_verified_by_last_name,
        l.name AS location_name,
@@ -642,6 +701,9 @@ type GetClientDetailsRow struct {
 	CareStartDate              pgtype.Date              `json:"care_start_date"`
 	LastEvaluationAnchorDate   pgtype.Date              `json:"last_evaluation_anchor_date"`
 	NextEvaluationDate         pgtype.Date              `json:"next_evaluation_date"`
+	DischargeDate              pgtype.Date              `json:"discharge_date"`
+	DischargeReason            NullDischargeReasonEnum  `json:"discharge_reason"`
+	FinalEvaluation            *string                  `json:"final_evaluation"`
 	SenderID                   *uuid.UUID               `json:"sender_id"`
 	LocationID                 *uuid.UUID               `json:"location_id"`
 	Street                     string                   `json:"street"`
@@ -712,6 +774,9 @@ func (q *Queries) GetClientDetails(ctx context.Context, id uuid.UUID) (GetClient
 		&i.CareStartDate,
 		&i.LastEvaluationAnchorDate,
 		&i.NextEvaluationDate,
+		&i.DischargeDate,
+		&i.DischargeReason,
+		&i.FinalEvaluation,
 		&i.SenderID,
 		&i.LocationID,
 		&i.Street,
@@ -802,7 +867,7 @@ func (q *Queries) GetClientLatestStatusHistory(ctx context.Context, clientID uui
 const getClientPageCounts = `-- name: GetClientPageCounts :one
 SELECT
     (SELECT COUNT(*)::bigint FROM contract c WHERE c.client_id = $1) AS contracts_count,
-    (SELECT COUNT(*)::bigint FROM incident i WHERE i.client_id = $1 AND i.soft_delete = FALSE) AS incidents_count,
+    (SELECT COUNT(*)::bigint FROM incident i WHERE i.client_id = $1) AS incidents_count,
     (SELECT COUNT(*)::bigint FROM progress_report pr WHERE pr.client_id = $1) AS reports_count,
     (SELECT COUNT(*)::bigint FROM client_goal_evaluations e WHERE e.client_id = $1) AS evaluations_count,
     (SELECT COUNT(*)::bigint FROM client_documents d WHERE d.client_id = $1) AS documents_count,
@@ -1215,6 +1280,41 @@ func (q *Queries) ListClientLocationTransfer(ctx context.Context, arg ListClient
 	return items, nil
 }
 
+const listClientNamesByIDs = `-- name: ListClientNamesByIDs :many
+SELECT
+    id,
+    first_name,
+    last_name
+FROM client_details
+WHERE id = ANY($1::uuid[])
+`
+
+type ListClientNamesByIDsRow struct {
+	ID        uuid.UUID `json:"id"`
+	FirstName string    `json:"first_name"`
+	LastName  string    `json:"last_name"`
+}
+
+func (q *Queries) ListClientNamesByIDs(ctx context.Context, clientIds []uuid.UUID) ([]ListClientNamesByIDsRow, error) {
+	rows, err := q.db.Query(ctx, listClientNamesByIDs, clientIds)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListClientNamesByIDsRow{}
+	for rows.Next() {
+		var i ListClientNamesByIDsRow
+		if err := rows.Scan(&i.ID, &i.FirstName, &i.LastName); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listClientStatusHistory = `-- name: ListClientStatusHistory :many
 SELECT id, client_id, old_status, new_status, changed_at, changed_by, reason FROM client_status_history
 WHERE client_id = $1
@@ -1249,6 +1349,35 @@ func (q *Queries) ListClientStatusHistory(ctx context.Context, arg ListClientSta
 			return nil, err
 		}
 		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listDueScheduledOutOfCareMissingFinalEvaluation = `-- name: ListDueScheduledOutOfCareMissingFinalEvaluation :many
+SELECT id
+FROM client_details
+WHERE status = 'scheduled_out_of_care'
+  AND discharge_date IS NOT NULL
+  AND discharge_date <= CURRENT_DATE
+  AND final_evaluation IS NULL
+`
+
+func (q *Queries) ListDueScheduledOutOfCareMissingFinalEvaluation(ctx context.Context) ([]uuid.UUID, error) {
+	rows, err := q.db.Query(ctx, listDueScheduledOutOfCareMissingFinalEvaluation)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []uuid.UUID{}
+	for rows.Next() {
+		var id uuid.UUID
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -1557,7 +1686,7 @@ SET
     placed_in_care_at = COALESCE($4, CURRENT_TIMESTAMP),
     care_start_date = $3
 WHERE id = $1
-RETURNING id, intake_form_id, registration_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, evaluation_intervals_weeks, care_type, email, phone_number, gender, filenumber, created_at, placed_in_care_at, care_start_date, last_evaluation_anchor_date, next_evaluation_date, sender_id, location_id, street, house_number, house_number_addition, postal_code, city, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, nationality, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes
+RETURNING id, intake_form_id, registration_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, evaluation_intervals_weeks, care_type, email, phone_number, gender, filenumber, created_at, placed_in_care_at, care_start_date, last_evaluation_anchor_date, next_evaluation_date, discharge_date, discharge_reason, final_evaluation, sender_id, location_id, street, house_number, house_number_addition, postal_code, city, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, nationality, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes
 `
 
 type PutClientInCareParams struct {
@@ -1597,6 +1726,100 @@ func (q *Queries) PutClientInCare(ctx context.Context, arg PutClientInCareParams
 		&i.CareStartDate,
 		&i.LastEvaluationAnchorDate,
 		&i.NextEvaluationDate,
+		&i.DischargeDate,
+		&i.DischargeReason,
+		&i.FinalEvaluation,
+		&i.SenderID,
+		&i.LocationID,
+		&i.Street,
+		&i.HouseNumber,
+		&i.HouseNumberAddition,
+		&i.PostalCode,
+		&i.City,
+		&i.EducationCurrentlyEnrolled,
+		&i.EducationInstitution,
+		&i.EducationMentorName,
+		&i.EducationMentorPhone,
+		&i.EducationMentorEmail,
+		&i.EducationAdditionalNotes,
+		&i.EducationLevel,
+		&i.WorkCurrentlyEmployed,
+		&i.WorkCurrentEmployer,
+		&i.WorkCurrentEmployerPhone,
+		&i.WorkCurrentEmployerEmail,
+		&i.WorkCurrentPosition,
+		&i.WorkStartDate,
+		&i.WorkAdditionalNotes,
+		&i.Nationality,
+		&i.RiskAggressiveBehavior,
+		&i.RiskSuicidalSelfharm,
+		&i.RiskSubstanceAbuse,
+		&i.RiskPsychiatricIssues,
+		&i.RiskCriminalHistory,
+		&i.RiskFlightBehavior,
+		&i.RiskWeaponPossession,
+		&i.RiskSexualBehavior,
+		&i.RiskDayNightRhythm,
+		&i.RiskOther,
+		&i.RiskOtherDescription,
+		&i.RiskAdditionalNotes,
+	)
+	return i, err
+}
+
+const putClientOutOfCare = `-- name: PutClientOutOfCare :one
+UPDATE client_details
+SET
+    status = $2,
+    discharge_date = $3,
+    discharge_reason = $4,
+    final_evaluation = $5
+WHERE id = $1
+RETURNING id, intake_form_id, registration_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, evaluation_intervals_weeks, care_type, email, phone_number, gender, filenumber, created_at, placed_in_care_at, care_start_date, last_evaluation_anchor_date, next_evaluation_date, discharge_date, discharge_reason, final_evaluation, sender_id, location_id, street, house_number, house_number_addition, postal_code, city, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, nationality, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes
+`
+
+type PutClientOutOfCareParams struct {
+	ID              uuid.UUID               `json:"id"`
+	Status          ClientStatusEnum        `json:"status"`
+	DischargeDate   pgtype.Date             `json:"discharge_date"`
+	DischargeReason NullDischargeReasonEnum `json:"discharge_reason"`
+	FinalEvaluation *string                 `json:"final_evaluation"`
+}
+
+func (q *Queries) PutClientOutOfCare(ctx context.Context, arg PutClientOutOfCareParams) (ClientDetail, error) {
+	row := q.db.QueryRow(ctx, putClientOutOfCare,
+		arg.ID,
+		arg.Status,
+		arg.DischargeDate,
+		arg.DischargeReason,
+		arg.FinalEvaluation,
+	)
+	var i ClientDetail
+	err := row.Scan(
+		&i.ID,
+		&i.IntakeFormID,
+		&i.RegistrationFormID,
+		&i.FirstName,
+		&i.LastName,
+		&i.DateOfBirth,
+		&i.Identity,
+		&i.Status,
+		&i.Bsn,
+		&i.BsnVerifiedBy,
+		&i.EvaluationIntervalsWeeks,
+		&i.CareType,
+		&i.Email,
+		&i.PhoneNumber,
+		&i.Gender,
+		&i.Filenumber,
+		&i.CreatedAt,
+		&i.PlacedInCareAt,
+		&i.CareStartDate,
+		&i.LastEvaluationAnchorDate,
+		&i.NextEvaluationDate,
+		&i.DischargeDate,
+		&i.DischargeReason,
+		&i.FinalEvaluation,
 		&i.SenderID,
 		&i.LocationID,
 		&i.Street,
@@ -1641,7 +1864,7 @@ const updateClientStatus = `-- name: UpdateClientStatus :one
 UPDATE client_details
 SET status = $2
 WHERE id = $1
-RETURNING id, intake_form_id, registration_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, evaluation_intervals_weeks, care_type, email, phone_number, gender, filenumber, created_at, placed_in_care_at, care_start_date, last_evaluation_anchor_date, next_evaluation_date, sender_id, location_id, street, house_number, house_number_addition, postal_code, city, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, nationality, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes
+RETURNING id, intake_form_id, registration_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, evaluation_intervals_weeks, care_type, email, phone_number, gender, filenumber, created_at, placed_in_care_at, care_start_date, last_evaluation_anchor_date, next_evaluation_date, discharge_date, discharge_reason, final_evaluation, sender_id, location_id, street, house_number, house_number_addition, postal_code, city, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, nationality, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes
 `
 
 type UpdateClientStatusParams struct {
@@ -1713,6 +1936,9 @@ func (q *Queries) UpdateClientStatus(ctx context.Context, arg UpdateClientStatus
 		&i.CareStartDate,
 		&i.LastEvaluationAnchorDate,
 		&i.NextEvaluationDate,
+		&i.DischargeDate,
+		&i.DischargeReason,
+		&i.FinalEvaluation,
 		&i.SenderID,
 		&i.LocationID,
 		&i.Street,

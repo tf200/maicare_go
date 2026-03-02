@@ -182,6 +182,8 @@ type GetClientApiResponse struct {
 	Client            ClientPageClientResponse         `json:"client"`
 	Care              *ClientInCareResponse            `json:"care,omitempty"`
 	CareSchedule      *ClientCareScheduleResponse      `json:"care_schedule,omitempty"`
+	DischargeSchedule *ClientDischargeScheduleResponse `json:"discharge_schedule,omitempty"`
+	DischargeSummary  *ClientDischargeSummaryResponse  `json:"discharge_summary,omitempty"`
 	Sender            *ClientSenderMinimalResponse     `json:"sender"`
 	Coordinator       *ClientCoordinatorResponse       `json:"coordinator,omitempty"`
 	ContractSummary   *ClientContractSummaryResponse   `json:"contract_summary,omitempty"`
@@ -227,6 +229,21 @@ type ClientCareScheduleResponse struct {
 	DaysUntilStart     *int32     `json:"days_until_start"`
 	ShouldBeActiveNow  bool       `json:"should_be_active_now"`
 	NextEvaluationDate *time.Time `json:"next_evaluation_date"`
+}
+
+type ClientDischargeScheduleResponse struct {
+	DischargeDate          *time.Time `json:"discharge_date"`
+	DischargeReason        *string    `json:"discharge_reason"`
+	FinalEvaluation        *string    `json:"final_evaluation"`
+	DaysUntilDischarge     *int32     `json:"days_until_discharge"`
+	IsDue                  bool       `json:"is_due"`
+	MissingFinalEvaluation bool       `json:"missing_final_evaluation"`
+}
+
+type ClientDischargeSummaryResponse struct {
+	DischargeDate   *time.Time `json:"discharge_date"`
+	DischargeReason *string    `json:"discharge_reason"`
+	FinalEvaluation *string    `json:"final_evaluation"`
 }
 
 type ClientCoordinatorResponse struct {
@@ -453,6 +470,21 @@ type PutClientInCareResponse struct {
 	NextEvaluationDate  *time.Time `json:"next_evaluation_date"`
 	CoordinatorAssignID uuid.UUID  `json:"coordinator_assignment_id"`
 	Warning             *string    `json:"warning,omitempty"`
+}
+
+type PutClientOutOfCareRequest struct {
+	DischargeDate   string  `json:"discharge_date" binding:"required"`
+	DischargeReason string  `json:"discharge_reason" binding:"required,oneof=treatment_completed terminated_by_mutual_agreement terminated_by_client terminated_by_provider terminated_due_to_external_factors other"`
+	FinalEvaluation *string `json:"final_evaluation"`
+	Reason          *string `json:"reason"`
+}
+
+type PutClientOutOfCareResponse struct {
+	ID              uuid.UUID `json:"id"`
+	Status          string    `json:"status"`
+	DischargeDate   time.Time `json:"discharge_date"`
+	DischargeReason string    `json:"discharge_reason"`
+	FinalEvaluation *string   `json:"final_evaluation"`
 }
 
 // ListStatusHistoryApiResponse represents a response to a list status history request

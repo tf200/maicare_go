@@ -22,18 +22,37 @@ type ListLocationsRequest struct {
 
 // ListLocationsResponse represents a location in the list
 type ListLocationsResponse struct {
-	ID                  uuid.UUID `json:"id"`
-	Name                string    `json:"name"`
-	Street              string    `json:"street"`
-	HouseNumber         string    `json:"house_number"`
-	HouseNumberAddition *string   `json:"house_number_addition"`
-	PostalCode          string    `json:"postal_code"`
-	City                string    `json:"city"`
-	Capacity            *int32    `json:"capacity"`
-	Occupied            int32     `json:"occupied"`
-	Available           int32     `json:"available"`
-	CreatedAt           time.Time `json:"created_at"`
-	UpdatedAt           time.Time `json:"updated_at"`
+	ID                  uuid.UUID                        `json:"id"`
+	Name                string                           `json:"name"`
+	Street              string                           `json:"street"`
+	HouseNumber         string                           `json:"house_number"`
+	HouseNumberAddition *string                          `json:"house_number_addition"`
+	PostalCode          string                           `json:"postal_code"`
+	City                string                           `json:"city"`
+	Capacity            *int32                           `json:"capacity"`
+	Occupied            int32                            `json:"occupied"`
+	Available           int32                            `json:"available"`
+	CreatedAt           time.Time                        `json:"created_at"`
+	UpdatedAt           time.Time                        `json:"updated_at"`
+	Shifts              []ListShiftsByLocationIDResponse `json:"shifts"`
+}
+
+// ListOrgLocationsResponse represents an organization-scoped location in the list.
+// It includes location shifts for each location.
+type ListOrgLocationsResponse struct {
+	ID                  uuid.UUID                        `json:"id"`
+	Name                string                           `json:"name"`
+	Street              string                           `json:"street"`
+	HouseNumber         string                           `json:"house_number"`
+	HouseNumberAddition *string                          `json:"house_number_addition"`
+	PostalCode          string                           `json:"postal_code"`
+	City                string                           `json:"city"`
+	Capacity            *int32                           `json:"capacity"`
+	Occupied            int32                            `json:"occupied"`
+	Available           int32                            `json:"available"`
+	CreatedAt           time.Time                        `json:"created_at"`
+	UpdatedAt           time.Time                        `json:"updated_at"`
+	Shifts              []ListShiftsByLocationIDResponse `json:"shifts"`
 }
 
 // CreateLocationRequest represents a request to create a location

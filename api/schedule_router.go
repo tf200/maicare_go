@@ -8,8 +8,7 @@ func (server *Server) setupScheduleRoutes(baseRouter *gin.RouterGroup) {
 	{
 		schedule.POST("/schedules", server.RBACMiddleware("SCHEDULE.CREATE"), server.CreateScheduleApi)
 
-		schedule.GET("/locations/:id/monthly_schedules", server.RBACMiddleware("SCHEDULE.VIEW"), server.GetMonthlySchedulesByLocationApi)
-		schedule.GET("/locations/:id/daily_schedules", server.RBACMiddleware("SCHEDULE.VIEW"), server.GetDailySchedulesByLocationApi)
+		schedule.GET("/locations/:id/schedules", server.RBACMiddleware("SCHEDULE.VIEW"), server.GetSchedulesByLocationInRangeApi)
 
 		schedule.DELETE("/schedules/:id", server.RBACMiddleware("SCHEDULE.DELETE"), server.DeleteScheduleApi)
 		schedule.GET("/schedules/:id", server.RBACMiddleware("SCHEDULE.VIEW"), server.GetScheduleByIDApi)

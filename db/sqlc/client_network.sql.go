@@ -89,7 +89,7 @@ const assignSender = `-- name: AssignSender :one
 UPDATE client_details
 SET sender_id = $1
 WHERE id = $2
-RETURNING id, intake_form_id, registration_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, evaluation_intervals_weeks, care_type, email, phone_number, gender, filenumber, created_at, placed_in_care_at, care_start_date, last_evaluation_anchor_date, next_evaluation_date, sender_id, location_id, street, house_number, house_number_addition, postal_code, city, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, nationality, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes
+RETURNING id, intake_form_id, registration_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, evaluation_intervals_weeks, care_type, email, phone_number, gender, filenumber, created_at, placed_in_care_at, care_start_date, last_evaluation_anchor_date, next_evaluation_date, discharge_date, discharge_reason, final_evaluation, sender_id, location_id, street, house_number, house_number_addition, postal_code, city, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, nationality, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes
 `
 
 type AssignSenderParams struct {
@@ -122,6 +122,9 @@ func (q *Queries) AssignSender(ctx context.Context, arg AssignSenderParams) (Cli
 		&i.CareStartDate,
 		&i.LastEvaluationAnchorDate,
 		&i.NextEvaluationDate,
+		&i.DischargeDate,
+		&i.DischargeReason,
+		&i.FinalEvaluation,
 		&i.SenderID,
 		&i.LocationID,
 		&i.Street,
@@ -543,6 +546,36 @@ func (q *Queries) ListEmergencyContacts(ctx context.Context, arg ListEmergencyCo
 			return nil, err
 		}
 		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listIncidentReportRecipientEmails = `-- name: ListIncidentReportRecipientEmails :many
+SELECT cec.email
+FROM client_emergency_contact cec
+WHERE cec.client_id = $1
+  AND cec.incidents_reports = TRUE
+  AND cec.is_verified = TRUE
+  AND cec.email IS NOT NULL
+ORDER BY cec.created_at ASC
+`
+
+func (q *Queries) ListIncidentReportRecipientEmails(ctx context.Context, clientID uuid.UUID) ([]*string, error) {
+	rows, err := q.db.Query(ctx, listIncidentReportRecipientEmails, clientID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []*string{}
+	for rows.Next() {
+		var email *string
+		if err := rows.Scan(&email); err != nil {
+			return nil, err
+		}
+		items = append(items, email)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err

@@ -81,6 +81,12 @@ type GetOrganisationCountResponse struct {
 	EmployeeCount    int64     `json:"employee_count"`
 }
 
+// GetGlobalOrganisationCountResponse represents a response for GetGlobalOrganisationCountApi
+type GetGlobalOrganisationCountResponse struct {
+	TotalLocations int64 `json:"total_locations"`
+	TotalCapacity  int64 `json:"total_capacity"`
+}
+
 // UpdateOrganisationRequest represents a request to update an organisation
 type UpdateOrganisationRequest struct {
 	Name                *string `json:"name"`

@@ -98,21 +98,32 @@ func (server *Server) CreditInvoiceApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, SuccessResponse(creditNoteInvoice, "Credit note created successfully"))
 }
 
-// @Summary List Invoices
-// @Description List invoices based on optional filters like client ID, sender ID, status, and date range.
-// @Tags Invoice
-// @Produce json
-// @Param client_id query int64 false "Client ID"
-// @Param sender_id query int64 false "Sender ID"
-// @Param status query string false "Invoice status (outstanding, partially_paid, paid, expired, overpaid, imported, concept)"
-// @Param start_date query string false "Start date (YYYY-MM-DD)"
-// @Param end_date query string false "End date (YYYY-MM-DD)"
-// @Param page query int false "Page number for pagination"
-// @Param page_size query int false "Number of items per page"
-// @Success 200 {object} Response[pagination.Response[invserv.ListInvoicesResponse]] "Successful response with paginated invoices"
-// @Failure 400,401,404,500 {object} Response[any]
-// @Router /invoices [get]
-func (server *Server) ListInvoicesApi(ctx *gin.Context) {
+	// @Summary List Invoices
+	// @Description List invoices with filters and sorting.
+	// @Tags Invoice
+	// @Produce json
+	// @Param client_id query string false "Client ID (uuid)"
+	// @Param sender_id query string false "Sender ID (uuid)"
+	// @Param status query string false "Single invoice status (outstanding, partially_paid, paid, expired, overpaid, imported, concept, canceled)"
+	// @Param statuses query []string false "Multiple statuses (repeat query param, e.g. statuses=outstanding&statuses=partially_paid)"
+	// @Param source query string false "Invoice source (auto, manual, imported)"
+	// @Param invoice_type query string false "Invoice type (standard, credit_note)"
+	// @Param run_id query string false "Invoice run ID (uuid)"
+	// @Param start_date query string false "Issue date start (YYYY-MM-DD)"
+	// @Param end_date query string false "Issue date end (YYYY-MM-DD)"
+	// @Param period_start query string false "Billing period start (RFC3339 or YYYY-MM-DD)"
+	// @Param period_end query string false "Billing period end (RFC3339 or YYYY-MM-DD)"
+	// @Param locked query bool false "Filter by whether invoice is locked"
+	// @Param min_warning_count query int false "Filter invoices with warning_count >= min_warning_count"
+	// @Param q query string false "Search (invoice number, sender name, client name/filenumber)"
+	// @Param sort_by query string false "Sort by (updated_at, issue_date, due_date, invoice_number, gross_total_amount, balance_due_amount)"
+	// @Param sort_dir query string false "Sort direction (asc, desc)"
+	// @Param page query int false "Page number for pagination"
+	// @Param page_size query int false "Number of items per page"
+	// @Success 200 {object} Response[pagination.Response[invserv.ListInvoicesResponse]] "Successful response with paginated invoices"
+	// @Failure 400,401,404,500 {object} Response[any]
+	// @Router /invoices [get]
+	func (server *Server) ListInvoicesApi(ctx *gin.Context) {
 	var req invserv.ListInvoicesRequest
 	if err := ctx.ShouldBindQuery(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))

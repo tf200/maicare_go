@@ -76,6 +76,11 @@ type ListIntakeFormsResponse struct {
 	AssignedLocationAddress *AssignedLocationAddress `json:"assigned_location_address"`
 }
 
+type GetIntakeFormTotalsResponse struct {
+	FurtherInvestigationTotal int64 `json:"further_investigation_total"`
+	WithoutGoalsTotal         int64 `json:"without_goals_total"`
+}
+
 type IntakeFormLocationDetails struct {
 	Name                *string `json:"name"`
 	Street              *string `json:"street"`
@@ -132,4 +137,40 @@ type UpdateIntakeConclusionResponse struct {
 	IntakeConclusion      db.IntakeConclusionEnum `json:"intake_conclusion"`
 	IntakeConclusionNotes *string                 `json:"intake_conclusion_notes"`
 	UpdatedAt             time.Time               `json:"updated_at"`
+}
+
+type UpdateIntakeFormRequest struct {
+	DateOfIntake             *time.Time                   `json:"date_of_intake"`
+	CareType                 *db.IntakeCareTypeEnum       `json:"care_type"`
+	IntakeParticipants       *[]db.IntakeParticipantsEnum `json:"intake_participants"`
+	FamilySituation          *string                      `json:"family_situation"`
+	PsychologicalState       *string                      `json:"psychological_state"`
+	SelfSufficiency          *int32                       `json:"self_sufficiency"`
+	SenderID                 *uuid.UUID                   `json:"sender_id"`
+	AssignedLocationID       *uuid.UUID                   `json:"assigned_location_id"`
+	RiskAssessment           *string                      `json:"risk_assessment"`
+	IntakeConclusion         db.IntakeConclusionEnum      `json:"intake_conclusion"`
+	IntakeConclusionNotes    *string                      `json:"intake_conclusion_notes"`
+	EvaluationIntervalsWeeks *int32                       `json:"evaluation_intervals_weeks"`
+	Signature                *string                      `json:"signature"`
+	ClearFields              []string                     `json:"clear_fields"`
+}
+
+type UpdateIntakeFormResponse struct {
+	ID                       uuid.UUID                   `json:"id"`
+	RegistrationFormID       uuid.UUID                   `json:"registration_form_id"`
+	DateOfIntake             time.Time                   `json:"date_of_intake"`
+	CareType                 db.IntakeCareTypeEnum       `json:"care_type"`
+	IntakeParticipants       []db.IntakeParticipantsEnum `json:"intake_participants"`
+	FamilySituation          *string                     `json:"family_situation"`
+	PsychologicalState       *string                     `json:"psychological_state"`
+	SelfSufficiency          int32                       `json:"self_sufficiency"`
+	SenderID                 *uuid.UUID                  `json:"sender_id"`
+	AssignedLocationID       *uuid.UUID                  `json:"assigned_location_id"`
+	RiskAssessment           *string                     `json:"risk_assessment"`
+	IntakeConclusion         db.IntakeConclusionEnum     `json:"intake_conclusion"`
+	IntakeConclusionNotes    *string                     `json:"intake_conclusion_notes"`
+	EvaluationIntervalsWeeks int32                       `json:"evaluation_intervals_weeks"`
+	Signature                *string                     `json:"signature"`
+	UpdatedAt                time.Time                   `json:"updated_at"`
 }

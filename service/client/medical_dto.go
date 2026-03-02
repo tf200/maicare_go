@@ -1,6 +1,7 @@
 package clientp
 
 import (
+	"encoding/json"
 	"time"
 
 	"maicare_go/pagination"
@@ -8,216 +9,157 @@ import (
 	"github.com/google/uuid"
 )
 
-type DiagnosisMedicationCreate struct {
-	Name             string     `json:"name"`
-	Dosage           string     `json:"dosage"`
-	StartDate        time.Time  `json:"start_date"`
-	EndDate          time.Time  `json:"end_date"`
-	Notes            *string    `json:"notes"`
-	SelfAdministered bool       `json:"self_administered"`
-	AdministeredByID *uuid.UUID `json:"administered_by_id"`
-	IsCritical       bool       `json:"is_critical"`
-}
+// =====================
+// Diagnoses
+// =====================
 
-// CreateClientDiagnosisRequest defines the request for creating a client diagnosis
 type CreateClientDiagnosisRequest struct {
-	Title               *string                     `json:"title"`
-	DiagnosisCode       string                      `json:"diagnosis_code"`
-	Description         string                      `json:"description"`
-	Severity            *string                     `json:"severity"`
-	Status              string                      `json:"status"`
-	DiagnosingClinician *string                     `json:"diagnosing_clinician"`
-	Notes               *string                     `json:"notes"`
-	Medications         []DiagnosisMedicationCreate `json:"medications"`
+	CodeSystem          string     `json:"code_system"`
+	Code                string     `json:"code"`
+	Title               *string    `json:"title"`
+	Description         *string    `json:"description"`
+	Status              *string    `json:"status"`
+	Severity            *string    `json:"severity"`
+	DiagnosedOn         *time.Time `json:"diagnosed_on"`
+	ResolvedOn          *time.Time `json:"resolved_on"`
+	DiagnosingClinician *string    `json:"diagnosing_clinician"`
+	Notes               *string    `json:"notes"`
 }
 
-// CreateClientDiagnosisResponse defines the response for creating a client diagnosis
-type CreateClientDiagnosisResponse struct {
-	ID                  uuid.UUID `json:"id"`
-	Title               *string   `json:"title"`
-	ClientID            uuid.UUID `json:"client_id"`
-	DiagnosisCode       string    `json:"diagnosis_code"`
-	Description         string    `json:"description"`
-	Severity            *string   `json:"severity"`
-	Status              string    `json:"status"`
-	DiagnosingClinician *string   `json:"diagnosing_clinician"`
-	Notes               *string   `json:"notes"`
-	CreatedAt           time.Time `json:"created_at"`
+type ClientDiagnosisResponse struct {
+	ID                  uuid.UUID  `json:"id"`
+	ClientID            uuid.UUID  `json:"client_id"`
+	CodeSystem          string     `json:"code_system"`
+	Code                string     `json:"code"`
+	Title               *string    `json:"title"`
+	Description         *string    `json:"description"`
+	Status              string     `json:"status"`
+	Severity            string     `json:"severity"`
+	DiagnosedOn         *time.Time `json:"diagnosed_on"`
+	ResolvedOn          *time.Time `json:"resolved_on"`
+	DiagnosingClinician *string    `json:"diagnosing_clinician"`
+	Notes               *string    `json:"notes"`
+	CreatedAt           time.Time  `json:"created_at"`
+	UpdatedAt           time.Time  `json:"updated_at"`
 }
 
-// ListClientDiagnosesRequest defines the request for listing client diagnoses
 type ListClientDiagnosesRequest struct {
 	pagination.Request
 }
 
-type DiagnosisMedicationList struct {
-	ID               uuid.UUID  `json:"id"`
-	DiagnosisID      *uuid.UUID `json:"diagnosis_id"`
-	Name             string     `json:"name"`
-	Dosage           string     `json:"dosage"`
-	StartDate        time.Time  `json:"start_date"`
-	EndDate          time.Time  `json:"end_date"`
-	Notes            *string    `json:"notes"`
-	SelfAdministered bool       `json:"self_administered"`
-	AdministeredByID *uuid.UUID `json:"administered_by_id"`
-	IsCritical       bool       `json:"is_critical"`
-	UpdatedAt        time.Time  `json:"updated_at"`
-	CreatedAt        time.Time  `json:"created_at"`
-}
-
-// ListClientDiagnosesResponse defines the response for listing client diagnoses
-type ListClientDiagnosesResponse struct {
-	ID                  uuid.UUID                 `json:"id"`
-	Title               *string                   `json:"title"`
-	ClientID            uuid.UUID                 `json:"client_id"`
-	DiagnosisCode       string                    `json:"diagnosis_code"`
-	Description         string                    `json:"description"`
-	Severity            *string                   `json:"severity"`
-	Status              string                    `json:"status"`
-	DiagnosingClinician *string                   `json:"diagnosing_clinician"`
-	Notes               *string                   `json:"notes"`
-	CreatedAt           time.Time                 `json:"created_at"`
-	Medications         []DiagnosisMedicationList `json:"medications"`
-}
-
-// GetClientDiagnosisResponse defines the response for getting a client diagnosis
-type GetClientDiagnosisResponse struct {
-	ID                  uuid.UUID                 `json:"id"`
-	Title               *string                   `json:"title"`
-	ClientID            uuid.UUID                 `json:"client_id"`
-	DiagnosisCode       string                    `json:"diagnosis_code"`
-	Description         string                    `json:"description"`
-	DateOfDiagnosis     time.Time                 `json:"date_of_diagnosis"`
-	Severity            *string                   `json:"severity"`
-	Status              string                    `json:"status"`
-	DiagnosingClinician *string                   `json:"diagnosing_clinician"`
-	Notes               *string                   `json:"notes"`
-	CreatedAt           time.Time                 `json:"created_at"`
-	Medications         []DiagnosisMedicationList `json:"medications"`
-}
-
-// UpdateClientDiagnosisApi updates a client diagnosis
 type UpdateClientDiagnosisRequest struct {
-	Title               *string                     `json:"title"`
-	DiagnosisCode       *string                     `json:"diagnosis_code"`
-	Description         *string                     `json:"description"`
-	Severity            *string                     `json:"severity"`
-	Status              *string                     `json:"status"`
-	DiagnosingClinician *string                     `json:"diagnosing_clinician"`
-	Notes               *string                     `json:"notes"`
-	MedicationIDs       []DiagnosisMedicationCreate `json:"medications"`
+	CodeSystem          *string    `json:"code_system"`
+	Code                *string    `json:"code"`
+	Title               *string    `json:"title"`
+	Description         *string    `json:"description"`
+	Status              *string    `json:"status"`
+	Severity            *string    `json:"severity"`
+	DiagnosedOn         *time.Time `json:"diagnosed_on"`
+	ResolvedOn          *time.Time `json:"resolved_on"`
+	DiagnosingClinician *string    `json:"diagnosing_clinician"`
+	Notes               *string    `json:"notes"`
 }
 
-// UpdateClientDiagnosisApi updates a client diagnosis
-type UpdateClientDiagnosisResponse struct {
-	ID                  uuid.UUID `json:"id"`
-	Title               *string   `json:"title"`
-	ClientID            uuid.UUID `json:"client_id"`
-	DiagnosisCode       string    `json:"diagnosis_code"`
-	Description         string    `json:"description"`
-	Severity            *string   `json:"severity"`
-	Status              string    `json:"status"`
-	DiagnosingClinician *string   `json:"diagnosing_clinician"`
-	Notes               *string   `json:"notes"`
-	CreatedAt           time.Time `json:"created_at"`
-}
-
-// DeleteClientDiagnosisResponse defines the response for deleting a client diagnosis
 type DeleteClientDiagnosisResponse struct {
 	ID uuid.UUID `json:"id"`
 }
 
-// CreateclientMedicationRequest defines the request for creating a client medication
-type CreateClientMedicationRequest struct {
-	Name             string     `json:"name"`
-	Dosage           string     `json:"dosage"`
-	StartDate        time.Time  `json:"start_date"`
-	EndDate          time.Time  `json:"end_date"`
-	Notes            *string    `json:"notes"`
-	SelfAdministered bool       `json:"self_administered"`
-	AdministeredByID *uuid.UUID `json:"administered_by_id"`
-	IsCritical       bool       `json:"is_critical"`
+// =====================
+// Medication Orders
+// =====================
+
+type CreateClientMedicationOrderRequest struct {
+	DiagnosisID           *uuid.UUID      `json:"diagnosis_id"`
+	MedicationName        string          `json:"medication_name"`
+	DosageText            string          `json:"dosage_text"`
+	DoseAmount            *float64        `json:"dose_amount"`
+	DoseUnit              *string         `json:"dose_unit"`
+	Route                 *string         `json:"route"`
+	FrequencyText         *string         `json:"frequency_text"`
+	Schedule              json.RawMessage `json:"schedule"`
+	IsPrn                 bool            `json:"is_prn"`
+	PrnIndication         *string         `json:"prn_indication"`
+	MaxDosesPer24h        *int32          `json:"max_doses_per_24h"`
+	StartDate             time.Time       `json:"start_date"`
+	EndDate               *time.Time      `json:"end_date"`
+	Status                *string         `json:"status"`
+	AdminMode             *string         `json:"admin_mode"`
+	ResponsibleEmployeeID *uuid.UUID      `json:"responsible_employee_id"`
+	IsCritical            bool            `json:"is_critical"`
+	Notes                 *string         `json:"notes"`
+	SourceAttachmentUUID  *uuid.UUID      `json:"source_attachment_uuid"`
 }
 
-// CreateClientMedicationResponse defines the response for creating a client medication
-type CreateClientMedicationResponse struct {
-	ID               uuid.UUID  `json:"id"`
-	DiagnosisID      *uuid.UUID `json:"diagnosis_id"`
-	Name             string     `json:"name"`
-	Dosage           string     `json:"dosage"`
-	StartDate        time.Time  `json:"start_date"`
-	EndDate          time.Time  `json:"end_date"`
-	Notes            *string    `json:"notes"`
-	SelfAdministered bool       `json:"self_administered"`
-	AdministeredByID *uuid.UUID `json:"administered_by_id"`
-	IsCritical       bool       `json:"is_critical"`
-	UpdatedAt        time.Time  `json:"updated_at"`
-	CreatedAt        time.Time  `json:"created_at"`
+type ClientMedicationOrderResponse struct {
+	ID                           uuid.UUID       `json:"id"`
+	ClientID                     uuid.UUID       `json:"client_id"`
+	DiagnosisID                  *uuid.UUID      `json:"diagnosis_id"`
+	MedicationName               string          `json:"medication_name"`
+	DosageText                   string          `json:"dosage_text"`
+	DoseAmount                   *float64        `json:"dose_amount"`
+	DoseUnit                     *string         `json:"dose_unit"`
+	Route                        *string         `json:"route"`
+	FrequencyText                *string         `json:"frequency_text"`
+	Schedule                     json.RawMessage `json:"schedule"`
+	IsPrn                        bool            `json:"is_prn"`
+	PrnIndication                *string         `json:"prn_indication"`
+	MaxDosesPer24h               *int32          `json:"max_doses_per_24h"`
+	StartDate                    time.Time       `json:"start_date"`
+	EndDate                      *time.Time      `json:"end_date"`
+	Status                       string          `json:"status"`
+	AdminMode                    string          `json:"admin_mode"`
+	ResponsibleEmployeeID        *uuid.UUID      `json:"responsible_employee_id"`
+	ResponsibleEmployeeFirstName *string         `json:"responsible_employee_first_name"`
+	ResponsibleEmployeeLastName  *string         `json:"responsible_employee_last_name"`
+	IsCritical                   bool            `json:"is_critical"`
+	Notes                        *string         `json:"notes"`
+	SourceAttachmentUUID         *uuid.UUID      `json:"source_attachment_uuid"`
+	DiagnosisTitle               *string         `json:"diagnosis_title"`
+	DiagnosisCodeSystem          *string         `json:"diagnosis_code_system"`
+	DiagnosisCode                *string         `json:"diagnosis_code"`
+	CreatedAt                    time.Time       `json:"created_at"`
+	UpdatedAt                    time.Time       `json:"updated_at"`
 }
 
-// ListClientMedicationsRequest defines the request for listing client medications
-type ListClientMedicationsRequest struct {
+type ListClientMedicationOrdersRequest struct {
 	pagination.Request
+	Status      *string    `json:"status" form:"status"`
+	AdminMode   *string    `json:"admin_mode" form:"admin_mode"`
+	DiagnosisID *uuid.UUID `json:"diagnosis_id" form:"diagnosis_id"`
+	Search      *string    `json:"search" form:"search"`
 }
 
-// ListClientMedicationsResponse defines the response for listing client medications
-type ListClientMedicationsResponse struct {
-	ID               uuid.UUID  `json:"id"`
-	DiagnosisID      *uuid.UUID `json:"diagnosis_id"`
-	Name             string     `json:"name"`
-	Dosage           string     `json:"dosage"`
-	StartDate        time.Time  `json:"start_date"`
-	EndDate          time.Time  `json:"end_date"`
-	Notes            *string    `json:"notes"`
-	SelfAdministered bool       `json:"self_administered"`
-	AdministeredByID *uuid.UUID `json:"administered_by_id"`
-	IsCritical       bool       `json:"is_critical"`
-	UpdatedAt        time.Time  `json:"updated_at"`
-	CreatedAt        time.Time  `json:"created_at"`
+type UpdateClientMedicationOrderRequest struct {
+	DiagnosisID           *uuid.UUID      `json:"diagnosis_id"`
+	MedicationName        *string         `json:"medication_name"`
+	DosageText            *string         `json:"dosage_text"`
+	DoseAmount            *float64        `json:"dose_amount"`
+	DoseUnit              *string         `json:"dose_unit"`
+	Route                 *string         `json:"route"`
+	FrequencyText         *string         `json:"frequency_text"`
+	Schedule              json.RawMessage `json:"schedule"`
+	IsPrn                 *bool           `json:"is_prn"`
+	PrnIndication         *string         `json:"prn_indication"`
+	MaxDosesPer24h        *int32          `json:"max_doses_per_24h"`
+	StartDate             *time.Time      `json:"start_date"`
+	EndDate               *time.Time      `json:"end_date"`
+	Status                *string         `json:"status"`
+	AdminMode             *string         `json:"admin_mode"`
+	ResponsibleEmployeeID *uuid.UUID      `json:"responsible_employee_id"`
+	IsCritical            *bool           `json:"is_critical"`
+	Notes                 *string         `json:"notes"`
+	SourceAttachmentUUID  *uuid.UUID      `json:"source_attachment_uuid"`
 }
 
-// GetClientMedicationResponse defines the response for getting a client medication
-type GetClientMedicationResponse struct {
-	ID                      uuid.UUID  `json:"id"`
-	Name                    string     `json:"name"`
-	Dosage                  string     `json:"dosage"`
-	StartDate               time.Time  `json:"start_date"`
-	EndDate                 time.Time  `json:"end_date"`
-	Notes                   *string    `json:"notes"`
-	SelfAdministered        bool       `json:"self_administered"`
-	DiagnosisID             *uuid.UUID `json:"diagnosis_id"`
-	AdministeredByID        *uuid.UUID `json:"administered_by_id"`
-	IsCritical              bool       `json:"is_critical"`
-	UpdatedAt               time.Time  `json:"updated_at"`
-	CreatedAt               time.Time  `json:"created_at"`
-	AdministeredByFirstName string     `json:"administered_by_first_name"`
-	AdministeredByLastName  string     `json:"administered_by_last_name"`
+type DeleteClientMedicationOrderResponse struct {
+	ID uuid.UUID `json:"id"`
 }
 
-// UpdateClientMedicationRequest defines the request for updating a client medication
-type UpdateClientMedicationRequest struct {
-	Name             *string    `json:"name"`
-	Dosage           *string    `json:"dosage"`
-	StartDate        time.Time  `json:"start_date"`
-	EndDate          time.Time  `json:"end_date"`
-	Notes            *string    `json:"notes"`
-	SelfAdministered *bool      `json:"self_administered"`
-	AdministeredByID *uuid.UUID `json:"administered_by_id"`
-	IsCritical       *bool      `json:"is_critical"`
-}
+// =====================
+// Overview
+// =====================
 
-// UpdateClientMedicationResponse defines the response for updating a client medication
-type UpdateClientMedicationResponse struct {
-	ID               uuid.UUID  `json:"id"`
-	Name             string     `json:"name"`
-	Dosage           string     `json:"dosage"`
-	StartDate        time.Time  `json:"start_date"`
-	EndDate          time.Time  `json:"end_date"`
-	Notes            *string    `json:"notes"`
-	SelfAdministered bool       `json:"self_administered"`
-	DiagnosisID      *uuid.UUID `json:"diagnosis_id"`
-	AdministeredByID *uuid.UUID `json:"administered_by_id"`
-	IsCritical       bool       `json:"is_critical"`
-	UpdatedAt        time.Time  `json:"updated_at"`
-	CreatedAt        time.Time  `json:"created_at"`
+type ClientMedicalOverviewResponse struct {
+	Diagnoses        []ClientDiagnosisResponse       `json:"diagnoses"`
+	MedicationOrders []ClientMedicationOrderResponse `json:"medication_orders"`
 }

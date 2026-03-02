@@ -215,6 +215,15 @@ func ParseJSONToObject(data []byte) JSONObject {
 	return result
 }
 
+// EnsureJSONArray returns a valid JSON array payload.
+// If raw is nil/empty it returns [] (as bytes).
+func EnsureJSONArray(raw json.RawMessage) []byte {
+	if len(raw) == 0 {
+		return []byte("[]")
+	}
+	return raw
+}
+
 func ParseObjectToJSON(obj JSONObject) []byte {
 	if obj == nil {
 		return nil
@@ -247,4 +256,24 @@ func NullEnumToStringPtr[T ~string](value T, valid bool) *string {
 		return &s
 	}
 	return nil
+}
+
+func UniqueUUIDs(ids []uuid.UUID) []uuid.UUID {
+	seen := make(map[uuid.UUID]struct{}, len(ids))
+	out := make([]uuid.UUID, 0, len(ids))
+	for _, id := range ids {
+		if _, ok := seen[id]; ok {
+			continue
+		}
+		seen[id] = struct{}{}
+		out = append(out, id)
+	}
+	return out
+}
+
+func UniqueUUIDsPtr(ids *[]uuid.UUID) []uuid.UUID {
+	if ids == nil {
+		return []uuid.UUID{}
+	}
+	return UniqueUUIDs(*ids)
 }

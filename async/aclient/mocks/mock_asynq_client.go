@@ -114,6 +114,25 @@ func (mr *MockAsynqClientInterfaceMockRecorder) EnqueueIncident(payload, ctx any
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnqueueIncident", reflect.TypeOf((*MockAsynqClientInterface)(nil).EnqueueIncident), varargs...)
 }
 
+// EnqueueIncidentConfirmedEmail mocks base method.
+func (m *MockAsynqClientInterface) EnqueueIncidentConfirmedEmail(ctx context.Context, payload aclient.IncidentConfirmedEmailPayload, opts ...asynq.Option) error {
+	m.ctrl.T.Helper()
+	varargs := []any{ctx, payload}
+	for _, a := range opts {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "EnqueueIncidentConfirmedEmail", varargs...)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// EnqueueIncidentConfirmedEmail indicates an expected call of EnqueueIncidentConfirmedEmail.
+func (mr *MockAsynqClientInterfaceMockRecorder) EnqueueIncidentConfirmedEmail(ctx, payload any, opts ...any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]any{ctx, payload}, opts...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnqueueIncidentConfirmedEmail", reflect.TypeOf((*MockAsynqClientInterface)(nil).EnqueueIncidentConfirmedEmail), varargs...)
+}
+
 // EnqueueNotificationTask mocks base method.
 func (m *MockAsynqClientInterface) EnqueueNotificationTask(ctx context.Context, payload notification.NotificationPayload, opts ...asynq.Option) error {
 	m.ctrl.T.Helper()

@@ -6,133 +6,91 @@ import (
 	"time"
 )
 
-type AccommodationInvoiceParams struct {
-	Price               float64   `json:"price"`
-	PriceTimeUnit       string    `json:"price_time_unit"`
-	VAT                 float64   `json:"vat"`
-	BillablePeriodStart time.Time `json:"billable_period_start"`
-	BillablePeriodEnd   time.Time `json:"billable_period_end"`
+const (
+	DefaultBillingTimezone = "UTC"
+	DefaultBillingCycle    = "iso_4_week"
+)
+
+func centsFromAmount(amount float64) int64 {
+	// Half away from zero; consistent for invoices.
+	return int64(math.Round(amount * 100))
 }
 
-type AccomodationInvoiceTotals struct {
-	PreVatTotal float64 `json:"pre_vat_total_price"`
-	Total       float64 `json:"total_price"`
-	Vat         float64 `json:"vat"`
-	TimeFrame   string  `json:"time_frame"`
+func amountFromCents(cents int64) float64 {
+	return float64(cents) / 100
 }
 
-func CalculateAccomodationInvoiceTotal(params AccommodationInvoiceParams) (*AccomodationInvoiceTotals, error) {
-	if params.Price <= 0 {
-		return nil, fmt.Errorf("price must be greater than zero")
+func roundHalfUpDiv(n, d int64) int64 {
+	if d == 0 {
+		panic("division by zero")
 	}
-	if params.PriceTimeUnit == "" {
-		return nil, fmt.Errorf("price time unit must be specified")
+	if n == 0 {
+		return 0
 	}
-	if params.BillablePeriodStart.IsZero() || params.BillablePeriodEnd.IsZero() {
-		return nil, fmt.Errorf("billable period start and end must be specified")
+	sign := int64(1)
+	if n < 0 {
+		sign = -1
+		n = -n
 	}
-	if params.BillablePeriodEnd.Before(params.BillablePeriodStart) {
-		return nil, fmt.Errorf("billable period end cannot be before start")
+	q := n / d
+	r := n % d
+	if 2*r >= d {
+		q++
 	}
-
-	// Calculate the number of days in the billable period
-	daysInPeriod := params.BillablePeriodEnd.Sub(params.BillablePeriodStart)
-	days := int(math.Ceil(daysInPeriod.Hours() / 24))
-	if days <= 0 {
-		return nil, fmt.Errorf("billable period must be at least one day")
-	}
-
-	if params.PriceTimeUnit == "daily" {
-		preVatTotal := params.Price * float64(days)
-		vat := preVatTotal * (params.VAT / 100)
-		total := preVatTotal + vat
-
-		return &AccomodationInvoiceTotals{
-			PreVatTotal: preVatTotal,
-			Total:       total,
-			Vat:         vat,
-			TimeFrame:   fmt.Sprintf("%d days", days),
-		}, nil
-	}
-	if params.PriceTimeUnit == "weekly" {
-		dailyRate := params.Price / 7
-		weeks := days / 7
-		preVatTotal := dailyRate * float64(days)
-		vat := preVatTotal * (params.VAT / 100)
-		total := preVatTotal + vat
-
-		return &AccomodationInvoiceTotals{
-			PreVatTotal: preVatTotal,
-			Total:       total,
-			Vat:         vat,
-			TimeFrame:   fmt.Sprintf("%d weeks", weeks),
-		}, nil
-	}
-
-	return nil, fmt.Errorf("unsupported price time unit: %s", params.PriceTimeUnit)
+	return sign * q
 }
 
-type AmbulanteInvoiceParams struct {
-	Price         float64 `json:"price"`
-	PriceTimeUnit string  `json:"price_time_unit"`
-	VAT           float64 `json:"vat"`
-	TotalMinutes  float64 `json:"total_minutes"` // Total minutes of care provided in the billable period
-}
-type AmbulanteInvoiceTotals struct {
-	PreVatTotal  float64 `json:"pre_vat_total_price"`
-	Total        float64 `json:"total_price"`
-	Vat          float64 `json:"vat"`
-	TotalMinutes float64 `json:"total_minutes"` // Total minutes of care provided in the billable period
+func clampTime(t, min, max time.Time) time.Time {
+	if t.Before(min) {
+		return min
+	}
+	if t.After(max) {
+		return max
+	}
+	return t
 }
 
-func CalculateAmbulanteInvoiceTotal(params AmbulanteInvoiceParams) (*AmbulanteInvoiceTotals, error) {
-	if params.Price <= 0 {
-		return nil, fmt.Errorf("price must be greater than zero")
+func countCalendarDays(start, end time.Time, tz string) (int64, error) {
+	if end.Before(start) || end.Equal(start) {
+		return 0, nil
 	}
-	if params.PriceTimeUnit == "" {
-		return nil, fmt.Errorf("price time unit must be specified")
+	if tz == "" {
+		tz = DefaultBillingTimezone
 	}
-	if params.TotalMinutes <= 0 {
-		return nil, fmt.Errorf("total minutes must be greater than zero")
+	loc, err := time.LoadLocation(tz)
+	if err != nil {
+		return 0, fmt.Errorf("invalid billing timezone %q: %w", tz, err)
 	}
 
-	if params.PriceTimeUnit == "minute" {
-		preVatTotal := params.Price * params.TotalMinutes
-		vat := preVatTotal * (params.VAT / 100)
-		total := preVatTotal + vat
+	sy, sm, sd := start.In(loc).Date()
+	ey, em, ed := end.In(loc).Date()
 
-		return &AmbulanteInvoiceTotals{
-			PreVatTotal:  preVatTotal,
-			Total:        total,
-			Vat:          vat,
-			TotalMinutes: params.TotalMinutes,
-		}, nil
+	// Use UTC midnights for the local dates to avoid DST hour-length anomalies.
+	sUTC := time.Date(sy, sm, sd, 0, 0, 0, 0, time.UTC)
+	eUTC := time.Date(ey, em, ed, 0, 0, 0, 0, time.UTC)
+	if eUTC.Before(sUTC) {
+		return 0, nil
 	}
-	if params.PriceTimeUnit == "hourly" {
-		hours := params.TotalMinutes / 60
-		preVatTotal := params.Price * hours
-		vat := preVatTotal * (params.VAT / 100)
-		total := preVatTotal + vat
-
-		return &AmbulanteInvoiceTotals{
-			PreVatTotal:  preVatTotal,
-			Total:        total,
-			Vat:          vat,
-			TotalMinutes: params.TotalMinutes,
-		}, nil
-	}
-	return nil, fmt.Errorf("unsupported price time unit: %s", params.PriceTimeUnit)
+	return int64(eUTC.Sub(sUTC).Hours() / 24), nil
 }
 
-func VerifyTotalAmount(invoiceDetails []InvoiceDetails, totalAmount float64) (bool, error) {
-	var calculatedTotal float64
-
-	for _, detail := range invoiceDetails {
-		calculatedTotal += detail.Total
-	}
-
-	if calculatedTotal != totalAmount {
-		return false, fmt.Errorf("total amount does not match the sum of invoice details: expected %.2f, got %.2f", totalAmount, calculatedTotal)
-	}
-	return true, nil
+type lineAmounts struct {
+	netCents   int64
+	vatCents   int64
+	grossCents int64
 }
+
+func computeVat(netCents int64, vatRatePct int64) lineAmounts {
+	vatCents := roundHalfUpDiv(netCents*vatRatePct, 100)
+	return lineAmounts{
+		netCents:   netCents,
+		vatCents:   vatCents,
+		grossCents: netCents + vatCents,
+	}
+}
+
+func roundTo(amount float64, decimals int) float64 {
+	pow := math.Pow10(decimals)
+	return math.Round(amount*pow) / pow
+}
+

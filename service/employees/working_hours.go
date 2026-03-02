@@ -100,11 +100,11 @@ func (s *employeeService) fetchWorkingHoursData(
 
 	// Fetch employee schedules
 	schedules, err := s.Store.GetEmployeeSchedules(ctx, db.GetEmployeeSchedulesParams{
-		PeriodStart: pgtype.Timestamp{
+		PeriodStart: pgtype.Timestamptz{
 			Time:  periodStart,
 			Valid: true,
 		},
-		PeriodEnd: pgtype.Timestamp{
+		PeriodEnd: pgtype.Timestamptz{
 			Time:  periodEnd,
 			Valid: true,
 		},
@@ -156,7 +156,10 @@ func (s *employeeService) buildWorkingHoursItems(
 	// Process appointments
 	for i, appointment := range appointments {
 		duration := appointment.EndTime.Time.Sub(appointment.StartTime.Time).Hours()
-		appointmentHours += duration
+		// Only count appointment hours after admin approval.
+		if appointment.IsConfirmed {
+			appointmentHours += duration
+		}
 		dayKey := appointment.StartTime.Time.Format("2006-01-02")
 		uniqueDays[dayKey] = true
 

@@ -13,50 +13,77 @@ import (
 )
 
 const createInvoice = `-- name: CreateInvoice :one
+
 INSERT INTO invoice (
     invoice_number,
     invoice_sequence,
     due_date,
     issue_date,
-    invoice_details,
-    total_amount,
+    status,
+    invoice_type,
+    source,
+    original_invoice_id,
+    replaces_invoice_id,
+    period_start,
+    period_end,
+    billing_cycle,
+    billing_timezone,
+    currency,
     extra_content,
     client_id,
     sender_id,
     warning_count,
-    invoice_type
-    ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11
-) RETURNING id, invoice_number, invoice_sequence, issue_date, due_date, status, invoice_type, original_invoice_id, invoice_details, total_amount, pdf_attachment_id, extra_content, client_id, sender_id, warning_count, updated_at, created_at
+    run_id
+) VALUES (
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
+    $11, $12, $13, $14, $15, $16, $17, $18, $19
+) RETURNING id, invoice_number, invoice_sequence, issue_date, due_date, status, invoice_type, source, original_invoice_id, replaces_invoice_id, period_start, period_end, billing_cycle, billing_timezone, bill_to_snapshot, client_snapshot, currency, details_snapshot, net_total_amount, vat_total_amount, gross_total_amount, pdf_attachment_id, extra_content, client_id, sender_id, warning_count, run_id, locked_at, calc_version, calc_metadata, updated_at, created_at
 `
 
 type CreateInvoiceParams struct {
-	InvoiceNumber   string          `json:"invoice_number"`
-	InvoiceSequence int64           `json:"invoice_sequence"`
-	DueDate         pgtype.Date     `json:"due_date"`
-	IssueDate       pgtype.Date     `json:"issue_date"`
-	InvoiceDetails  []byte          `json:"invoice_details"`
-	TotalAmount     float64         `json:"total_amount"`
-	ExtraContent    []byte          `json:"extra_content"`
-	ClientID        uuid.UUID       `json:"client_id"`
-	SenderID        *uuid.UUID      `json:"sender_id"`
-	WarningCount    int32           `json:"warning_count"`
-	InvoiceType     InvoiceTypeEnum `json:"invoice_type"`
+	InvoiceNumber     string             `json:"invoice_number"`
+	InvoiceSequence   int64              `json:"invoice_sequence"`
+	DueDate           pgtype.Date        `json:"due_date"`
+	IssueDate         pgtype.Date        `json:"issue_date"`
+	Status            InvoiceStatusEnum  `json:"status"`
+	InvoiceType       InvoiceTypeEnum    `json:"invoice_type"`
+	Source            InvoiceSourceEnum  `json:"source"`
+	OriginalInvoiceID *uuid.UUID         `json:"original_invoice_id"`
+	ReplacesInvoiceID *uuid.UUID         `json:"replaces_invoice_id"`
+	PeriodStart       pgtype.Timestamptz `json:"period_start"`
+	PeriodEnd         pgtype.Timestamptz `json:"period_end"`
+	BillingCycle      *string            `json:"billing_cycle"`
+	BillingTimezone   string             `json:"billing_timezone"`
+	Currency          string             `json:"currency"`
+	ExtraContent      []byte             `json:"extra_content"`
+	ClientID          uuid.UUID          `json:"client_id"`
+	SenderID          uuid.UUID          `json:"sender_id"`
+	WarningCount      int32              `json:"warning_count"`
+	RunID             *uuid.UUID         `json:"run_id"`
 }
 
+// ////////////////////// Invoices //////////////////////
 func (q *Queries) CreateInvoice(ctx context.Context, arg CreateInvoiceParams) (Invoice, error) {
 	row := q.db.QueryRow(ctx, createInvoice,
 		arg.InvoiceNumber,
 		arg.InvoiceSequence,
 		arg.DueDate,
 		arg.IssueDate,
-		arg.InvoiceDetails,
-		arg.TotalAmount,
+		arg.Status,
+		arg.InvoiceType,
+		arg.Source,
+		arg.OriginalInvoiceID,
+		arg.ReplacesInvoiceID,
+		arg.PeriodStart,
+		arg.PeriodEnd,
+		arg.BillingCycle,
+		arg.BillingTimezone,
+		arg.Currency,
 		arg.ExtraContent,
 		arg.ClientID,
 		arg.SenderID,
 		arg.WarningCount,
-		arg.InvoiceType,
+		arg.RunID,
 	)
 	var i Invoice
 	err := row.Scan(
@@ -67,15 +94,282 @@ func (q *Queries) CreateInvoice(ctx context.Context, arg CreateInvoiceParams) (I
 		&i.DueDate,
 		&i.Status,
 		&i.InvoiceType,
+		&i.Source,
 		&i.OriginalInvoiceID,
-		&i.InvoiceDetails,
-		&i.TotalAmount,
+		&i.ReplacesInvoiceID,
+		&i.PeriodStart,
+		&i.PeriodEnd,
+		&i.BillingCycle,
+		&i.BillingTimezone,
+		&i.BillToSnapshot,
+		&i.ClientSnapshot,
+		&i.Currency,
+		&i.DetailsSnapshot,
+		&i.NetTotalAmount,
+		&i.VatTotalAmount,
+		&i.GrossTotalAmount,
 		&i.PdfAttachmentID,
 		&i.ExtraContent,
 		&i.ClientID,
 		&i.SenderID,
 		&i.WarningCount,
+		&i.RunID,
+		&i.LockedAt,
+		&i.CalcVersion,
+		&i.CalcMetadata,
 		&i.UpdatedAt,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const createInvoiceLine = `-- name: CreateInvoiceLine :one
+
+INSERT INTO invoice_line (
+    invoice_id,
+    client_id,
+    sender_id,
+    line_no,
+    line_type,
+    contract_id,
+    service_type,
+    description,
+    period_start,
+    period_end,
+    quantity,
+    unit,
+    unit_price,
+    net_amount,
+    vat_rate,
+    vat_amount,
+    gross_amount,
+    metadata
+) VALUES (
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
+    $11, $12, $13, $14, $15, $16, $17, $18
+) RETURNING id, invoice_id, client_id, sender_id, line_no, line_type, contract_id, service_type, description, period_start, period_end, quantity, unit, unit_price, net_amount, vat_rate, vat_amount, gross_amount, metadata, created_at
+`
+
+type CreateInvoiceLineParams struct {
+	InvoiceID   uuid.UUID           `json:"invoice_id"`
+	ClientID    uuid.UUID           `json:"client_id"`
+	SenderID    uuid.UUID           `json:"sender_id"`
+	LineNo      int32               `json:"line_no"`
+	LineType    InvoiceLineTypeEnum `json:"line_type"`
+	ContractID  *uuid.UUID          `json:"contract_id"`
+	ServiceType string              `json:"service_type"`
+	Description string              `json:"description"`
+	PeriodStart pgtype.Timestamptz  `json:"period_start"`
+	PeriodEnd   pgtype.Timestamptz  `json:"period_end"`
+	Quantity    float64             `json:"quantity"`
+	Unit        string              `json:"unit"`
+	UnitPrice   float64             `json:"unit_price"`
+	NetAmount   float64             `json:"net_amount"`
+	VatRate     float64             `json:"vat_rate"`
+	VatAmount   float64             `json:"vat_amount"`
+	GrossAmount float64             `json:"gross_amount"`
+	Metadata    []byte              `json:"metadata"`
+}
+
+// ////////////////////// Invoice Lines //////////////////////
+func (q *Queries) CreateInvoiceLine(ctx context.Context, arg CreateInvoiceLineParams) (InvoiceLine, error) {
+	row := q.db.QueryRow(ctx, createInvoiceLine,
+		arg.InvoiceID,
+		arg.ClientID,
+		arg.SenderID,
+		arg.LineNo,
+		arg.LineType,
+		arg.ContractID,
+		arg.ServiceType,
+		arg.Description,
+		arg.PeriodStart,
+		arg.PeriodEnd,
+		arg.Quantity,
+		arg.Unit,
+		arg.UnitPrice,
+		arg.NetAmount,
+		arg.VatRate,
+		arg.VatAmount,
+		arg.GrossAmount,
+		arg.Metadata,
+	)
+	var i InvoiceLine
+	err := row.Scan(
+		&i.ID,
+		&i.InvoiceID,
+		&i.ClientID,
+		&i.SenderID,
+		&i.LineNo,
+		&i.LineType,
+		&i.ContractID,
+		&i.ServiceType,
+		&i.Description,
+		&i.PeriodStart,
+		&i.PeriodEnd,
+		&i.Quantity,
+		&i.Unit,
+		&i.UnitPrice,
+		&i.NetAmount,
+		&i.VatRate,
+		&i.VatAmount,
+		&i.GrossAmount,
+		&i.Metadata,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const createInvoiceLineCalendarEvent = `-- name: CreateInvoiceLineCalendarEvent :one
+
+INSERT INTO invoice_line_calendar_event (
+    invoice_line_id,
+    calendar_event_id,
+    client_id,
+    start_at,
+    end_at,
+    minutes_billed,
+    metadata
+) VALUES (
+    $1, $2, $3, $4, $5, $6, $7
+) RETURNING id, invoice_line_id, calendar_event_id, client_id, start_at, end_at, minutes_billed, metadata, created_at
+`
+
+type CreateInvoiceLineCalendarEventParams struct {
+	InvoiceLineID   uuid.UUID          `json:"invoice_line_id"`
+	CalendarEventID uuid.UUID          `json:"calendar_event_id"`
+	ClientID        uuid.UUID          `json:"client_id"`
+	StartAt         pgtype.Timestamptz `json:"start_at"`
+	EndAt           pgtype.Timestamptz `json:"end_at"`
+	MinutesBilled   float64            `json:"minutes_billed"`
+	Metadata        []byte             `json:"metadata"`
+}
+
+// ////////////////////// Line Sources (Appointments) //////////////////////
+func (q *Queries) CreateInvoiceLineCalendarEvent(ctx context.Context, arg CreateInvoiceLineCalendarEventParams) (InvoiceLineCalendarEvent, error) {
+	row := q.db.QueryRow(ctx, createInvoiceLineCalendarEvent,
+		arg.InvoiceLineID,
+		arg.CalendarEventID,
+		arg.ClientID,
+		arg.StartAt,
+		arg.EndAt,
+		arg.MinutesBilled,
+		arg.Metadata,
+	)
+	var i InvoiceLineCalendarEvent
+	err := row.Scan(
+		&i.ID,
+		&i.InvoiceLineID,
+		&i.CalendarEventID,
+		&i.ClientID,
+		&i.StartAt,
+		&i.EndAt,
+		&i.MinutesBilled,
+		&i.Metadata,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const createInvoiceRun = `-- name: CreateInvoiceRun :one
+
+INSERT INTO invoice_run (
+    billing_cycle,
+    period_start,
+    period_end,
+    timezone,
+    dry_run,
+    status,
+    params,
+    created_by
+) VALUES (
+    $1, $2, $3, $4, $5, $6, $7, $8
+) RETURNING id, billing_cycle, period_start, period_end, timezone, dry_run, status, params, started_at, finished_at, created_by
+`
+
+type CreateInvoiceRunParams struct {
+	BillingCycle string               `json:"billing_cycle"`
+	PeriodStart  pgtype.Timestamptz   `json:"period_start"`
+	PeriodEnd    pgtype.Timestamptz   `json:"period_end"`
+	Timezone     string               `json:"timezone"`
+	DryRun       bool                 `json:"dry_run"`
+	Status       InvoiceRunStatusEnum `json:"status"`
+	Params       []byte               `json:"params"`
+	CreatedBy    *uuid.UUID           `json:"created_by"`
+}
+
+// ////////////////////// Batch Runs //////////////////////
+func (q *Queries) CreateInvoiceRun(ctx context.Context, arg CreateInvoiceRunParams) (InvoiceRun, error) {
+	row := q.db.QueryRow(ctx, createInvoiceRun,
+		arg.BillingCycle,
+		arg.PeriodStart,
+		arg.PeriodEnd,
+		arg.Timezone,
+		arg.DryRun,
+		arg.Status,
+		arg.Params,
+		arg.CreatedBy,
+	)
+	var i InvoiceRun
+	err := row.Scan(
+		&i.ID,
+		&i.BillingCycle,
+		&i.PeriodStart,
+		&i.PeriodEnd,
+		&i.Timezone,
+		&i.DryRun,
+		&i.Status,
+		&i.Params,
+		&i.StartedAt,
+		&i.FinishedAt,
+		&i.CreatedBy,
+	)
+	return i, err
+}
+
+const createInvoiceRunItem = `-- name: CreateInvoiceRunItem :one
+INSERT INTO invoice_run_item (
+    run_id,
+    client_id,
+    sender_id,
+    status,
+    invoice_id,
+    error,
+    warnings
+) VALUES (
+    $1, $2, $3, $4, $5, $6, $7
+) RETURNING id, run_id, client_id, sender_id, status, invoice_id, error, warnings, created_at
+`
+
+type CreateInvoiceRunItemParams struct {
+	RunID     uuid.UUID                `json:"run_id"`
+	ClientID  uuid.UUID                `json:"client_id"`
+	SenderID  uuid.UUID                `json:"sender_id"`
+	Status    InvoiceRunItemStatusEnum `json:"status"`
+	InvoiceID *uuid.UUID               `json:"invoice_id"`
+	Error     *string                  `json:"error"`
+	Warnings  []byte                   `json:"warnings"`
+}
+
+func (q *Queries) CreateInvoiceRunItem(ctx context.Context, arg CreateInvoiceRunItemParams) (InvoiceRunItem, error) {
+	row := q.db.QueryRow(ctx, createInvoiceRunItem,
+		arg.RunID,
+		arg.ClientID,
+		arg.SenderID,
+		arg.Status,
+		arg.InvoiceID,
+		arg.Error,
+		arg.Warnings,
+	)
+	var i InvoiceRunItem
+	err := row.Scan(
+		&i.ID,
+		&i.RunID,
+		&i.ClientID,
+		&i.SenderID,
+		&i.Status,
+		&i.InvoiceID,
+		&i.Error,
+		&i.Warnings,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -188,7 +482,7 @@ func (q *Queries) GetCompletedPaymentSum(ctx context.Context, invoiceID uuid.UUI
 
 const getInvoice = `-- name: GetInvoice :one
 SELECT
-    i.id, i.invoice_number, i.invoice_sequence, i.issue_date, i.due_date, i.status, i.invoice_type, i.original_invoice_id, i.invoice_details, i.total_amount, i.pdf_attachment_id, i.extra_content, i.client_id, i.sender_id, i.warning_count, i.updated_at, i.created_at,
+    i.id, i.invoice_number, i.invoice_sequence, i.issue_date, i.due_date, i.status, i.invoice_type, i.source, i.original_invoice_id, i.replaces_invoice_id, i.period_start, i.period_end, i.billing_cycle, i.billing_timezone, i.bill_to_snapshot, i.client_snapshot, i.currency, i.details_snapshot, i.net_total_amount, i.vat_total_amount, i.gross_total_amount, i.pdf_attachment_id, i.extra_content, i.client_id, i.sender_id, i.warning_count, i.run_id, i.locked_at, i.calc_version, i.calc_metadata, i.updated_at, i.created_at,
     s.name AS sender_name,
     s.contacts As sender_contacts,
     s.postal_code AS sender_postal_code,
@@ -220,14 +514,29 @@ type GetInvoiceRow struct {
 	DueDate                   pgtype.Date        `json:"due_date"`
 	Status                    InvoiceStatusEnum  `json:"status"`
 	InvoiceType               InvoiceTypeEnum    `json:"invoice_type"`
+	Source                    InvoiceSourceEnum  `json:"source"`
 	OriginalInvoiceID         *uuid.UUID         `json:"original_invoice_id"`
-	InvoiceDetails            []byte             `json:"invoice_details"`
-	TotalAmount               float64            `json:"total_amount"`
+	ReplacesInvoiceID         *uuid.UUID         `json:"replaces_invoice_id"`
+	PeriodStart               pgtype.Timestamptz `json:"period_start"`
+	PeriodEnd                 pgtype.Timestamptz `json:"period_end"`
+	BillingCycle              *string            `json:"billing_cycle"`
+	BillingTimezone           string             `json:"billing_timezone"`
+	BillToSnapshot            []byte             `json:"bill_to_snapshot"`
+	ClientSnapshot            []byte             `json:"client_snapshot"`
+	Currency                  string             `json:"currency"`
+	DetailsSnapshot           []byte             `json:"details_snapshot"`
+	NetTotalAmount            float64            `json:"net_total_amount"`
+	VatTotalAmount            float64            `json:"vat_total_amount"`
+	GrossTotalAmount          float64            `json:"gross_total_amount"`
 	PdfAttachmentID           *uuid.UUID         `json:"pdf_attachment_id"`
 	ExtraContent              []byte             `json:"extra_content"`
 	ClientID                  uuid.UUID          `json:"client_id"`
-	SenderID                  *uuid.UUID         `json:"sender_id"`
+	SenderID                  uuid.UUID          `json:"sender_id"`
 	WarningCount              int32              `json:"warning_count"`
+	RunID                     *uuid.UUID         `json:"run_id"`
+	LockedAt                  pgtype.Timestamptz `json:"locked_at"`
+	CalcVersion               int32              `json:"calc_version"`
+	CalcMetadata              []byte             `json:"calc_metadata"`
 	UpdatedAt                 pgtype.Timestamptz `json:"updated_at"`
 	CreatedAt                 pgtype.Timestamptz `json:"created_at"`
 	SenderName                *string            `json:"sender_name"`
@@ -255,14 +564,29 @@ func (q *Queries) GetInvoice(ctx context.Context, id uuid.UUID) (GetInvoiceRow, 
 		&i.DueDate,
 		&i.Status,
 		&i.InvoiceType,
+		&i.Source,
 		&i.OriginalInvoiceID,
-		&i.InvoiceDetails,
-		&i.TotalAmount,
+		&i.ReplacesInvoiceID,
+		&i.PeriodStart,
+		&i.PeriodEnd,
+		&i.BillingCycle,
+		&i.BillingTimezone,
+		&i.BillToSnapshot,
+		&i.ClientSnapshot,
+		&i.Currency,
+		&i.DetailsSnapshot,
+		&i.NetTotalAmount,
+		&i.VatTotalAmount,
+		&i.GrossTotalAmount,
 		&i.PdfAttachmentID,
 		&i.ExtraContent,
 		&i.ClientID,
 		&i.SenderID,
 		&i.WarningCount,
+		&i.RunID,
+		&i.LockedAt,
+		&i.CalcVersion,
+		&i.CalcMetadata,
 		&i.UpdatedAt,
 		&i.CreatedAt,
 		&i.SenderName,
@@ -346,9 +670,9 @@ FROM invoice
 WHERE id = $1
 `
 
-func (q *Queries) GetInvoiceSenderID(ctx context.Context, id uuid.UUID) (*uuid.UUID, error) {
+func (q *Queries) GetInvoiceSenderID(ctx context.Context, id uuid.UUID) (uuid.UUID, error) {
 	row := q.db.QueryRow(ctx, getInvoiceSenderID, id)
-	var sender_id *uuid.UUID
+	var sender_id uuid.UUID
 	err := row.Scan(&sender_id)
 	return sender_id, err
 }
@@ -418,9 +742,9 @@ func (q *Queries) GetPayment(ctx context.Context, id uuid.UUID) (GetPaymentRow, 
 }
 
 const getPaymentWithInvoice = `-- name: GetPaymentWithInvoice :one
-SELECT 
+SELECT
     p.id, p.invoice_id, p.payment_method, p.payment_status, p.amount, p.payment_date, p.payment_reference, p.notes, p.recorded_by, p.created_at, p.updated_at,
-    i.total_amount as invoice_total_amount,
+    i.gross_total_amount as invoice_total_amount,
     i.status as invoice_status
 FROM invoice_payment_history p
 JOIN invoice i ON p.invoice_id = i.id
@@ -465,10 +789,10 @@ func (q *Queries) GetPaymentWithInvoice(ctx context.Context, id uuid.UUID) (GetP
 }
 
 const getTotalPaidAmountByInvoice = `-- name: GetTotalPaidAmountByInvoice :one
-SELECT 
+SELECT
     COALESCE(SUM(amount), 0)::FLOAT AS total_paid
-FROM invoice_payment_history 
-WHERE invoice_id = $1 
+FROM invoice_payment_history
+WHERE invoice_id = $1
   AND payment_status = 'completed'
 `
 
@@ -479,12 +803,51 @@ func (q *Queries) GetTotalPaidAmountByInvoice(ctx context.Context, invoiceID uui
 	return total_paid, err
 }
 
+const insertBilledCalendarEvent = `-- name: InsertBilledCalendarEvent :one
+INSERT INTO billed_calendar_event (
+    calendar_event_id,
+    client_id,
+    invoice_id,
+    invoice_line_id
+) VALUES (
+    $1, $2, $3, $4
+) RETURNING id, calendar_event_id, client_id, invoice_id, invoice_line_id, voided_at, created_at
+`
+
+type InsertBilledCalendarEventParams struct {
+	CalendarEventID uuid.UUID `json:"calendar_event_id"`
+	ClientID        uuid.UUID `json:"client_id"`
+	InvoiceID       uuid.UUID `json:"invoice_id"`
+	InvoiceLineID   uuid.UUID `json:"invoice_line_id"`
+}
+
+func (q *Queries) InsertBilledCalendarEvent(ctx context.Context, arg InsertBilledCalendarEventParams) (BilledCalendarEvent, error) {
+	row := q.db.QueryRow(ctx, insertBilledCalendarEvent,
+		arg.CalendarEventID,
+		arg.ClientID,
+		arg.InvoiceID,
+		arg.InvoiceLineID,
+	)
+	var i BilledCalendarEvent
+	err := row.Scan(
+		&i.ID,
+		&i.CalendarEventID,
+		&i.ClientID,
+		&i.InvoiceID,
+		&i.InvoiceLineID,
+		&i.VoidedAt,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const insertIncoicePdfUrl = `-- name: InsertIncoicePdfUrl :one
-UPDATE invoice 
-SET 
-    pdf_attachment_id = $2  
+UPDATE invoice
+SET
+    pdf_attachment_id = $2
 WHERE
     id = $1
+    AND pdf_attachment_id IS NULL
 RETURNING invoice.pdf_attachment_id
 `
 
@@ -500,86 +863,255 @@ func (q *Queries) InsertIncoicePdfUrl(ctx context.Context, arg InsertIncoicePdfU
 	return pdf_attachment_id, err
 }
 
+const listInvoiceLinesByInvoice = `-- name: ListInvoiceLinesByInvoice :many
+SELECT id, invoice_id, client_id, sender_id, line_no, line_type, contract_id, service_type, description, period_start, period_end, quantity, unit, unit_price, net_amount, vat_rate, vat_amount, gross_amount, metadata, created_at
+FROM invoice_line
+WHERE invoice_id = $1
+ORDER BY line_no
+`
+
+func (q *Queries) ListInvoiceLinesByInvoice(ctx context.Context, invoiceID uuid.UUID) ([]InvoiceLine, error) {
+	rows, err := q.db.Query(ctx, listInvoiceLinesByInvoice, invoiceID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []InvoiceLine{}
+	for rows.Next() {
+		var i InvoiceLine
+		if err := rows.Scan(
+			&i.ID,
+			&i.InvoiceID,
+			&i.ClientID,
+			&i.SenderID,
+			&i.LineNo,
+			&i.LineType,
+			&i.ContractID,
+			&i.ServiceType,
+			&i.Description,
+			&i.PeriodStart,
+			&i.PeriodEnd,
+			&i.Quantity,
+			&i.Unit,
+			&i.UnitPrice,
+			&i.NetAmount,
+			&i.VatRate,
+			&i.VatAmount,
+			&i.GrossAmount,
+			&i.Metadata,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listInvoices = `-- name: ListInvoices :many
+WITH params AS (
+    SELECT
+        $1::text AS sort_by,
+        $2::text AS sort_dir
+),
+paid AS (
+    SELECT
+        iph.invoice_id,
+        COALESCE(SUM(CASE WHEN iph.payment_status = 'completed' THEN iph.amount ELSE 0 END), 0)::NUMERIC(20,2) AS paid_total_amount
+    FROM invoice_payment_history iph
+    GROUP BY iph.invoice_id
+),
+base AS (
+    SELECT
+        i.id,
+        i.invoice_number,
+        i.issue_date,
+        i.due_date,
+        i.status,
+        i.currency,
+        i.gross_total_amount,
+        i.client_id,
+        i.sender_id,
+        i.updated_at,
+
+        COALESCE(NULLIF(i.bill_to_snapshot->>'name', ''), s.name) AS sender_name,
+        COALESCE(NULLIF(i.client_snapshot->>'first_name', ''), cd.first_name) AS client_first_name,
+        COALESCE(NULLIF(i.client_snapshot->>'last_name', ''), cd.last_name) AS client_last_name,
+        COALESCE(NULLIF(i.client_snapshot->>'filenumber', ''), cd.filenumber) AS client_filenumber,
+
+        COALESCE(p.paid_total_amount, 0)::NUMERIC(20,2) AS paid_total_amount,
+        GREATEST(i.gross_total_amount - COALESCE(p.paid_total_amount, 0), 0)::NUMERIC(20,2) AS balance_due_amount,
+        CASE
+            WHEN i.gross_total_amount <= 0 THEN 0
+            ELSE ROUND((COALESCE(p.paid_total_amount, 0) / i.gross_total_amount) * 100, 2)
+        END::NUMERIC(10,2) AS payment_completion_prc,
+        COALESCE((i.due_date < CURRENT_DATE AND i.status NOT IN ('paid', 'canceled')), false)::boolean AS is_overdue
+    FROM invoice i
+    JOIN client_details cd ON i.client_id = cd.id
+    LEFT JOIN sender s ON i.sender_id = s.id
+    LEFT JOIN paid p ON p.invoice_id = i.id
+    WHERE
+        (i.client_id = $3 OR $3 IS NULL)
+        AND (i.sender_id = $4 OR $4 IS NULL)
+
+        AND (i.status = $5 OR $5 IS NULL)
+        AND ($6::invoice_status_enum[] IS NULL OR i.status = ANY($6::invoice_status_enum[]))
+
+        AND (i.source = $7 OR $7 IS NULL)
+        AND (i.invoice_type = $8 OR $8 IS NULL)
+        AND (i.run_id = $9 OR $9 IS NULL)
+
+        AND (i.issue_date >= $10 OR $10 IS NULL)
+        AND (i.issue_date <= $11 OR $11 IS NULL)
+
+        AND (i.period_start >= $12 OR $12 IS NULL)
+        AND (i.period_end <= $13 OR $13 IS NULL)
+
+        AND (i.warning_count >= $14 OR $14 IS NULL)
+
+        AND (
+            $15::boolean IS NULL
+            OR ($15 = true AND i.locked_at IS NOT NULL)
+            OR ($15 = false AND i.locked_at IS NULL)
+        )
+
+        AND (
+            $16::text IS NULL
+            OR i.invoice_number ILIKE ('%' || $16::text || '%')
+            OR COALESCE(NULLIF(i.bill_to_snapshot->>'name', ''), s.name) ILIKE ('%' || $16::text || '%')
+            OR COALESCE(NULLIF(i.client_snapshot->>'filenumber', ''), cd.filenumber) ILIKE ('%' || $16::text || '%')
+            OR (COALESCE(NULLIF(i.client_snapshot->>'first_name', ''), cd.first_name) || ' ' || COALESCE(NULLIF(i.client_snapshot->>'last_name', ''), cd.last_name)) ILIKE ('%' || $16::text || '%')
+        )
+),
+paged AS (
+    SELECT
+        b.id,
+        b.invoice_number,
+        b.issue_date,
+        b.due_date,
+        b.status,
+        b.currency,
+        b.gross_total_amount,
+        b.client_id,
+        b.sender_id,
+        b.updated_at,
+        b.sender_name,
+        b.client_first_name,
+        b.client_last_name,
+        b.client_filenumber,
+        b.paid_total_amount,
+        b.balance_due_amount,
+        b.is_overdue,
+        COUNT(*) OVER() AS total_count
+    FROM base b
+    CROSS JOIN params p
+    ORDER BY
+        CASE WHEN p.sort_by = 'updated_at' AND p.sort_dir = 'asc' THEN b.updated_at END ASC,
+        CASE WHEN p.sort_by = 'updated_at' AND p.sort_dir = 'desc' THEN b.updated_at END DESC,
+
+        CASE WHEN p.sort_by = 'issue_date' AND p.sort_dir = 'asc' THEN b.issue_date END ASC,
+        CASE WHEN p.sort_by = 'issue_date' AND p.sort_dir = 'desc' THEN b.issue_date END DESC,
+
+        CASE WHEN p.sort_by = 'due_date' AND p.sort_dir = 'asc' THEN b.due_date END ASC,
+        CASE WHEN p.sort_by = 'due_date' AND p.sort_dir = 'desc' THEN b.due_date END DESC,
+
+        CASE WHEN p.sort_by = 'invoice_number' AND p.sort_dir = 'asc' THEN b.invoice_number END ASC,
+        CASE WHEN p.sort_by = 'invoice_number' AND p.sort_dir = 'desc' THEN b.invoice_number END DESC,
+
+        CASE WHEN p.sort_by = 'gross_total_amount' AND p.sort_dir = 'asc' THEN b.gross_total_amount END ASC,
+        CASE WHEN p.sort_by = 'gross_total_amount' AND p.sort_dir = 'desc' THEN b.gross_total_amount END DESC,
+
+        CASE WHEN p.sort_by = 'balance_due_amount' AND p.sort_dir = 'asc' THEN b.balance_due_amount END ASC,
+        CASE WHEN p.sort_by = 'balance_due_amount' AND p.sort_dir = 'desc' THEN b.balance_due_amount END DESC,
+
+        b.updated_at DESC,
+        b.id DESC
+    LIMIT $18
+    OFFSET $17
+)
 SELECT
-    i.id, i.invoice_number, i.invoice_sequence, i.issue_date, i.due_date, i.status, i.invoice_type, i.original_invoice_id, i.invoice_details, i.total_amount, i.pdf_attachment_id, i.extra_content, i.client_id, i.sender_id, i.warning_count, i.updated_at, i.created_at,
-    COUNT(*) OVER() AS total_count,
-    s.name AS sender_name,
-    cd.first_name AS client_first_name,
-    cd.last_name AS client_last_name
-FROM
-    invoice i
-JOIN
-    client_details cd ON i.client_id = cd.id
-LEFT JOIN
-    sender s ON i.sender_id = s.id
-WHERE
-    -- Optional filter for client_id.
-    -- The filter is applied only if the @client_id parameter is not NULL.
-    (i.client_id = $1 OR $1 IS NULL)
-    
-    -- Optional filter for sender_id.
-    -- The filter is applied only if the @sender_id parameter is not NULL.
-    AND (i.sender_id = $2 OR $2 IS NULL)
-    
-    -- Optional filter for status.
-    -- The filter is applied only if the @status parameter is not NULL.
-    AND (i.status = $3 OR $3 IS NULL)
-    
-    -- Optional filter for the start of the issue_date range.
-    -- The filter is applied only if the @start_date parameter is not NULL.
-    AND (i.issue_date >= $4 OR $4 IS NULL)
-    
-    -- Optional filter for the end of the issue_date range.
-    -- The filter is applied only if the @end_date parameter is not NULL.
-    AND (i.issue_date <= $5 OR $5 IS NULL)
-ORDER BY
-    i.updated_at DESC
-LIMIT $7
-OFFSET $6
+    id,
+    invoice_number,
+    issue_date,
+    due_date,
+    status,
+    currency,
+    gross_total_amount,
+    paid_total_amount,
+    balance_due_amount,
+    is_overdue,
+    client_id,
+    sender_id,
+    sender_name,
+    client_first_name,
+    client_last_name,
+    client_filenumber,
+    total_count
+FROM paged
 `
 
 type ListInvoicesParams struct {
-	ClientID  *uuid.UUID            `json:"client_id"`
-	SenderID  *uuid.UUID            `json:"sender_id"`
-	Status    NullInvoiceStatusEnum `json:"status"`
-	StartDate pgtype.Date           `json:"start_date"`
-	EndDate   pgtype.Date           `json:"end_date"`
-	Offset    int32                 `json:"offset"`
-	Limit     int32                 `json:"limit"`
+	SortBy          string                `json:"sort_by"`
+	SortDir         string                `json:"sort_dir"`
+	ClientID        *uuid.UUID            `json:"client_id"`
+	SenderID        *uuid.UUID            `json:"sender_id"`
+	Status          NullInvoiceStatusEnum `json:"status"`
+	Statuses        []InvoiceStatusEnum   `json:"statuses"`
+	Source          NullInvoiceSourceEnum `json:"source"`
+	InvoiceType     NullInvoiceTypeEnum   `json:"invoice_type"`
+	RunID           *uuid.UUID            `json:"run_id"`
+	StartDate       pgtype.Date           `json:"start_date"`
+	EndDate         pgtype.Date           `json:"end_date"`
+	PeriodStart     pgtype.Timestamptz    `json:"period_start"`
+	PeriodEnd       pgtype.Timestamptz    `json:"period_end"`
+	MinWarningCount *int32                `json:"min_warning_count"`
+	Locked          *bool                 `json:"locked"`
+	Q               *string               `json:"q"`
+	Offset          int32                 `json:"offset"`
+	Limit           int32                 `json:"limit"`
 }
 
 type ListInvoicesRow struct {
-	ID                uuid.UUID          `json:"id"`
-	InvoiceNumber     string             `json:"invoice_number"`
-	InvoiceSequence   int64              `json:"invoice_sequence"`
-	IssueDate         pgtype.Date        `json:"issue_date"`
-	DueDate           pgtype.Date        `json:"due_date"`
-	Status            InvoiceStatusEnum  `json:"status"`
-	InvoiceType       InvoiceTypeEnum    `json:"invoice_type"`
-	OriginalInvoiceID *uuid.UUID         `json:"original_invoice_id"`
-	InvoiceDetails    []byte             `json:"invoice_details"`
-	TotalAmount       float64            `json:"total_amount"`
-	PdfAttachmentID   *uuid.UUID         `json:"pdf_attachment_id"`
-	ExtraContent      []byte             `json:"extra_content"`
-	ClientID          uuid.UUID          `json:"client_id"`
-	SenderID          *uuid.UUID         `json:"sender_id"`
-	WarningCount      int32              `json:"warning_count"`
-	UpdatedAt         pgtype.Timestamptz `json:"updated_at"`
-	CreatedAt         pgtype.Timestamptz `json:"created_at"`
-	TotalCount        int64              `json:"total_count"`
-	SenderName        *string            `json:"sender_name"`
-	ClientFirstName   string             `json:"client_first_name"`
-	ClientLastName    string             `json:"client_last_name"`
+	ID               uuid.UUID         `json:"id"`
+	InvoiceNumber    string            `json:"invoice_number"`
+	IssueDate        pgtype.Date       `json:"issue_date"`
+	DueDate          pgtype.Date       `json:"due_date"`
+	Status           InvoiceStatusEnum `json:"status"`
+	Currency         string            `json:"currency"`
+	GrossTotalAmount float64           `json:"gross_total_amount"`
+	PaidTotalAmount  float64           `json:"paid_total_amount"`
+	BalanceDueAmount float64           `json:"balance_due_amount"`
+	IsOverdue        bool              `json:"is_overdue"`
+	ClientID         uuid.UUID         `json:"client_id"`
+	SenderID         uuid.UUID         `json:"sender_id"`
+	SenderName       string            `json:"sender_name"`
+	ClientFirstName  string            `json:"client_first_name"`
+	ClientLastName   string            `json:"client_last_name"`
+	ClientFilenumber string            `json:"client_filenumber"`
+	TotalCount       int64             `json:"total_count"`
 }
 
 func (q *Queries) ListInvoices(ctx context.Context, arg ListInvoicesParams) ([]ListInvoicesRow, error) {
 	rows, err := q.db.Query(ctx, listInvoices,
+		arg.SortBy,
+		arg.SortDir,
 		arg.ClientID,
 		arg.SenderID,
 		arg.Status,
+		arg.Statuses,
+		arg.Source,
+		arg.InvoiceType,
+		arg.RunID,
 		arg.StartDate,
 		arg.EndDate,
+		arg.PeriodStart,
+		arg.PeriodEnd,
+		arg.MinWarningCount,
+		arg.Locked,
+		arg.Q,
 		arg.Offset,
 		arg.Limit,
 	)
@@ -593,25 +1125,21 @@ func (q *Queries) ListInvoices(ctx context.Context, arg ListInvoicesParams) ([]L
 		if err := rows.Scan(
 			&i.ID,
 			&i.InvoiceNumber,
-			&i.InvoiceSequence,
 			&i.IssueDate,
 			&i.DueDate,
 			&i.Status,
-			&i.InvoiceType,
-			&i.OriginalInvoiceID,
-			&i.InvoiceDetails,
-			&i.TotalAmount,
-			&i.PdfAttachmentID,
-			&i.ExtraContent,
+			&i.Currency,
+			&i.GrossTotalAmount,
+			&i.PaidTotalAmount,
+			&i.BalanceDueAmount,
+			&i.IsOverdue,
 			&i.ClientID,
 			&i.SenderID,
-			&i.WarningCount,
-			&i.UpdatedAt,
-			&i.CreatedAt,
-			&i.TotalCount,
 			&i.SenderName,
 			&i.ClientFirstName,
 			&i.ClientLastName,
+			&i.ClientFilenumber,
+			&i.TotalCount,
 		); err != nil {
 			return nil, err
 		}
@@ -693,24 +1221,57 @@ UPDATE invoice
 SET
     issue_date = COALESCE($2, issue_date),
     due_date = COALESCE($3, due_date),
-    invoice_details = COALESCE($4, invoice_details),
-    total_amount = COALESCE($5, total_amount),
-    extra_content = COALESCE($6, extra_content),
-    status = COALESCE($7, status),
-    warning_count = COALESCE($8, warning_count)
+    period_start = COALESCE($4, period_start),
+    period_end = COALESCE($5, period_end),
+    billing_cycle = COALESCE($6, billing_cycle),
+    billing_timezone = COALESCE($7, billing_timezone),
+    source = COALESCE($8, source),
+    original_invoice_id = COALESCE($9, original_invoice_id),
+    replaces_invoice_id = COALESCE($10, replaces_invoice_id),
+    bill_to_snapshot = COALESCE($11, bill_to_snapshot),
+    client_snapshot = COALESCE($12, client_snapshot),
+    details_snapshot = COALESCE($13, details_snapshot),
+    net_total_amount = COALESCE($14, net_total_amount),
+    vat_total_amount = COALESCE($15, vat_total_amount),
+    gross_total_amount = COALESCE($16, gross_total_amount),
+    currency = COALESCE($17, currency),
+    extra_content = COALESCE($18, extra_content),
+    status = COALESCE($19, status),
+    warning_count = COALESCE($20, warning_count),
+    run_id = COALESCE($21, run_id),
+    locked_at = COALESCE($22, locked_at),
+    calc_version = COALESCE($23, calc_version),
+    calc_metadata = COALESCE($24, calc_metadata),
+    updated_at = CURRENT_TIMESTAMP
 WHERE id = $1
-RETURNING id, invoice_number, invoice_sequence, issue_date, due_date, status, invoice_type, original_invoice_id, invoice_details, total_amount, pdf_attachment_id, extra_content, client_id, sender_id, warning_count, updated_at, created_at
+RETURNING id, invoice_number, invoice_sequence, issue_date, due_date, status, invoice_type, source, original_invoice_id, replaces_invoice_id, period_start, period_end, billing_cycle, billing_timezone, bill_to_snapshot, client_snapshot, currency, details_snapshot, net_total_amount, vat_total_amount, gross_total_amount, pdf_attachment_id, extra_content, client_id, sender_id, warning_count, run_id, locked_at, calc_version, calc_metadata, updated_at, created_at
 `
 
 type UpdateInvoiceParams struct {
-	ID             uuid.UUID             `json:"id"`
-	IssueDate      pgtype.Date           `json:"issue_date"`
-	DueDate        pgtype.Date           `json:"due_date"`
-	InvoiceDetails []byte                `json:"invoice_details"`
-	TotalAmount    *float64              `json:"total_amount"`
-	ExtraContent   []byte                `json:"extra_content"`
-	Status         NullInvoiceStatusEnum `json:"status"`
-	WarningCount   *int32                `json:"warning_count"`
+	ID                uuid.UUID             `json:"id"`
+	IssueDate         pgtype.Date           `json:"issue_date"`
+	DueDate           pgtype.Date           `json:"due_date"`
+	PeriodStart       pgtype.Timestamptz    `json:"period_start"`
+	PeriodEnd         pgtype.Timestamptz    `json:"period_end"`
+	BillingCycle      *string               `json:"billing_cycle"`
+	BillingTimezone   *string               `json:"billing_timezone"`
+	Source            NullInvoiceSourceEnum `json:"source"`
+	OriginalInvoiceID *uuid.UUID            `json:"original_invoice_id"`
+	ReplacesInvoiceID *uuid.UUID            `json:"replaces_invoice_id"`
+	BillToSnapshot    []byte                `json:"bill_to_snapshot"`
+	ClientSnapshot    []byte                `json:"client_snapshot"`
+	DetailsSnapshot   []byte                `json:"details_snapshot"`
+	NetTotalAmount    *float64              `json:"net_total_amount"`
+	VatTotalAmount    *float64              `json:"vat_total_amount"`
+	GrossTotalAmount  *float64              `json:"gross_total_amount"`
+	Currency          *string               `json:"currency"`
+	ExtraContent      []byte                `json:"extra_content"`
+	Status            NullInvoiceStatusEnum `json:"status"`
+	WarningCount      *int32                `json:"warning_count"`
+	RunID             *uuid.UUID            `json:"run_id"`
+	LockedAt          pgtype.Timestamptz    `json:"locked_at"`
+	CalcVersion       *int32                `json:"calc_version"`
+	CalcMetadata      []byte                `json:"calc_metadata"`
 }
 
 func (q *Queries) UpdateInvoice(ctx context.Context, arg UpdateInvoiceParams) (Invoice, error) {
@@ -718,11 +1279,27 @@ func (q *Queries) UpdateInvoice(ctx context.Context, arg UpdateInvoiceParams) (I
 		arg.ID,
 		arg.IssueDate,
 		arg.DueDate,
-		arg.InvoiceDetails,
-		arg.TotalAmount,
+		arg.PeriodStart,
+		arg.PeriodEnd,
+		arg.BillingCycle,
+		arg.BillingTimezone,
+		arg.Source,
+		arg.OriginalInvoiceID,
+		arg.ReplacesInvoiceID,
+		arg.BillToSnapshot,
+		arg.ClientSnapshot,
+		arg.DetailsSnapshot,
+		arg.NetTotalAmount,
+		arg.VatTotalAmount,
+		arg.GrossTotalAmount,
+		arg.Currency,
 		arg.ExtraContent,
 		arg.Status,
 		arg.WarningCount,
+		arg.RunID,
+		arg.LockedAt,
+		arg.CalcVersion,
+		arg.CalcMetadata,
 	)
 	var i Invoice
 	err := row.Scan(
@@ -733,15 +1310,106 @@ func (q *Queries) UpdateInvoice(ctx context.Context, arg UpdateInvoiceParams) (I
 		&i.DueDate,
 		&i.Status,
 		&i.InvoiceType,
+		&i.Source,
 		&i.OriginalInvoiceID,
-		&i.InvoiceDetails,
-		&i.TotalAmount,
+		&i.ReplacesInvoiceID,
+		&i.PeriodStart,
+		&i.PeriodEnd,
+		&i.BillingCycle,
+		&i.BillingTimezone,
+		&i.BillToSnapshot,
+		&i.ClientSnapshot,
+		&i.Currency,
+		&i.DetailsSnapshot,
+		&i.NetTotalAmount,
+		&i.VatTotalAmount,
+		&i.GrossTotalAmount,
 		&i.PdfAttachmentID,
 		&i.ExtraContent,
 		&i.ClientID,
 		&i.SenderID,
 		&i.WarningCount,
+		&i.RunID,
+		&i.LockedAt,
+		&i.CalcVersion,
+		&i.CalcMetadata,
 		&i.UpdatedAt,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const updateInvoiceRun = `-- name: UpdateInvoiceRun :one
+UPDATE invoice_run
+SET
+    status = COALESCE($2, status),
+    finished_at = COALESCE($3, finished_at)
+WHERE id = $1
+RETURNING id, billing_cycle, period_start, period_end, timezone, dry_run, status, params, started_at, finished_at, created_by
+`
+
+type UpdateInvoiceRunParams struct {
+	ID         uuid.UUID                `json:"id"`
+	Status     NullInvoiceRunStatusEnum `json:"status"`
+	FinishedAt pgtype.Timestamptz       `json:"finished_at"`
+}
+
+func (q *Queries) UpdateInvoiceRun(ctx context.Context, arg UpdateInvoiceRunParams) (InvoiceRun, error) {
+	row := q.db.QueryRow(ctx, updateInvoiceRun, arg.ID, arg.Status, arg.FinishedAt)
+	var i InvoiceRun
+	err := row.Scan(
+		&i.ID,
+		&i.BillingCycle,
+		&i.PeriodStart,
+		&i.PeriodEnd,
+		&i.Timezone,
+		&i.DryRun,
+		&i.Status,
+		&i.Params,
+		&i.StartedAt,
+		&i.FinishedAt,
+		&i.CreatedBy,
+	)
+	return i, err
+}
+
+const updateInvoiceRunItem = `-- name: UpdateInvoiceRunItem :one
+UPDATE invoice_run_item
+SET
+    status = COALESCE($2, status),
+    invoice_id = COALESCE($3, invoice_id),
+    error = COALESCE($4, error),
+    warnings = COALESCE($5, warnings)
+WHERE id = $1
+RETURNING id, run_id, client_id, sender_id, status, invoice_id, error, warnings, created_at
+`
+
+type UpdateInvoiceRunItemParams struct {
+	ID        uuid.UUID                    `json:"id"`
+	Status    NullInvoiceRunItemStatusEnum `json:"status"`
+	InvoiceID *uuid.UUID                   `json:"invoice_id"`
+	Error     *string                      `json:"error"`
+	Warnings  []byte                       `json:"warnings"`
+}
+
+func (q *Queries) UpdateInvoiceRunItem(ctx context.Context, arg UpdateInvoiceRunItemParams) (InvoiceRunItem, error) {
+	row := q.db.QueryRow(ctx, updateInvoiceRunItem,
+		arg.ID,
+		arg.Status,
+		arg.InvoiceID,
+		arg.Error,
+		arg.Warnings,
+	)
+	var i InvoiceRunItem
+	err := row.Scan(
+		&i.ID,
+		&i.RunID,
+		&i.ClientID,
+		&i.SenderID,
+		&i.Status,
+		&i.InvoiceID,
+		&i.Error,
+		&i.Warnings,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -753,7 +1421,7 @@ SET
     status = $2,
     updated_at = CURRENT_TIMESTAMP
 WHERE id = $1
-RETURNING id, invoice_number, invoice_sequence, issue_date, due_date, status, invoice_type, original_invoice_id, invoice_details, total_amount, pdf_attachment_id, extra_content, client_id, sender_id, warning_count, updated_at, created_at
+RETURNING id, invoice_number, invoice_sequence, issue_date, due_date, status, invoice_type, source, original_invoice_id, replaces_invoice_id, period_start, period_end, billing_cycle, billing_timezone, bill_to_snapshot, client_snapshot, currency, details_snapshot, net_total_amount, vat_total_amount, gross_total_amount, pdf_attachment_id, extra_content, client_id, sender_id, warning_count, run_id, locked_at, calc_version, calc_metadata, updated_at, created_at
 `
 
 type UpdateInvoiceStatusParams struct {
@@ -772,14 +1440,29 @@ func (q *Queries) UpdateInvoiceStatus(ctx context.Context, arg UpdateInvoiceStat
 		&i.DueDate,
 		&i.Status,
 		&i.InvoiceType,
+		&i.Source,
 		&i.OriginalInvoiceID,
-		&i.InvoiceDetails,
-		&i.TotalAmount,
+		&i.ReplacesInvoiceID,
+		&i.PeriodStart,
+		&i.PeriodEnd,
+		&i.BillingCycle,
+		&i.BillingTimezone,
+		&i.BillToSnapshot,
+		&i.ClientSnapshot,
+		&i.Currency,
+		&i.DetailsSnapshot,
+		&i.NetTotalAmount,
+		&i.VatTotalAmount,
+		&i.GrossTotalAmount,
 		&i.PdfAttachmentID,
 		&i.ExtraContent,
 		&i.ClientID,
 		&i.SenderID,
 		&i.WarningCount,
+		&i.RunID,
+		&i.LockedAt,
+		&i.CalcVersion,
+		&i.CalcMetadata,
 		&i.UpdatedAt,
 		&i.CreatedAt,
 	)
@@ -787,8 +1470,8 @@ func (q *Queries) UpdateInvoiceStatus(ctx context.Context, arg UpdateInvoiceStat
 }
 
 const updatePayment = `-- name: UpdatePayment :one
-UPDATE invoice_payment_history 
-SET 
+UPDATE invoice_payment_history
+SET
     payment_method = COALESCE($1, payment_method),
     payment_status = COALESCE($2, payment_status),
     amount = COALESCE($3, amount),
@@ -838,4 +1521,16 @@ func (q *Queries) UpdatePayment(ctx context.Context, arg UpdatePaymentParams) (I
 		&i.UpdatedAt,
 	)
 	return i, err
+}
+
+const voidBilledCalendarEventsByInvoice = `-- name: VoidBilledCalendarEventsByInvoice :exec
+UPDATE billed_calendar_event
+SET voided_at = CURRENT_TIMESTAMP
+WHERE invoice_id = $1
+  AND voided_at IS NULL
+`
+
+func (q *Queries) VoidBilledCalendarEventsByInvoice(ctx context.Context, invoiceID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, voidBilledCalendarEventsByInvoice, invoiceID)
+	return err
 }

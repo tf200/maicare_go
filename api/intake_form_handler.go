@@ -1,6 +1,7 @@
 package api
 
 import (
+	"errors"
 	"fmt"
 	_ "maicare_go/pagination"
 	clientp "maicare_go/service/client"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 )
 
 // @Summary Create Intake Form
@@ -69,6 +71,24 @@ func (s *Server) ListIntakeFormsApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
+// @Summary Get Intake Form Totals
+// @Description Retrieve totals for further investigation intakes and intakes without goals.
+// @Tags Intake Forms
+// @Produce json
+// @Success 200 {object} Response[clientp.GetIntakeFormTotalsResponse]
+// @Failure 500 {object} Response[any]
+// @Router /intake_forms/totals [get]
+func (s *Server) GetIntakeFormTotalsApi(ctx *gin.Context) {
+	result, err := s.businessService.ClientService.GetIntakeFormTotals(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(result, "Intake Form totals retrieved successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
 // @Summary Get Intake Form
 // @Description Retrieve an intake form by ID with related details.
 // @Tags Intake Forms
@@ -95,8 +115,57 @@ func (s *Server) GetIntakeFormApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
-// @Summary Create Intake Form Goals
-// @Description Batch create intake maturity assessments (goals) for an intake form.
+// @Summary Update Intake Form
+// @Description Partially update editable intake form fields.
+// @Tags Intake Forms
+// @Accept json
+// @Produce json
+// @Param id path uuid true "Intake Form ID"
+// @Param request body clientp.UpdateIntakeFormRequest true "Intake form update payload"
+// @Success 200 {object} Response[clientp.UpdateIntakeFormResponse]
+// @Failure 400 {object} Response[any]
+// @Failure 404 {object} Response[any]
+// @Failure 409 {object} Response[any]
+// @Failure 500 {object} Response[any]
+// @Router /intake_forms/{id} [patch]
+func (s *Server) UpdateIntakeFormApi(ctx *gin.Context) {
+	intakeFormID, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	var req clientp.UpdateIntakeFormRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body")))
+		return
+	}
+
+	result, err := s.businessService.ClientService.UpdateIntakeForm(ctx, intakeFormID, &req)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			ctx.JSON(http.StatusNotFound, errorResponse(fmt.Errorf("intake form not found")))
+			return
+		}
+		if errors.Is(err, clientp.ErrIntakeFormUpdateBlockedByActiveClient) || errors.Is(err, clientp.ErrIntakeFormUpdateConflict) {
+			ctx.JSON(http.StatusConflict, errorResponse(err))
+			return
+		}
+		if errors.Is(err, clientp.ErrNoIntakeFormFieldsToUpdate) || errors.Is(err, clientp.ErrInvalidIntakeFormClearField) || strings.Contains(err.Error(), "invalid intake form update") {
+			ctx.JSON(http.StatusBadRequest, errorResponse(err))
+			return
+		}
+
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(result, "Intake Form updated successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
+// @Summary Replace Intake Form Goals
+// @Description Replace intake maturity assessments (goals) for an intake form.
 // @Tags Intake Forms
 // @Accept json
 // @Produce json
@@ -104,8 +173,10 @@ func (s *Server) GetIntakeFormApi(ctx *gin.Context) {
 // @Param request body clientp.CreateIntakeFormGoalsRequest true "Goals payload"
 // @Success 200 {object} Response[clientp.CreateIntakeFormGoalsResponse]
 // @Failure 400 {object} Response[any]
+// @Failure 404 {object} Response[any]
+// @Failure 409 {object} Response[any]
 // @Failure 500 {object} Response[any]
-// @Router /intake_forms/{id}/goals [post]
+// @Router /intake_forms/{id}/goals [put]
 func (s *Server) CreateIntakeFormGoalsApi(ctx *gin.Context) {
 	intakeFormID, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
@@ -121,11 +192,19 @@ func (s *Server) CreateIntakeFormGoalsApi(ctx *gin.Context) {
 
 	result, err := s.businessService.ClientService.CreateIntakeFormGoals(ctx, intakeFormID, &req)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			ctx.JSON(http.StatusNotFound, errorResponse(fmt.Errorf("intake form not found")))
+			return
+		}
+		if errors.Is(err, clientp.ErrIntakeGoalsUpdateBlockedByActiveClient) {
+			ctx.JSON(http.StatusConflict, errorResponse(err))
+			return
+		}
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	res := SuccessResponse(result, "Intake Form goals created successfully")
+	res := SuccessResponse(result, "Intake Form goals replaced successfully")
 	ctx.JSON(http.StatusOK, res)
 }
 
