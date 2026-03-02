@@ -64,7 +64,7 @@ func LoadConfig(path string) (config Config, err error) {
 		"SMTP_AUTH", "SMTP_HOST", "SMTP_PORT", "BREVO_SENDER_NAME",
 		"BREVO_SENDER_EMAIL", "BREVO_API_KEY", "ENVIRONMENT", "GRPC_URL",
 		"OPEN_ROUTER_API_KEY", "OPEN_ROUTER_MODEL",
-		"MIGRATIONS_PATH",
+		"MIGRATIONS_PATH", "ADMIN_EMAIL", "ADMIN_PASSWORD",
 	}
 
 	for _, envVar := range envVars {

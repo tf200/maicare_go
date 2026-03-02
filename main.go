@@ -101,6 +101,14 @@ func main() {
 	}
 
 	store := db.NewStore(conn)
+	if err := ensureAdminAccountOnStartup(ctx, store, config); err != nil {
+		if isConflictError(err) {
+			log.Printf("admin bootstrap conflict detected, continuing startup: %v", err)
+		} else {
+			log.Fatalf("admin bootstrap failed: %v", err)
+		}
+	}
+
 	var b2Client bucket.ObjectStorageInterface
 	if config.DisableBucket {
 		b2Client = bucket.NewNoopObjectStorageClient()
