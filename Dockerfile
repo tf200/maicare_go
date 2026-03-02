@@ -50,7 +50,7 @@ ENV CGO_CFLAGS="-I/opt/ortools/include"
 ENV CGO_LDFLAGS="-L/opt/ortools/lib -lortools -Wl,-rpath,/opt/ortools/lib"
 
 # Build the Go application
-RUN go build -ldflags="-s -w" -o main main.go
+RUN go build -ldflags="-s -w" -o main .
 
 # Stage 2: Final Image
 FROM debian:bookworm-slim
