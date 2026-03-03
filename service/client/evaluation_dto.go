@@ -1,4 +1,4 @@
-nlpackage clientp
+package clientp
 
 import (
 	"time"
