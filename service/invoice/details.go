@@ -51,12 +51,18 @@ func (s *invoiceService) CreateInvoice(ctx context.Context, req CreateInvoiceReq
 	if req.ClientID == uuid.Nil {
 		return nil, fmt.Errorf("client_id is required")
 	}
-	if req.SenderID == uuid.Nil {
-		return nil, fmt.Errorf("sender_id is required")
-	}
 	if len(req.Lines) == 0 {
 		return nil, fmt.Errorf("lines must not be empty")
 	}
+
+	client, err := s.Store.GetClientDetails(ctx, req.ClientID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load client details: %w", err)
+	}
+	if client.SenderID == nil || *client.SenderID == uuid.Nil {
+		return nil, fmt.Errorf("sender_id is not set for the client")
+	}
+	senderID := *client.SenderID
 
 	invoiceNumber, invoiceSequence, err := s.GenerateInvoiceNumber(ctx)
 	if err != nil {
@@ -76,21 +82,15 @@ func (s *invoiceService) CreateInvoice(ctx context.Context, req CreateInvoiceReq
 	}
 	qtx := s.Store.WithTx(tx)
 
-	billingTz := req.BillingTimezone
-	if billingTz == "" {
-		billingTz = DefaultBillingTimezone
-	}
-	currency := req.Currency
-	if currency == "" {
-		currency = "EUR"
-	}
+	billingTz := DefaultBillingTimezone
+	currency := "EUR"
 
 	inv, err := qtx.CreateInvoice(ctx, db.CreateInvoiceParams{
 		InvoiceNumber:     invoiceNumber,
 		InvoiceSequence:   invoiceSequence,
 		DueDate:           pgtype.Date{Time: req.DueDate, Valid: true},
 		IssueDate:         pgtype.Date{Time: req.IssueDate, Valid: true},
-		Status:            db.InvoiceStatusEnum(req.Status),
+		Status:            db.InvoiceStatusEnumConcept,
 		InvoiceType:       db.InvoiceTypeEnum(req.InvoiceType),
 		Source:            db.InvoiceSourceEnumManual,
 		OriginalInvoiceID: nil,
@@ -102,7 +102,7 @@ func (s *invoiceService) CreateInvoice(ctx context.Context, req CreateInvoiceReq
 		Currency:          currency,
 		ExtraContent:      util.ParseObjectToJSON(req.ExtraContent),
 		ClientID:          req.ClientID,
-		SenderID:          req.SenderID,
+		SenderID:          senderID,
 		WarningCount:      0,
 		RunID:             nil,
 	})
@@ -192,7 +192,7 @@ func (s *invoiceService) CreateInvoice(ctx context.Context, req CreateInvoiceReq
 		GrossTotalAmount:  &grossTotal,
 		Currency:          &currency,
 		ExtraContent:      nil,
-		Status:            db.NullInvoiceStatusEnum{Valid: true, InvoiceStatusEnum: db.InvoiceStatusEnum(req.Status)},
+		Status:            db.NullInvoiceStatusEnum{Valid: true, InvoiceStatusEnum: db.InvoiceStatusEnumConcept},
 		WarningCount:      nil,
 		RunID:             nil,
 		LockedAt:          pgtype.Timestamptz{Valid: false},

@@ -27,16 +27,12 @@ type InvoiceLineInput struct {
 
 // CreateInvoiceRequest represents the request body for creating an invoice.
 type CreateInvoiceRequest struct {
-	ClientID        uuid.UUID          `json:"client_id" binding:"required"`
-	SenderID        uuid.UUID          `json:"sender_id" binding:"required"`
-	InvoiceType     string             `json:"invoice_type" binding:"required,oneof=standard credit_note"`
-	IssueDate       time.Time          `json:"issue_date" binding:"required"`
-	DueDate         time.Time          `json:"due_date" binding:"required"`
-	Currency        string             `json:"currency"`
-	Lines           []InvoiceLineInput `json:"lines" binding:"required"`
-	ExtraContent    util.JSONObject    `json:"extra_content"`
-	Status          string             `json:"status" binding:"required,oneof=outstanding partially_paid paid expired overpaid imported concept canceled"`
-	BillingTimezone string             `json:"billing_timezone"`
+	ClientID     uuid.UUID          `json:"client_id" binding:"required"`
+	InvoiceType  string             `json:"invoice_type" binding:"required,oneof=standard credit_note"`
+	IssueDate    time.Time          `json:"issue_date" binding:"required"`
+	DueDate      time.Time          `json:"due_date" binding:"required"`
+	Lines        []InvoiceLineInput `json:"lines" binding:"required"`
+	ExtraContent util.JSONObject    `json:"extra_content"`
 }
 
 // CreateInvoiceResponse represents the response body for creating an invoice.

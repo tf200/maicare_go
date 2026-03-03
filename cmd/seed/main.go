@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -47,6 +48,16 @@ func main() {
 	defer cancel()
 
 	dsn := strings.TrimSpace(*dataSource)
+	if dsn == "" {
+		appEnvDSN, err := dbSourceFromAppEnv("app.env")
+		if err != nil {
+			if !errors.Is(err, os.ErrNotExist) {
+				log.Printf("[seed] warning: cannot read DB_SOURCE from app.env: %v", err)
+			}
+		} else {
+			dsn = strings.TrimSpace(appEnvDSN)
+		}
+	}
 	if dsn == "" {
 		dsn = strings.TrimSpace(os.Getenv("DB_SOURCE"))
 	}
@@ -168,4 +179,38 @@ func main() {
 		fmt.Printf("First ID: %s\n", seeder.data.RegistrationFormIDs[0])
 		fmt.Printf("Last ID:  %s\n", seeder.data.RegistrationFormIDs[len(seeder.data.RegistrationFormIDs)-1])
 	}
+}
+
+func dbSourceFromAppEnv(path string) (string, error) {
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+
+	for _, rawLine := range strings.Split(string(content), "\n") {
+		line := strings.TrimSpace(rawLine)
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+
+		if strings.HasPrefix(line, "export ") {
+			line = strings.TrimSpace(strings.TrimPrefix(line, "export "))
+		}
+
+		key, value, ok := strings.Cut(line, "=")
+		if !ok || strings.TrimSpace(key) != "DB_SOURCE" {
+			continue
+		}
+
+		value = strings.TrimSpace(value)
+		if len(value) >= 2 {
+			if (value[0] == '"' && value[len(value)-1] == '"') || (value[0] == '\'' && value[len(value)-1] == '\'') {
+				value = value[1 : len(value)-1]
+			}
+		}
+
+		return strings.TrimSpace(value), nil
+	}
+
+	return "", nil
 }

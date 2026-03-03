@@ -6,4 +6,4 @@ prod.env
 entrypoint.sh
 /admin
 *.env
-
+/cmd/deploy/
