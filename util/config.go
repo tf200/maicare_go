@@ -42,12 +42,15 @@ type Config struct {
 	MigrationsPath        string        `mapstructure:"MIGRATIONS_PATH"`
 	AdminEmail            string        `mapstructure:"ADMIN_EMAIL"`
 	AdminPassword         string        `mapstructure:"ADMIN_PASSWORD"`
+	WsAllowedOrigins      string        `mapstructure:"WS_ALLOWED_ORIGINS"`
+	WsTicketTTL           time.Duration `mapstructure:"WS_TICKET_TTL"`
 }
 
 func LoadConfig(path string) (config Config, err error) {
 	viper.AddConfigPath(path)
 	viper.SetConfigName("app")
 	viper.SetConfigType("env")
+	viper.SetDefault("WS_TICKET_TTL", "1m")
 
 	// Enable automatic environment variable reading
 	viper.AutomaticEnv()
@@ -65,6 +68,7 @@ func LoadConfig(path string) (config Config, err error) {
 		"BREVO_SENDER_EMAIL", "BREVO_API_KEY", "ENVIRONMENT", "GRPC_URL",
 		"OPEN_ROUTER_API_KEY", "OPEN_ROUTER_MODEL",
 		"MIGRATIONS_PATH", "ADMIN_EMAIL", "ADMIN_PASSWORD",
+		"WS_ALLOWED_ORIGINS", "WS_TICKET_TTL",
 	}
 
 	for _, envVar := range envVars {
@@ -129,6 +133,9 @@ func validateConfig(config *Config) error {
 	}
 	if config.RefreshTokenDuration <= 0 {
 		missingVars = append(missingVars, "REFRESH_TOKEN_DURATION")
+	}
+	if config.WsTicketTTL <= 0 {
+		missingVars = append(missingVars, "WS_TICKET_TTL")
 	}
 
 	if len(missingVars) > 0 {

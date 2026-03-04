@@ -40,6 +40,14 @@ type WebSocketMessage struct {
 	CreatedAt        time.Time        `json:"created_at"`
 }
 
+type WebSocketEnvelope[T any] struct {
+	Version string    `json:"v"`
+	ID      string    `json:"id"`
+	Type    string    `json:"type"`
+	TS      time.Time `json:"ts"`
+	Data    T         `json:"data"`
+}
+
 func (s *notificationService) CreateAndDeliver(ctx context.Context, payload NotificationPayload) error {
 	var firstError error
 
@@ -81,7 +89,15 @@ func (s *notificationService) CreateAndDeliver(ctx context.Context, payload Noti
 			CreatedAt:        notif.CreatedAt.Time,
 		}
 
-		wsPayload, err := json.Marshal(wsMsg)
+		envelope := WebSocketEnvelope[WebSocketMessage]{
+			Version: "1",
+			ID:      uuid.NewString(),
+			Type:    "notification.created",
+			TS:      time.Now().UTC(),
+			Data:    wsMsg,
+		}
+
+		wsPayload, err := json.Marshal(envelope)
 		if err != nil {
 			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "CreateAndDeliver", fmt.Sprintf("Error marshalling WebSocket message (Type: %s): %v", payload.Type, err))
 			// If we can't marshal this, we can't send it via WS.

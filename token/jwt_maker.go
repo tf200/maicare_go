@@ -28,9 +28,17 @@ func NewJWTMaker(accessTokenKey string, refreshTokenKey string, twoFATokenKey st
 }
 
 func (maker *JWTMaker) CreateToken(user_id uuid.UUID, employee_id uuid.UUID, duration time.Duration, tokenType TokenType) (string, *Payload, error) {
+	return maker.CreateTokenWithSessionID(user_id, employee_id, duration, tokenType, uuid.Nil)
+}
+
+func (maker *JWTMaker) CreateTokenWithSessionID(user_id uuid.UUID, employee_id uuid.UUID, duration time.Duration, tokenType TokenType, sessionID uuid.UUID) (string, *Payload, error) {
 	payload, err := NewPayload(user_id, employee_id, duration, tokenType)
 	if err != nil {
 		return "", payload, err
+	}
+
+	if sessionID != uuid.Nil {
+		payload.SessionID = sessionID
 	}
 
 	var secretKey string

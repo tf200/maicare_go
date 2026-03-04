@@ -128,20 +128,8 @@ func (c *Client) writePump() {
 			_, err = w.Write(message)
 			if err != nil {
 				log.Printf("Error writing message for user %d: %v", c.userID, err)
-				// Don't return immediately, try closing the writer
-			}
-
-			// Add queued chat messages to the current websocket message.
-			// This attempts to batch messages for efficiency.
-			n := len(c.send)
-			for i := 0; i < n; i++ {
-				// Add a newline separator if you want distinct messages in one frame
-				// _, _ = w.Write(newline)
-				_, err = w.Write(<-c.send)
-				if err != nil {
-					log.Printf("Error writing batched message for user %d: %v", c.userID, err)
-					// Don't return immediately
-				}
+				_ = w.Close()
+				return
 			}
 
 			if err := w.Close(); err != nil {

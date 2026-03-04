@@ -2,6 +2,7 @@ package api
 
 import (
 	"net/http"
+	"net/url"
 	"runtime/debug"
 	"time"
 
@@ -59,7 +60,7 @@ func (server *Server) requestLogger() gin.HandlerFunc {
 
 		// Add query string if present (be careful with sensitive data)
 		if raw != "" && server.config.Environment != "production" {
-			fields = append(fields, zap.String("query", raw))
+			fields = append(fields, zap.String("query", sanitizeQuery(raw)))
 		}
 
 		// Add error information if present
@@ -92,6 +93,22 @@ func (server *Server) requestLogger() gin.HandlerFunc {
 			server.logger.Warn("Slow HTTP Request", fields...)
 		}
 	}
+}
+
+func sanitizeQuery(raw string) string {
+	values, err := url.ParseQuery(raw)
+	if err != nil {
+		return ""
+	}
+
+	sensitive := []string{"ticket", "access_token", "token"}
+	for _, key := range sensitive {
+		if _, exists := values[key]; exists {
+			values.Set(key, "[REDACTED]")
+		}
+	}
+
+	return values.Encode()
 }
 
 func (server *Server) shouldLogRequest(statusCode int) bool {

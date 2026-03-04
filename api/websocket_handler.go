@@ -4,10 +4,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	"maicare_go/hub"
-	"maicare_go/infra"
-	"maicare_go/token"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -17,54 +16,32 @@ import (
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
-	// CheckOrigin determines whether a request from a different origin is allowed.
-	// In production, you should restrict this to your frontend's domain(s).
-	// Returning true allows all origins (useful for development).
-	CheckOrigin: func(r *http.Request) bool {
-		// TODO: Implement proper origin check for production
-		// Example:
-		// origin := r.Header.Get("Origin")
-		// allowedOrigins := []string{"http://localhost:3000", "https://yourfrontend.com"}
-		// for _, allowed := range allowedOrigins {
-		//     if origin == allowed {
-		//         return true
-		//     }
-		// }
-		// return false
-		log.Printf("Upgrading WebSocket connection from origin: %s", r.Header.Get("Origin"))
-		return true // Allow all origins for now
-	},
 }
 
 func (server *Server) handleWebSocket(ctx *gin.Context) {
-	// --- 1. Retrieve Authenticated User Payload ---
-	authPayloadValue, exists := ctx.Get(infra.AuthorizationPayloadKey)
-	if !exists {
-		// This should ideally not happen if AuthMiddleware is working correctly
-		log.Printf("Error: %s not found in context after AuthMiddleware", infra.AuthorizationPayloadKey)
-		ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorResponse(fmt.Errorf("missing auth payload"))) // Define ErrAuthPayloadMissing if needed
-		return
-	}
+	localUpgrader := upgrader
+	localUpgrader.CheckOrigin = server.checkWebSocketOrigin
 
-	authPayload, ok := authPayloadValue.(*token.Payload) // Adjust type assertion if your payload type is different
-	if !ok {
-		log.Printf("Error: Could not assert type of %s to *token.Payload", infra.AuthorizationPayloadKey)
-		ctx.AbortWithStatusJSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("wrong auth Payload"))) // Define ErrAuthPayloadType if needed
+	// --- 1. Authenticate via one-time WebSocket ticket ---
+	ticketValue := strings.TrimSpace(ctx.Query(wsTicketQueryKey))
+	authPayload, err := server.wsTicketManager.Consume(ctx, ticketValue)
+	if err != nil {
+		ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorResponse(fmt.Errorf("invalid websocket ticket")))
 		return
 	}
 
 	userID := authPayload.UserId // Extract user ID
-	log.Printf("Attempting WebSocket upgrade for authenticated user ID: %d", userID)
+	log.Printf("Attempting WebSocket upgrade for authenticated user ID: %s", userID)
 
 	// --- 2. Upgrade Connection ---
-	conn, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
+	conn, err := localUpgrader.Upgrade(ctx.Writer, ctx.Request, nil)
 	if err != nil {
 		// upgrader.Upgrade sends an HTTP error response itself if it fails
-		log.Printf("Failed to upgrade WebSocket connection for user %d: %v", userID, err)
+		log.Printf("Failed to upgrade WebSocket connection for user %s: %v", userID, err)
 		// No need to write further HTTP response here
 		return
 	}
-	log.Printf("WebSocket connection successfully upgraded for user ID: %d", userID)
+	log.Printf("WebSocket connection successfully upgraded for user ID: %s", userID)
 
 	// --- 3. Create and Register Client ---
 	// Create a new client instance associated with the hub and user ID
@@ -81,4 +58,37 @@ func (server *Server) handleWebSocket(ctx *gin.Context) {
 
 	// Note: From this point on, we don't use the gin context (ctx) to send responses.
 	// The connection is now a WebSocket managed by the client's pumps.
+}
+
+func (server *Server) checkWebSocketOrigin(r *http.Request) bool {
+	origin := strings.TrimSpace(r.Header.Get("Origin"))
+	if origin == "" {
+		return false
+	}
+
+	allowedOrigins := parseAllowedOrigins(server.config.WsAllowedOrigins)
+	if len(allowedOrigins) == 0 {
+		return server.config.Environment != "production"
+	}
+
+	for _, allowed := range allowedOrigins {
+		if strings.EqualFold(allowed, origin) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func parseAllowedOrigins(value string) []string {
+	parts := strings.Split(value, ",")
+	origins := make([]string, 0, len(parts))
+	for _, part := range parts {
+		trimmed := strings.TrimSpace(part)
+		if trimmed == "" {
+			continue
+		}
+		origins = append(origins, trimmed)
+	}
+	return origins
 }

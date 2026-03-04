@@ -20,5 +20,6 @@ func (t TokenType) String() string {
 
 type Maker interface {
 	CreateToken(user_id uuid.UUID, employee_id uuid.UUID, duration time.Duration, tokenType TokenType) (string, *Payload, error)
+	CreateTokenWithSessionID(user_id uuid.UUID, employee_id uuid.UUID, duration time.Duration, tokenType TokenType, sessionID uuid.UUID) (string, *Payload, error)
 	VerifyToken(token string) (*Payload, error)
 }

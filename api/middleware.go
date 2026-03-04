@@ -19,8 +19,7 @@ import (
 var (
 	ErrMissingAuthHeader = errors.New("authorization header is not provided")
 	ErrInvalidAuthFormat = errors.New("invalid authorization header format")
-
-	ErrMissingToken = errors.New("missing access token in header and query parameter") // New error for clarity
+	ErrMissingToken      = errors.New("missing access token in authorization header")
 )
 
 var ErrUnauthorizedRole = errors.New("role is not authorized to access this resource")
@@ -31,48 +30,32 @@ const (
 	RoleAdmin RoleID = 1
 )
 
-// Helper function to check if the request looks like a WebSocket upgrade request
-func isWebSocketUpgrade(ctx *gin.Context) bool {
-	// Standard headers for WebSocket upgrade requests (case-insensitive check recommended)
-	// Note: The 'Connection' header value might contain multiple comma-separated values.
-	return strings.ToLower(ctx.GetHeader("Upgrade")) == "websocket" &&
-		strings.Contains(strings.ToLower(ctx.GetHeader("Connection")), "upgrade")
-}
-
-// AuthMiddleware restricts query param auth to WebSocket requests only.
+// AuthMiddleware validates bearer access tokens for HTTP APIs.
 func (s *Server) AuthMiddleware() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var accessToken string
 
-		// 1. Try to get the token from the Authorization header (Primary Method)
+		// 1. Get token from Authorization header
 		authHeader := ctx.GetHeader(infra.AuthorizationHeaderKey)
-		if authHeader != "" {
-			fields := strings.Fields(authHeader)
-			if len(fields) < 2 {
-				ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorResponse(ErrInvalidAuthFormat))
-				return
-			}
-
-			authType := fields[0]
-			if !strings.EqualFold(authType, infra.AuthorizationTypeBearer) {
-				err := fmt.Errorf("unsupported authorization type: %s", authType)
-				ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorResponse(err))
-				return
-			}
-
-			accessToken = fields[1] // Token found in header
-
-		} else {
-			// 2. If Authorization header is missing, check if it's a WebSocket upgrade request
-			if isWebSocketUpgrade(ctx) {
-				// ONLY if it's a WS upgrade request, try getting token from query parameter
-				accessToken = ctx.Query(infra.AuthorizationQueryKey)
-				// If accessToken is still "" here, the next check will handle ErrMissingToken
-			}
-			// If header is missing AND it's NOT a WS upgrade request,
-			// accessToken remains "" and the check below will trigger ErrMissingToken,
-			// correctly enforcing header usage for non-WS requests.
+		if authHeader == "" {
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorResponse(ErrMissingToken))
+			return
 		}
+
+		fields := strings.Fields(authHeader)
+		if len(fields) < 2 {
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorResponse(ErrInvalidAuthFormat))
+			return
+		}
+
+		authType := fields[0]
+		if !strings.EqualFold(authType, infra.AuthorizationTypeBearer) {
+			err := fmt.Errorf("unsupported authorization type: %s", authType)
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorResponse(err))
+			return
+		}
+
+		accessToken = fields[1]
 
 		// 3. Check if we ultimately found a token through an ALLOWED method
 		if accessToken == "" {
@@ -88,6 +71,10 @@ func (s *Server) AuthMiddleware() gin.HandlerFunc {
 			// Handle specific token errors if needed (e.g., expired token)
 			// Example: if errors.Is(err, token.ErrExpiredToken) { ... }
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorResponse(err)) // Use the error from VerifyToken
+			return
+		}
+		if payload.TokenType != token.AccessToken {
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorResponse(token.ErrInvalidToken))
 			return
 		}
 		roles, err := s.businessService.AuthService.GetUserRoles(ctx, payload.UserId)

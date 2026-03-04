@@ -46,6 +46,7 @@ type Server struct {
 	tokenMaker      token.Maker
 	httpServer      *http.Server
 	hub             *hub.Hub
+	wsTicketManager *wsTicketManager
 	logger          *zap.Logger
 	grpClient       grpclient.GrpcClientInterface
 	businessService *service.BusinessService
@@ -68,6 +69,12 @@ func NewServer(hubInstance *hub.Hub,
 		grpClient:       grpcClient,
 		businessService: service,
 	}
+
+	wsTicketManager, err := newWSTicketManager(config)
+	if err != nil {
+		return nil, fmt.Errorf("cannot initialize websocket ticket manager: %w", err)
+	}
+	server.wsTicketManager = wsTicketManager
 
 	// Initialize swagger docs
 	docs.SwaggerInfo.Title = "Maicare API"
@@ -197,6 +204,12 @@ func (server *Server) Shutdown(ctx context.Context) error {
 			log.Printf("gRPC connection shutdown error: %v", err)
 		} else {
 			log.Println("gRPC connection closed successfully.")
+		}
+	}
+
+	if server.wsTicketManager != nil {
+		if err := server.wsTicketManager.Close(); err != nil {
+			log.Printf("ws ticket manager shutdown error: %v", err)
 		}
 	}
 

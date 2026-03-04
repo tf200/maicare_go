@@ -86,3 +86,22 @@ func TestInvalidJWTTokenAlgNone(t *testing.T) {
 	require.EqualError(t, err, ErrInvalidToken.Error())
 	require.Nil(t, payload)
 }
+
+func TestJWTMakerCreateTokenWithSessionID(t *testing.T) {
+	maker, err := NewJWTMaker(util.RandomString(32), util.RandomString(32), util.RandomString(32))
+	require.NoError(t, err)
+
+	userID := uuid.New()
+	employeeID := uuid.New()
+	sessionID := uuid.New()
+
+	token, payload, err := maker.CreateTokenWithSessionID(userID, employeeID, time.Minute, AccessToken, sessionID)
+	require.NoError(t, err)
+	require.NotEmpty(t, token)
+	require.NotNil(t, payload)
+	require.Equal(t, sessionID, payload.SessionID)
+
+	verifiedPayload, err := maker.VerifyToken(token)
+	require.NoError(t, err)
+	require.Equal(t, sessionID, verifiedPayload.SessionID)
+}

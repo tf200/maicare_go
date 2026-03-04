@@ -14,4 +14,5 @@ func (server *Server) setupAuthRoutes(baseRouter *gin.RouterGroup) {
 	authGroup.POST("/enable_2fa", server.AuthMiddleware(), server.Enable2FAHandler)
 
 	authGroup.POST("/change_password", server.AuthMiddleware(), server.ChangePasswordApi)
+	authGroup.POST("/ws-ticket", server.AuthMiddleware(), server.CreateWebSocketTicketApi)
 }

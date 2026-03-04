@@ -57,17 +57,17 @@ func (s *authService) Login(req LoginUserRequest, clientIP string,
 		}, nil
 	}
 
-	accessToken, _, err := s.TokenMaker.CreateToken(user.ID, user.EmployeeID,
-		s.Config.AccessTokenDuration, token.AccessToken)
-	if err != nil {
-		s.Logger.LogError(ctx, "Login", "Failed to create access token", err, zap.String("email", email))
-		return nil, fmt.Errorf("failed to create access token")
-	}
-
 	refreshToken, payload, err := s.TokenMaker.CreateToken(user.ID, user.EmployeeID, s.Config.RefreshTokenDuration, token.RefreshToken)
 	if err != nil {
 		s.Logger.LogError(ctx, "Login", "Failed to create refresh token", err, zap.String("email", email))
 		return nil, fmt.Errorf("failed to create refresh token: %v", err)
+	}
+
+	accessToken, _, err := s.TokenMaker.CreateTokenWithSessionID(user.ID, user.EmployeeID,
+		s.Config.AccessTokenDuration, token.AccessToken, payload.ID)
+	if err != nil {
+		s.Logger.LogError(ctx, "Login", "Failed to create access token", err, zap.String("email", email))
+		return nil, fmt.Errorf("failed to create access token")
 	}
 
 	session, err := s.Store.CreateSession(ctx, db.CreateSessionParams{
@@ -139,8 +139,8 @@ func (s *authService) RefreshToken(req RefreshTokenRequest, ctx context.Context)
 		return nil, ErrUnauthorized
 	}
 
-	accessToken, _, err := s.TokenMaker.CreateToken(payload.UserId, payload.EmployeeID,
-		s.Config.AccessTokenDuration, token.AccessToken)
+	accessToken, _, err := s.TokenMaker.CreateTokenWithSessionID(payload.UserId, payload.EmployeeID,
+		s.Config.AccessTokenDuration, token.AccessToken, payload.ID)
 	if err != nil {
 		s.Logger.LogError(ctx, "RefreshToken", "Failed to create access token", err,
 			zap.String("user_id", payload.UserId.String()))
@@ -188,18 +188,18 @@ func (s *authService) VerifyTwoFAToken(req Verify2FARequest, clientIP string, us
 			zap.String("user_id", user.ID.String()))
 		return nil, ErrUnauthorized
 	}
-	accessToken, _, err := s.TokenMaker.CreateToken(user.ID, user.EmployeeID, s.Config.AccessTokenDuration, token.AccessToken)
-	if err != nil {
-		s.Logger.LogError(ctx, "VerifyTwoFAToken", "Failed to create access token", err,
-			zap.String("user_id", user.ID.String()))
-		return nil, fmt.Errorf("failed to create access token: %v", err)
-	}
-
 	refreshToken, payload, err := s.TokenMaker.CreateToken(user.ID, user.EmployeeID, s.Config.RefreshTokenDuration, token.RefreshToken)
 	if err != nil {
 		s.Logger.LogError(ctx, "VerifyTwoFAToken", "Failed to create refresh token", err,
 			zap.String("user_id", user.ID.String()))
 		return nil, fmt.Errorf("failed to create refresh token: %v", err)
+	}
+
+	accessToken, _, err := s.TokenMaker.CreateTokenWithSessionID(user.ID, user.EmployeeID, s.Config.AccessTokenDuration, token.AccessToken, payload.ID)
+	if err != nil {
+		s.Logger.LogError(ctx, "VerifyTwoFAToken", "Failed to create access token", err,
+			zap.String("user_id", user.ID.String()))
+		return nil, fmt.Errorf("failed to create access token: %v", err)
 	}
 
 	session, err := s.Store.CreateSession(ctx, db.CreateSessionParams{
@@ -228,24 +228,24 @@ func (s *authService) VerifyTwoFAToken(req Verify2FARequest, clientIP string, us
 }
 
 type LogoutRequest struct {
-	PayloadID uuid.UUID
+	SessionID uuid.UUID
 }
 
 func (s *authService) Logout(req LogoutRequest, ctx context.Context) error {
-	err := s.Store.DeleteSession(ctx, req.PayloadID)
+	err := s.Store.DeleteSession(ctx, req.SessionID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			s.Logger.LogWarn(ctx, "Logout", "Session not found during logout",
-				zap.String("session_id", req.PayloadID.String()))
+				zap.String("session_id", req.SessionID.String()))
 			return ErrSessionNotFound
 		}
 		s.Logger.LogError(ctx, "Logout", "Database error during session deletion", err,
-			zap.String("session_id", req.PayloadID.String()))
+			zap.String("session_id", req.SessionID.String()))
 		return fmt.Errorf("failed to delete session: %v", err)
 	}
 
 	s.Logger.LogInfo(ctx, "Logout", "User logged out successfully",
-		zap.String("session_id", req.PayloadID.String()))
+		zap.String("session_id", req.SessionID.String()))
 
 	return nil
 }

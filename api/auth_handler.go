@@ -3,10 +3,12 @@ package api
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"maicare_go/service/auth"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 // @Summary Generate authentication tokens
@@ -108,8 +110,12 @@ func (server *Server) LogOutApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
 		return
 	}
+	sessionID := payload.SessionID
+	if sessionID == (uuid.UUID{}) {
+		sessionID = payload.ID
+	}
 	err = server.businessService.AuthService.Logout(auth.LogoutRequest{
-		PayloadID: payload.ID,
+		SessionID: sessionID,
 	}, ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
@@ -218,5 +224,32 @@ func (server *Server) Enable2FAHandler(ctx *gin.Context) {
 	}
 
 	res := SuccessResponse(result, "2FA enabled successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
+type CreateWebSocketTicketResponse struct {
+	Ticket    string `json:"ticket"`
+	ExpiresAt string `json:"expires_at"`
+	WSPath    string `json:"ws_path"`
+}
+
+func (server *Server) CreateWebSocketTicketApi(ctx *gin.Context) {
+	payload, err := GetAuthPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
+	ticketValue, expiresAt, err := server.wsTicketManager.Issue(ctx, payload)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create websocket ticket")))
+		return
+	}
+
+	res := SuccessResponse(CreateWebSocketTicketResponse{
+		Ticket:    ticketValue,
+		ExpiresAt: expiresAt.UTC().Format(time.RFC3339),
+		WSPath:    "/ws",
+	}, "websocket ticket issued")
 	ctx.JSON(http.StatusOK, res)
 }

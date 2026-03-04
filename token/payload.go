@@ -8,7 +8,8 @@ import (
 )
 
 type Payload struct {
-	ID         uuid.UUID
+	ID         uuid.UUID `json:"id"`
+	SessionID  uuid.UUID `json:"session_id"`
 	UserId     uuid.UUID `json:"user_id"`
 	EmployeeID uuid.UUID `json:"employee_id"`
 	TokenType  TokenType `json:"token_type"`
@@ -32,6 +33,7 @@ func NewPayload(user_id uuid.UUID, employee_id uuid.UUID, duration time.Duration
 	now := time.Now()
 	payload := &Payload{
 		ID:         tokenID,
+		SessionID:  tokenID,
 		EmployeeID: employee_id,
 		UserId:     user_id,
 		TokenType:  tokenType,
