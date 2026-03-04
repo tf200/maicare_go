@@ -425,6 +425,222 @@ func (s *invoiceService) UpdateInvoice(ctx context.Context, invoiceID uuid.UUID,
 	}
 	qtx := s.Store.WithTx(tx)
 
+	inv, err := qtx.GetInvoice(ctx, invoiceID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get invoice: %w", err)
+	}
+
+	var detailsSnapshot []byte
+	var netTotalAmount, vatTotalAmount, grossTotalAmount *float64
+
+	if req.Lines != nil {
+		if len(req.Lines) == 0 {
+			return nil, fmt.Errorf("lines must not be empty")
+		}
+		if inv.Source == db.InvoiceSourceEnumImported {
+			return nil, fmt.Errorf("cannot update invoice lines for imported invoices")
+		}
+		if inv.InvoiceType == db.InvoiceTypeEnumCreditNote {
+			return nil, fmt.Errorf("cannot update invoice lines for credit notes")
+		}
+		if inv.Status == db.InvoiceStatusEnumCanceled {
+			return nil, fmt.Errorf("cannot update invoice lines for canceled invoices")
+		}
+		if inv.LockedAt.Valid {
+			return nil, fmt.Errorf("cannot update invoice lines on a locked invoice")
+		}
+
+		paid, err := qtx.GetTotalPaidAmountByInvoice(ctx, invoiceID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to check payments: %w", err)
+		}
+		if paid > 0 {
+			return nil, fmt.Errorf("cannot update invoice lines when payments exist")
+		}
+
+		billedCount, err := qtx.CountBilledCalendarEventsByInvoice(ctx, invoiceID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to check billed appointments: %w", err)
+		}
+
+		linkedCount, err := qtx.CountInvoiceLineCalendarEventsByInvoice(ctx, invoiceID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to check invoice appointment links: %w", err)
+		}
+		existingLines, err := qtx.ListInvoiceLinesByInvoice(ctx, invoiceID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to list existing invoice lines: %w", err)
+		}
+		if len(existingLines) == 0 {
+			return nil, fmt.Errorf("invoice has no existing lines to update")
+		}
+
+		sameUUIDPtr := func(a, b *uuid.UUID) bool {
+			if a == nil && b == nil {
+				return true
+			}
+			if a == nil || b == nil {
+				return false
+			}
+			return *a == *b
+		}
+
+		var netTotalCents, vatTotalCents, grossTotalCents int64
+		snapshotLines := make([]InvoiceLine, 0, len(req.Lines))
+
+		// If the invoice has appointment-linked lines, we must keep the existing invoice_line IDs.
+		// That means: no add/remove/reorder, only edit values in-place.
+		if billedCount > 0 || linkedCount > 0 {
+			if len(req.Lines) != len(existingLines) {
+				return nil, fmt.Errorf("cannot add/remove/reorder lines for invoices with appointment links")
+			}
+
+			for i, in := range req.Lines {
+				cur := existingLines[i]
+				if in.LineType != string(cur.LineType) {
+					return nil, fmt.Errorf("line %d: line_type cannot be changed", i+1)
+				}
+				if !sameUUIDPtr(in.ContractID, cur.ContractID) {
+					return nil, fmt.Errorf("line %d: contract_id cannot be changed", i+1)
+				}
+				if in.ServiceType != cur.ServiceType {
+					return nil, fmt.Errorf("line %d: service_type cannot be changed", i+1)
+				}
+
+				netCents := centsFromAmount(in.UnitPrice * in.Quantity)
+				vatRatePct := int64(in.VatRate)
+				amts := computeVat(netCents, vatRatePct)
+
+				unitPrice := roundTo(in.UnitPrice, 4)
+				periodStart := pgtype.Timestamptz{Time: in.PeriodStart, Valid: !in.PeriodStart.IsZero()}
+				periodEnd := pgtype.Timestamptz{Time: in.PeriodEnd, Valid: !in.PeriodEnd.IsZero()}
+				description := in.Description
+				unit := in.Unit
+				qty := in.Quantity
+				netAmt := amountFromCents(amts.netCents)
+				vatRate := in.VatRate
+				vatAmt := amountFromCents(amts.vatCents)
+				grossAmt := amountFromCents(amts.grossCents)
+
+				updatedLine, err := qtx.UpdateInvoiceLine(ctx, db.UpdateInvoiceLineParams{
+					LineType:    db.NullInvoiceLineTypeEnum{Valid: false},
+					ContractID:  nil,
+					ServiceType: nil,
+					Description: &description,
+					PeriodStart: periodStart,
+					PeriodEnd:   periodEnd,
+					Quantity:    &qty,
+					Unit:        &unit,
+					UnitPrice:   &unitPrice,
+					NetAmount:   &netAmt,
+					VatRate:     &vatRate,
+					VatAmount:   &vatAmt,
+					GrossAmount: &grossAmt,
+					Metadata:    nil,
+					ID:          cur.ID,
+				})
+				if err != nil {
+					return nil, fmt.Errorf("failed to update invoice line: %w", err)
+				}
+
+				snapshotLines = append(snapshotLines, InvoiceLine{
+					ID:          updatedLine.ID,
+					LineNo:      updatedLine.LineNo,
+					LineType:    string(updatedLine.LineType),
+					ContractID:  updatedLine.ContractID,
+					ServiceType: updatedLine.ServiceType,
+					Description: updatedLine.Description,
+					PeriodStart: updatedLine.PeriodStart.Time,
+					PeriodEnd:   updatedLine.PeriodEnd.Time,
+					Quantity:    updatedLine.Quantity,
+					Unit:        updatedLine.Unit,
+					UnitPrice:   updatedLine.UnitPrice,
+					NetAmount:   updatedLine.NetAmount,
+					VatRate:     updatedLine.VatRate,
+					VatAmount:   updatedLine.VatAmount,
+					GrossAmount: updatedLine.GrossAmount,
+				})
+
+				netTotalCents += amts.netCents
+				vatTotalCents += amts.vatCents
+				grossTotalCents += amts.grossCents
+			}
+		} else {
+			// No appointment linkage: safe to fully replace the invoice lines.
+			if err := qtx.DeleteInvoiceLinesByInvoice(ctx, invoiceID); err != nil {
+				return nil, fmt.Errorf("failed to delete invoice lines: %w", err)
+			}
+
+			lineNo := int32(1)
+			for _, in := range req.Lines {
+				netCents := centsFromAmount(in.UnitPrice * in.Quantity)
+				vatRatePct := int64(in.VatRate)
+				amts := computeVat(netCents, vatRatePct)
+
+				metaBytes := []byte("{}")
+				if inv.Source == db.InvoiceSourceEnumManual {
+					metaBytes, _ = json.Marshal(map[string]any{"manual": true, "updated": true})
+				}
+				periodStart := pgtype.Timestamptz{Time: in.PeriodStart, Valid: !in.PeriodStart.IsZero()}
+				periodEnd := pgtype.Timestamptz{Time: in.PeriodEnd, Valid: !in.PeriodEnd.IsZero()}
+				line, err := qtx.CreateInvoiceLine(ctx, db.CreateInvoiceLineParams{
+					InvoiceID:   inv.ID,
+					ClientID:    inv.ClientID,
+					SenderID:    inv.SenderID,
+					LineNo:      lineNo,
+					LineType:    db.InvoiceLineTypeEnum(in.LineType),
+					ContractID:  in.ContractID,
+					ServiceType: in.ServiceType,
+					Description: in.Description,
+					PeriodStart: periodStart,
+					PeriodEnd:   periodEnd,
+					Quantity:    in.Quantity,
+					Unit:        in.Unit,
+					UnitPrice:   roundTo(in.UnitPrice, 4),
+					NetAmount:   amountFromCents(amts.netCents),
+					VatRate:     in.VatRate,
+					VatAmount:   amountFromCents(amts.vatCents),
+					GrossAmount: amountFromCents(amts.grossCents),
+					Metadata:    metaBytes,
+				})
+				if err != nil {
+					return nil, fmt.Errorf("failed to create invoice line: %w", err)
+				}
+
+				snapshotLines = append(snapshotLines, InvoiceLine{
+					ID:          line.ID,
+					LineNo:      line.LineNo,
+					LineType:    string(line.LineType),
+					ContractID:  line.ContractID,
+					ServiceType: line.ServiceType,
+					Description: line.Description,
+					PeriodStart: line.PeriodStart.Time,
+					PeriodEnd:   line.PeriodEnd.Time,
+					Quantity:    line.Quantity,
+					Unit:        line.Unit,
+					UnitPrice:   line.UnitPrice,
+					NetAmount:   line.NetAmount,
+					VatRate:     line.VatRate,
+					VatAmount:   line.VatAmount,
+					GrossAmount: line.GrossAmount,
+				})
+
+				lineNo++
+				netTotalCents += amts.netCents
+				vatTotalCents += amts.vatCents
+				grossTotalCents += amts.grossCents
+			}
+		}
+
+		netTotal := amountFromCents(netTotalCents)
+		vatTotal := amountFromCents(vatTotalCents)
+		grossTotal := amountFromCents(grossTotalCents)
+		detailsSnapshot, _ = json.Marshal(snapshotLines)
+		netTotalAmount = &netTotal
+		vatTotalAmount = &vatTotal
+		grossTotalAmount = &grossTotal
+	}
+
 	var locked pgtype.Timestamptz
 	if req.LockedAt != nil {
 		locked = pgtype.Timestamptz{Time: *req.LockedAt, Valid: true}
@@ -443,14 +659,14 @@ func (s *invoiceService) UpdateInvoice(ctx context.Context, invoiceID uuid.UUID,
 		Source:           db.NullInvoiceSourceEnum{Valid: false},
 		BillToSnapshot:   nil,
 		ClientSnapshot:   nil,
-		DetailsSnapshot:  nil,
-		NetTotalAmount:   nil,
-		VatTotalAmount:   nil,
-		GrossTotalAmount: nil,
+		DetailsSnapshot:  detailsSnapshot,
+		NetTotalAmount:   netTotalAmount,
+		VatTotalAmount:   vatTotalAmount,
+		GrossTotalAmount: grossTotalAmount,
 		Currency:         nil,
 		ExtraContent:     util.ParseObjectToJSON(req.ExtraContent),
 		Status:           db.NullInvoiceStatusEnum{Valid: req.Status != "", InvoiceStatusEnum: db.InvoiceStatusEnum(req.Status)},
-		WarningCount:     &req.WarningCount,
+		WarningCount:     req.WarningCount,
 		RunID:            nil,
 		LockedAt:         locked,
 		CalcVersion:      nil,

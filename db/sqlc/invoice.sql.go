@@ -12,6 +12,33 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const countBilledCalendarEventsByInvoice = `-- name: CountBilledCalendarEventsByInvoice :one
+SELECT COUNT(*)::BIGINT AS count
+FROM billed_calendar_event
+WHERE invoice_id = $1
+`
+
+func (q *Queries) CountBilledCalendarEventsByInvoice(ctx context.Context, invoiceID uuid.UUID) (int64, error) {
+	row := q.db.QueryRow(ctx, countBilledCalendarEventsByInvoice, invoiceID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const countInvoiceLineCalendarEventsByInvoice = `-- name: CountInvoiceLineCalendarEventsByInvoice :one
+SELECT COUNT(*)::BIGINT AS count
+FROM invoice_line_calendar_event ilce
+JOIN invoice_line il ON ilce.invoice_line_id = il.id
+WHERE il.invoice_id = $1
+`
+
+func (q *Queries) CountInvoiceLineCalendarEventsByInvoice(ctx context.Context, invoiceID uuid.UUID) (int64, error) {
+	row := q.db.QueryRow(ctx, countInvoiceLineCalendarEventsByInvoice, invoiceID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const createInvoice = `-- name: CreateInvoice :one
 
 INSERT INTO invoice (
@@ -438,6 +465,16 @@ WHERE id = $1
 
 func (q *Queries) DeleteInvoice(ctx context.Context, id uuid.UUID) error {
 	_, err := q.db.Exec(ctx, deleteInvoice, id)
+	return err
+}
+
+const deleteInvoiceLinesByInvoice = `-- name: DeleteInvoiceLinesByInvoice :exec
+DELETE FROM invoice_line
+WHERE invoice_id = $1
+`
+
+func (q *Queries) DeleteInvoiceLinesByInvoice(ctx context.Context, invoiceID uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteInvoiceLinesByInvoice, invoiceID)
 	return err
 }
 
@@ -1334,6 +1371,89 @@ func (q *Queries) UpdateInvoice(ctx context.Context, arg UpdateInvoiceParams) (I
 		&i.CalcVersion,
 		&i.CalcMetadata,
 		&i.UpdatedAt,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
+const updateInvoiceLine = `-- name: UpdateInvoiceLine :one
+UPDATE invoice_line
+SET
+    line_type = COALESCE($1, line_type),
+    contract_id = COALESCE($2, contract_id),
+    service_type = COALESCE($3, service_type),
+    description = COALESCE($4, description),
+    period_start = COALESCE($5, period_start),
+    period_end = COALESCE($6, period_end),
+    quantity = COALESCE($7, quantity),
+    unit = COALESCE($8, unit),
+    unit_price = COALESCE($9, unit_price),
+    net_amount = COALESCE($10, net_amount),
+    vat_rate = COALESCE($11, vat_rate),
+    vat_amount = COALESCE($12, vat_amount),
+    gross_amount = COALESCE($13, gross_amount),
+    metadata = COALESCE($14, metadata)
+WHERE id = $15
+RETURNING id, invoice_id, client_id, sender_id, line_no, line_type, contract_id, service_type, description, period_start, period_end, quantity, unit, unit_price, net_amount, vat_rate, vat_amount, gross_amount, metadata, created_at
+`
+
+type UpdateInvoiceLineParams struct {
+	LineType    NullInvoiceLineTypeEnum `json:"line_type"`
+	ContractID  *uuid.UUID              `json:"contract_id"`
+	ServiceType *string                 `json:"service_type"`
+	Description *string                 `json:"description"`
+	PeriodStart pgtype.Timestamptz      `json:"period_start"`
+	PeriodEnd   pgtype.Timestamptz      `json:"period_end"`
+	Quantity    *float64                `json:"quantity"`
+	Unit        *string                 `json:"unit"`
+	UnitPrice   *float64                `json:"unit_price"`
+	NetAmount   *float64                `json:"net_amount"`
+	VatRate     *float64                `json:"vat_rate"`
+	VatAmount   *float64                `json:"vat_amount"`
+	GrossAmount *float64                `json:"gross_amount"`
+	Metadata    []byte                  `json:"metadata"`
+	ID          uuid.UUID               `json:"id"`
+}
+
+func (q *Queries) UpdateInvoiceLine(ctx context.Context, arg UpdateInvoiceLineParams) (InvoiceLine, error) {
+	row := q.db.QueryRow(ctx, updateInvoiceLine,
+		arg.LineType,
+		arg.ContractID,
+		arg.ServiceType,
+		arg.Description,
+		arg.PeriodStart,
+		arg.PeriodEnd,
+		arg.Quantity,
+		arg.Unit,
+		arg.UnitPrice,
+		arg.NetAmount,
+		arg.VatRate,
+		arg.VatAmount,
+		arg.GrossAmount,
+		arg.Metadata,
+		arg.ID,
+	)
+	var i InvoiceLine
+	err := row.Scan(
+		&i.ID,
+		&i.InvoiceID,
+		&i.ClientID,
+		&i.SenderID,
+		&i.LineNo,
+		&i.LineType,
+		&i.ContractID,
+		&i.ServiceType,
+		&i.Description,
+		&i.PeriodStart,
+		&i.PeriodEnd,
+		&i.Quantity,
+		&i.Unit,
+		&i.UnitPrice,
+		&i.NetAmount,
+		&i.VatRate,
+		&i.VatAmount,
+		&i.GrossAmount,
+		&i.Metadata,
 		&i.CreatedAt,
 	)
 	return i, err

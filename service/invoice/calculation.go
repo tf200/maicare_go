@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	DefaultBillingTimezone = "UTC"
+	DefaultBillingTimezone = "Europe/Amsterdam"
 	DefaultBillingCycle    = "iso_4_week"
 )
 
@@ -93,4 +93,3 @@ func roundTo(amount float64, decimals int) float64 {
 	pow := math.Pow10(decimals)
 	return math.Round(amount*pow) / pow
 }
-

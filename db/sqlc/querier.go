@@ -38,7 +38,9 @@ type Querier interface {
 	ContractEndCount(ctx context.Context) (int64, error)
 	CountActiveGoalsByClientID(ctx context.Context, clientID uuid.UUID) (int64, error)
 	CountAllIncidents(ctx context.Context, arg CountAllIncidentsParams) (int64, error)
+	CountBilledCalendarEventsByInvoice(ctx context.Context, invoiceID uuid.UUID) (int64, error)
 	CountEmployeeProfile(ctx context.Context, arg CountEmployeeProfileParams) (int64, error)
+	CountInvoiceLineCalendarEventsByInvoice(ctx context.Context, invoiceID uuid.UUID) (int64, error)
 	CountRegistrationForms(ctx context.Context, arg CountRegistrationFormsParams) (int64, error)
 	CountSenders(ctx context.Context, includeArchived *bool) (int64, error)
 	CreateAiGeneratedReport(ctx context.Context, arg CreateAiGeneratedReportParams) (AiGeneratedReport, error)
@@ -110,6 +112,7 @@ type Querier interface {
 	DeleteIntakeTopicAssessmentsByIntakeForm(ctx context.Context, intakeFormID uuid.UUID) error
 	DeleteIntakeTopicsAssessment(ctx context.Context, id uuid.UUID) error
 	DeleteInvoice(ctx context.Context, id uuid.UUID) error
+	DeleteInvoiceLinesByInvoice(ctx context.Context, invoiceID uuid.UUID) error
 	DeleteLocation(ctx context.Context, id uuid.UUID) (Location, error)
 	DeleteOrganisation(ctx context.Context, id uuid.UUID) (Organisation, error)
 	DeletePayment(ctx context.Context, id uuid.UUID) (InvoicePaymentHistory, error)
@@ -382,6 +385,7 @@ type Querier interface {
 	UpdateIntakeForm(ctx context.Context, arg UpdateIntakeFormParams) (IntakeForm, error)
 	UpdateIntakeTopicsAssessment(ctx context.Context, arg UpdateIntakeTopicsAssessmentParams) (IntakeTopicAssessment, error)
 	UpdateInvoice(ctx context.Context, arg UpdateInvoiceParams) (Invoice, error)
+	UpdateInvoiceLine(ctx context.Context, arg UpdateInvoiceLineParams) (InvoiceLine, error)
 	UpdateInvoiceRun(ctx context.Context, arg UpdateInvoiceRunParams) (InvoiceRun, error)
 	UpdateInvoiceRunItem(ctx context.Context, arg UpdateInvoiceRunItemParams) (InvoiceRunItem, error)
 	UpdateInvoiceStatus(ctx context.Context, arg UpdateInvoiceStatusParams) (Invoice, error)

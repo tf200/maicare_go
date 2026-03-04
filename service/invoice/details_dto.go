@@ -31,7 +31,7 @@ type CreateInvoiceRequest struct {
 	InvoiceType  string             `json:"invoice_type" binding:"required,oneof=standard credit_note"`
 	IssueDate    time.Time          `json:"issue_date" binding:"required"`
 	DueDate      time.Time          `json:"due_date" binding:"required"`
-	Lines        []InvoiceLineInput `json:"lines" binding:"required"`
+	Lines        []InvoiceLineInput `json:"lines" binding:"required,min=1,dive"`
 	ExtraContent util.JSONObject    `json:"extra_content"`
 }
 
@@ -145,12 +145,13 @@ type ListInvoicesResponse struct {
 
 // UpdateInvoiceRequest represents the request body for updating an invoice.
 type UpdateInvoiceRequest struct {
-	IssueDate    time.Time       `json:"issue_date"`
-	DueDate      time.Time       `json:"due_date"`
-	ExtraContent util.JSONObject `json:"extra_content"`
-	Status       string          `json:"status"`
-	WarningCount int32           `json:"warning_count"`
-	LockedAt     *time.Time      `json:"locked_at"`
+	IssueDate    time.Time          `json:"issue_date"`
+	DueDate      time.Time          `json:"due_date"`
+	ExtraContent util.JSONObject    `json:"extra_content"`
+	Status       string             `json:"status"`
+	WarningCount *int32             `json:"warning_count"`
+	LockedAt     *time.Time         `json:"locked_at"`
+	Lines        []InvoiceLineInput `json:"lines" binding:"omitempty,dive"`
 }
 
 // UpdateInvoiceResponse represents the response body for updating an invoice.

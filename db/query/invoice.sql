@@ -306,6 +306,45 @@ WHERE invoice_id = $1
 ORDER BY line_no;
 
 
+-- name: DeleteInvoiceLinesByInvoice :exec
+DELETE FROM invoice_line
+WHERE invoice_id = $1;
+
+
+-- name: CountBilledCalendarEventsByInvoice :one
+SELECT COUNT(*)::BIGINT AS count
+FROM billed_calendar_event
+WHERE invoice_id = $1;
+
+
+-- name: CountInvoiceLineCalendarEventsByInvoice :one
+SELECT COUNT(*)::BIGINT AS count
+FROM invoice_line_calendar_event ilce
+JOIN invoice_line il ON ilce.invoice_line_id = il.id
+WHERE il.invoice_id = $1;
+
+
+-- name: UpdateInvoiceLine :one
+UPDATE invoice_line
+SET
+    line_type = COALESCE(sqlc.narg('line_type'), line_type),
+    contract_id = COALESCE(sqlc.narg('contract_id'), contract_id),
+    service_type = COALESCE(sqlc.narg('service_type'), service_type),
+    description = COALESCE(sqlc.narg('description'), description),
+    period_start = COALESCE(sqlc.narg('period_start'), period_start),
+    period_end = COALESCE(sqlc.narg('period_end'), period_end),
+    quantity = COALESCE(sqlc.narg('quantity'), quantity),
+    unit = COALESCE(sqlc.narg('unit'), unit),
+    unit_price = COALESCE(sqlc.narg('unit_price'), unit_price),
+    net_amount = COALESCE(sqlc.narg('net_amount'), net_amount),
+    vat_rate = COALESCE(sqlc.narg('vat_rate'), vat_rate),
+    vat_amount = COALESCE(sqlc.narg('vat_amount'), vat_amount),
+    gross_amount = COALESCE(sqlc.narg('gross_amount'), gross_amount),
+    metadata = COALESCE(sqlc.narg('metadata'), metadata)
+WHERE id = sqlc.arg('id')
+RETURNING *;
+
+
 -- ////////////////////// Line Sources (Appointments) //////////////////////
 
 -- name: CreateInvoiceLineCalendarEvent :one
