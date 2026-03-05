@@ -24,6 +24,9 @@ func NewJWTMaker(accessTokenKey string, refreshTokenKey string, twoFATokenKey st
 	if len(refreshTokenKey) < minSecretKeySize {
 		return nil, fmt.Errorf("invalid key size: must be at least %d characters", minSecretKeySize)
 	}
+	if len(twoFATokenKey) < minSecretKeySize {
+		return nil, fmt.Errorf("invalid key size: must be at least %d characters", minSecretKeySize)
+	}
 	return &JWTMaker{accessTokenKey, refreshTokenKey, twoFATokenKey}, nil
 }
 

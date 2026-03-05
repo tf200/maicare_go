@@ -18,6 +18,7 @@ type ClientService interface {
 	ListWaitingListClients(ctx *gin.Context, req ListWaitingListClientsParams) (*pagination.Response[ListWaitingListClientsResponse], error)
 	ListInCareClients(ctx *gin.Context, req ListInCareClientsParams) (*pagination.Response[ListInCareClientsResponse], error)
 	GetClientsCount(ctx context.Context) (*GetClientsCountResponse, error)
+	GetClientStatusCounts(ctx context.Context) (*GetClientStatusCountsResponse, error)
 	GetClientDetails(ctx context.Context, clientID uuid.UUID) (*GetClientApiResponse, error)
 	GetClientAddresses(ctx context.Context, clientID uuid.UUID) (*GetClientAddressesApiResponse, error)
 	UpdateClientDetails(ctx context.Context, req UpdateClientDetailsRequest, clientID uuid.UUID) (*UpdateClientDetailsResponse, error)
@@ -45,6 +46,7 @@ type ClientService interface {
 	GenerateIncidentFile(ctx context.Context, incidentID uuid.UUID) ([]byte, string, error)
 	ConfirmIncident(ctx context.Context, incidentID uuid.UUID, confirmedByUserID uuid.UUID) (*ConfirmIncidentResponse, error)
 	ListAllIncidents(ctx *gin.Context, req *ListAllIncidentsRequest) (*pagination.Response[ListAllIncidentsResponse], error)
+	GetIncidentCounts(ctx context.Context) (*GetIncidentCountsResponse, error)
 
 	// Client Diagnoses
 	CreateClientDiagnosis(ctx context.Context, req CreateClientDiagnosisRequest, clientID uuid.UUID) (*ClientDiagnosisResponse, error)

@@ -122,6 +122,13 @@ SELECT
     COUNT(*) FILTER (WHERE status = 'out_of_care') AS clients_out_of_care
 FROM client_details;
 
+-- name: GetClientStatusCounts :one
+SELECT
+    COUNT(*) FILTER (WHERE status IN ('in_care', 'scheduled_in_care')) AS clients_in_or_scheduled_in_care,
+    COUNT(*) FILTER (WHERE status = 'on_waiting_list') AS clients_on_waiting_list,
+    COUNT(*) FILTER (WHERE status IN ('out_of_care', 'scheduled_out_of_care')) AS clients_out_or_scheduled_out_of_care
+FROM client_details;
+
 
 -- name: ListWaitingListClients :many
 SELECT

@@ -37,6 +37,11 @@ type ChangePasswordRequest struct {
 }
 
 // Setup2FARequest represents the setup 2FA request payload
+type Setup2FARequest struct {
+	CurrentPassword string `json:"current_password" binding:"required"`
+}
+
+// Setup2FAResponse represents the setup 2FA response payload
 type Setup2FAResponse struct {
 	QrCode string `json:"qr_code_base64" example:"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."`
 	Secret string `json:"secret" example:"JBSWY3DPEHPK3PXP"`

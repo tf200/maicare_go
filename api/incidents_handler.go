@@ -37,3 +37,22 @@ func (server *Server) ListAllIncidentsApi(ctx *gin.Context) {
 	res := SuccessResponse(pag, "Incidents fetched successfully")
 	ctx.JSON(http.StatusOK, res)
 }
+
+// GetIncidentCountsApi gets incident aggregate counts
+// @Summary Get incident counts
+// @Description Get counts for serious/fatal incidents, pending confirmations, and incidents in the past 24 hours
+// @Tags incidents
+// @Produce json
+// @Success 200 {object} Response[clientp.GetIncidentCountsResponse]
+// @Failure 500 {object} Response[any]
+// @Router /incidents/counts [get]
+func (server *Server) GetIncidentCountsApi(ctx *gin.Context) {
+	counts, err := server.businessService.ClientService.GetIncidentCounts(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(counts, "Incident counts fetched successfully")
+	ctx.JSON(http.StatusOK, res)
+}

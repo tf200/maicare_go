@@ -13,6 +13,7 @@ func (server *Server) setupClientRoutes(baseRouter *gin.RouterGroup) {
 		clientsGroup.GET("/waiting-list", server.RBACMiddleware("CLIENT.VIEW"), server.ListWaitingListClientsApi)
 		clientsGroup.GET("/in-care", server.RBACMiddleware("CLIENT.VIEW"), server.ListInCareClientsApi)
 		clientsGroup.GET("/counts", server.RBACMiddleware("CLIENT.VIEW"), server.GetClientsCountApi)
+		clientsGroup.GET("/status-counts", server.RBACMiddleware("CLIENT.VIEW"), server.GetClientStatusCountsApi)
 	}
 	{
 		clientsGroup.GET("/:id", server.RBACMiddleware("CLIENT.VIEW"), server.AuditMiddleware(), server.GetClientApi)

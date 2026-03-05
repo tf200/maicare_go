@@ -322,6 +322,221 @@ func (s *employeeService) GetEmployeeProfile(
 	return res, nil
 }
 
+func (s *employeeService) GetEmployeeProfileDetails(
+	userID uuid.UUID,
+	ctx context.Context,
+) (*GetEmployeeProfileDetailsResponse, error) {
+	accountProfile, err := s.Store.GetEmployeeProfileByUserID(ctx, userID)
+	if err != nil {
+		s.Logger.LogBusinessEvent(
+			ctx,
+			logger.LogLevelError,
+			"GetEmployeeProfileDetails",
+			"Failed to get employee account profile",
+			zap.Error(err),
+			zap.String("UserID", userID.String()),
+		)
+		return nil, fmt.Errorf("failed to get employee profile details: %w", err)
+	}
+
+	employee, err := s.Store.GetEmployeeProfileByID(ctx, accountProfile.EmployeeID)
+	if err != nil {
+		s.Logger.LogBusinessEvent(
+			ctx,
+			logger.LogLevelError,
+			"GetEmployeeProfileDetails",
+			"Failed to get employee profile by ID",
+			zap.Error(err),
+			zap.String("EmployeeID", accountProfile.EmployeeID.String()),
+		)
+		return nil, fmt.Errorf("failed to get employee profile details: %w", err)
+	}
+
+	roles, err := s.Store.GetUserRoles(ctx, userID)
+	if err != nil {
+		s.Logger.LogBusinessEvent(
+			ctx,
+			logger.LogLevelError,
+			"GetEmployeeProfileDetails",
+			"Failed to get user roles",
+			zap.Error(err),
+			zap.String("UserID", userID.String()),
+		)
+		return nil, fmt.Errorf("failed to get employee profile details: %w", err)
+	}
+
+	activeSessions, err := s.Store.ListActiveSessionsByUserID(ctx, userID)
+	if err != nil {
+		s.Logger.LogBusinessEvent(
+			ctx,
+			logger.LogLevelError,
+			"GetEmployeeProfileDetails",
+			"Failed to list active sessions",
+			zap.Error(err),
+			zap.String("UserID", userID.String()),
+		)
+		return nil, fmt.Errorf("failed to get employee profile details: %w", err)
+	}
+
+	educations, err := s.Store.ListEducations(ctx, employee.ID)
+	if err != nil {
+		s.Logger.LogBusinessEvent(
+			ctx,
+			logger.LogLevelError,
+			"GetEmployeeProfileDetails",
+			"Failed to list employee educations",
+			zap.Error(err),
+			zap.String("EmployeeID", employee.ID.String()),
+		)
+		return nil, fmt.Errorf("failed to get employee profile details: %w", err)
+	}
+
+	experiences, err := s.Store.ListEmployeeExperience(ctx, employee.ID)
+	if err != nil {
+		s.Logger.LogBusinessEvent(
+			ctx,
+			logger.LogLevelError,
+			"GetEmployeeProfileDetails",
+			"Failed to list employee experiences",
+			zap.Error(err),
+			zap.String("EmployeeID", employee.ID.String()),
+		)
+		return nil, fmt.Errorf("failed to get employee profile details: %w", err)
+	}
+
+	roleResponse := make([]EmployeeRole, 0, len(roles))
+	for _, role := range roles {
+		roleResponse = append(roleResponse, EmployeeRole{
+			ID:   role.ID,
+			Name: role.Name,
+		})
+	}
+
+	educationResponse := make([]BriefEducationDetail, 0, len(educations))
+	for _, education := range educations {
+		educationResponse = append(educationResponse, BriefEducationDetail{
+			InstitutionName: education.InstitutionName,
+			Degree:          education.Degree,
+			FieldOfStudy:    education.FieldOfStudy,
+			StartDate:       pgDatePtr(education.StartDate),
+			EndDate:         pgDatePtr(education.EndDate),
+		})
+	}
+
+	experienceResponse := make([]BriefExperienceDetail, 0, len(experiences))
+	for _, experience := range experiences {
+		experienceResponse = append(experienceResponse, BriefExperienceDetail{
+			JobTitle:    experience.JobTitle,
+			CompanyName: experience.CompanyName,
+			StartDate:   pgDatePtr(experience.StartDate),
+			EndDate:     pgDatePtr(experience.EndDate),
+		})
+	}
+
+	sessionResponse := make([]ActiveSessionDetail, 0, len(activeSessions))
+	for _, session := range activeSessions {
+		sessionResponse = append(sessionResponse, ActiveSessionDetail{
+			ID:        session.ID,
+			UserAgent: session.UserAgent,
+			ClientIP:  session.ClientIp,
+			ExpiresAt: session.ExpiresAt.Time,
+			CreatedAt: session.CreatedAt.Time,
+		})
+	}
+
+	var locationName *string
+	var organisationName *string
+	if employee.LocationID != nil {
+		location, err := s.Store.GetLocation(ctx, *employee.LocationID)
+		if err != nil {
+			s.Logger.LogBusinessEvent(
+				ctx,
+				logger.LogLevelError,
+				"GetEmployeeProfileDetails",
+				"Failed to get employee location",
+				zap.Error(err),
+				zap.String("LocationID", employee.LocationID.String()),
+			)
+			return nil, fmt.Errorf("failed to get employee profile details: %w", err)
+		}
+		locationName = &location.Name
+
+		organisation, err := s.Store.GetOrganisation(ctx, location.OrganisationID)
+		if err != nil {
+			s.Logger.LogBusinessEvent(
+				ctx,
+				logger.LogLevelError,
+				"GetEmployeeProfileDetails",
+				"Failed to get employee organisation",
+				zap.Error(err),
+				zap.String("OrganisationID", location.OrganisationID.String()),
+			)
+			return nil, fmt.Errorf("failed to get employee profile details: %w", err)
+		}
+		organisationName = &organisation.Name
+	}
+
+	res := &GetEmployeeProfileDetailsResponse{
+		UserID:              accountProfile.UserID,
+		EmployeeID:          accountProfile.EmployeeID,
+		Email:               accountProfile.Email,
+		FirstName:           employee.FirstName,
+		LastName:            employee.LastName,
+		TwoFactorEnabled:    accountProfile.TwoFactorEnabled,
+		LastLogin:           accountProfile.LastLogin.Time,
+		Roles:               roleResponse,
+		ActiveSessions:      sessionResponse,
+		Education:           educationResponse,
+		WorkExperience:      experienceResponse,
+		Street:              employee.Street,
+		HouseNumber:         employee.HouseNumber,
+		HouseNumberAddition: employee.HouseNumberAddition,
+		PostalCode:          employee.PostalCode,
+		City:                employee.City,
+		Position:            employee.Position,
+		Department:          employee.Department,
+		EmployeeNumber:      employee.EmployeeNumber,
+		EmploymentNumber:    employee.EmploymentNumber,
+		PrivateEmailAddress: employee.PrivateEmailAddress,
+		WorkEmailAddress:    employee.WorkEmailAddress,
+		PrivatePhoneNumber:  employee.PrivatePhoneNumber,
+		WorkPhoneNumber:     employee.WorkPhoneNumber,
+		HomeTelephoneNumber: employee.HomeTelephoneNumber,
+		DateOfBirth:         pgDatePtr(employee.DateOfBirth),
+		Gender:              string(employee.Gender),
+		LocationID:          employee.LocationID,
+		LocationName:        locationName,
+		OrganisationName:    organisationName,
+		HasBorrowed:         employee.HasBorrowed,
+		OutOfService:        employee.OutOfService,
+		IsArchived:          employee.IsArchived,
+		ContractType:        string(employee.ContractType),
+		ContractHours:       employee.ContractHours,
+		ContractStartDate:   pgDatePtr(employee.ContractStartDate),
+		ContractEndDate:     pgDatePtr(employee.ContractEndDate),
+		ContractRate:        employee.ContractRate,
+	}
+
+	s.Logger.LogBusinessEvent(
+		ctx,
+		logger.LogLevelInfo,
+		"GetEmployeeProfileDetails",
+		"Successfully retrieved employee profile details",
+		zap.String("UserID", userID.String()),
+		zap.String("EmployeeID", accountProfile.EmployeeID.String()),
+	)
+
+	return res, nil
+}
+
+func pgDatePtr(d pgtype.Date) *time.Time {
+	if !d.Valid {
+		return nil
+	}
+	t := d.Time
+	return &t
+}
+
 func (s *employeeService) GetEmployeeProfileByID(
 	employeeID, currentUserID uuid.UUID,
 	ctx context.Context,

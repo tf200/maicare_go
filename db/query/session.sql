@@ -19,3 +19,11 @@ WHERE id = $1 LIMIT 1;
 -- name: DeleteSession :exec
 DELETE FROM sessions
 WHERE id = $1;
+
+-- name: ListActiveSessionsByUserID :many
+SELECT id, user_agent, client_ip, is_blocked, expires_at, created_at
+FROM sessions
+WHERE user_id = $1
+  AND is_blocked = FALSE
+  AND expires_at > NOW()
+ORDER BY created_at DESC;

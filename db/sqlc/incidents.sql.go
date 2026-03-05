@@ -40,6 +40,33 @@ func (q *Queries) CountAllIncidents(ctx context.Context, arg CountAllIncidentsPa
 	return total_count, err
 }
 
+const getIncidentCounts = `-- name: GetIncidentCounts :one
+SELECT
+    COUNT(*) FILTER (
+        WHERE i.severity_of_incident IN ('serious', 'fatal')
+    )::BIGINT AS serious_fatal_count,
+    COUNT(*) FILTER (
+        WHERE i.is_confirmed = FALSE
+    )::BIGINT AS pending_confirmation_count,
+    COUNT(*) FILTER (
+        WHERE i.occurred_at >= NOW() - INTERVAL '24 hours'
+    )::BIGINT AS past_24h_count
+FROM incident i
+`
+
+type GetIncidentCountsRow struct {
+	SeriousFatalCount        int64 `json:"serious_fatal_count"`
+	PendingConfirmationCount int64 `json:"pending_confirmation_count"`
+	Past24hCount             int64 `json:"past_24h_count"`
+}
+
+func (q *Queries) GetIncidentCounts(ctx context.Context) (GetIncidentCountsRow, error) {
+	row := q.db.QueryRow(ctx, getIncidentCounts)
+	var i GetIncidentCountsRow
+	err := row.Scan(&i.SeriousFatalCount, &i.PendingConfirmationCount, &i.Past24hCount)
+	return i, err
+}
+
 const listAllIncidents = `-- name: ListAllIncidents :many
 SELECT 
     i.id,

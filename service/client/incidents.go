@@ -499,3 +499,17 @@ func (s *clientService) ListAllIncidents(ctx *gin.Context, req *ListAllIncidents
 	paginatedResponse := pagination.NewResponse(ctx, req.Request, response, count)
 	return &paginatedResponse, nil
 }
+
+func (s *clientService) GetIncidentCounts(ctx context.Context) (*GetIncidentCountsResponse, error) {
+	counts, err := s.Store.GetIncidentCounts(ctx)
+	if err != nil {
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetIncidentCounts", "Failed to get incident counts", zap.Error(err))
+		return nil, err
+	}
+
+	return &GetIncidentCountsResponse{
+		SeriousFatalCount:        counts.SeriousFatalCount,
+		PendingConfirmationCount: counts.PendingConfirmationCount,
+		Past24hCount:             counts.Past24hCount,
+	}, nil
+}

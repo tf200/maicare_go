@@ -134,6 +134,9 @@ func validateConfig(config *Config) error {
 	if config.RefreshTokenDuration <= 0 {
 		missingVars = append(missingVars, "REFRESH_TOKEN_DURATION")
 	}
+	if config.TwoFATokenDuration <= 0 {
+		missingVars = append(missingVars, "TWO_FA_TOKEN_DURATION")
+	}
 	if config.WsTicketTTL <= 0 {
 		missingVars = append(missingVars, "WS_TICKET_TTL")
 	}

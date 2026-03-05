@@ -292,6 +292,28 @@ func (s *clientService) GetClientsCount(ctx context.Context) (*GetClientsCountRe
 	}, nil
 }
 
+func (s *clientService) GetClientStatusCounts(ctx context.Context) (*GetClientStatusCountsResponse, error) {
+	var count db.GetClientStatusCountsRow
+	err := s.Store.ExecTx(ctx, func(q *db.Queries) error {
+		var err error
+		count, err = q.GetClientStatusCounts(ctx)
+		return err
+	})
+	if err != nil {
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GetClientStatusCounts",
+			"Failed to get client status counts", zap.Error(err))
+		return nil, fmt.Errorf("failed to get client status counts")
+	}
+
+	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "GetClientStatusCounts",
+		"Successfully retrieved client status counts")
+	return &GetClientStatusCountsResponse{
+		ClientsInOrScheduledInCare:     count.ClientsInOrScheduledInCare,
+		ClientsOnWaitingList:           count.ClientsOnWaitingList,
+		ClientsOutOrScheduledOutOfCare: count.ClientsOutOrScheduledOutOfCare,
+	}, nil
+}
+
 func (s *clientService) GetClientDetails(ctx context.Context, clientID uuid.UUID) (*GetClientApiResponse, error) {
 	var client db.GetClientDetailsRow
 	var goals []db.ListActiveGoalSummariesByClientIDRow

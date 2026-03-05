@@ -213,3 +213,9 @@ type ListAllIncidentsResponse struct {
 	EmployeeLastName   string    `json:"employee_last_name"`
 	LocationName       string    `json:"location_name"`
 }
+
+type GetIncidentCountsResponse struct {
+	SeriousFatalCount        int64 `json:"serious_fatal_count"`
+	PendingConfirmationCount int64 `json:"pending_confirmation_count"`
+	Past24hCount             int64 `json:"past_24h_count"`
+}

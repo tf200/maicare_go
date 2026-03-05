@@ -30,6 +30,7 @@ type EmployeeService interface {
 	ListEmployees(req ListEmployeeRequest, ctx *gin.Context) (*pagination.Response[ListEmployeeResponse], error)
 	UpdateEmployeeIsSubcontractor(req UpdateEmployeeIsSubcontractorRequest, employeeID uuid.UUID, ctx context.Context) (*UpdateEmployeeIsSubcontractorResponse, error)
 	GetEmployeeProfile(userID uuid.UUID, ctx context.Context) (*GetEmployeeProfileResponse, error)
+	GetEmployeeProfileDetails(userID uuid.UUID, ctx context.Context) (*GetEmployeeProfileDetailsResponse, error)
 	GetEmployeeProfileByID(employeeID, currentUserID uuid.UUID, ctx context.Context) (*GetEmployeeProfileByIDResponse, error)
 	UpdateEmployeeProfile(req UpdateEmployeeProfileRequest, employeeID uuid.UUID, ctx context.Context) (*UpdateEmployeeProfileResponse, error)
 	SetEmployeeProfilePicture(req SetEmployeeProfilePictureRequest, employeeID uuid.UUID, ctx context.Context) (*SetEmployeeProfilePictureResponse, error)

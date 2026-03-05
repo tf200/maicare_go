@@ -174,6 +174,12 @@ type GetClientsCountResponse struct {
 	ClientsOutOfCare     int64 `json:"clients_out_of_care"`
 }
 
+type GetClientStatusCountsResponse struct {
+	ClientsInOrScheduledInCare     int64 `json:"clients_in_or_scheduled_in_care"`
+	ClientsOnWaitingList           int64 `json:"clients_on_waiting_list"`
+	ClientsOutOrScheduledOutOfCare int64 `json:"clients_out_or_scheduled_out_of_care"`
+}
+
 // GetClientApiResponse represents the client GET page response.
 // This is a stable envelope + nested objects; consumers should not rely on old flat fields.
 type GetClientApiResponse struct {

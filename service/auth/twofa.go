@@ -16,7 +16,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func (s *authService) SetupTwoFA(userID uuid.UUID, ctx context.Context) (*Setup2FAResponse, error) {
+func (s *authService) SetupTwoFA(req Setup2FARequest, userID uuid.UUID, ctx context.Context) (*Setup2FAResponse, error) {
 	user, err := s.Store.GetUserByID(ctx, userID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -32,6 +32,13 @@ func (s *authService) SetupTwoFA(userID uuid.UUID, ctx context.Context) (*Setup2
 		s.Logger.LogWarn(ctx, "SetupTwoFA", "2FA already enabled for user",
 			zap.String("user_id", userID.String()))
 		return nil, ErrTwoFaAlreadyEnabled
+	}
+
+	err = util.CheckPassword(req.CurrentPassword, user.Password)
+	if err != nil {
+		s.Logger.LogWarn(ctx, "SetupTwoFA", "Invalid password for 2FA setup",
+			zap.String("user_id", userID.String()))
+		return nil, ErrInvalidCredentials
 	}
 
 	key, err := totp.Generate(totp.GenerateOpts{

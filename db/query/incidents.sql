@@ -50,3 +50,16 @@ AND (
     OR c.first_name ILIKE '%' || sqlc.narg('search')::text || '%'
     OR c.last_name ILIKE '%' || sqlc.narg('search')::text || '%'
 );
+
+-- name: GetIncidentCounts :one
+SELECT
+    COUNT(*) FILTER (
+        WHERE i.severity_of_incident IN ('serious', 'fatal')
+    )::BIGINT AS serious_fatal_count,
+    COUNT(*) FILTER (
+        WHERE i.is_confirmed = FALSE
+    )::BIGINT AS pending_confirmation_count,
+    COUNT(*) FILTER (
+        WHERE i.occurred_at >= NOW() - INTERVAL '24 hours'
+    )::BIGINT AS past_24h_count
+FROM incident i;

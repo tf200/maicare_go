@@ -143,6 +143,24 @@ func (server *Server) GetClientsCountApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
+// GetClientStatusCountsApi gets grouped client status counts
+// @Summary Get grouped client status counts
+// @Tags clients
+// @Produce json
+// @Success 200 {object} Response[clientp.GetClientStatusCountsResponse]
+// @Failure 400,404,500 {object} Response[any]
+// @Router /clients/status-counts [get]
+func (server *Server) GetClientStatusCountsApi(ctx *gin.Context) {
+	counts, err := server.businessService.ClientService.GetClientStatusCounts(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(counts, "Client status counts fetched successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
 // GetClientApi gets a client
 // @Summary Get a client
 // @Tags clients

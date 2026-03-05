@@ -34,6 +34,10 @@ func (server *Server) Login(ctx *gin.Context) {
 
 	loginResult, err := server.businessService.AuthService.Login(req, ctx.ClientIP(), ctx.Request.UserAgent(), ctx)
 	if err != nil {
+		if err == auth.ErrTooManyAttempts {
+			ctx.JSON(http.StatusTooManyRequests, errorResponse(err))
+			return
+		}
 		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
 		return
 	}
@@ -90,6 +94,10 @@ func (server *Server) Verify2FAHandler(ctx *gin.Context) {
 
 	loginResult, err := server.businessService.AuthService.VerifyTwoFAToken(req, ctx.ClientIP(), ctx.Request.UserAgent(), ctx)
 	if err != nil {
+		if err == auth.ErrTooManyAttempts {
+			ctx.JSON(http.StatusTooManyRequests, errorResponse(err))
+			return
+		}
 		ctx.JSON(http.StatusUnauthorized, errorResponse(fmt.Errorf("2FA verification failed")))
 		return
 	}
@@ -164,7 +172,9 @@ func (server *Server) ChangePasswordApi(ctx *gin.Context) {
 // @Summary Setup 2FA
 // @Description Setup 2FA for user
 // @Tags authentication
+// @Accept json
 // @Produce json
+// @Param request body auth.Setup2FARequest true "Setup 2FA request"
 // @Success 200 {object} Response[auth.Setup2FAResponse] "2FA setup successful"
 // @Failure 400 {object} Response[any] "Bad request - Invalid input"
 // @Failure 401 {object} Response[any] "Unauthorized - Invalid credentials"
@@ -180,9 +190,16 @@ func (server *Server) Setup2FAHandler(ctx *gin.Context) {
 		return
 	}
 	userID := payload.UserId
-	setup2FAResult, err := server.businessService.AuthService.SetupTwoFA(userID, ctx)
+
+	var req auth.Setup2FARequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request payload")))
+		return
+	}
+
+	setup2FAResult, err := server.businessService.AuthService.SetupTwoFA(req, userID, ctx)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to setup 2FA: %v", err)))
+		ctx.JSON(http.StatusUnauthorized, errorResponse(fmt.Errorf("failed to setup 2FA: %v", err)))
 		return
 	}
 
@@ -219,7 +236,7 @@ func (server *Server) Enable2FAHandler(ctx *gin.Context) {
 	}
 	result, err := server.businessService.AuthService.EnableTwoFA(req, userID, ctx)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to enable 2FA")))
+		ctx.JSON(http.StatusUnauthorized, errorResponse(fmt.Errorf("failed to enable 2FA")))
 		return
 	}
 

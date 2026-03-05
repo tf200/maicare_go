@@ -35,6 +35,30 @@ func (server *Server) GetEmployeeProfileApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
+// @Summary Get detailed employee profile by user ID
+// @Description Get detailed employee profile by user ID
+// @Tags employees
+// @Produce json
+// @Success 200 {object} Response[employees.GetEmployeeProfileDetailsResponse]
+// @Failure 400,401,404,409,500 {object} Response[any]
+// @Router /employees/profile/details [get]
+func (server *Server) GetEmployeeProfileDetailsApi(ctx *gin.Context) {
+	payload, err := GetAuthPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
+	profile, err := server.businessService.EmployeeService.GetEmployeeProfileDetails(payload.UserId, ctx)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(profile, "Employee profile details retrieved successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
 // @Summary Create employee profile
 // @Description Create a new employee profile with associated user account
 // @Tags employees

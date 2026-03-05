@@ -904,6 +904,27 @@ func (q *Queries) GetClientPageCounts(ctx context.Context, clientID uuid.UUID) (
 	return i, err
 }
 
+const getClientStatusCounts = `-- name: GetClientStatusCounts :one
+SELECT
+    COUNT(*) FILTER (WHERE status IN ('in_care', 'scheduled_in_care')) AS clients_in_or_scheduled_in_care,
+    COUNT(*) FILTER (WHERE status = 'on_waiting_list') AS clients_on_waiting_list,
+    COUNT(*) FILTER (WHERE status IN ('out_of_care', 'scheduled_out_of_care')) AS clients_out_or_scheduled_out_of_care
+FROM client_details
+`
+
+type GetClientStatusCountsRow struct {
+	ClientsInOrScheduledInCare     int64 `json:"clients_in_or_scheduled_in_care"`
+	ClientsOnWaitingList           int64 `json:"clients_on_waiting_list"`
+	ClientsOutOrScheduledOutOfCare int64 `json:"clients_out_or_scheduled_out_of_care"`
+}
+
+func (q *Queries) GetClientStatusCounts(ctx context.Context) (GetClientStatusCountsRow, error) {
+	row := q.db.QueryRow(ctx, getClientStatusCounts)
+	var i GetClientStatusCountsRow
+	err := row.Scan(&i.ClientsInOrScheduledInCare, &i.ClientsOnWaitingList, &i.ClientsOutOrScheduledOutOfCare)
+	return i, err
+}
+
 const getMissingClientDocuments = `-- name: GetMissingClientDocuments :many
 WITH all_labels AS (
     SELECT unnest(ARRAY[

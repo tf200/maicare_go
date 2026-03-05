@@ -113,6 +113,75 @@ type GetEmployeeProfileResponse struct {
 	Permissions []Permission `json:"permissions"`
 }
 
+type EmployeeRole struct {
+	ID   uuid.UUID `json:"id"`
+	Name string    `json:"name"`
+}
+
+type BriefEducationDetail struct {
+	InstitutionName string     `json:"institution_name"`
+	Degree          string     `json:"degree"`
+	FieldOfStudy    string     `json:"field_of_study"`
+	StartDate       *time.Time `json:"start_date"`
+	EndDate         *time.Time `json:"end_date"`
+}
+
+type BriefExperienceDetail struct {
+	JobTitle    string     `json:"job_title"`
+	CompanyName string     `json:"company_name"`
+	StartDate   *time.Time `json:"start_date"`
+	EndDate     *time.Time `json:"end_date"`
+}
+
+type ActiveSessionDetail struct {
+	ID        uuid.UUID `json:"id"`
+	UserAgent string    `json:"user_agent"`
+	ClientIP  string    `json:"client_ip"`
+	ExpiresAt time.Time `json:"expires_at"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+type GetEmployeeProfileDetailsResponse struct {
+	UserID              uuid.UUID               `json:"user_id"`
+	EmployeeID          uuid.UUID               `json:"employee_id"`
+	Email               string                  `json:"email"`
+	FirstName           string                  `json:"first_name"`
+	LastName            string                  `json:"last_name"`
+	TwoFactorEnabled    bool                    `json:"two_factor_enabled"`
+	LastLogin           time.Time               `json:"last_login"`
+	Roles               []EmployeeRole          `json:"roles"`
+	ActiveSessions      []ActiveSessionDetail   `json:"active_sessions"`
+	Education           []BriefEducationDetail  `json:"education"`
+	WorkExperience      []BriefExperienceDetail `json:"work_experience"`
+	Street              string                  `json:"street"`
+	HouseNumber         string                  `json:"house_number"`
+	HouseNumberAddition *string                 `json:"house_number_addition"`
+	PostalCode          string                  `json:"postal_code"`
+	City                string                  `json:"city"`
+	Position            *string                 `json:"position"`
+	Department          *string                 `json:"department"`
+	EmployeeNumber      *string                 `json:"employee_number"`
+	EmploymentNumber    *string                 `json:"employment_number"`
+	PrivateEmailAddress *string                 `json:"private_email_address"`
+	WorkEmailAddress    *string                 `json:"work_email_address"`
+	PrivatePhoneNumber  *string                 `json:"private_phone_number"`
+	WorkPhoneNumber     *string                 `json:"work_phone_number"`
+	HomeTelephoneNumber *string                 `json:"home_telephone_number"`
+	DateOfBirth         *time.Time              `json:"date_of_birth"`
+	Gender              string                  `json:"gender"`
+	LocationID          *uuid.UUID              `json:"location_id"`
+	LocationName        *string                 `json:"location_name"`
+	OrganisationName    *string                 `json:"organisation_name"`
+	HasBorrowed         bool                    `json:"has_borrowed"`
+	OutOfService        *bool                   `json:"out_of_service"`
+	IsArchived          bool                    `json:"is_archived"`
+	ContractType        string                  `json:"contract_type"`
+	ContractHours       *float64                `json:"contract_hours"`
+	ContractStartDate   *time.Time              `json:"contract_start_date"`
+	ContractEndDate     *time.Time              `json:"contract_end_date"`
+	ContractRate        *float64                `json:"contract_rate"`
+}
+
 // Permission represents a permission entity
 type Permission struct {
 	ID       uuid.UUID `json:"id"`

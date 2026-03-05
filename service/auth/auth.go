@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"crypto/subtle"
 	"database/sql"
 	"fmt"
 	"strings"
@@ -21,10 +22,24 @@ func (s *authService) Login(req LoginUserRequest, clientIP string,
 	userAgent string, ctx context.Context,
 ) (*LoginUserResponse, error) {
 	email := strings.ToLower(req.Email)
+	now := time.Now()
+	loginEmailKey := loginAttemptKeyForEmail(email)
+	loginIPKey := loginAttemptKeyForIP(clientIP)
+
+	if err := s.checkAttemptAllowed(s.loginAttempts, loginEmailKey, now); err != nil {
+		s.Logger.LogWarn(ctx, "Login", "Login blocked due to too many attempts", zap.String("email", email))
+		return nil, ErrTooManyAttempts
+	}
+	if err := s.checkAttemptAllowed(s.loginAttempts, loginIPKey, now); err != nil {
+		s.Logger.LogWarn(ctx, "Login", "Login blocked due to too many attempts", zap.String("client_ip", clientIP))
+		return nil, ErrTooManyAttempts
+	}
 
 	user, err := s.Store.GetUserByEmail(ctx, email)
 	if err != nil {
 		if err == sql.ErrNoRows {
+			s.recordAttemptFailure(s.loginAttempts, loginEmailKey, now)
+			s.recordAttemptFailure(s.loginAttempts, loginIPKey, now)
 			s.Logger.LogError(ctx, "Login", "Failed login attempt: user not found", nil,
 				zap.String("email", email), zap.String("client_ip", clientIP), zap.String("user_agent", userAgent))
 			return nil, ErrInvalidCredentials
@@ -35,18 +50,37 @@ func (s *authService) Login(req LoginUserRequest, clientIP string,
 
 	err = util.CheckPassword(req.Password, user.Password)
 	if err != nil {
+		s.recordAttemptFailure(s.loginAttempts, loginEmailKey, now)
+		s.recordAttemptFailure(s.loginAttempts, loginIPKey, now)
 		s.Logger.LogError(ctx, "Login", "Failed login attempt: incorrect password", nil,
 			zap.String("email", email), zap.String("client_ip", clientIP),
 			zap.String("user_agent", userAgent))
 		return nil, ErrInvalidCredentials
 	}
+	s.clearAttemptState(s.loginAttempts, loginEmailKey)
+	s.clearAttemptState(s.loginAttempts, loginIPKey)
 
 	if user.TwoFactorEnabled {
-		tempToken, _, err := s.TokenMaker.CreateToken(user.ID, user.EmployeeID,
+		tempToken, tempPayload, err := s.TokenMaker.CreateToken(user.ID, user.EmployeeID,
 			s.Config.TwoFATokenDuration, token.TwoFAToken)
 		if err != nil {
 			s.Logger.LogError(ctx, "Login", "Failed to create 2FA token", err, zap.String("email", email))
 			return nil, fmt.Errorf("failed to create 2FA token: %v", err)
+		}
+
+		_, err = s.Store.CreateSession(ctx, db.CreateSessionParams{
+			ID:           tempPayload.ID,
+			RefreshToken: tempToken,
+			UserAgent:    userAgent,
+			ClientIp:     clientIP,
+			IsBlocked:    false,
+			ExpiresAt:    pgtype.Timestamptz{Time: tempPayload.ExpiresAt, Valid: true},
+			CreatedAt:    pgtype.Timestamptz{Time: time.Now(), Valid: true},
+			UserID:       tempPayload.UserId,
+		})
+		if err != nil {
+			s.Logger.LogError(ctx, "Login", "Failed to create temporary 2FA challenge", err, zap.String("email", email))
+			return nil, fmt.Errorf("failed to create 2FA challenge: %v", err)
 		}
 		s.Logger.LogInfo(ctx, "Login", "2FA required for user",
 			zap.String("email", email), zap.String("client_ip", clientIP),
@@ -104,6 +138,12 @@ func (s *authService) RefreshToken(req RefreshTokenRequest, ctx context.Context)
 		return nil, ErrInvalidCredentials
 	}
 
+	if payload.TokenType != token.RefreshToken {
+		s.Logger.LogWarn(ctx, "RefreshToken", "Token type is not refresh token",
+			zap.String("user_id", payload.UserId.String()))
+		return nil, ErrUnauthorized
+	}
+
 	session, err := s.Store.GetSessionByID(ctx, payload.ID)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -128,7 +168,7 @@ func (s *authService) RefreshToken(req RefreshTokenRequest, ctx context.Context)
 		return nil, ErrUnauthorized
 	}
 
-	if session.RefreshToken != req.RefreshToken {
+	if subtle.ConstantTimeCompare([]byte(session.RefreshToken), []byte(req.RefreshToken)) != 1 {
 		s.Logger.LogWarn(ctx, "RefreshToken", "Refresh token mismatch",
 			zap.String("user_id", payload.UserId.String()), zap.String("session_id", payload.ID.String()))
 		return nil, ErrUnauthorized
@@ -158,15 +198,57 @@ func (s *authService) RefreshToken(req RefreshTokenRequest, ctx context.Context)
 }
 
 func (s *authService) VerifyTwoFAToken(req Verify2FARequest, clientIP string, userAgent string, ctx context.Context) (*LoginUserResponse, error) {
+	now := time.Now()
+	verifyIPKey := verify2FAAttemptKeyForIP(clientIP)
+	if err := s.checkAttemptAllowed(s.twoFAAttempts, verifyIPKey, now); err != nil {
+		s.Logger.LogWarn(ctx, "VerifyTwoFAToken", "2FA verification blocked due to too many attempts", zap.String("client_ip", clientIP))
+		return nil, ErrTooManyAttempts
+	}
+
 	tempPayload, err := s.TokenMaker.VerifyToken(req.TempToken)
 	if err != nil {
+		s.recordAttemptFailure(s.twoFAAttempts, verifyIPKey, now)
 		s.Logger.LogWarn(ctx, "VerifyTwoFAToken", "Invalid temporary 2FA token", zap.Error(err))
+		return nil, ErrUnauthorized
+	}
+
+	if tempPayload.TokenType != token.TwoFAToken {
+		s.recordAttemptFailure(s.twoFAAttempts, verifyIPKey, now)
+		s.Logger.LogWarn(ctx, "VerifyTwoFAToken", "Token type is not 2FA token", zap.String("user_id", tempPayload.UserId.String()))
+		return nil, ErrUnauthorized
+	}
+
+	verifyUserKey := verify2FAAttemptKeyForUser(tempPayload.UserId.String())
+	if err := s.checkAttemptAllowed(s.twoFAAttempts, verifyUserKey, now); err != nil {
+		s.Logger.LogWarn(ctx, "VerifyTwoFAToken", "2FA verification blocked due to too many attempts", zap.String("user_id", tempPayload.UserId.String()))
+		return nil, ErrTooManyAttempts
+	}
+
+	tempSession, err := s.Store.GetSessionByID(ctx, tempPayload.ID)
+	if err != nil {
+		s.recordAttemptFailure(s.twoFAAttempts, verifyIPKey, now)
+		s.recordAttemptFailure(s.twoFAAttempts, verifyUserKey, now)
+		s.Logger.LogWarn(ctx, "VerifyTwoFAToken", "2FA challenge session not found", zap.String("session_id", tempPayload.ID.String()))
+		return nil, ErrUnauthorized
+	}
+	if tempSession.IsBlocked || tempSession.UserID != tempPayload.UserId || time.Now().After(tempSession.ExpiresAt.Time) {
+		s.recordAttemptFailure(s.twoFAAttempts, verifyIPKey, now)
+		s.recordAttemptFailure(s.twoFAAttempts, verifyUserKey, now)
+		s.Logger.LogWarn(ctx, "VerifyTwoFAToken", "Invalid or expired 2FA challenge session", zap.String("session_id", tempPayload.ID.String()))
+		return nil, ErrUnauthorized
+	}
+	if subtle.ConstantTimeCompare([]byte(tempSession.RefreshToken), []byte(req.TempToken)) != 1 {
+		s.recordAttemptFailure(s.twoFAAttempts, verifyIPKey, now)
+		s.recordAttemptFailure(s.twoFAAttempts, verifyUserKey, now)
+		s.Logger.LogWarn(ctx, "VerifyTwoFAToken", "2FA temp token mismatch", zap.String("session_id", tempPayload.ID.String()))
 		return nil, ErrUnauthorized
 	}
 
 	user, err := s.Store.GetUserByID(ctx, tempPayload.UserId)
 	if err != nil {
 		if err == sql.ErrNoRows {
+			s.recordAttemptFailure(s.twoFAAttempts, verifyIPKey, now)
+			s.recordAttemptFailure(s.twoFAAttempts, verifyUserKey, now)
 			s.Logger.LogWarn(ctx, "VerifyTwoFAToken", "User not found for 2FA",
 				zap.String("user_id", tempPayload.UserId.String()))
 			return nil, ErrUserNotFound
@@ -177,6 +259,8 @@ func (s *authService) VerifyTwoFAToken(req Verify2FARequest, clientIP string, us
 	}
 
 	if !user.TwoFactorEnabled || user.TwoFactorSecret == nil || *user.TwoFactorSecret == "" {
+		s.recordAttemptFailure(s.twoFAAttempts, verifyIPKey, now)
+		s.recordAttemptFailure(s.twoFAAttempts, verifyUserKey, now)
 		s.Logger.LogWarn(ctx, "VerifyTwoFAToken", "2FA not enabled for user",
 			zap.String("user_id", user.ID.String()))
 		return nil, ErrUnauthorized
@@ -184,10 +268,23 @@ func (s *authService) VerifyTwoFAToken(req Verify2FARequest, clientIP string, us
 
 	valid := totp.Validate(req.ValidationCode, *user.TwoFactorSecret)
 	if !valid {
+		s.recordAttemptFailure(s.twoFAAttempts, verifyIPKey, now)
+		s.recordAttemptFailure(s.twoFAAttempts, verifyUserKey, now)
 		s.Logger.LogWarn(ctx, "VerifyTwoFAToken", "Invalid 2FA code",
 			zap.String("user_id", user.ID.String()))
 		return nil, ErrUnauthorized
 	}
+
+	err = s.Store.DeleteSession(ctx, tempPayload.ID)
+	if err != nil {
+		s.recordAttemptFailure(s.twoFAAttempts, verifyIPKey, now)
+		s.recordAttemptFailure(s.twoFAAttempts, verifyUserKey, now)
+		s.Logger.LogWarn(ctx, "VerifyTwoFAToken", "Failed to consume 2FA challenge session", zap.Error(err), zap.String("session_id", tempPayload.ID.String()))
+		return nil, ErrUnauthorized
+	}
+	s.clearAttemptState(s.twoFAAttempts, verifyIPKey)
+	s.clearAttemptState(s.twoFAAttempts, verifyUserKey)
+
 	refreshToken, payload, err := s.TokenMaker.CreateToken(user.ID, user.EmployeeID, s.Config.RefreshTokenDuration, token.RefreshToken)
 	if err != nil {
 		s.Logger.LogError(ctx, "VerifyTwoFAToken", "Failed to create refresh token", err,

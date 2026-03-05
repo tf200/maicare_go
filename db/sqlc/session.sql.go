@@ -93,3 +93,48 @@ func (q *Queries) GetSessionByID(ctx context.Context, id uuid.UUID) (Session, er
 	)
 	return i, err
 }
+
+const listActiveSessionsByUserID = `-- name: ListActiveSessionsByUserID :many
+SELECT id, user_agent, client_ip, is_blocked, expires_at, created_at
+FROM sessions
+WHERE user_id = $1
+  AND is_blocked = FALSE
+  AND expires_at > NOW()
+ORDER BY created_at DESC
+`
+
+type ListActiveSessionsByUserIDRow struct {
+	ID        uuid.UUID          `json:"id"`
+	UserAgent string             `json:"user_agent"`
+	ClientIp  string             `json:"client_ip"`
+	IsBlocked bool               `json:"is_blocked"`
+	ExpiresAt pgtype.Timestamptz `json:"expires_at"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
+func (q *Queries) ListActiveSessionsByUserID(ctx context.Context, userID uuid.UUID) ([]ListActiveSessionsByUserIDRow, error) {
+	rows, err := q.db.Query(ctx, listActiveSessionsByUserID, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListActiveSessionsByUserIDRow{}
+	for rows.Next() {
+		var i ListActiveSessionsByUserIDRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserAgent,
+			&i.ClientIp,
+			&i.IsBlocked,
+			&i.ExpiresAt,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
