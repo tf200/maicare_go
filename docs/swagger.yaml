@@ -1718,19 +1718,19 @@ definitions:
       success:
         type: boolean
     type: object
-  api.Response-settings_GrantUserPermissionsResponse:
+  api.Response-settings_ListUserRolesAndPermissionsApiResponse:
     properties:
       data:
-        $ref: '#/definitions/settings.GrantUserPermissionsResponse'
+        $ref: '#/definitions/settings.ListUserRolesAndPermissionsApiResponse'
       message:
         type: string
       success:
         type: boolean
     type: object
-  api.Response-settings_ListUserRolesAndPermissionsApiResponse:
+  api.Response-settings_ReplaceUserPermissionOverridesResponse:
     properties:
       data:
-        $ref: '#/definitions/settings.ListUserRolesAndPermissionsApiResponse'
+        $ref: '#/definitions/settings.ReplaceUserPermissionOverridesResponse'
       message:
         type: string
       success:
@@ -10000,22 +10000,6 @@ definitions:
       website:
         type: string
     type: object
-  settings.GrantUserPermissionsRequest:
-    properties:
-      permission_ids:
-        items:
-          type: string
-        type: array
-    type: object
-  settings.GrantUserPermissionsResponse:
-    properties:
-      employee_id:
-        type: string
-      permission_ids:
-        items:
-          type: string
-        type: array
-    type: object
   settings.ListAllPermissionsApiResponse:
     properties:
       description:
@@ -10057,11 +10041,23 @@ definitions:
     type: object
   settings.ListUserRolesAndPermissionsApiResponse:
     properties:
-      permissions:
+      effective_permissions:
         items:
           $ref: '#/definitions/settings.PermissionInfo'
         type: array
-      roles:
+      inherited_permissions:
+        items:
+          $ref: '#/definitions/settings.PermissionInfo'
+        type: array
+      override_allows:
+        items:
+          $ref: '#/definitions/settings.PermissionOverrideInfo'
+        type: array
+      override_denies:
+        items:
+          $ref: '#/definitions/settings.PermissionOverrideInfo'
+        type: array
+      role:
         $ref: '#/definitions/settings.RoleInfo'
     type: object
   settings.PermissionGroupResponse:
@@ -10084,6 +10080,15 @@ definitions:
       resource:
         type: string
     type: object
+  settings.PermissionOverrideInfo:
+    properties:
+      id:
+        type: string
+      name:
+        type: string
+      resource:
+        type: string
+    type: object
   settings.PermissionSectionResponse:
     properties:
       permissions:
@@ -10093,6 +10098,30 @@ definitions:
       section_key:
         type: string
       section_label:
+        type: string
+    type: object
+  settings.ReplaceUserPermissionOverridesRequest:
+    properties:
+      allow_permission_ids:
+        items:
+          type: string
+        type: array
+      deny_permission_ids:
+        items:
+          type: string
+        type: array
+    type: object
+  settings.ReplaceUserPermissionOverridesResponse:
+    properties:
+      allow_permission_ids:
+        items:
+          type: string
+        type: array
+      deny_permission_ids:
+        items:
+          type: string
+        type: array
+      employee_id:
         type: string
     type: object
   settings.RoleInfo:
@@ -12775,26 +12804,27 @@ paths:
     post:
       consumes:
       - application/json
-      description: Grant specific permissions to a user by employee ID
+      description: Replace explicit allow and deny permission overrides for a user
+        by employee ID
       parameters:
       - description: Employee ID
         in: path
         name: employee_id
         required: true
         type: integer
-      - description: Grant user permissions
+      - description: Replace user permission overrides
         in: body
         name: input
         required: true
         schema:
-          $ref: '#/definitions/settings.GrantUserPermissionsRequest'
+          $ref: '#/definitions/settings.ReplaceUserPermissionOverridesRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/api.Response-settings_GrantUserPermissionsResponse'
+            $ref: '#/definitions/api.Response-settings_ReplaceUserPermissionOverridesResponse'
         "400":
           description: Bad Request
           schema:
@@ -12807,7 +12837,7 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/api.Response-any'
-      summary: Grant user permissions
+      summary: Replace user permission overrides
       tags:
       - roles
   /employees/{employee_id}/roles:
@@ -16610,7 +16640,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Add specific permissions to a role by role ID
+      description: Replace the permission set assigned to a role by role ID
       parameters:
       - description: Add permissions to role
         in: body
@@ -16637,7 +16667,7 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/api.Response-any'
-      summary: Add permissions to a role
+      summary: Replace role permissions
       tags:
       - roles
   /schedules:

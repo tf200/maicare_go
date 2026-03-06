@@ -4226,7 +4226,7 @@ const docTemplate = `{
         },
         "/employees/{employee_id}/permissions": {
             "post": {
-                "description": "Grant specific permissions to a user by employee ID",
+                "description": "Replace explicit allow and deny permission overrides for a user by employee ID",
                 "consumes": [
                     "application/json"
                 ],
@@ -4236,7 +4236,7 @@ const docTemplate = `{
                 "tags": [
                     "roles"
                 ],
-                "summary": "Grant user permissions",
+                "summary": "Replace user permission overrides",
                 "parameters": [
                     {
                         "type": "integer",
@@ -4246,12 +4246,12 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "Grant user permissions",
+                        "description": "Replace user permission overrides",
                         "name": "input",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/settings.GrantUserPermissionsRequest"
+                            "$ref": "#/definitions/settings.ReplaceUserPermissionOverridesRequest"
                         }
                     }
                 ],
@@ -4259,7 +4259,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-settings_GrantUserPermissionsResponse"
+                            "$ref": "#/definitions/api.Response-settings_ReplaceUserPermissionOverridesResponse"
                         }
                     },
                     "400": {
@@ -9807,7 +9807,7 @@ const docTemplate = `{
                 }
             },
             "post": {
-                "description": "Add specific permissions to a role by role ID",
+                "description": "Replace the permission set assigned to a role by role ID",
                 "consumes": [
                     "application/json"
                 ],
@@ -9817,7 +9817,7 @@ const docTemplate = `{
                 "tags": [
                     "roles"
                 ],
-                "summary": "Add permissions to a role",
+                "summary": "Replace role permissions",
                 "parameters": [
                     {
                         "description": "Add permissions to role",
@@ -13455,11 +13455,11 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-settings_GrantUserPermissionsResponse": {
+        "api.Response-settings_ListUserRolesAndPermissionsApiResponse": {
             "type": "object",
             "properties": {
                 "data": {
-                    "$ref": "#/definitions/settings.GrantUserPermissionsResponse"
+                    "$ref": "#/definitions/settings.ListUserRolesAndPermissionsApiResponse"
                 },
                 "message": {
                     "type": "string"
@@ -13469,11 +13469,11 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-settings_ListUserRolesAndPermissionsApiResponse": {
+        "api.Response-settings_ReplaceUserPermissionOverridesResponse": {
             "type": "object",
             "properties": {
                 "data": {
-                    "$ref": "#/definitions/settings.ListUserRolesAndPermissionsApiResponse"
+                    "$ref": "#/definitions/settings.ReplaceUserPermissionOverridesResponse"
                 },
                 "message": {
                     "type": "string"
@@ -25877,31 +25877,6 @@ const docTemplate = `{
                 }
             }
         },
-        "settings.GrantUserPermissionsRequest": {
-            "type": "object",
-            "properties": {
-                "permission_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "settings.GrantUserPermissionsResponse": {
-            "type": "object",
-            "properties": {
-                "employee_id": {
-                    "type": "string"
-                },
-                "permission_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
         "settings.ListAllPermissionsApiResponse": {
             "type": "object",
             "properties": {
@@ -25965,13 +25940,31 @@ const docTemplate = `{
         "settings.ListUserRolesAndPermissionsApiResponse": {
             "type": "object",
             "properties": {
-                "permissions": {
+                "effective_permissions": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/settings.PermissionInfo"
                     }
                 },
-                "roles": {
+                "inherited_permissions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/settings.PermissionInfo"
+                    }
+                },
+                "override_allows": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/settings.PermissionOverrideInfo"
+                    }
+                },
+                "override_denies": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/settings.PermissionOverrideInfo"
+                    }
+                },
+                "role": {
                     "$ref": "#/definitions/settings.RoleInfo"
                 }
             }
@@ -26007,6 +26000,20 @@ const docTemplate = `{
                 }
             }
         },
+        "settings.PermissionOverrideInfo": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "resource": {
+                    "type": "string"
+                }
+            }
+        },
         "settings.PermissionSectionResponse": {
             "type": "object",
             "properties": {
@@ -26020,6 +26027,43 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "section_label": {
+                    "type": "string"
+                }
+            }
+        },
+        "settings.ReplaceUserPermissionOverridesRequest": {
+            "type": "object",
+            "properties": {
+                "allow_permission_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "deny_permission_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "settings.ReplaceUserPermissionOverridesResponse": {
+            "type": "object",
+            "properties": {
+                "allow_permission_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "deny_permission_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "employee_id": {
                     "type": "string"
                 }
             }
