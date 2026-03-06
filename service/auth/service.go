@@ -33,16 +33,6 @@ type AuthService interface {
 	Logout(req LogoutRequest, ctx context.Context) error
 	ChangePassword(req ChangePasswordRequest, userID uuid.UUID, ctx context.Context) error
 	EnableTwoFA(req Enable2FARequest, userID uuid.UUID, ctx context.Context) (*Enable2FAResponse, error)
-
-	// role methods
-	ListRoles(ctx context.Context) ([]ListRolesApiResponse, error)
-	ListAllPermissions(ctx context.Context) ([]ListAllPermissionsApiResponse, error)
-	ListAllRolePermissions(ctx context.Context, roleID uuid.UUID) ([]ListAllRolePermissionsApiResponse, error)
-	AssignRoleToEmployee(ctx context.Context, employeeID uuid.UUID, req *AssignRoleToEmployeeParams) (*AssignRoleToEmployeeApiResponse, error)
-	ListUserRolesAndPermissionsApi(ctx context.Context, employeeID uuid.UUID) (*ListUserRolesAndPermissionsApiResponse, error)
-	GrantUserPermission(ctx context.Context, employeeID uuid.UUID, req *GrantUserPermissionsRequest) (*GrantUserPermissionsResponse, error)
-	AddPermissionsToRole(ctx context.Context, roleID uuid.UUID, req *AddPermissionsToRoleRequest) (*AddPermissionsToRoleResponse, error)
-	CreateRole(ctx context.Context, req *CreateRoleRequest) (*CreateRoleResponse, error)
 	HasPermission(ctx context.Context, userID uuid.UUID, permission string) (bool, error)
 	GetUserRoles(ctx context.Context, userID uuid.UUID) ([]string, error)
 }

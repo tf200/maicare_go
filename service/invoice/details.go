@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
-	"strings"
 	"time"
 
 	db "maicare_go/db/sqlc"
@@ -20,32 +19,6 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
 )
-
-func parseYYYYMMDD(s string) (time.Time, bool, error) {
-	if strings.TrimSpace(s) == "" {
-		return time.Time{}, false, nil
-	}
-	t, err := time.Parse("2006-01-02", s)
-	if err != nil {
-		return time.Time{}, false, fmt.Errorf("invalid date %q (expected YYYY-MM-DD): %w", s, err)
-	}
-	return t, true, nil
-}
-
-func parseRFC3339OrYYYYMMDD(s string) (time.Time, bool, error) {
-	s = strings.TrimSpace(s)
-	if s == "" {
-		return time.Time{}, false, nil
-	}
-	if strings.Contains(s, "T") {
-		t, err := time.Parse(time.RFC3339, s)
-		if err != nil {
-			return time.Time{}, false, fmt.Errorf("invalid timestamp %q (expected RFC3339): %w", s, err)
-		}
-		return t, true, nil
-	}
-	return parseYYYYMMDD(s)
-}
 
 func (s *invoiceService) CreateInvoice(ctx context.Context, req CreateInvoiceRequest, employeeID uuid.UUID) (*CreateInvoiceResponse, error) {
 	if req.ClientID == uuid.Nil {
@@ -308,20 +281,20 @@ func (s *invoiceService) GetInvoiceByID(ctx context.Context, invoiceID uuid.UUID
 func (s *invoiceService) ListInvoices(ctx *gin.Context, req ListInvoicesRequest) (*pagination.Response[ListInvoicesResponse], error) {
 	params := req.GetParams()
 
-	issueStart, issueStartValid, err := parseYYYYMMDD(req.StartDate)
+	issueStart, issueStartValid, err := util.ParseYYYYMMDD(req.StartDate)
 	if err != nil {
 		return nil, err
 	}
-	issueEnd, issueEndValid, err := parseYYYYMMDD(req.EndDate)
+	issueEnd, issueEndValid, err := util.ParseYYYYMMDD(req.EndDate)
 	if err != nil {
 		return nil, err
 	}
 
-	periodStart, periodStartValid, err := parseRFC3339OrYYYYMMDD(req.PeriodStart)
+	periodStart, periodStartValid, err := util.ParseRFC3339OrYYYYMMDD(req.PeriodStart)
 	if err != nil {
 		return nil, err
 	}
-	periodEnd, periodEndValid, err := parseRFC3339OrYYYYMMDD(req.PeriodEnd)
+	periodEnd, periodEndValid, err := util.ParseRFC3339OrYYYYMMDD(req.PeriodEnd)
 	if err != nil {
 		return nil, err
 	}

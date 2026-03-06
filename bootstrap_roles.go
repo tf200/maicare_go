@@ -13,23 +13,12 @@ import (
 	"gopkg.in/yaml.v3"
 
 	db "maicare_go/db/sqlc"
+	rolecfg "maicare_go/roles"
 )
 
-type rbacPermission struct {
-	Name     string   `yaml:"name"`
-	Resource string   `yaml:"resource"`
-	Method   []string `yaml:"method"`
-}
-
-type rbacRole struct {
-	Name        string   `yaml:"name"`
-	Permissions []string `yaml:"permissions"`
-}
-
-type rbacConfig struct {
-	Permissions []rbacPermission `yaml:"permissions"`
-	Roles       []rbacRole       `yaml:"roles"`
-}
+type rbacPermission = rolecfg.Permission
+type rbacRole = rolecfg.Role
+type rbacConfig = rolecfg.Config
 
 //go:embed roles/rbac_config.yaml
 var embeddedRBACConfig []byte
@@ -62,15 +51,38 @@ func ensurePermission(ctx context.Context, store *db.Store, perm rbacPermission)
 		return fmt.Errorf("failed to marshal methods for permission %s: %w", perm.Name, err)
 	}
 
+	metadata := perm.Normalize()
+
 	var permissionID uuid.UUID
 	err = store.ConnPool.QueryRow(
 		ctx,
-		`SELECT id FROM permissions WHERE name = $1 AND resource = $2 AND method = $3 LIMIT 1`,
+		`SELECT id FROM permissions WHERE name = $1 ORDER BY id LIMIT 1`,
 		perm.Name,
-		perm.Resource,
-		string(methodJSON),
 	).Scan(&permissionID)
 	if err == nil {
+		_, err = store.ConnPool.Exec(
+			ctx,
+			`UPDATE permissions
+			 SET resource = $2,
+			     method = $3,
+			     group_key = $4,
+			     section_key = $5,
+			     display_name = $6,
+			     description = $7,
+			     sort_order = $8
+			 WHERE id = $1`,
+			permissionID,
+			perm.Resource,
+			string(methodJSON),
+			metadata.GroupKey,
+			metadata.SectionKey,
+			metadata.DisplayName,
+			metadata.Description,
+			metadata.SortOrder,
+		)
+		if err != nil {
+			return fmt.Errorf("failed to update permission %s: %w", perm.Name, err)
+		}
 		return nil
 	}
 	if !errors.Is(err, pgx.ErrNoRows) {
@@ -79,10 +91,17 @@ func ensurePermission(ctx context.Context, store *db.Store, perm rbacPermission)
 
 	_, err = store.ConnPool.Exec(
 		ctx,
-		`INSERT INTO permissions (name, resource, method) VALUES ($1, $2, $3)`,
+		`INSERT INTO permissions
+			(name, resource, method, group_key, section_key, display_name, description, sort_order)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
 		perm.Name,
 		perm.Resource,
 		string(methodJSON),
+		metadata.GroupKey,
+		metadata.SectionKey,
+		metadata.DisplayName,
+		metadata.Description,
+		metadata.SortOrder,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to insert permission %s: %w", perm.Name, err)
@@ -99,7 +118,15 @@ func ensureRoleWithPermissions(ctx context.Context, store *db.Store, role rbacRo
 			return fmt.Errorf("failed to query role %s: %w", role.Name, err)
 		}
 
-		createdRole, createErr := store.CreateRole(ctx, role.Name)
+		var description *string
+		if role.Description != "" {
+			description = &role.Description
+		}
+
+		createdRole, createErr := store.CreateRole(ctx, db.CreateRoleParams{
+			Name:        role.Name,
+			Description: description,
+		})
 		if createErr != nil {
 			if isConflictError(createErr) {
 				err = store.ConnPool.QueryRow(ctx, `SELECT id FROM roles WHERE name = $1 LIMIT 1`, role.Name).Scan(&roleID)
@@ -112,6 +139,15 @@ func ensureRoleWithPermissions(ctx context.Context, store *db.Store, role rbacRo
 		} else {
 			roleID = createdRole.ID
 		}
+	}
+
+	if _, err = store.ConnPool.Exec(
+		ctx,
+		`UPDATE roles SET description = $2 WHERE id = $1`,
+		roleID,
+		nilIfEmpty(role.Description),
+	); err != nil {
+		return fmt.Errorf("failed to update role description for %s: %w", role.Name, err)
 	}
 
 	for _, permissionName := range role.Permissions {
@@ -141,4 +177,11 @@ func ensureRoleWithPermissions(ctx context.Context, store *db.Store, role rbacRo
 	}
 
 	return nil
+}
+
+func nilIfEmpty(value string) *string {
+	if value == "" {
+		return nil
+	}
+	return &value
 }

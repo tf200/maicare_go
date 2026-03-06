@@ -437,6 +437,74 @@ func (s *Seeder) createSeedCoordinatorProfile(ctx context.Context, q *db.Queries
 		resolvedLocationID = &picked
 	}
 
+	departmentName := "Youth Care"
+	dept, err := q.GetDepartmentByName(ctx, departmentName)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			dept, err = q.CreateDepartment(ctx, db.CreateDepartmentParams{
+				Name:                     departmentName,
+				DepartmentHeadEmployeeID: nil,
+			})
+		}
+		if err != nil {
+			return uuid.Nil, fmt.Errorf("resolve department: %w", err)
+		}
+	}
+	departmentID := dept.ID
+
+	// Ensure there's an active handbook template + default steps for this department,
+	// so seeded employees can immediately exercise the onboarding flows.
+	template, err := q.GetActiveHandbookTemplateByDepartment(ctx, departmentID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			template, err = q.CreateHandbookTemplateForDepartment(ctx, db.CreateHandbookTemplateForDepartmentParams{
+				DepartmentID:        departmentID,
+				Title:               "Youth Care Onboarding",
+				Description:         stringPtr("Default onboarding handbook for seeded data"),
+				CreatedByEmployeeID: nil,
+			})
+		}
+		if err != nil {
+			return uuid.Nil, fmt.Errorf("resolve handbook template: %w", err)
+		}
+	}
+
+	existingSteps, err := q.ListHandbookStepsByTemplate(ctx, template.ID)
+	if err != nil {
+		return uuid.Nil, fmt.Errorf("list handbook steps: %w", err)
+	}
+	if len(existingSteps) == 0 {
+		defaultSteps := []struct {
+			order int32
+			kind  db.HandbookStepKindEnum
+			title string
+			body  string
+			req   bool
+		}{
+			{1, db.HandbookStepKindEnumContent, "Welcome", "Welcome to the team. This handbook will guide you through your first days.", true},
+			{2, db.HandbookStepKindEnumContent, "Mission & Vision", "Our mission and vision, and how your work contributes.", true},
+			{3, db.HandbookStepKindEnumContent, "Your Role", "Your responsibilities, expectations, and how success is measured.", true},
+			{4, db.HandbookStepKindEnumContent, "Processes", "Key processes: scheduling, reporting, incidents, and communication.", true},
+			{5, db.HandbookStepKindEnumAck, "Acknowledgement", "Please acknowledge you have read and understood the handbook.", true},
+		}
+
+		for _, step := range defaultSteps {
+			body := step.body
+			isReq := step.req
+			if _, err := q.CreateHandbookStep(ctx, db.CreateHandbookStepParams{
+				TemplateID: template.ID,
+				SortOrder:  step.order,
+				Kind:       step.kind,
+				Title:      step.title,
+				Body:       &body,
+				Content:    nil,
+				IsRequired: &isReq,
+			}); err != nil {
+				return uuid.Nil, fmt.Errorf("create handbook step: %w", err)
+			}
+		}
+	}
+
 	email := fmt.Sprintf("seed.coordinator.%s@maicare.local", strings.ToLower(gofakeit.LetterN(8)))
 	user, err := q.CreateUser(ctx, db.CreateUserParams{Password: "seed-password", Email: email, IsActive: true, ProfilePicture: nil})
 	if err != nil {
@@ -453,6 +521,12 @@ func (s *Seeder) createSeedCoordinatorProfile(ctx context.Context, q *db.Queries
 	privatePhone := fakePhone()
 	homePhone := fakePhone()
 
+	var managerEmployeeID *uuid.UUID
+	if len(s.data.EmployeeIDs) > 0 {
+		managerID := oneOf(s.data.EmployeeIDs)
+		managerEmployeeID = &managerID
+	}
+
 	employee, err := q.CreateEmployeeProfile(ctx, db.CreateEmployeeProfileParams{
 		UserID:              user.ID,
 		FirstName:           gofakeit.FirstName(),
@@ -464,7 +538,8 @@ func (s *Seeder) createSeedCoordinatorProfile(ctx context.Context, q *db.Queries
 		PostalCode:          fakePostalCodeNL(),
 		City:                gofakeit.City(),
 		Position:            stringPtr("Care Coordinator"),
-		Department:          stringPtr("Youth Care"),
+		DepartmentID:        &departmentID,
+		ManagerEmployeeID:   managerEmployeeID,
 		EmployeeNumber:      &employeeNumber,
 		EmploymentNumber:    &employmentNumber,
 		PrivateEmailAddress: &privateEmail,
@@ -483,6 +558,14 @@ func (s *Seeder) createSeedCoordinatorProfile(ctx context.Context, q *db.Queries
 	})
 	if err != nil {
 		return uuid.Nil, fmt.Errorf("create employee profile: %w", err)
+	}
+
+	if _, err := q.CreateEmployeeHandbookFromTemplate(ctx, db.CreateEmployeeHandbookFromTemplateParams{
+		EmployeeID:           employee.ID,
+		TemplateID:           template.ID,
+		AssignedByEmployeeID: nil,
+	}); err != nil {
+		return uuid.Nil, fmt.Errorf("assign employee handbook: %w", err)
 	}
 
 	s.data.EmployeeIDs = append(s.data.EmployeeIDs, employee.ID)

@@ -2,10 +2,12 @@ package db
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"maicare_go/infra"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -82,15 +84,31 @@ func (store *Store) CreateEmployeeWithAccountTx(ctx context.Context, arg CreateE
 			return err
 		}
 
-		err = q.AssignRoleToUser(ctx, AssignRoleToUserParams{
-			UserID: result.User.ID,
-			RoleID: arg.RoleID,
-		})
-		if err != nil {
-			return err
+		// Auto-assign the active employee handbook for the employee's department (if configured).
+		if arg.CreateEmployeeParams.DepartmentID != nil {
+			template, tmplErr := q.GetActiveHandbookTemplateByDepartment(ctx, *arg.CreateEmployeeParams.DepartmentID)
+			if tmplErr != nil {
+				if !errors.Is(tmplErr, pgx.ErrNoRows) {
+					return tmplErr
+				}
+			} else {
+				assignedBy := infra.GetEmployeeID(ctx)
+				var assignedByPtr *uuid.UUID
+				if assignedBy != uuid.Nil {
+					assignedByPtr = &assignedBy
+				}
+				_, err = q.CreateEmployeeHandbookFromTemplate(ctx, CreateEmployeeHandbookFromTemplateParams{
+					EmployeeID:           result.Employee.ID,
+					TemplateID:           template.ID,
+					AssignedByEmployeeID: assignedByPtr,
+				})
+				if err != nil {
+					return err
+				}
+			}
 		}
 
-		err = q.GrantRolePermissionsToUser(ctx, GrantRolePermissionsToUserParams{
+		err = q.AssignRoleToUser(ctx, AssignRoleToUserParams{
 			UserID: result.User.ID,
 			RoleID: arg.RoleID,
 		})

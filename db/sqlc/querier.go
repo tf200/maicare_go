@@ -24,6 +24,8 @@ type Querier interface {
 	AddEventReminder(ctx context.Context, arg AddEventReminderParams) (AddEventReminderRow, error)
 	// Bulk-insert permission IDs into a role (idempotent).
 	AddPermissionsToRole(ctx context.Context, arg AddPermissionsToRoleParams) error
+	// Bulk-insert explicit overrides for a user (idempotent by replacement flow).
+	AddUserPermissionOverrides(ctx context.Context, arg AddUserPermissionOverridesParams) error
 	ApproveOrRejectClientLocationTransfer(ctx context.Context, arg ApproveOrRejectClientLocationTransferParams) error
 	// Select the columns from the inserted row AND join to get the user_id
 	AssignEmployee(ctx context.Context, arg AssignEmployeeParams) (AssignEmployeeRow, error)
@@ -34,6 +36,7 @@ type Querier interface {
 	// ---------- 6. CHECK UTILITIES ----------
 	// Returns true/false whether the user has the named permission.
 	CheckUserPermission(ctx context.Context, arg CheckUserPermissionParams) (bool, error)
+	CompleteEmployeeHandbookStep(ctx context.Context, arg CompleteEmployeeHandbookStepParams) (EmployeeHandbookStepProgress, error)
 	ConfirmIncident(ctx context.Context, arg ConfirmIncidentParams) (int64, error)
 	ContractEndCount(ctx context.Context) (int64, error)
 	CountActiveGoalsByClientID(ctx context.Context, clientID uuid.UUID) (int64, error)
@@ -42,6 +45,7 @@ type Querier interface {
 	CountEmployeeProfile(ctx context.Context, arg CountEmployeeProfileParams) (int64, error)
 	CountInvoiceLineCalendarEventsByInvoice(ctx context.Context, invoiceID uuid.UUID) (int64, error)
 	CountRegistrationForms(ctx context.Context, arg CountRegistrationFormsParams) (int64, error)
+	CountRemainingRequiredHandbookSteps(ctx context.Context, employeeHandbookID uuid.UUID) (int32, error)
 	CountSenders(ctx context.Context, includeArchived *bool) (int64, error)
 	CreateAiGeneratedReport(ctx context.Context, arg CreateAiGeneratedReportParams) (AiGeneratedReport, error)
 	CreateAppointmentCard(ctx context.Context, arg CreateAppointmentCardParams) (AppointmentCard, error)
@@ -63,9 +67,13 @@ type Querier interface {
 	CreateContract(ctx context.Context, arg CreateContractParams) (Contract, error)
 	CreateContractReminder(ctx context.Context, arg CreateContractReminderParams) (ContractReminder, error)
 	CreateContractType(ctx context.Context, name string) (ContractType, error)
+	CreateDepartment(ctx context.Context, arg CreateDepartmentParams) (Department, error)
 	CreateEmemrgencyContact(ctx context.Context, arg CreateEmemrgencyContactParams) (ClientEmergencyContact, error)
+	CreateEmployeeHandbookFromTemplate(ctx context.Context, arg CreateEmployeeHandbookFromTemplateParams) (CreateEmployeeHandbookFromTemplateRow, error)
 	CreateEmployeeProfile(ctx context.Context, arg CreateEmployeeProfileParams) (EmployeeProfile, error)
 	CreateGoalEvaluation(ctx context.Context, arg CreateGoalEvaluationParams) (ClientGoalEvaluation, error)
+	CreateHandbookStep(ctx context.Context, arg CreateHandbookStepParams) (HandbookStep, error)
+	CreateHandbookTemplateForDepartment(ctx context.Context, arg CreateHandbookTemplateForDepartmentParams) (HandbookTemplate, error)
 	CreateIncident(ctx context.Context, arg CreateIncidentParams) (CreateIncidentRow, error)
 	CreateIntakeForm(ctx context.Context, arg CreateIntakeFormParams) (IntakeForm, error)
 	CreateIntakeTopicAssessment(ctx context.Context, arg CreateIntakeTopicAssessmentParams) (IntakeTopicAssessment, error)
@@ -88,7 +96,7 @@ type Querier interface {
 	CreateRegistrationForm(ctx context.Context, arg CreateRegistrationFormParams) (RegistrationForm, error)
 	// ---------- 1. ROLES ----------
 	// Insert a new role and return the created row.
-	CreateRole(ctx context.Context, name string) (Role, error)
+	CreateRole(ctx context.Context, arg CreateRoleParams) (Role, error)
 	CreateSchedule(ctx context.Context, arg CreateScheduleParams) (CreateScheduleRow, error)
 	CreateSeedIntakeForm(ctx context.Context, arg CreateSeedIntakeFormParams) (CreateSeedIntakeFormRow, error)
 	CreateSender(ctx context.Context, arg CreateSenderParams) (Sender, error)
@@ -104,6 +112,7 @@ type Querier interface {
 	DeleteClientDocument(ctx context.Context, attachmentUuid *uuid.UUID) (ClientDocument, error)
 	DeleteClientMedicationOrder(ctx context.Context, arg DeleteClientMedicationOrderParams) error
 	DeleteContractType(ctx context.Context, id uuid.UUID) error
+	DeleteDepartment(ctx context.Context, id uuid.UUID) error
 	DeleteEmergencyContact(ctx context.Context, id uuid.UUID) (ClientEmergencyContact, error)
 	DeleteEmployeeCertification(ctx context.Context, id uuid.UUID) (Certification, error)
 	DeleteEmployeeEducation(ctx context.Context, id uuid.UUID) (EmployeeEducation, error)
@@ -123,16 +132,19 @@ type Querier interface {
 	DeleteSender(ctx context.Context, id uuid.UUID) error
 	DeleteSession(ctx context.Context, id uuid.UUID) error
 	DeleteShift(ctx context.Context, id uuid.UUID) error
-	// Removes *all* permissions from the given user.
-	DeleteUserPermissions(ctx context.Context, userID uuid.UUID) error
+	// Removes all explicit overrides for the given user.
+	DeleteUserPermissionOverrides(ctx context.Context, userID uuid.UUID) error
 	DischargeOverview(ctx context.Context, arg DischargeOverviewParams) ([]DischargeOverviewRow, error)
 	Enable2Fa(ctx context.Context, arg Enable2FaParams) (int64, error)
+	GetActiveEmployeeHandbookByEmployeeID(ctx context.Context, employeeID uuid.UUID) (GetActiveEmployeeHandbookByEmployeeIDRow, error)
+	GetActiveHandbookTemplateByDepartment(ctx context.Context, departmentID uuid.UUID) (HandbookTemplate, error)
 	// Returns the ID of the admin role.
 	GetAdminRoleId(ctx context.Context) (uuid.UUID, error)
 	GetAiGeneratedReport(ctx context.Context, id uuid.UUID) (AiGeneratedReport, error)
 	GetAllAdminUsers(ctx context.Context) ([]CustomUser, error)
 	GetAllClientsIDs(ctx context.Context) ([]uuid.UUID, error)
 	GetAllTemplateItems(ctx context.Context) ([]TemplateItem, error)
+	GetAppOrganizationProfile(ctx context.Context) (AppOrganizationProfile, error)
 	GetAppointmentCard(ctx context.Context, clientID uuid.UUID) (GetAppointmentCardRow, error)
 	GetAssignedEmployee(ctx context.Context, id uuid.UUID) (GetAssignedEmployeeRow, error)
 	GetAttachmentById(ctx context.Context, argUuid uuid.UUID) (AttachmentFile, error)
@@ -158,6 +170,8 @@ type Querier interface {
 	GetCompletedPaymentSum(ctx context.Context, invoiceID uuid.UUID) (float64, error)
 	GetContractAudit(ctx context.Context, contractID uuid.UUID) ([]GetContractAuditRow, error)
 	GetCurrentCycleDraftEvaluationByClientAndEmployee(ctx context.Context, arg GetCurrentCycleDraftEvaluationByClientAndEmployeeParams) (ClientGoalEvaluation, error)
+	GetDepartment(ctx context.Context, id uuid.UUID) (Department, error)
+	GetDepartmentByName(ctx context.Context, name string) (Department, error)
 	GetDraftGoalEvaluationByClientAndDate(ctx context.Context, arg GetDraftGoalEvaluationByClientAndDateParams) (ClientGoalEvaluation, error)
 	GetEmergencyContact(ctx context.Context, id uuid.UUID) (ClientEmergencyContact, error)
 	GetEmployeeContractDetails(ctx context.Context, id uuid.UUID) (GetEmployeeContractDetailsRow, error)
@@ -168,6 +182,7 @@ type Querier interface {
 	GetGlobalOrganisationCounts(ctx context.Context) (GetGlobalOrganisationCountsRow, error)
 	GetGoalEvaluationByID(ctx context.Context, id uuid.UUID) (GetGoalEvaluationByIDRow, error)
 	GetGoalEvaluationItems(ctx context.Context, evaluationID uuid.UUID) ([]GetGoalEvaluationItemsRow, error)
+	GetHandbookTemplateByID(ctx context.Context, id uuid.UUID) (HandbookTemplate, error)
 	GetIncident(ctx context.Context, id uuid.UUID) (GetIncidentRow, error)
 	GetIncidentCounts(ctx context.Context) (GetIncidentCountsRow, error)
 	GetIntakeForm(ctx context.Context, id uuid.UUID) (IntakeForm, error)
@@ -211,11 +226,8 @@ type Querier interface {
 	GetUserIDByEmployeeID(ctx context.Context, id uuid.UUID) (uuid.UUID, error)
 	// ---------- 4. USER-ROLE MAPPING ----------
 	// Returns every role granted to a user.
-	GetUserRoles(ctx context.Context, userID uuid.UUID) ([]Role, error)
+	GetUserRoles(ctx context.Context, userID uuid.UUID) ([]GetUserRolesRow, error)
 	GetVisibleEventByID(ctx context.Context, arg GetVisibleEventByIDParams) (CalendarEvent, error)
-	GrantRolePermissionsToUser(ctx context.Context, arg GrantRolePermissionsToUserParams) error
-	// Bulk-insert permission IDs for a user (idempotent).
-	GrantUserPermissions(ctx context.Context, arg GrantUserPermissionsParams) error
 	HasActiveClientByIntakeFormID(ctx context.Context, intakeFormID *uuid.UUID) (bool, error)
 	InsertBilledCalendarEvent(ctx context.Context, arg InsertBilledCalendarEventParams) (BilledCalendarEvent, error)
 	InsertIncoicePdfUrl(ctx context.Context, arg InsertIncoicePdfUrlParams) (*uuid.UUID, error)
@@ -254,21 +266,30 @@ type Querier interface {
 	ListContractTypes(ctx context.Context) ([]ContractType, error)
 	ListContracts(ctx context.Context, arg ListContractsParams) ([]ListContractsRow, error)
 	ListContractsTobeReminded(ctx context.Context) ([]ListContractsTobeRemindedRow, error)
+	ListDepartments(ctx context.Context) ([]ListDepartmentsRow, error)
 	ListDueScheduledOutOfCareMissingFinalEvaluation(ctx context.Context) ([]uuid.UUID, error)
 	ListEducations(ctx context.Context, employeeID uuid.UUID) ([]EmployeeEducation, error)
+	// Returns effective permissions after applying role inheritance and overrides.
+	ListEffectiveUserPermissions(ctx context.Context, userID uuid.UUID) ([]ListEffectiveUserPermissionsRow, error)
 	ListEmergencyContacts(ctx context.Context, arg ListEmergencyContactsParams) ([]ListEmergencyContactsRow, error)
 	ListEmployeeAppointmentsInRange(ctx context.Context, arg ListEmployeeAppointmentsInRangeParams) ([]ListEmployeeAppointmentsInRangeRow, error)
 	ListEmployeeCertifications(ctx context.Context, employeeID uuid.UUID) ([]Certification, error)
 	ListEmployeeExperience(ctx context.Context, employeeID uuid.UUID) ([]EmployeeExperience, error)
+	ListEmployeeHandbookStepsByHandbookID(ctx context.Context, employeeHandbookID uuid.UUID) ([]ListEmployeeHandbookStepsByHandbookIDRow, error)
 	ListEmployeeNamesByIDs(ctx context.Context, employeeIds []uuid.UUID) ([]ListEmployeeNamesByIDsRow, error)
 	ListEmployeeProfile(ctx context.Context, arg ListEmployeeProfileParams) ([]ListEmployeeProfileRow, error)
 	ListEmployeesByContractEndDate(ctx context.Context) ([]ListEmployeesByContractEndDateRow, error)
 	ListEmployeesWithContractHours(ctx context.Context, dollar_1 []uuid.UUID) ([]ListEmployeesWithContractHoursRow, error)
 	ListExistingClientDocumentLabels(ctx context.Context, clientID uuid.UUID) ([]string, error)
 	ListGoalEvaluationHistoryByClientAndGoal(ctx context.Context, arg ListGoalEvaluationHistoryByClientAndGoalParams) ([]ListGoalEvaluationHistoryByClientAndGoalRow, error)
+	ListHandbookStepsByTemplate(ctx context.Context, templateID uuid.UUID) ([]HandbookStep, error)
+	ListHandbookTemplatesByDepartment(ctx context.Context, departmentID uuid.UUID) ([]HandbookTemplate, error)
 	ListInCareClients(ctx context.Context, arg ListInCareClientsParams) ([]ListInCareClientsRow, error)
 	ListIncidentReportRecipientEmails(ctx context.Context, clientID uuid.UUID) ([]*string, error)
 	ListIncidents(ctx context.Context, arg ListIncidentsParams) ([]ListIncidentsRow, error)
+	// ---------- 5. USER-PERMISSION OVERRIDES ----------
+	// Returns permissions inherited from the user's assigned role.
+	ListInheritedUserPermissions(ctx context.Context, userID uuid.UUID) ([]ListInheritedUserPermissionsRow, error)
 	ListIntakeForms(ctx context.Context, arg ListIntakeFormsParams) ([]ListIntakeFormsRow, error)
 	ListIntakeTopicsAssessmentsByIntake(ctx context.Context, arg ListIntakeTopicsAssessmentsByIntakeParams) ([]ListIntakeTopicsAssessmentsByIntakeRow, error)
 	ListInvoiceLinesByInvoice(ctx context.Context, invoiceID uuid.UUID) ([]InvoiceLine, error)
@@ -291,7 +312,7 @@ type Querier interface {
 	ListRecentSubmittedEvaluationsByEmployee(ctx context.Context, arg ListRecentSubmittedEvaluationsByEmployeeParams) ([]ListRecentSubmittedEvaluationsByEmployeeRow, error)
 	ListRegistrationForms(ctx context.Context, arg ListRegistrationFormsParams) ([]ListRegistrationFormsRow, error)
 	ListRemindersByEventID(ctx context.Context, eventID uuid.UUID) ([]ListRemindersByEventIDRow, error)
-	// Returns every role ordered by id with count of permissions.
+	// Returns every role ordered by id with count of permissions and employees.
 	ListRoles(ctx context.Context) ([]ListRolesRow, error)
 	ListSenders(ctx context.Context, arg ListSendersParams) ([]Sender, error)
 	ListSeriesExceptions(ctx context.Context, seriesIds []uuid.UUID) ([]CalendarEvent, error)
@@ -306,9 +327,8 @@ type Querier interface {
 	ListUpcomingAppointments(ctx context.Context, organizerEmployeeID uuid.UUID) ([]ListUpcomingAppointmentsRow, error)
 	ListUpcomingEvaluationsForCoordinator(ctx context.Context, arg ListUpcomingEvaluationsForCoordinatorParams) ([]ListUpcomingEvaluationsForCoordinatorRow, error)
 	ListUserIDsByEmployeeIDs(ctx context.Context, dollar_1 []uuid.UUID) ([]uuid.UUID, error)
-	// ---------- 5. USER-PERMISSION MAPPING ----------
-	// Returns every permission granted to a user (direct or via roles).
-	ListUserPermissions(ctx context.Context, userID uuid.UUID) ([]ListUserPermissionsRow, error)
+	// Returns explicit allow/deny overrides configured for a user.
+	ListUserPermissionOverrides(ctx context.Context, userID uuid.UUID) ([]ListUserPermissionOverridesRow, error)
 	ListVisibleMasterEvents(ctx context.Context, arg ListVisibleMasterEventsParams) ([]CalendarEvent, error)
 	ListWaitingListClients(ctx context.Context, arg ListWaitingListClientsParams) ([]ListWaitingListClientsRow, error)
 	// ==========================================
@@ -317,6 +337,8 @@ type Querier interface {
 	ListWorkApprovalQueueOneOffAppointmentsStartingInRange(ctx context.Context, arg ListWorkApprovalQueueOneOffAppointmentsStartingInRangeParams) ([]CalendarEvent, error)
 	ListWorkApprovalQueueRecurringMastersStartingBeforeEnd(ctx context.Context, arg ListWorkApprovalQueueRecurringMastersStartingBeforeEndParams) ([]CalendarEvent, error)
 	LockIntakeFormByID(ctx context.Context, id uuid.UUID) (uuid.UUID, error)
+	MarkEmployeeHandbookCompleted(ctx context.Context, id uuid.UUID) (EmployeeHandbook, error)
+	MarkEmployeeHandbookStarted(ctx context.Context, id uuid.UUID) (EmployeeHandbook, error)
 	MarkIncidentConfirmationEmailSent(ctx context.Context, id uuid.UUID) (int64, error)
 	MarkNotificationAsRead(ctx context.Context, id uuid.UUID) (Notification, error)
 	PutClientInCare(ctx context.Context, arg PutClientInCareParams) (ClientDetail, error)
@@ -328,6 +350,7 @@ type Querier interface {
 	SetEmployeeProfilePicture(ctx context.Context, arg SetEmployeeProfilePictureParams) (CustomUser, error)
 	StatusChangeCount(ctx context.Context) (int64, error)
 	TotalDischargeCount(ctx context.Context) (int64, error)
+	UpdateAppOrganizationProfile(ctx context.Context, arg UpdateAppOrganizationProfileParams) (AppOrganizationProfile, error)
 	UpdateAppointmentCard(ctx context.Context, arg UpdateAppointmentCardParams) (AppointmentCard, error)
 	UpdateAssignedEmployee(ctx context.Context, arg UpdateAssignedEmployeeParams) (AssignedEmployee, error)
 	UpdateCalendarEvent(ctx context.Context, arg UpdateCalendarEventParams) (CalendarEvent, error)
@@ -375,6 +398,7 @@ type Querier interface {
 	UpdateClientStatus(ctx context.Context, arg UpdateClientStatusParams) (ClientDetail, error)
 	UpdateContract(ctx context.Context, arg UpdateContractParams) (Contract, error)
 	UpdateContractStatus(ctx context.Context, arg UpdateContractStatusParams) (Contract, error)
+	UpdateDepartment(ctx context.Context, arg UpdateDepartmentParams) (Department, error)
 	UpdateEmergencyContact(ctx context.Context, arg UpdateEmergencyContactParams) (ClientEmergencyContact, error)
 	UpdateEmployeeCertification(ctx context.Context, arg UpdateEmployeeCertificationParams) (Certification, error)
 	UpdateEmployeeEducation(ctx context.Context, arg UpdateEmployeeEducationParams) (EmployeeEducation, error)
@@ -409,6 +433,7 @@ type Querier interface {
 	UpsertMainCoordinator(ctx context.Context, arg UpsertMainCoordinatorParams) (UpsertMainCoordinatorRow, error)
 	UrgentCasesCount(ctx context.Context) (int64, error)
 	VoidBilledCalendarEventsByInvoice(ctx context.Context, invoiceID uuid.UUID) error
+	WaiveActiveEmployeeHandbooksByEmployeeID(ctx context.Context, employeeID uuid.UUID) error
 }
 
 var _ Querier = (*Queries)(nil)

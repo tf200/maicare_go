@@ -48,22 +48,23 @@ WHERE c.end_date IS NOT NULL
 
 -- name: ListEmployeesByContractEndDate :many
 SELECT
-    id,
-    user_id,
-    first_name,
-    last_name,
-    position,
-    department,
-    employee_number,
-    employment_number,
-    work_email_address,
-    contract_start_date,
-    contract_end_date,
-    contract_type
-FROM employee_profile
+    ep.id,
+    ep.user_id,
+    ep.first_name,
+    ep.last_name,
+    ep.position,
+    d.name AS department_name,
+    ep.employee_number,
+    ep.employment_number,
+    ep.work_email_address,
+    ep.contract_start_date,
+    ep.contract_end_date,
+    ep.contract_type
+FROM employee_profile ep
+LEFT JOIN departments d ON d.id = ep.department_id
 WHERE contract_end_date IS NOT NULL
-  AND is_archived = FALSE
-ORDER BY contract_end_date ASC
+  AND ep.is_archived = FALSE
+ORDER BY ep.contract_end_date ASC
 LIMIT 10;
 
 

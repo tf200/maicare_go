@@ -150,15 +150,15 @@ func (s *ecrService) ListEmployeesByContractEndDate(ctx context.Context) ([]List
 	response := []ListEmployeesByContractEndDateResponse{}
 	for _, emp := range employees {
 		response = append(response, ListEmployeesByContractEndDateResponse{
-			ID:                emp.ID,
-			FirstName:         emp.FirstName,
-			LastName:          emp.LastName,
-			Position:          emp.Position,
-			Department:        emp.Department,
-			EmployeeNumber:    emp.EmployeeNumber,
-			EmploymentNumber:  emp.EmploymentNumber,
-			Email:             *emp.WorkEmailAddress,
-			ContractStartDate: emp.ContractStartDate.Time,
+				ID:                emp.ID,
+				FirstName:         emp.FirstName,
+				LastName:          emp.LastName,
+				Position:          emp.Position,
+				Department:        emp.DepartmentName,
+				EmployeeNumber:    emp.EmployeeNumber,
+				EmploymentNumber:  emp.EmploymentNumber,
+				Email:             *emp.WorkEmailAddress,
+				ContractStartDate: emp.ContractStartDate.Time,
 			ContractEndDate:   emp.ContractEndDate.Time,
 			ContractType:      string(emp.ContractType),
 		})

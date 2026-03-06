@@ -1,13 +1,13 @@
 
 migrateup:
-	migrate -path db/migrations -database "postgresql://maicare:maicare@localhost:5432/maicare?sslmode=disable" -verbose up 1
+	migrate -path db/migrations -database "postgresql://maicare:maicare@167.86.75.250:5432/maicare?sslmode=disable" -verbose up 1
 
 migrateforce:
-	migrate -path db/migrations -database "postgresql://maicare:maicare@localhost:5432/maicare?sslmode=disable" force 1
+	migrate -path db/migrations -database "postgresql://maicare:maicare@167.86.75.250:5432/maicare?sslmode=disable" force 1
 
 
 migratedown:
-	migrate -path db/migrations -database "postgresql://maicare:maicare@localhost:5432/maicare?sslmode=disable" -verbose down 1
+	migrate -path db/migrations -database "postgresql://maicare:maicare@167.86.75.250:5432/maicare?sslmode=disable" -verbose down 1
 
 sqlc:
 	sqlc generate

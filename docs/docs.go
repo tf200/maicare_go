@@ -526,6 +526,9 @@ const docTemplate = `{
         "/auth/setup_2fa": {
             "post": {
                 "description": "Setup 2FA for user",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -533,6 +536,17 @@ const docTemplate = `{
                     "authentication"
                 ],
                 "summary": "Setup 2FA",
+                "parameters": [
+                    {
+                        "description": "Setup 2FA request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/auth.Setup2FARequest"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "2FA setup successful",
@@ -1047,6 +1061,43 @@ const docTemplate = `{
                 }
             }
         },
+        "/clients/status-counts": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "clients"
+                ],
+                "summary": "Get grouped client status counts",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-clientp_GetClientStatusCountsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/clients/waiting-list": {
             "get": {
                 "produces": [
@@ -1472,365 +1523,6 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/api.Response-pagination_Response-array_contract_ListClientContractsResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/clients/{id}/diagnosis": {
-            "get": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "client_Medical"
-                ],
-                "summary": "List all client diagnoses",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Page number",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Page size",
-                        "name": "page_size",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-pagination_Response-clientp_ListClientDiagnosesResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "client_Medical"
-                ],
-                "summary": "Create a client diagnosis",
-                "parameters": [
-                    {
-                        "description": "Client diagnosis data",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/clientp.CreateClientDiagnosisRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-clientp_CreateClientDiagnosisResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    }
-                }
-            }
-        },
-        "/clients/{id}/diagnosis/{diagnosis_id}": {
-            "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "client_Medical"
-                ],
-                "summary": "Get a client diagnosis",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-clientp_GetClientDiagnosisResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "client_Medical"
-                ],
-                "summary": "Update a client diagnosis",
-                "parameters": [
-                    {
-                        "description": "Client diagnosis data",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/clientp.UpdateClientDiagnosisRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-clientp_UpdateClientDiagnosisResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "client_Medical"
-                ],
-                "summary": "Delete a client diagnosis",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    }
-                }
-            }
-        },
-        "/clients/{id}/diagnosis/{diagnosis_id}/medications": {
-            "get": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "client_Medical"
-                ],
-                "summary": "List all client medications",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Page number",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Page size",
-                        "name": "page_size",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-pagination_Response-clientp_ListClientMedicationsResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "client_Medical"
-                ],
-                "summary": "Create a client medication",
-                "parameters": [
-                    {
-                        "description": "Client medication data",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/clientp.CreateClientMedicationRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-clientp_CreateClientMedicationResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    }
-                }
-            }
-        },
-        "/clients/{id}/diagnosis/{diagnosis_id}/medications/{medication_id}": {
-            "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "client_Medical"
-                ],
-                "summary": "Get a client medication",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-clientp_GetClientMedicationResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "client_Medical"
-                ],
-                "summary": "Update a client medication",
-                "parameters": [
-                    {
-                        "description": "Client medication data",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/clientp.UpdateClientMedicationRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-clientp_UpdateClientMedicationResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
                         }
                     }
                 }
@@ -2283,6 +1975,161 @@ const docTemplate = `{
                 }
             }
         },
+        "/clients/{id}/evaluations/submitted": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "evaluations"
+                ],
+                "summary": "List submitted evaluations by client",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size",
+                        "name": "page_size",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-pagination_Response-clientp_ListClientSubmittedEvaluationsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/clients/{id}/goals": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "evaluations"
+                ],
+                "summary": "Get client goals for evaluation page",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-clientp_GetClientGoalsForEvaluationPageResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/clients/{id}/goals/{goal_id}/history": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "evaluations"
+                ],
+                "summary": "List goal evaluation history",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Goal ID",
+                        "name": "goal_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size",
+                        "name": "page_size",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-pagination_Response-clientp_ListGoalEvaluationHistoryResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/clients/{id}/incidents": {
             "get": {
                 "produces": [
@@ -2311,210 +2158,6 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/api.Response-pagination_Response-clientp_ListIncidentsResponse"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "incidents"
-                ],
-                "summary": "Create an incident",
-                "parameters": [
-                    {
-                        "description": "Incident data",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/clientp.CreateIncidentRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-clientp_CreateIncidentResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    }
-                }
-            }
-        },
-        "/incidents/{incident_id}": {
-            "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "incidents"
-                ],
-                "summary": "Retrieve an incident",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-clientp_GetIncidentResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "incidents"
-                ],
-                "summary": "Update an incident",
-                "parameters": [
-                    {
-                        "description": "Incident",
-                        "name": "incident",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/clientp.UpdateIncidentRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-clientp_UpdateIncidentResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "incidents"
-                ],
-                "summary": "Delete an incident",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    }
-                }
-            }
-        },
-        "/incidents/{incident_id}/file": {
-            "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "incidents"
-                ],
-                "summary": "Generate an incident file",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-clientp_GenerateIncidentFileResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
                         }
                     }
                 }
@@ -2762,7 +2405,170 @@ const docTemplate = `{
                 }
             }
         },
-        "/clients/{id}/medications/{medication_id}": {
+        "/clients/{id}/medical/diagnoses": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "client_Medical"
+                ],
+                "summary": "List client diagnoses",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size",
+                        "name": "page_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-pagination_Response-clientp_ClientDiagnosisResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "client_Medical"
+                ],
+                "summary": "Create a client diagnosis",
+                "parameters": [
+                    {
+                        "description": "Client diagnosis data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/clientp.CreateClientDiagnosisRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-clientp_ClientDiagnosisResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/clients/{id}/medical/diagnoses/{diagnosis_id}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "client_Medical"
+                ],
+                "summary": "Get a client diagnosis",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-clientp_ClientDiagnosisResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "client_Medical"
+                ],
+                "summary": "Update a client diagnosis",
+                "parameters": [
+                    {
+                        "description": "Client diagnosis data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/clientp.UpdateClientDiagnosisRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-clientp_ClientDiagnosisResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            },
             "delete": {
                 "produces": [
                     "application/json"
@@ -2770,12 +2576,255 @@ const docTemplate = `{
                 "tags": [
                     "client_Medical"
                 ],
-                "summary": "Delete a client medication",
+                "summary": "Delete a client diagnosis",
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
+                            "$ref": "#/definitions/api.Response-clientp_DeleteClientDiagnosisResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
                             "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/clients/{id}/medical/medication-orders": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "client_Medical"
+                ],
+                "summary": "List medication orders",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Page size",
+                        "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by status",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by admin mode",
+                        "name": "admin_mode",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search",
+                        "name": "search",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-pagination_Response-clientp_ClientMedicationOrderResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "client_Medical"
+                ],
+                "summary": "Create a medication order",
+                "parameters": [
+                    {
+                        "description": "Medication order data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/clientp.CreateClientMedicationOrderRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-clientp_ClientMedicationOrderResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/clients/{id}/medical/medication-orders/{order_id}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "client_Medical"
+                ],
+                "summary": "Get a medication order",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-clientp_ClientMedicationOrderResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "client_Medical"
+                ],
+                "summary": "Update a medication order",
+                "parameters": [
+                    {
+                        "description": "Medication order data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/clientp.UpdateClientMedicationOrderRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-clientp_ClientMedicationOrderResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "client_Medical"
+                ],
+                "summary": "Delete a medication order",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-clientp_DeleteClientMedicationOrderResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/clients/{id}/medical/overview": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "client_Medical"
+                ],
+                "summary": "Get client medical overview",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-clientp_ClientMedicalOverviewResponse"
                         }
                     },
                     "400": {
@@ -2850,6 +2899,22 @@ const docTemplate = `{
                         "type": "integer",
                         "description": "Page size",
                         "name": "page_size",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "morning_report",
+                            "evening_report",
+                            "night_report",
+                            "shift_report",
+                            "one_to_one_report",
+                            "process_report",
+                            "contact_journal",
+                            "other"
+                        ],
+                        "type": "string",
+                        "description": "Filter by report type",
+                        "name": "type",
                         "in": "query"
                     }
                 ],
@@ -3049,6 +3114,57 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/api.Response-clientp_PutClientInCareResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/clients/{id}/put-out-of-care": {
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "clients"
+                ],
+                "summary": "Put client out of care",
+                "parameters": [
+                    {
+                        "description": "Put out of care payload",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/clientp.PutClientOutOfCareRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-clientp_PutClientOutOfCareResponse"
                         }
                     },
                     "400": {
@@ -4058,6 +4174,56 @@ const docTemplate = `{
                 }
             }
         },
+        "/employees/profile/details": {
+            "get": {
+                "description": "Get detailed employee profile by user ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "employees"
+                ],
+                "summary": "Get detailed employee profile by user ID",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-employees_GetEmployeeProfileDetailsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/employees/{employee_id}/permissions": {
             "post": {
                 "description": "Grant specific permissions to a user by employee ID",
@@ -4085,7 +4251,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/auth.GrantUserPermissionsRequest"
+                            "$ref": "#/definitions/settings.GrantUserPermissionsRequest"
                         }
                     }
                 ],
@@ -4093,7 +4259,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-auth_GrantUserPermissionsResponse"
+                            "$ref": "#/definitions/api.Response-settings_GrantUserPermissionsResponse"
                         }
                     },
                     "400": {
@@ -4144,7 +4310,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/auth.AssignRoleToEmployeeParams"
+                            "$ref": "#/definitions/settings.AssignRoleToEmployeeParams"
                         }
                     }
                 ],
@@ -4152,7 +4318,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-auth_AssignRoleToEmployeeApiResponse"
+                            "$ref": "#/definitions/api.Response-settings_AssignRoleToEmployeeApiResponse"
                         }
                     },
                     "400": {
@@ -4199,7 +4365,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-auth_ListUserRolesAndPermissionsApiResponse"
+                            "$ref": "#/definitions/api.Response-settings_ListUserRolesAndPermissionsApiResponse"
                         }
                     },
                     "400": {
@@ -5417,6 +5583,52 @@ const docTemplate = `{
                 }
             }
         },
+        "/evaluations/{evaluation_id}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "evaluations"
+                ],
+                "summary": "Get goal evaluation by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Evaluation ID",
+                        "name": "evaluation_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-clientp_GoalEvaluationResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/events": {
             "post": {
                 "description": "Create appointment or reminder event (optionally recurring)",
@@ -5508,6 +5720,64 @@ const docTemplate = `{
                     },
                     "401": {
                         "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/events/work_approval_queue": {
+            "post": {
+                "description": "Lists recent appointments across all employees that include at least one client attendee, with approval status.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "events"
+                ],
+                "summary": "List work approval queue items (admin)",
+                "parameters": [
+                    {
+                        "description": "List work approval queue request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/appointment.ListWorkApprovalQueueRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-appointment_ListWorkApprovalQueueResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
                         "schema": {
                             "$ref": "#/definitions/api.Response-any"
                         }
@@ -5688,6 +5958,489 @@ const docTemplate = `{
                 }
             }
         },
+        "/events/{id}/work_approval": {
+            "put": {
+                "description": "Admin updates work approval status for an appointment (and optionally a specific recurrence occurrence)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "events"
+                ],
+                "summary": "Approve/reject appointment worked hours",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Event ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Set work approval request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/appointment.SetEventWorkApprovalRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/handbook/assignments": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "handbook"
+                ],
+                "summary": "Assign handbook template to an employee",
+                "parameters": [
+                    {
+                        "description": "Assignment payload",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handbook.AssignTemplateToEmployeeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-handbook_AssignTemplateToEmployeeResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/handbook/departments/{department_id}/templates": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "handbook"
+                ],
+                "summary": "List templates by department",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/handbook/me": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "handbook"
+                ],
+                "summary": "Get my active handbook",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-handbook_GetMyActiveHandbookResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/handbook/me/start": {
+            "post": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "handbook"
+                ],
+                "summary": "Start my handbook",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-handbook_StartMyHandbookResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/handbook/me/steps/{step_id}/complete": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "handbook"
+                ],
+                "summary": "Complete a handbook step",
+                "parameters": [
+                    {
+                        "description": "Step completion payload",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.completeMyHandbookStepRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-handbook_CompleteMyHandbookStepResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/handbook/steps": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "handbook"
+                ],
+                "summary": "Create handbook step",
+                "parameters": [
+                    {
+                        "description": "Step payload",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.createHandbookStepRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-handbook_CreateStepResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/handbook/templates": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "handbook"
+                ],
+                "summary": "Create handbook template (new version for department)",
+                "parameters": [
+                    {
+                        "description": "Template payload",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handbook.CreateTemplateForDepartmentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-handbook_CreateTemplateForDepartmentResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/handbook/templates/{template_id}/steps": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "handbook"
+                ],
+                "summary": "List steps by template",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/incidents": {
             "get": {
                 "description": "List all incidents with pagination and filtering options",
@@ -5703,6 +6456,12 @@ const docTemplate = `{
                         "type": "boolean",
                         "description": "Filter by confirmation status",
                         "name": "is_confirmed",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search by client first or last name",
+                        "name": "search",
                         "in": "query"
                     },
                     {
@@ -5738,6 +6497,199 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "incidents"
+                ],
+                "summary": "Create an incident",
+                "parameters": [
+                    {
+                        "description": "Incident data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/clientp.CreateIncidentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-clientp_CreateIncidentResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/incidents/counts": {
+            "get": {
+                "description": "Get counts for serious/fatal incidents, pending confirmations, and incidents in the past 24 hours",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "incidents"
+                ],
+                "summary": "Get incident counts",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-clientp_GetIncidentCountsResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/incidents/{incident_id}": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "incidents"
+                ],
+                "summary": "Retrieve an incident",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-clientp_GetIncidentResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "incidents"
+                ],
+                "summary": "Update an incident",
+                "parameters": [
+                    {
+                        "description": "Incident",
+                        "name": "incident",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/clientp.UpdateIncidentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-clientp_UpdateIncidentResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "incidents"
+                ],
+                "summary": "Delete an incident",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
             }
         },
         "/incidents/{incident_id}/confirm": {
@@ -5754,6 +6706,43 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/api.Response-clientp_ConfirmIncidentResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/incidents/{incident_id}/file": {
+            "get": {
+                "produces": [
+                    "application/pdf"
+                ],
+                "tags": [
+                    "incidents"
+                ],
+                "summary": "Generate an incident file",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "file"
                         }
                     },
                     "400": {
@@ -5888,6 +6877,32 @@ const docTemplate = `{
                 }
             }
         },
+        "/intake_forms/totals": {
+            "get": {
+                "description": "Retrieve totals for further investigation intakes and intakes without goals.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Intake Forms"
+                ],
+                "summary": "Get Intake Form Totals",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-clientp_GetIntakeFormTotalsResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/intake_forms/{id}": {
             "get": {
                 "description": "Retrieve an intake form by ID with related details.",
@@ -5907,6 +6922,62 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "Partially update editable intake form fields.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Intake Forms"
+                ],
+                "summary": "Update Intake Form",
+                "parameters": [
+                    {
+                        "description": "Intake form update payload",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/clientp.UpdateIntakeFormRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-clientp_UpdateIntakeFormResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
                         "schema": {
                             "$ref": "#/definitions/api.Response-any"
                         }
@@ -5967,8 +7038,8 @@ const docTemplate = `{
             }
         },
         "/intake_forms/{id}/goals": {
-            "post": {
-                "description": "Batch create intake maturity assessments (goals) for an intake form.",
+            "put": {
+                "description": "Replace intake maturity assessments (goals) for an intake form.",
                 "consumes": [
                     "application/json"
                 ],
@@ -5978,7 +7049,7 @@ const docTemplate = `{
                 "tags": [
                     "Intake Forms"
                 ],
-                "summary": "Create Intake Form Goals",
+                "summary": "Replace Intake Form Goals",
                 "parameters": [
                     {
                         "description": "Goals payload",
@@ -5999,6 +7070,18 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
                         "schema": {
                             "$ref": "#/definitions/api.Response-any"
                         }
@@ -6080,7 +7163,7 @@ const docTemplate = `{
         },
         "/invoices": {
             "get": {
-                "description": "List invoices based on optional filters like client ID, sender ID, status, and date range.",
+                "description": "List invoices with filters and sorting.",
                 "produces": [
                     "application/json"
                 ],
@@ -6090,35 +7173,103 @@ const docTemplate = `{
                 "summary": "List Invoices",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "format": "int64",
-                        "description": "Client ID",
+                        "type": "string",
+                        "description": "Client ID (uuid)",
                         "name": "client_id",
                         "in": "query"
                     },
                     {
-                        "type": "integer",
-                        "format": "int64",
-                        "description": "Sender ID",
+                        "type": "string",
+                        "description": "Sender ID (uuid)",
                         "name": "sender_id",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "description": "Invoice status (outstanding, partially_paid, paid, expired, overpaid, imported, concept)",
+                        "description": "Single invoice status (outstanding, partially_paid, paid, expired, overpaid, imported, concept, canceled)",
                         "name": "status",
                         "in": "query"
                     },
                     {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "description": "Multiple statuses (repeat query param, e.g. statuses=outstanding\u0026statuses=partially_paid)",
+                        "name": "statuses",
+                        "in": "query"
+                    },
+                    {
                         "type": "string",
-                        "description": "Start date (YYYY-MM-DD)",
+                        "description": "Invoice source (auto, manual, imported)",
+                        "name": "source",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Invoice type (standard, credit_note)",
+                        "name": "invoice_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Invoice run ID (uuid)",
+                        "name": "run_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Issue date start (YYYY-MM-DD)",
                         "name": "start_date",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "description": "End date (YYYY-MM-DD)",
+                        "description": "Issue date end (YYYY-MM-DD)",
                         "name": "end_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Billing period start (RFC3339 or YYYY-MM-DD)",
+                        "name": "period_start",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Billing period end (RFC3339 or YYYY-MM-DD)",
+                        "name": "period_end",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter by whether invoice is locked",
+                        "name": "locked",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Filter invoices with warning_count \u003e= min_warning_count",
+                        "name": "min_warning_count",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Search (invoice number, sender name, client name/filenumber)",
+                        "name": "q",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort by (updated_at, issue_date, due_date, invoice_number, gross_total_amount, balance_due_amount)",
+                        "name": "sort_by",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Sort direction (asc, desc)",
+                        "name": "sort_dir",
                         "in": "query"
                     },
                     {
@@ -7184,92 +8335,37 @@ const docTemplate = `{
                 }
             }
         },
-        "/locations/{id}/daily_schedules": {
+        "/locations/{id}/schedules": {
             "get": {
-                "description": "Get all schedules for a specific location for a given day",
+                "description": "Get location schedules grouped by day for the specified inclusive date range",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Schedule"
                 ],
-                "summary": "Get daily schedules by location",
+                "summary": "Get schedules by location in date range",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "Year",
-                        "name": "year",
+                        "type": "string",
+                        "description": "Start date (YYYY-MM-DD)",
+                        "name": "start_date",
                         "in": "query",
                         "required": true
                     },
                     {
-                        "type": "integer",
-                        "description": "Month",
-                        "name": "month",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Day",
-                        "name": "day",
+                        "type": "string",
+                        "description": "End date (YYYY-MM-DD)",
+                        "name": "end_date",
                         "in": "query",
                         "required": true
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Daily schedules retrieved successfully",
+                        "description": "Schedules retrieved successfully",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-schedule_GetDailySchedulesByLocationResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-any"
-                        }
-                    }
-                }
-            }
-        },
-        "/locations/{id}/monthly_schedules": {
-            "get": {
-                "description": "Get all schedules for a specific location for a given month and year",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Schedule"
-                ],
-                "summary": "Get monthly schedules by location",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Year",
-                        "name": "year",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Month",
-                        "name": "month",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Monthly schedules retrieved successfully",
-                        "schema": {
-                            "$ref": "#/definitions/api.Response-array_schedule_GetMonthlySchedulesByLocationResponse"
+                            "$ref": "#/definitions/api.Response-array_schedule_GetSchedulesByLocationInRangeResponse"
                         }
                     },
                     "400": {
@@ -7594,6 +8690,32 @@ const docTemplate = `{
                         "description": "Forbidden",
                         "schema": {
                             "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/organisations/count": {
+            "get": {
+                "description": "Get total location count and total capacity across all organizations",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "organizations"
+                ],
+                "summary": "Get global organization counts",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-organization_GetGlobalOrganisationCountResponse"
                         }
                     },
                     "500": {
@@ -8018,7 +9140,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-pagination_Response-organization_ListLocationsResponse"
+                            "$ref": "#/definitions/api.Response-pagination_Response-organization_ListOrgLocationsResponse"
                         }
                     },
                     "400": {
@@ -8056,7 +9178,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-array_auth_ListAllPermissionsApiResponse"
+                            "$ref": "#/definitions/api.Response-array_settings_PermissionGroupResponse"
                         }
                     },
                     "400": {
@@ -8183,7 +9305,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/registration_form": {
+        "/registration_forms": {
             "get": {
                 "description": "List all registration forms",
                 "produces": [
@@ -8209,7 +9331,7 @@ const docTemplate = `{
                     {
                         "enum": [
                             "pending",
-                            "approved",
+                            "processed",
                             "rejected"
                         ],
                         "type": "string",
@@ -8338,7 +9460,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/registration_form/{id}": {
+        "/registration_forms/{id}": {
             "get": {
                 "description": "Get a registration form by ID",
                 "produces": [
@@ -8462,7 +9584,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/registration_form/{id}/process": {
+        "/registration_forms/{id}/process": {
             "post": {
                 "description": "Process a registration form by sending intake proposals",
                 "produces": [
@@ -8511,7 +9633,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/registration_form/{id}/status": {
+        "/registration_forms/{id}/status": {
             "post": {
                 "description": "Update the status of a registration form by ID",
                 "produces": [
@@ -8573,7 +9695,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-array_auth_ListRolesApiResponse"
+                            "$ref": "#/definitions/api.Response-array_settings_ListRolesApiResponse"
                         }
                     },
                     "400": {
@@ -8615,7 +9737,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/auth.CreateRoleRequest"
+                            "$ref": "#/definitions/settings.CreateRoleRequest"
                         }
                     }
                 ],
@@ -8623,7 +9745,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-auth_CreateRoleResponse"
+                            "$ref": "#/definitions/api.Response-settings_CreateRoleResponse"
                         }
                     },
                     "400": {
@@ -8661,7 +9783,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-array_auth_ListAllRolePermissionsApiResponse"
+                            "$ref": "#/definitions/api.Response-array_settings_ListAllRolePermissionsApiResponse"
                         }
                     },
                     "400": {
@@ -8703,7 +9825,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/auth.AddPermissionsToRoleRequest"
+                            "$ref": "#/definitions/settings.AddPermissionsToRoleRequest"
                         }
                     }
                 ],
@@ -8711,7 +9833,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-auth_AddPermissionsToRoleResponse"
+                            "$ref": "#/definitions/api.Response-settings_AddPermissionsToRoleResponse"
                         }
                     },
                     "400": {
@@ -8737,7 +9859,7 @@ const docTemplate = `{
         },
         "/schedules": {
             "post": {
-                "description": "Create a new schedule for an employee at a specific location. Supports both custom schedules and preset shifts.\nSet is_custom=true and provide start_datetime/end_datetime for custom schedules\nSet is_custom=false and provide location_shift_id/shift_date for preset shifts",
+                "description": "Create schedules for one or more employees at a specific location. Supports both custom schedules and preset shifts.\nSet is_custom=true and provide start_datetime/end_datetime for custom schedules\nSet is_custom=false and provide location_shift_id/shift_date for preset shifts\nOptional recurrence supports: none (default), end_of_week, end_of_month",
                 "consumes": [
                     "application/json"
                 ],
@@ -8747,7 +9869,7 @@ const docTemplate = `{
                 "tags": [
                     "Schedule"
                 ],
-                "summary": "Create a new schedule",
+                "summary": "Create new schedules",
                 "parameters": [
                     {
                         "description": "Create Schedule Request",
@@ -8761,9 +9883,9 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Schedule created successfully",
+                        "description": "Schedules created successfully",
                         "schema": {
-                            "$ref": "#/definitions/api.Response-schedule_CreateScheduleResponse"
+                            "$ref": "#/definitions/api.Response-array_schedule_CreateScheduleResponse"
                         }
                     },
                     "400": {
@@ -9322,6 +10444,253 @@ const docTemplate = `{
                 }
             }
         },
+        "/settings/departments": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "settings"
+                ],
+                "summary": "List departments",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "settings"
+                ],
+                "summary": "Create department",
+                "parameters": [
+                    {
+                        "description": "Department payload",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/settings.CreateDepartmentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-settings_CreateDepartmentResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/settings/departments/{id}": {
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "settings"
+                ],
+                "summary": "Update department",
+                "parameters": [
+                    {
+                        "description": "Department payload",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/settings.UpdateDepartmentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-settings_UpdateDepartmentResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/settings/organization-profile": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "settings"
+                ],
+                "summary": "Get organization profile",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-settings_GetOrganizationProfileResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "settings"
+                ],
+                "summary": "Update organization profile",
+                "parameters": [
+                    {
+                        "description": "Organization profile payload",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/settings.UpdateOrganizationProfileRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-settings_GetOrganizationProfileResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/api.Response-any"
+                        }
+                    }
+                }
+            }
+        },
         "/test/notification": {
             "get": {
                 "security": [
@@ -9486,6 +10855,20 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-appointment_ListWorkApprovalQueueResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/appointment.ListWorkApprovalQueueResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-array_appointment_EventOccurrenceResponse": {
             "type": "object",
             "properties": {
@@ -9510,57 +10893,6 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/audit.AuditRecord"
-                    }
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-array_auth_ListAllPermissionsApiResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/auth.ListAllPermissionsApiResponse"
-                    }
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-array_auth_ListAllRolePermissionsApiResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/auth.ListAllRolePermissionsApiResponse"
-                    }
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-array_auth_ListRolesApiResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/auth.ListRolesApiResponse"
                     }
                 },
                 "message": {
@@ -9826,13 +11158,81 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-array_schedule_GetMonthlySchedulesByLocationResponse": {
+        "api.Response-array_schedule_CreateScheduleResponse": {
             "type": "object",
             "properties": {
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/schedule.GetMonthlySchedulesByLocationResponse"
+                        "$ref": "#/definitions/schedule.CreateScheduleResponse"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-array_schedule_GetSchedulesByLocationInRangeResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/schedule.GetSchedulesByLocationInRangeResponse"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-array_settings_ListAllRolePermissionsApiResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/settings.ListAllRolePermissionsApiResponse"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-array_settings_ListRolesApiResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/settings.ListRolesApiResponse"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-array_settings_PermissionGroupResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/settings.PermissionGroupResponse"
                     }
                 },
                 "message": {
@@ -9890,76 +11290,6 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/attachment.InitUploadResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-auth_AddPermissionsToRoleResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/auth.AddPermissionsToRoleResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-auth_AssignRoleToEmployeeApiResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/auth.AssignRoleToEmployeeApiResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-auth_CreateRoleResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/auth.CreateRoleResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-auth_GrantUserPermissionsResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/auth.GrantUserPermissionsResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-auth_ListUserRolesAndPermissionsApiResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/auth.ListUserRolesAndPermissionsApiResponse"
                 },
                 "message": {
                     "type": "string"
@@ -10039,6 +11369,48 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-clientp_ClientDiagnosisResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/clientp.ClientDiagnosisResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-clientp_ClientMedicalOverviewResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/clientp.ClientMedicalOverviewResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-clientp_ClientMedicationOrderResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/clientp.ClientMedicationOrderResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-clientp_ConfirmIncidentResponse": {
             "type": "object",
             "properties": {
@@ -10081,39 +11453,11 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-clientp_CreateClientDiagnosisResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/clientp.CreateClientDiagnosisResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
         "api.Response-clientp_CreateClientEmergencyContactResponse": {
             "type": "object",
             "properties": {
                 "data": {
                     "$ref": "#/definitions/clientp.CreateClientEmergencyContactResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-clientp_CreateClientMedicationResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/clientp.CreateClientMedicationResponse"
                 },
                 "message": {
                     "type": "string"
@@ -10179,6 +11523,20 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-clientp_DeleteClientDiagnosisResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/clientp.DeleteClientDiagnosisResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-clientp_DeleteClientDocumentApiResponse": {
             "type": "object",
             "properties": {
@@ -10207,11 +11565,11 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-clientp_GenerateAutoReportsResponse": {
+        "api.Response-clientp_DeleteClientMedicationOrderResponse": {
             "type": "object",
             "properties": {
                 "data": {
-                    "$ref": "#/definitions/clientp.GenerateAutoReportsResponse"
+                    "$ref": "#/definitions/clientp.DeleteClientMedicationOrderResponse"
                 },
                 "message": {
                     "type": "string"
@@ -10221,11 +11579,11 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-clientp_GenerateIncidentFileResponse": {
+        "api.Response-clientp_GenerateAutoReportsResponse": {
             "type": "object",
             "properties": {
                 "data": {
-                    "$ref": "#/definitions/clientp.GenerateIncidentFileResponse"
+                    "$ref": "#/definitions/clientp.GenerateAutoReportsResponse"
                 },
                 "message": {
                     "type": "string"
@@ -10305,20 +11663,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-clientp_GetClientDiagnosisResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/clientp.GetClientDiagnosisResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
         "api.Response-clientp_GetClientEmergencyContactResponse": {
             "type": "object",
             "properties": {
@@ -10333,11 +11677,11 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-clientp_GetClientMedicationResponse": {
+        "api.Response-clientp_GetClientGoalsForEvaluationPageResponse": {
             "type": "object",
             "properties": {
                 "data": {
-                    "$ref": "#/definitions/clientp.GetClientMedicationResponse"
+                    "$ref": "#/definitions/clientp.GetClientGoalsForEvaluationPageResponse"
                 },
                 "message": {
                     "type": "string"
@@ -10375,11 +11719,39 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-clientp_GetClientStatusCountsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/clientp.GetClientStatusCountsResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-clientp_GetClientsCountResponse": {
             "type": "object",
             "properties": {
                 "data": {
                     "$ref": "#/definitions/clientp.GetClientsCountResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-clientp_GetIncidentCountsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/clientp.GetIncidentCountsResponse"
                 },
                 "message": {
                     "type": "string"
@@ -10408,6 +11780,20 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/clientp.GetIntakeFormResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-clientp_GetIntakeFormTotalsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/clientp.GetIntakeFormTotalsResponse"
                 },
                 "message": {
                     "type": "string"
@@ -10585,6 +11971,20 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-clientp_PutClientOutOfCareResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/clientp.PutClientOutOfCareResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-clientp_UpdateAppointmentCardResponse": {
             "type": "object",
             "properties": {
@@ -10627,39 +12027,11 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-clientp_UpdateClientDiagnosisResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/clientp.UpdateClientDiagnosisResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
         "api.Response-clientp_UpdateClientEmergencyContactResponse": {
             "type": "object",
             "properties": {
                 "data": {
                     "$ref": "#/definitions/clientp.UpdateClientEmergencyContactResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-clientp_UpdateClientMedicationResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/clientp.UpdateClientMedicationResponse"
                 },
                 "message": {
                     "type": "string"
@@ -10702,6 +12074,20 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/clientp.UpdateIntakeConclusionResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-clientp_UpdateIntakeFormResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/clientp.UpdateIntakeFormResponse"
                 },
                 "message": {
                     "type": "string"
@@ -10991,6 +12377,20 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-employees_GetEmployeeProfileDetailsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/employees.GetEmployeeProfileDetailsResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-employees_GetEmployeeProfileResponse": {
             "type": "object",
             "properties": {
@@ -11094,6 +12494,90 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/employees.UpdateEmployeeProfileResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-handbook_AssignTemplateToEmployeeResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/handbook.AssignTemplateToEmployeeResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-handbook_CompleteMyHandbookStepResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/handbook.CompleteMyHandbookStepResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-handbook_CreateStepResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/handbook.CreateStepResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-handbook_CreateTemplateForDepartmentResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/handbook.CreateTemplateForDepartmentResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-handbook_GetMyActiveHandbookResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/handbook.GetMyActiveHandbookResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-handbook_StartMyHandbookResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/handbook.StartMyHandbookResponse"
                 },
                 "message": {
                     "type": "string"
@@ -11341,6 +12825,20 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-organization_GetGlobalOrganisationCountResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/organization.GetGlobalOrganisationCountResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-organization_GetLocationResponse": {
             "type": "object",
             "properties": {
@@ -11481,6 +12979,34 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-pagination_Response-clientp_ClientDiagnosisResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/pagination.Response-clientp_ClientDiagnosisResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-pagination_Response-clientp_ClientMedicationOrderResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/pagination.Response-clientp_ClientMedicationOrderResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-pagination_Response-clientp_ListAllIncidentsResponse": {
             "type": "object",
             "properties": {
@@ -11509,20 +13035,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-pagination_Response-clientp_ListClientDiagnosesResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/pagination.Response-clientp_ListClientDiagnosesResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
         "api.Response-pagination_Response-clientp_ListClientDocumentsApiResponse": {
             "type": "object",
             "properties": {
@@ -11537,11 +13049,11 @@ const docTemplate = `{
                 }
             }
         },
-        "api.Response-pagination_Response-clientp_ListClientMedicationsResponse": {
+        "api.Response-pagination_Response-clientp_ListClientSubmittedEvaluationsResponse": {
             "type": "object",
             "properties": {
                 "data": {
-                    "$ref": "#/definitions/pagination.Response-clientp_ListClientMedicationsResponse"
+                    "$ref": "#/definitions/pagination.Response-clientp_ListClientSubmittedEvaluationsResponse"
                 },
                 "message": {
                     "type": "string"
@@ -11556,6 +13068,20 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/pagination.Response-clientp_ListClientsApiResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-pagination_Response-clientp_ListGoalEvaluationHistoryResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/pagination.Response-clientp_ListGoalEvaluationHistoryResponse"
                 },
                 "message": {
                     "type": "string"
@@ -11733,6 +13259,20 @@ const docTemplate = `{
                 }
             }
         },
+        "api.Response-pagination_Response-organization_ListOrgLocationsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/pagination.Response-organization_ListOrgLocationsResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
         "api.Response-pagination_Response-organization_ListOrganisationsResponse": {
             "type": "object",
             "properties": {
@@ -11766,34 +13306,6 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/schedule.AutoGenerateSchedulesResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-schedule_CreateScheduleResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/schedule.CreateScheduleResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "api.Response-schedule_GetDailySchedulesByLocationResponse": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "$ref": "#/definitions/schedule.GetDailySchedulesByLocationResponse"
                 },
                 "message": {
                     "type": "string"
@@ -11872,6 +13384,124 @@ const docTemplate = `{
                     "type": "boolean"
                 }
             }
+        },
+        "api.Response-settings_AddPermissionsToRoleResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/settings.AddPermissionsToRoleResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-settings_AssignRoleToEmployeeApiResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/settings.AssignRoleToEmployeeApiResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-settings_CreateDepartmentResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/settings.CreateDepartmentResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-settings_CreateRoleResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/settings.CreateRoleResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-settings_GetOrganizationProfileResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/settings.GetOrganizationProfileResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-settings_GrantUserPermissionsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/settings.GrantUserPermissionsResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-settings_ListUserRolesAndPermissionsApiResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/settings.ListUserRolesAndPermissionsApiResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.Response-settings_UpdateDepartmentResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/settings.UpdateDepartmentResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "api.completeMyHandbookStepRequest": {
+            "type": "object"
+        },
+        "api.createHandbookStepRequest": {
+            "type": "object"
         },
         "appointment.CreateEventRequest": {
             "type": "object",
@@ -12014,6 +13644,9 @@ const docTemplate = `{
                 },
                 "title": {
                     "type": "string"
+                },
+                "work_approval_status": {
+                    "type": "string"
                 }
             }
         },
@@ -12082,6 +13715,35 @@ const docTemplate = `{
                 },
                 "updated_at": {
                     "type": "string"
+                },
+                "work_approval_status": {
+                    "type": "string"
+                },
+                "work_approved_at": {
+                    "type": "string"
+                },
+                "work_approved_by": {
+                    "type": "string"
+                },
+                "work_rejected_at": {
+                    "type": "string"
+                },
+                "work_rejected_by": {
+                    "type": "string"
+                },
+                "work_rejection_reason": {
+                    "type": "string"
+                }
+            }
+        },
+        "appointment.IDName": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
                 }
             }
         },
@@ -12101,6 +13763,53 @@ const docTemplate = `{
                 },
                 "start_at": {
                     "type": "string"
+                }
+            }
+        },
+        "appointment.ListWorkApprovalQueueRequest": {
+            "type": "object",
+            "required": [
+                "end_at",
+                "start_at"
+            ],
+            "properties": {
+                "employee_ids": {
+                    "description": "Optional employee filter. Matches organizer or attendee employees.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "end_at": {
+                    "type": "string"
+                },
+                "limit": {
+                    "description": "Pagination (applied after expansion/sort).",
+                    "type": "integer"
+                },
+                "offset": {
+                    "type": "integer"
+                },
+                "only_ended": {
+                    "description": "If true, only include occurrences that have ended (default true).",
+                    "type": "boolean"
+                },
+                "start_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "appointment.ListWorkApprovalQueueResponse": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/appointment.WorkApprovalQueueItem"
+                    }
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },
@@ -12139,6 +13848,31 @@ const docTemplate = `{
                 },
                 "remind_at": {
                     "type": "string"
+                }
+            }
+        },
+        "appointment.SetEventWorkApprovalRequest": {
+            "type": "object",
+            "required": [
+                "status"
+            ],
+            "properties": {
+                "recurrence_id": {
+                    "description": "If set for a recurring master event, approval is applied to this specific occurrence\nby creating/updating an override row (recurring_event_id + recurrence_id).",
+                    "type": "string"
+                },
+                "rejection_reason": {
+                    "description": "Required when rejecting",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "One of: pending, approved, rejected",
+                    "type": "string",
+                    "enum": [
+                        "pending",
+                        "approved",
+                        "rejected"
+                    ]
                 }
             }
         },
@@ -12200,6 +13934,58 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "appointment.WorkApprovalQueueItem": {
+            "type": "object",
+            "properties": {
+                "attendee_clients": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/appointment.IDName"
+                    }
+                },
+                "attendee_employees": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/appointment.IDName"
+                    }
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "end_at": {
+                    "type": "string"
+                },
+                "event_id": {
+                    "description": "For recurring occurrences, this is the master event ID to call approval endpoints with.",
+                    "type": "string"
+                },
+                "is_confirmed": {
+                    "type": "boolean"
+                },
+                "location": {
+                    "type": "string"
+                },
+                "organizer_employee": {
+                    "$ref": "#/definitions/appointment.IDName"
+                },
+                "recurrence_id": {
+                    "description": "Non-nil for recurring occurrences.",
+                    "type": "string"
+                },
+                "start_at": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "work_approval_status": {
                     "type": "string"
                 }
             }
@@ -12346,53 +14132,6 @@ const docTemplate = `{
                 }
             }
         },
-        "auth.AddPermissionsToRoleRequest": {
-            "type": "object",
-            "required": [
-                "permission_ids"
-            ],
-            "properties": {
-                "permission_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "auth.AddPermissionsToRoleResponse": {
-            "type": "object",
-            "properties": {
-                "permission_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "role_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "auth.AssignRoleToEmployeeApiResponse": {
-            "type": "object",
-            "properties": {
-                "employee_id": {
-                    "type": "string"
-                },
-                "role_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "auth.AssignRoleToEmployeeParams": {
-            "type": "object",
-            "properties": {
-                "role_id": {
-                    "type": "string"
-                }
-            }
-        },
         "auth.ChangePasswordRequest": {
             "type": "object",
             "required": [
@@ -12408,28 +14147,6 @@ const docTemplate = `{
                 }
             }
         },
-        "auth.CreateRoleRequest": {
-            "type": "object",
-            "required": [
-                "name"
-            ],
-            "properties": {
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "auth.CreateRoleResponse": {
-            "type": "object",
-            "properties": {
-                "name": {
-                    "type": "string"
-                },
-                "role_id": {
-                    "type": "string"
-                }
-            }
-        },
         "auth.Enable2FARequest": {
             "type": "object",
             "required": [
@@ -12438,109 +14155,6 @@ const docTemplate = `{
             "properties": {
                 "validation_code": {
                     "type": "string"
-                }
-            }
-        },
-        "auth.GrantUserPermissionsRequest": {
-            "type": "object",
-            "properties": {
-                "permission_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "auth.GrantUserPermissionsResponse": {
-            "type": "object",
-            "properties": {
-                "employee_id": {
-                    "type": "string"
-                },
-                "permission_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "auth.ListAllPermissionsApiResponse": {
-            "type": "object",
-            "properties": {
-                "permission_id": {
-                    "type": "string"
-                },
-                "permission_name": {
-                    "type": "string"
-                },
-                "permission_resource": {
-                    "type": "string"
-                }
-            }
-        },
-        "auth.ListAllRolePermissionsApiResponse": {
-            "type": "object",
-            "properties": {
-                "permission_id": {
-                    "type": "string"
-                },
-                "permission_name": {
-                    "type": "string"
-                },
-                "permission_resource": {
-                    "type": "string"
-                },
-                "role_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "auth.ListRolesApiResponse": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "permission_count": {
-                    "type": "integer"
-                },
-                "role_name": {
-                    "type": "string"
-                }
-            }
-        },
-        "auth.ListUserRolesAndPermissionsApiResponse": {
-            "type": "object",
-            "properties": {
-                "permissions": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "id": {
-                                "type": "string"
-                            },
-                            "name": {
-                                "type": "string"
-                            },
-                            "resource": {
-                                "type": "string"
-                            }
-                        }
-                    }
-                },
-                "roles": {
-                    "type": "object",
-                    "properties": {
-                        "id": {
-                            "type": "string"
-                        },
-                        "name": {
-                            "type": "string"
-                        }
-                    }
                 }
             }
         },
@@ -12600,6 +14214,17 @@ const docTemplate = `{
                 "access": {
                     "type": "string",
                     "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                }
+            }
+        },
+        "auth.Setup2FARequest": {
+            "type": "object",
+            "required": [
+                "current_password"
+            ],
+            "properties": {
+                "current_password": {
+                    "type": "string"
                 }
             }
         },
@@ -12914,6 +14539,90 @@ const docTemplate = `{
                 }
             }
         },
+        "clientp.ClientDiagnosisResponse": {
+            "type": "object",
+            "properties": {
+                "client_id": {
+                    "type": "string"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "code_system": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "diagnosed_on": {
+                    "type": "string"
+                },
+                "diagnosing_clinician": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "resolved_on": {
+                    "type": "string"
+                },
+                "severity": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "clientp.ClientDischargeScheduleResponse": {
+            "type": "object",
+            "properties": {
+                "days_until_discharge": {
+                    "type": "integer"
+                },
+                "discharge_date": {
+                    "type": "string"
+                },
+                "discharge_reason": {
+                    "type": "string"
+                },
+                "final_evaluation": {
+                    "type": "string"
+                },
+                "is_due": {
+                    "type": "boolean"
+                },
+                "missing_final_evaluation": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "clientp.ClientDischargeSummaryResponse": {
+            "type": "object",
+            "properties": {
+                "discharge_date": {
+                    "type": "string"
+                },
+                "discharge_reason": {
+                    "type": "string"
+                },
+                "final_evaluation": {
+                    "type": "string"
+                }
+            }
+        },
         "clientp.ClientDocumentsSummary": {
             "type": "object",
             "properties": {
@@ -13002,6 +14711,26 @@ const docTemplate = `{
                 }
             }
         },
+        "clientp.ClientGoalForEvaluationPageResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "last_evaluation_progress": {
+                    "type": "string"
+                },
+                "priority": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "topic_name": {
+                    "type": "string"
+                }
+            }
+        },
         "clientp.ClientGoalSummaryResponse": {
             "type": "object",
             "properties": {
@@ -13060,6 +14789,115 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "clientp.ClientMedicalOverviewResponse": {
+            "type": "object",
+            "properties": {
+                "diagnoses": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/clientp.ClientDiagnosisResponse"
+                    }
+                },
+                "medication_orders": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/clientp.ClientMedicationOrderResponse"
+                    }
+                }
+            }
+        },
+        "clientp.ClientMedicationOrderResponse": {
+            "type": "object",
+            "properties": {
+                "admin_mode": {
+                    "type": "string"
+                },
+                "client_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "diagnosis_code": {
+                    "type": "string"
+                },
+                "diagnosis_code_system": {
+                    "type": "string"
+                },
+                "diagnosis_id": {
+                    "type": "string"
+                },
+                "diagnosis_title": {
+                    "type": "string"
+                },
+                "dosage_text": {
+                    "type": "string"
+                },
+                "dose_amount": {
+                    "type": "number"
+                },
+                "dose_unit": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "frequency_text": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_critical": {
+                    "type": "boolean"
+                },
+                "is_prn": {
+                    "type": "boolean"
+                },
+                "max_doses_per_24h": {
+                    "type": "integer"
+                },
+                "medication_name": {
+                    "type": "string"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "prn_indication": {
+                    "type": "string"
+                },
+                "responsible_employee_first_name": {
+                    "type": "string"
+                },
+                "responsible_employee_id": {
+                    "type": "string"
+                },
+                "responsible_employee_last_name": {
+                    "type": "string"
+                },
+                "route": {
+                    "type": "string"
+                },
+                "schedule": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "source_attachment_uuid": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "updated_at": {
                     "type": "string"
                 }
             }
@@ -13534,57 +15372,25 @@ const docTemplate = `{
         "clientp.CreateClientDiagnosisRequest": {
             "type": "object",
             "properties": {
-                "description": {
+                "code": {
                     "type": "string"
                 },
-                "diagnosing_clinician": {
-                    "type": "string"
-                },
-                "diagnosis_code": {
-                    "type": "string"
-                },
-                "medications": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/clientp.DiagnosisMedicationCreate"
-                    }
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "severity": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                }
-            }
-        },
-        "clientp.CreateClientDiagnosisResponse": {
-            "type": "object",
-            "properties": {
-                "client_id": {
-                    "type": "string"
-                },
-                "created_at": {
+                "code_system": {
                     "type": "string"
                 },
                 "description": {
                     "type": "string"
                 },
+                "diagnosed_on": {
+                    "type": "string"
+                },
                 "diagnosing_clinician": {
                     "type": "string"
                 },
-                "diagnosis_code": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
                 "notes": {
+                    "type": "string"
+                },
+                "resolved_on": {
                     "type": "string"
                 },
                 "severity": {
@@ -13680,75 +15486,8 @@ const docTemplate = `{
                 }
             }
         },
-        "clientp.CreateClientMedicationRequest": {
-            "type": "object",
-            "properties": {
-                "administered_by_id": {
-                    "type": "string"
-                },
-                "dosage": {
-                    "type": "string"
-                },
-                "end_date": {
-                    "type": "string"
-                },
-                "is_critical": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "self_administered": {
-                    "type": "boolean"
-                },
-                "start_date": {
-                    "type": "string"
-                }
-            }
-        },
-        "clientp.CreateClientMedicationResponse": {
-            "type": "object",
-            "properties": {
-                "administered_by_id": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "diagnosis_id": {
-                    "type": "string"
-                },
-                "dosage": {
-                    "type": "string"
-                },
-                "end_date": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "is_critical": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "self_administered": {
-                    "type": "boolean"
-                },
-                "start_date": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
+        "clientp.CreateClientMedicationOrderRequest": {
+            "type": "object"
         },
         "clientp.CreateGoalEvaluationRequest": {
             "type": "object",
@@ -13770,32 +15509,29 @@ const docTemplate = `{
         "clientp.CreateIncidentRequest": {
             "type": "object",
             "required": [
+                "client_id",
                 "incident_type",
                 "needed_consultation",
                 "physical_injury",
                 "recurrence_risk",
                 "reporter_involvement",
-                "runtime_incident",
                 "severity_of_incident"
             ],
             "properties": {
-                "accident": {
-                    "type": "boolean"
-                },
-                "additional_appointments": {
+                "additional_details": {
                     "type": "string"
                 },
-                "cause_explanation": {
-                    "type": "string"
-                },
-                "client_absence": {
-                    "type": "boolean"
-                },
-                "client_options": {
+                "cause_categories": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
+                },
+                "cause_explanation": {
+                    "type": "string"
+                },
+                "client_id": {
+                    "type": "string"
                 },
                 "emails": {
                     "type": "array",
@@ -13803,16 +15539,16 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
-                "employee_absenteeism": {
-                    "type": "string"
-                },
                 "employee_id": {
                     "type": "string"
                 },
-                "fire_water_damage": {
-                    "type": "boolean"
+                "follow_up_actions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
-                "incident_date": {
+                "follow_up_notes": {
                     "type": "string"
                 },
                 "incident_explanation": {
@@ -13827,23 +15563,17 @@ const docTemplate = `{
                 "incident_type": {
                     "type": "string"
                 },
-                "inform_who": {
+                "informed_parties": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
+                },
+                "is_employee_absent": {
+                    "type": "boolean"
                 },
                 "location_id": {
                     "type": "string"
-                },
-                "medicines": {
-                    "type": "boolean"
-                },
-                "mese_worker": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
                 },
                 "needed_consultation": {
                     "type": "string",
@@ -13854,29 +15584,8 @@ const docTemplate = `{
                         "consult_gp"
                     ]
                 },
-                "organization": {
-                    "type": "boolean"
-                },
-                "organizational": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "other": {
-                    "type": "boolean"
-                },
-                "other_cause": {
+                "occurred_at": {
                     "type": "string"
-                },
-                "other_desc": {
-                    "type": "string"
-                },
-                "other_notifications": {
-                    "type": "boolean"
-                },
-                "passing_away": {
-                    "type": "boolean"
                 },
                 "physical_injury": {
                     "type": "string",
@@ -13917,12 +15626,6 @@ const docTemplate = `{
                         "alarmed"
                     ]
                 },
-                "runtime_incident": {
-                    "type": "string"
-                },
-                "self_harm": {
-                    "type": "boolean"
-                },
                 "severity_of_incident": {
                     "type": "string",
                     "enum": [
@@ -13931,53 +15634,26 @@ const docTemplate = `{
                         "less_serious",
                         "near_incident"
                     ]
-                },
-                "succession": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "succession_desc": {
-                    "type": "string"
-                },
-                "technical": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "use_prohibited_substances": {
-                    "type": "boolean"
-                },
-                "violence": {
-                    "type": "boolean"
                 }
             }
         },
         "clientp.CreateIncidentResponse": {
             "type": "object",
             "properties": {
-                "accident": {
-                    "type": "boolean"
-                },
-                "additional_appointments": {
+                "additional_details": {
                     "type": "string"
                 },
-                "cause_explanation": {
-                    "type": "string"
-                },
-                "client_absence": {
-                    "type": "boolean"
-                },
-                "client_id": {
-                    "type": "string"
-                },
-                "client_options": {
+                "cause_categories": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
+                },
+                "cause_explanation": {
+                    "type": "string"
+                },
+                "client_id": {
+                    "type": "string"
                 },
                 "created": {
                     "type": "string"
@@ -13988,19 +15664,19 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
-                "employee_absenteeism": {
-                    "type": "string"
-                },
                 "employee_id": {
                     "type": "string"
                 },
-                "fire_water_damage": {
-                    "type": "boolean"
+                "follow_up_actions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
-                "id": {
+                "follow_up_notes": {
                     "type": "string"
                 },
-                "incident_date": {
+                "id": {
                     "type": "string"
                 },
                 "incident_explanation": {
@@ -14015,50 +15691,23 @@ const docTemplate = `{
                 "incident_type": {
                     "type": "string"
                 },
-                "inform_who": {
+                "informed_parties": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
+                },
+                "is_employee_absent": {
+                    "type": "boolean"
                 },
                 "location_id": {
                     "type": "string"
                 },
-                "medicines": {
-                    "type": "boolean"
-                },
-                "mese_worker": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
                 "needed_consultation": {
                     "type": "string"
                 },
-                "organization": {
-                    "type": "boolean"
-                },
-                "organizational": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "other": {
-                    "type": "boolean"
-                },
-                "other_cause": {
+                "occurred_at": {
                     "type": "string"
-                },
-                "other_desc": {
-                    "type": "string"
-                },
-                "other_notifications": {
-                    "type": "boolean"
-                },
-                "passing_away": {
-                    "type": "boolean"
                 },
                 "physical_injury": {
                     "type": "string"
@@ -14078,41 +15727,11 @@ const docTemplate = `{
                 "reporter_involvement": {
                     "type": "string"
                 },
-                "runtime_incident": {
-                    "type": "string"
-                },
-                "self_harm": {
-                    "type": "boolean"
-                },
                 "severity_of_incident": {
                     "type": "string"
                 },
-                "soft_delete": {
-                    "type": "boolean"
-                },
-                "succession": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "succession_desc": {
-                    "type": "string"
-                },
-                "technical": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
                 "updated": {
                     "type": "string"
-                },
-                "use_prohibited_substances": {
-                    "type": "boolean"
-                },
-                "violence": {
-                    "type": "boolean"
                 }
             }
         },
@@ -14804,6 +16423,14 @@ const docTemplate = `{
                 }
             }
         },
+        "clientp.DeleteClientDiagnosisResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                }
+            }
+        },
         "clientp.DeleteClientDocumentApiRequest": {
             "type": "object",
             "required": [
@@ -14834,72 +16461,10 @@ const docTemplate = `{
                 }
             }
         },
-        "clientp.DiagnosisMedicationCreate": {
+        "clientp.DeleteClientMedicationOrderResponse": {
             "type": "object",
             "properties": {
-                "administered_by_id": {
-                    "type": "string"
-                },
-                "dosage": {
-                    "type": "string"
-                },
-                "end_date": {
-                    "type": "string"
-                },
-                "is_critical": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "self_administered": {
-                    "type": "boolean"
-                },
-                "start_date": {
-                    "type": "string"
-                }
-            }
-        },
-        "clientp.DiagnosisMedicationList": {
-            "type": "object",
-            "properties": {
-                "administered_by_id": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "diagnosis_id": {
-                    "type": "string"
-                },
-                "dosage": {
-                    "type": "string"
-                },
-                "end_date": {
-                    "type": "string"
-                },
                 "id": {
-                    "type": "string"
-                },
-                "is_critical": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "self_administered": {
-                    "type": "boolean"
-                },
-                "start_date": {
-                    "type": "string"
-                },
-                "updated_at": {
                     "type": "string"
                 }
             }
@@ -14944,17 +16509,6 @@ const docTemplate = `{
                 }
             }
         },
-        "clientp.GenerateIncidentFileResponse": {
-            "type": "object",
-            "properties": {
-                "file_url": {
-                    "type": "string"
-                },
-                "incident_id": {
-                    "type": "string"
-                }
-            }
-        },
         "clientp.GenerateIntakeGoalsRequest": {
             "type": "object",
             "properties": {
@@ -14993,9 +16547,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "created_at": {
-                    "type": "string"
-                },
-                "file_url": {
                     "type": "string"
                 },
                 "general_information": {
@@ -15136,6 +16687,12 @@ const docTemplate = `{
                 "counts": {
                     "$ref": "#/definitions/clientp.ClientPageCounts"
                 },
+                "discharge_schedule": {
+                    "$ref": "#/definitions/clientp.ClientDischargeScheduleResponse"
+                },
+                "discharge_summary": {
+                    "$ref": "#/definitions/clientp.ClientDischargeSummaryResponse"
+                },
                 "documents": {
                     "$ref": "#/definitions/clientp.ClientDocumentsSummary"
                 },
@@ -15174,50 +16731,6 @@ const docTemplate = `{
                 },
                 "status_timeline": {
                     "$ref": "#/definitions/clientp.ClientStatusTimelineResponse"
-                }
-            }
-        },
-        "clientp.GetClientDiagnosisResponse": {
-            "type": "object",
-            "properties": {
-                "client_id": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "date_of_diagnosis": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "diagnosing_clinician": {
-                    "type": "string"
-                },
-                "diagnosis_code": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "medications": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/clientp.DiagnosisMedicationList"
-                    }
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "severity": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
                 }
             }
         },
@@ -15268,49 +16781,22 @@ const docTemplate = `{
                 }
             }
         },
-        "clientp.GetClientMedicationResponse": {
+        "clientp.GetClientGoalsForEvaluationPageResponse": {
             "type": "object",
             "properties": {
-                "administered_by_first_name": {
-                    "type": "string"
+                "goals": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/clientp.ClientGoalForEvaluationPageResponse"
+                    }
                 },
-                "administered_by_id": {
-                    "type": "string"
-                },
-                "administered_by_last_name": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "diagnosis_id": {
-                    "type": "string"
-                },
-                "dosage": {
-                    "type": "string"
-                },
-                "end_date": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "is_critical": {
+                "is_responsible_employee": {
                     "type": "boolean"
                 },
-                "name": {
+                "my_draft_evaluation_id": {
                     "type": "string"
                 },
-                "notes": {
-                    "type": "string"
-                },
-                "self_administered": {
-                    "type": "boolean"
-                },
-                "start_date": {
-                    "type": "string"
-                },
-                "updated_at": {
+                "next_evaluation_date": {
                     "type": "string"
                 }
             }
@@ -15388,6 +16874,20 @@ const docTemplate = `{
                 }
             }
         },
+        "clientp.GetClientStatusCountsResponse": {
+            "type": "object",
+            "properties": {
+                "clients_in_or_scheduled_in_care": {
+                    "type": "integer"
+                },
+                "clients_on_waiting_list": {
+                    "type": "integer"
+                },
+                "clients_out_or_scheduled_out_of_care": {
+                    "type": "integer"
+                }
+            }
+        },
         "clientp.GetClientsCountResponse": {
             "type": "object",
             "properties": {
@@ -15405,29 +16905,37 @@ const docTemplate = `{
                 }
             }
         },
+        "clientp.GetIncidentCountsResponse": {
+            "type": "object",
+            "properties": {
+                "past_24h_count": {
+                    "type": "integer"
+                },
+                "pending_confirmation_count": {
+                    "type": "integer"
+                },
+                "serious_fatal_count": {
+                    "type": "integer"
+                }
+            }
+        },
         "clientp.GetIncidentResponse": {
             "type": "object",
             "properties": {
-                "accident": {
-                    "type": "boolean"
-                },
-                "additional_appointments": {
+                "additional_details": {
                     "type": "string"
                 },
-                "cause_explanation": {
-                    "type": "string"
-                },
-                "client_absence": {
-                    "type": "boolean"
-                },
-                "client_id": {
-                    "type": "string"
-                },
-                "client_options": {
+                "cause_categories": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
+                },
+                "cause_explanation": {
+                    "type": "string"
+                },
+                "client_id": {
+                    "type": "string"
                 },
                 "created_at": {
                     "type": "string"
@@ -15438,9 +16946,6 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
-                "employee_absenteeism": {
-                    "type": "string"
-                },
                 "employee_first_name": {
                     "type": "string"
                 },
@@ -15450,13 +16955,16 @@ const docTemplate = `{
                 "employee_last_name": {
                     "type": "string"
                 },
-                "fire_water_damage": {
-                    "type": "boolean"
+                "follow_up_actions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
-                "id": {
+                "follow_up_notes": {
                     "type": "string"
                 },
-                "incident_date": {
+                "id": {
                     "type": "string"
                 },
                 "incident_explanation": {
@@ -15471,7 +16979,7 @@ const docTemplate = `{
                 "incident_type": {
                     "type": "string"
                 },
-                "inform_who": {
+                "informed_parties": {
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -15480,47 +16988,20 @@ const docTemplate = `{
                 "is_confirmed": {
                     "type": "boolean"
                 },
+                "is_employee_absent": {
+                    "type": "boolean"
+                },
                 "location_id": {
                     "type": "string"
                 },
                 "location_name": {
                     "type": "string"
                 },
-                "medicines": {
-                    "type": "boolean"
-                },
-                "mese_worker": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
                 "needed_consultation": {
                     "type": "string"
                 },
-                "organization": {
-                    "type": "boolean"
-                },
-                "organizational": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "other": {
-                    "type": "boolean"
-                },
-                "other_cause": {
+                "occurred_at": {
                     "type": "string"
-                },
-                "other_desc": {
-                    "type": "string"
-                },
-                "other_notifications": {
-                    "type": "boolean"
-                },
-                "passing_away": {
-                    "type": "boolean"
                 },
                 "physical_injury": {
                     "type": "string"
@@ -15540,41 +17021,11 @@ const docTemplate = `{
                 "reporter_involvement": {
                     "type": "string"
                 },
-                "runtime_incident": {
-                    "type": "string"
-                },
-                "self_harm": {
-                    "type": "boolean"
-                },
                 "severity_of_incident": {
                     "type": "string"
                 },
-                "soft_delete": {
-                    "type": "boolean"
-                },
-                "succession": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "succession_desc": {
-                    "type": "string"
-                },
-                "technical": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
                 "updated_at": {
                     "type": "string"
-                },
-                "use_prohibited_substances": {
-                    "type": "boolean"
-                },
-                "violence": {
-                    "type": "boolean"
                 }
             }
         },
@@ -15664,6 +17115,17 @@ const docTemplate = `{
                 },
                 "updated_at": {
                     "type": "string"
+                }
+            }
+        },
+        "clientp.GetIntakeFormTotalsResponse": {
+            "type": "object",
+            "properties": {
+                "further_investigation_total": {
+                    "type": "integer"
+                },
+                "without_goals_total": {
+                    "type": "integer"
                 }
             }
         },
@@ -16128,6 +17590,9 @@ const docTemplate = `{
                 "created_by_employee_id": {
                     "type": "string"
                 },
+                "creator_name": {
+                    "type": "string"
+                },
                 "evaluation_date": {
                     "type": "string"
                 },
@@ -16259,67 +17724,22 @@ const docTemplate = `{
         "clientp.ListAllIncidentsResponse": {
             "type": "object",
             "properties": {
-                "accident": {
-                    "type": "boolean"
-                },
-                "additional_appointments": {
+                "client_bsn": {
                     "type": "string"
-                },
-                "cause_explanation": {
-                    "type": "string"
-                },
-                "client_absence": {
-                    "type": "boolean"
                 },
                 "client_first_name": {
-                    "type": "string"
-                },
-                "client_id": {
                     "type": "string"
                 },
                 "client_last_name": {
                     "type": "string"
                 },
-                "created_at": {
-                    "type": "string"
-                },
-                "emails": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "employee_absenteeism": {
-                    "type": "string"
-                },
                 "employee_first_name": {
-                    "type": "string"
-                },
-                "employee_id": {
                     "type": "string"
                 },
                 "employee_last_name": {
                     "type": "string"
                 },
-                "file_url": {
-                    "type": "string"
-                },
-                "fire_water_damage": {
-                    "type": "boolean"
-                },
                 "id": {
-                    "type": "string"
-                },
-                "incident_date": {
-                    "type": "string"
-                },
-                "incident_explanation": {
-                    "type": "string"
-                },
-                "incident_prevent_steps": {
-                    "type": "string"
-                },
-                "incident_taken_measures": {
                     "type": "string"
                 },
                 "incident_type": {
@@ -16328,74 +17748,14 @@ const docTemplate = `{
                 "is_confirmed": {
                     "type": "boolean"
                 },
-                "location_id": {
+                "location_name": {
                     "type": "string"
                 },
-                "medicines": {
-                    "type": "boolean"
-                },
-                "needed_consultation": {
+                "occurred_at": {
                     "type": "string"
-                },
-                "organization": {
-                    "type": "boolean"
-                },
-                "other": {
-                    "type": "boolean"
-                },
-                "other_cause": {
-                    "type": "string"
-                },
-                "other_desc": {
-                    "type": "string"
-                },
-                "other_notifications": {
-                    "type": "boolean"
-                },
-                "passing_away": {
-                    "type": "boolean"
-                },
-                "physical_injury": {
-                    "type": "string"
-                },
-                "physical_injury_desc": {
-                    "type": "string"
-                },
-                "psychological_damage": {
-                    "type": "string"
-                },
-                "psychological_damage_desc": {
-                    "type": "string"
-                },
-                "recurrence_risk": {
-                    "type": "string"
-                },
-                "reporter_involvement": {
-                    "type": "string"
-                },
-                "runtime_incident": {
-                    "type": "string"
-                },
-                "self_harm": {
-                    "type": "boolean"
                 },
                 "severity_of_incident": {
                     "type": "string"
-                },
-                "soft_delete": {
-                    "type": "boolean"
-                },
-                "succession_desc": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "use_prohibited_substances": {
-                    "type": "boolean"
-                },
-                "violence": {
-                    "type": "boolean"
                 }
             }
         },
@@ -16421,47 +17781,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "start_date": {
-                    "type": "string"
-                }
-            }
-        },
-        "clientp.ListClientDiagnosesResponse": {
-            "type": "object",
-            "properties": {
-                "client_id": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "diagnosing_clinician": {
-                    "type": "string"
-                },
-                "diagnosis_code": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "medications": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/clientp.DiagnosisMedicationList"
-                    }
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "severity": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "title": {
                     "type": "string"
                 }
             }
@@ -16554,44 +17873,29 @@ const docTemplate = `{
                 }
             }
         },
-        "clientp.ListClientMedicationsResponse": {
+        "clientp.ListClientSubmittedEvaluationsResponse": {
             "type": "object",
             "properties": {
-                "administered_by_id": {
+                "created_by_employee_id": {
                     "type": "string"
                 },
-                "created_at": {
+                "creator_name": {
                     "type": "string"
                 },
-                "diagnosis_id": {
+                "evaluation_date": {
                     "type": "string"
                 },
-                "dosage": {
+                "evaluation_id": {
                     "type": "string"
                 },
-                "end_date": {
+                "filled_goals_count": {
+                    "type": "integer"
+                },
+                "submitted_at": {
                     "type": "string"
                 },
-                "id": {
-                    "type": "string"
-                },
-                "is_critical": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "self_administered": {
-                    "type": "boolean"
-                },
-                "start_date": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
+                "total_goals_count": {
+                    "type": "integer"
                 }
             }
         },
@@ -16629,6 +17933,38 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "clientp.ListGoalEvaluationHistoryResponse": {
+            "type": "object",
+            "properties": {
+                "created_by_employee_id": {
+                    "type": "string"
+                },
+                "creator_name": {
+                    "type": "string"
+                },
+                "evaluation_date": {
+                    "type": "string"
+                },
+                "evaluation_id": {
+                    "type": "string"
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "period_end": {
+                    "type": "string"
+                },
+                "period_start": {
+                    "type": "string"
+                },
+                "progress": {
+                    "type": "string"
+                },
+                "submitted_at": {
                     "type": "string"
                 }
             }
@@ -16671,43 +18007,7 @@ const docTemplate = `{
         "clientp.ListIncidentsResponse": {
             "type": "object",
             "properties": {
-                "accident": {
-                    "type": "boolean"
-                },
-                "additional_appointments": {
-                    "type": "string"
-                },
-                "cause_explanation": {
-                    "type": "string"
-                },
-                "client_absence": {
-                    "type": "boolean"
-                },
-                "client_id": {
-                    "type": "string"
-                },
-                "client_options": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "emails": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "employee_absenteeism": {
-                    "type": "string"
-                },
                 "employee_first_name": {
-                    "type": "string"
-                },
-                "employee_id": {
                     "type": "string"
                 },
                 "employee_last_name": {
@@ -16716,131 +18016,23 @@ const docTemplate = `{
                 "employee_profile_picture": {
                     "type": "string"
                 },
-                "fire_water_damage": {
-                    "type": "boolean"
-                },
                 "id": {
-                    "type": "string"
-                },
-                "incident_date": {
-                    "type": "string"
-                },
-                "incident_explanation": {
-                    "type": "string"
-                },
-                "incident_prevent_steps": {
-                    "type": "string"
-                },
-                "incident_taken_measures": {
                     "type": "string"
                 },
                 "incident_type": {
                     "type": "string"
                 },
-                "inform_who": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
                 "is_confirmed": {
                     "type": "boolean"
-                },
-                "location_id": {
-                    "type": "string"
                 },
                 "location_name": {
                     "type": "string"
                 },
-                "medicines": {
-                    "type": "boolean"
-                },
-                "mese_worker": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "needed_consultation": {
+                "occurred_at": {
                     "type": "string"
-                },
-                "organization": {
-                    "type": "boolean"
-                },
-                "organizational": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "other": {
-                    "type": "boolean"
-                },
-                "other_cause": {
-                    "type": "string"
-                },
-                "other_desc": {
-                    "type": "string"
-                },
-                "other_notifications": {
-                    "type": "boolean"
-                },
-                "passing_away": {
-                    "type": "boolean"
-                },
-                "physical_injury": {
-                    "type": "string"
-                },
-                "physical_injury_desc": {
-                    "type": "string"
-                },
-                "psychological_damage": {
-                    "type": "string"
-                },
-                "psychological_damage_desc": {
-                    "type": "string"
-                },
-                "recurrence_risk": {
-                    "type": "string"
-                },
-                "reporter_involvement": {
-                    "type": "string"
-                },
-                "runtime_incident": {
-                    "type": "string"
-                },
-                "self_harm": {
-                    "type": "boolean"
                 },
                 "severity_of_incident": {
                     "type": "string"
-                },
-                "soft_delete": {
-                    "type": "boolean"
-                },
-                "succession": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "succession_desc": {
-                    "type": "string"
-                },
-                "technical": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "use_prohibited_substances": {
-                    "type": "boolean"
-                },
-                "violence": {
-                    "type": "boolean"
                 }
             }
         },
@@ -16983,9 +18175,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "id": {
-                    "type": "string"
-                },
-                "report_text": {
                     "type": "string"
                 },
                 "title": {
@@ -17329,6 +18518,55 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "warning": {
+                    "type": "string"
+                }
+            }
+        },
+        "clientp.PutClientOutOfCareRequest": {
+            "type": "object",
+            "required": [
+                "discharge_date",
+                "discharge_reason"
+            ],
+            "properties": {
+                "discharge_date": {
+                    "type": "string"
+                },
+                "discharge_reason": {
+                    "type": "string",
+                    "enum": [
+                        "treatment_completed",
+                        "terminated_by_mutual_agreement",
+                        "terminated_by_client",
+                        "terminated_by_provider",
+                        "terminated_due_to_external_factors",
+                        "other"
+                    ]
+                },
+                "final_evaluation": {
+                    "type": "string"
+                },
+                "reason": {
+                    "type": "string"
+                }
+            }
+        },
+        "clientp.PutClientOutOfCareResponse": {
+            "type": "object",
+            "properties": {
+                "discharge_date": {
+                    "type": "string"
+                },
+                "discharge_reason": {
+                    "type": "string"
+                },
+                "final_evaluation": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "status": {
                     "type": "string"
                 }
             }
@@ -17771,57 +19009,25 @@ const docTemplate = `{
         "clientp.UpdateClientDiagnosisRequest": {
             "type": "object",
             "properties": {
-                "description": {
+                "code": {
                     "type": "string"
                 },
-                "diagnosing_clinician": {
-                    "type": "string"
-                },
-                "diagnosis_code": {
-                    "type": "string"
-                },
-                "medications": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/clientp.DiagnosisMedicationCreate"
-                    }
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "severity": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "title": {
-                    "type": "string"
-                }
-            }
-        },
-        "clientp.UpdateClientDiagnosisResponse": {
-            "type": "object",
-            "properties": {
-                "client_id": {
-                    "type": "string"
-                },
-                "created_at": {
+                "code_system": {
                     "type": "string"
                 },
                 "description": {
                     "type": "string"
                 },
+                "diagnosed_on": {
+                    "type": "string"
+                },
                 "diagnosing_clinician": {
                     "type": "string"
                 },
-                "diagnosis_code": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
                 "notes": {
+                    "type": "string"
+                },
+                "resolved_on": {
                     "type": "string"
                 },
                 "severity": {
@@ -17917,75 +19123,8 @@ const docTemplate = `{
                 }
             }
         },
-        "clientp.UpdateClientMedicationRequest": {
-            "type": "object",
-            "properties": {
-                "administered_by_id": {
-                    "type": "string"
-                },
-                "dosage": {
-                    "type": "string"
-                },
-                "end_date": {
-                    "type": "string"
-                },
-                "is_critical": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "self_administered": {
-                    "type": "boolean"
-                },
-                "start_date": {
-                    "type": "string"
-                }
-            }
-        },
-        "clientp.UpdateClientMedicationResponse": {
-            "type": "object",
-            "properties": {
-                "administered_by_id": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "diagnosis_id": {
-                    "type": "string"
-                },
-                "dosage": {
-                    "type": "string"
-                },
-                "end_date": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "is_critical": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "self_administered": {
-                    "type": "boolean"
-                },
-                "start_date": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
+        "clientp.UpdateClientMedicationOrderRequest": {
+            "type": "object"
         },
         "clientp.UpdateClientStatusRequest": {
             "type": "object",
@@ -18021,23 +19160,17 @@ const docTemplate = `{
         "clientp.UpdateIncidentRequest": {
             "type": "object",
             "properties": {
-                "accident": {
-                    "type": "boolean"
-                },
-                "additional_appointments": {
+                "additional_details": {
                     "type": "string"
                 },
-                "cause_explanation": {
-                    "type": "string"
-                },
-                "client_absence": {
-                    "type": "boolean"
-                },
-                "client_options": {
+                "cause_categories": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
+                },
+                "cause_explanation": {
+                    "type": "string"
                 },
                 "emails": {
                     "type": "array",
@@ -18045,19 +19178,19 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
-                "employee_absenteeism": {
-                    "type": "string"
-                },
                 "employee_id": {
                     "type": "string"
                 },
-                "fire_water_damage": {
-                    "type": "boolean"
+                "follow_up_actions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
-                "id": {
+                "follow_up_notes": {
                     "type": "string"
                 },
-                "incident_date": {
+                "id": {
                     "type": "string"
                 },
                 "incident_explanation": {
@@ -18072,50 +19205,23 @@ const docTemplate = `{
                 "incident_type": {
                     "type": "string"
                 },
-                "inform_who": {
+                "informed_parties": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
+                },
+                "is_employee_absent": {
+                    "type": "boolean"
                 },
                 "location_id": {
                     "type": "string"
                 },
-                "medicines": {
-                    "type": "boolean"
-                },
-                "mese_worker": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
                 "needed_consultation": {
                     "type": "string"
                 },
-                "organization": {
-                    "type": "boolean"
-                },
-                "organizational": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "other": {
-                    "type": "boolean"
-                },
-                "other_cause": {
+                "occurred_at": {
                     "type": "string"
-                },
-                "other_desc": {
-                    "type": "string"
-                },
-                "other_notifications": {
-                    "type": "boolean"
-                },
-                "passing_away": {
-                    "type": "boolean"
                 },
                 "physical_injury": {
                     "type": "string"
@@ -18135,61 +19241,28 @@ const docTemplate = `{
                 "reporter_involvement": {
                     "type": "string"
                 },
-                "runtime_incident": {
-                    "type": "string"
-                },
-                "self_harm": {
-                    "type": "boolean"
-                },
                 "severity_of_incident": {
                     "type": "string"
-                },
-                "succession": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "succession_desc": {
-                    "type": "string"
-                },
-                "technical": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "use_prohibited_substances": {
-                    "type": "boolean"
-                },
-                "violence": {
-                    "type": "boolean"
                 }
             }
         },
         "clientp.UpdateIncidentResponse": {
             "type": "object",
             "properties": {
-                "accident": {
-                    "type": "boolean"
-                },
-                "additional_appointments": {
+                "additional_details": {
                     "type": "string"
                 },
-                "cause_explanation": {
-                    "type": "string"
-                },
-                "client_absence": {
-                    "type": "boolean"
-                },
-                "client_id": {
-                    "type": "string"
-                },
-                "client_options": {
+                "cause_categories": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
+                },
+                "cause_explanation": {
+                    "type": "string"
+                },
+                "client_id": {
+                    "type": "string"
                 },
                 "created": {
                     "type": "string"
@@ -18200,19 +19273,19 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
-                "employee_absenteeism": {
-                    "type": "string"
-                },
                 "employee_id": {
                     "type": "string"
                 },
-                "fire_water_damage": {
-                    "type": "boolean"
+                "follow_up_actions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
-                "id": {
+                "follow_up_notes": {
                     "type": "string"
                 },
-                "incident_date": {
+                "id": {
                     "type": "string"
                 },
                 "incident_explanation": {
@@ -18227,7 +19300,7 @@ const docTemplate = `{
                 "incident_type": {
                     "type": "string"
                 },
-                "inform_who": {
+                "informed_parties": {
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -18236,44 +19309,17 @@ const docTemplate = `{
                 "is_confirmed": {
                     "type": "boolean"
                 },
-                "location_id": {
-                    "type": "string"
-                },
-                "medicines": {
+                "is_employee_absent": {
                     "type": "boolean"
                 },
-                "mese_worker": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                "location_id": {
+                    "type": "string"
                 },
                 "needed_consultation": {
                     "type": "string"
                 },
-                "organization": {
-                    "type": "boolean"
-                },
-                "organizational": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "other": {
-                    "type": "boolean"
-                },
-                "other_cause": {
+                "occurred_at": {
                     "type": "string"
-                },
-                "other_desc": {
-                    "type": "string"
-                },
-                "other_notifications": {
-                    "type": "boolean"
-                },
-                "passing_away": {
-                    "type": "boolean"
                 },
                 "physical_injury": {
                     "type": "string"
@@ -18293,41 +19339,11 @@ const docTemplate = `{
                 "reporter_involvement": {
                     "type": "string"
                 },
-                "runtime_incident": {
-                    "type": "string"
-                },
-                "self_harm": {
-                    "type": "boolean"
-                },
                 "severity_of_incident": {
                     "type": "string"
                 },
-                "soft_delete": {
-                    "type": "boolean"
-                },
-                "succession": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "succession_desc": {
-                    "type": "string"
-                },
-                "technical": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
                 "updated": {
                     "type": "string"
-                },
-                "use_prohibited_substances": {
-                    "type": "boolean"
-                },
-                "violence": {
-                    "type": "boolean"
                 }
             }
         },
@@ -18359,6 +19375,115 @@ const docTemplate = `{
                     "$ref": "#/definitions/db.IntakeConclusionEnum"
                 },
                 "intake_conclusion_notes": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "clientp.UpdateIntakeFormRequest": {
+            "type": "object",
+            "properties": {
+                "assigned_location_id": {
+                    "type": "string"
+                },
+                "care_type": {
+                    "$ref": "#/definitions/db.IntakeCareTypeEnum"
+                },
+                "clear_fields": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "date_of_intake": {
+                    "type": "string"
+                },
+                "evaluation_intervals_weeks": {
+                    "type": "integer"
+                },
+                "family_situation": {
+                    "type": "string"
+                },
+                "intake_conclusion": {
+                    "$ref": "#/definitions/db.IntakeConclusionEnum"
+                },
+                "intake_conclusion_notes": {
+                    "type": "string"
+                },
+                "intake_participants": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/db.IntakeParticipantsEnum"
+                    }
+                },
+                "psychological_state": {
+                    "type": "string"
+                },
+                "risk_assessment": {
+                    "type": "string"
+                },
+                "self_sufficiency": {
+                    "type": "integer"
+                },
+                "sender_id": {
+                    "type": "string"
+                },
+                "signature": {
+                    "type": "string"
+                }
+            }
+        },
+        "clientp.UpdateIntakeFormResponse": {
+            "type": "object",
+            "properties": {
+                "assigned_location_id": {
+                    "type": "string"
+                },
+                "care_type": {
+                    "$ref": "#/definitions/db.IntakeCareTypeEnum"
+                },
+                "date_of_intake": {
+                    "type": "string"
+                },
+                "evaluation_intervals_weeks": {
+                    "type": "integer"
+                },
+                "family_situation": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "intake_conclusion": {
+                    "$ref": "#/definitions/db.IntakeConclusionEnum"
+                },
+                "intake_conclusion_notes": {
+                    "type": "string"
+                },
+                "intake_participants": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/db.IntakeParticipantsEnum"
+                    }
+                },
+                "psychological_state": {
+                    "type": "string"
+                },
+                "registration_form_id": {
+                    "type": "string"
+                },
+                "risk_assessment": {
+                    "type": "string"
+                },
+                "self_sufficiency": {
+                    "type": "integer"
+                },
+                "sender_id": {
+                    "type": "string"
+                },
+                "signature": {
                     "type": "string"
                 },
                 "updated_at": {
@@ -18428,7 +19553,10 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "application_date": {
-                    "$ref": "#/definitions/pgtype.Date"
+                    "type": "string"
+                },
+                "application_reason": {
+                    "type": "string"
                 },
                 "care_ambulatory_guidance": {
                     "type": "boolean"
@@ -18458,7 +19586,13 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "client_gender": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "male",
+                        "female",
+                        "other",
+                        "unknown"
+                    ]
                 },
                 "client_goals": {
                     "type": "array",
@@ -18487,24 +19621,6 @@ const docTemplate = `{
                 "client_street": {
                     "type": "string"
                 },
-                "document_diagnosis": {
-                    "type": "string"
-                },
-                "document_education_report": {
-                    "type": "string"
-                },
-                "document_id_copy": {
-                    "type": "string"
-                },
-                "document_psychiatric_report": {
-                    "type": "string"
-                },
-                "document_referral": {
-                    "type": "string"
-                },
-                "document_safety_plan": {
-                    "type": "string"
-                },
                 "education_additional_notes": {
                     "type": "string"
                 },
@@ -18515,7 +19631,13 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "education_level": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "primary",
+                        "secondary",
+                        "higher",
+                        "none"
+                    ]
                 },
                 "education_mentor_email": {
                     "type": "string"
@@ -19582,6 +20704,21 @@ const docTemplate = `{
                 "ClientLocationTransferStatusEnumRejected"
             ]
         },
+        "db.HandbookStepKindEnum": {
+            "type": "string",
+            "enum": [
+                "content",
+                "ack",
+                "link",
+                "quiz"
+            ],
+            "x-enum-varnames": [
+                "HandbookStepKindEnumContent",
+                "HandbookStepKindEnumAck",
+                "HandbookStepKindEnumLink",
+                "HandbookStepKindEnumQuiz"
+            ]
+        },
         "db.IntakeCareTypeEnum": {
             "type": "string",
             "enum": [
@@ -19775,6 +20912,26 @@ const docTemplate = `{
                 }
             }
         },
+        "employees.ActiveSessionDetail": {
+            "type": "object",
+            "properties": {
+                "client_ip": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "expires_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "user_agent": {
+                    "type": "string"
+                }
+            }
+        },
         "employees.AddEducationToEmployeeProfileRequest": {
             "type": "object",
             "required": [
@@ -19962,6 +21119,43 @@ const docTemplate = `{
                 }
             }
         },
+        "employees.BriefEducationDetail": {
+            "type": "object",
+            "properties": {
+                "degree": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "field_of_study": {
+                    "type": "string"
+                },
+                "institution_name": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
+        "employees.BriefExperienceDetail": {
+            "type": "object",
+            "properties": {
+                "company_name": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "job_title": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
         "employees.CreateEmployeeProfileRequest": {
             "type": "object",
             "required": [
@@ -20015,9 +21209,9 @@ const docTemplate = `{
                     "type": "string",
                     "example": "2000-01-01"
                 },
-                "department": {
+                "department_id": {
                     "type": "string",
-                    "example": "IT"
+                    "example": "1"
                 },
                 "employee_number": {
                     "type": "string",
@@ -20057,6 +21251,10 @@ const docTemplate = `{
                     "example": "joe"
                 },
                 "location_id": {
+                    "type": "string",
+                    "example": "1"
+                },
+                "manager_employee_id": {
                     "type": "string",
                     "example": "1"
                 },
@@ -20103,7 +21301,10 @@ const docTemplate = `{
                 "date_of_birth": {
                     "type": "string"
                 },
-                "department": {
+                "department_id": {
+                    "type": "string"
+                },
+                "department_name": {
                     "type": "string"
                 },
                 "email": {
@@ -20142,6 +21343,15 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "location_id": {
+                    "type": "string"
+                },
+                "manager_employee_id": {
+                    "type": "string"
+                },
+                "manager_first_name": {
+                    "type": "string"
+                },
+                "manager_last_name": {
                     "type": "string"
                 },
                 "out_of_service": {
@@ -20239,6 +21449,17 @@ const docTemplate = `{
                 }
             }
         },
+        "employees.EmployeeRole": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "employees.GetEmployeeContractDetailsResponse": {
             "type": "object",
             "properties": {
@@ -20292,7 +21513,10 @@ const docTemplate = `{
                 "date_of_birth": {
                     "type": "string"
                 },
-                "department": {
+                "department_id": {
+                    "type": "string"
+                },
+                "department_name": {
                     "type": "string"
                 },
                 "email": {
@@ -20334,6 +21558,15 @@ const docTemplate = `{
                 "location_id": {
                     "type": "string"
                 },
+                "manager_employee_id": {
+                    "type": "string"
+                },
+                "manager_first_name": {
+                    "type": "string"
+                },
+                "manager_last_name": {
+                    "type": "string"
+                },
                 "out_of_service": {
                     "type": "boolean"
                 },
@@ -20354,6 +21587,149 @@ const docTemplate = `{
                 },
                 "user_id": {
                     "type": "string"
+                },
+                "work_phone_number": {
+                    "type": "string"
+                }
+            }
+        },
+        "employees.GetEmployeeProfileDetailsResponse": {
+            "type": "object",
+            "properties": {
+                "active_sessions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/employees.ActiveSessionDetail"
+                    }
+                },
+                "city": {
+                    "type": "string"
+                },
+                "contract_end_date": {
+                    "type": "string"
+                },
+                "contract_hours": {
+                    "type": "number"
+                },
+                "contract_rate": {
+                    "type": "number"
+                },
+                "contract_start_date": {
+                    "type": "string"
+                },
+                "contract_type": {
+                    "type": "string"
+                },
+                "date_of_birth": {
+                    "type": "string"
+                },
+                "department_id": {
+                    "type": "string"
+                },
+                "department_name": {
+                    "type": "string"
+                },
+                "education": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/employees.BriefEducationDetail"
+                    }
+                },
+                "email": {
+                    "type": "string"
+                },
+                "employee_id": {
+                    "type": "string"
+                },
+                "employee_number": {
+                    "type": "string"
+                },
+                "employment_number": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "string"
+                },
+                "has_borrowed": {
+                    "type": "boolean"
+                },
+                "home_telephone_number": {
+                    "type": "string"
+                },
+                "house_number": {
+                    "type": "string"
+                },
+                "house_number_addition": {
+                    "type": "string"
+                },
+                "is_archived": {
+                    "type": "boolean"
+                },
+                "last_login": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "location_id": {
+                    "type": "string"
+                },
+                "location_name": {
+                    "type": "string"
+                },
+                "manager_employee_id": {
+                    "type": "string"
+                },
+                "manager_first_name": {
+                    "type": "string"
+                },
+                "manager_last_name": {
+                    "type": "string"
+                },
+                "organisation_name": {
+                    "type": "string"
+                },
+                "out_of_service": {
+                    "type": "boolean"
+                },
+                "position": {
+                    "type": "string"
+                },
+                "postal_code": {
+                    "type": "string"
+                },
+                "private_email_address": {
+                    "type": "string"
+                },
+                "private_phone_number": {
+                    "type": "string"
+                },
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/employees.EmployeeRole"
+                    }
+                },
+                "street": {
+                    "type": "string"
+                },
+                "two_factor_enabled": {
+                    "type": "boolean"
+                },
+                "user_id": {
+                    "type": "string"
+                },
+                "work_email_address": {
+                    "type": "string"
+                },
+                "work_experience": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/employees.BriefExperienceDetail"
+                    }
                 },
                 "work_phone_number": {
                     "type": "string"
@@ -20482,7 +21858,7 @@ const docTemplate = `{
                 "contract_type": {
                     "type": "string"
                 },
-                "department": {
+                "department_name": {
                     "type": "string"
                 },
                 "first_name": {
@@ -20805,7 +22181,10 @@ const docTemplate = `{
                 "date_of_birth": {
                     "type": "string"
                 },
-                "department": {
+                "department_id": {
+                    "type": "string"
+                },
+                "department_name": {
                     "type": "string"
                 },
                 "email": {
@@ -20842,6 +22221,15 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "location_id": {
+                    "type": "string"
+                },
+                "manager_employee_id": {
+                    "type": "string"
+                },
+                "manager_first_name": {
+                    "type": "string"
+                },
+                "manager_last_name": {
                     "type": "string"
                 },
                 "out_of_service": {
@@ -20899,17 +22287,235 @@ const docTemplate = `{
                 }
             }
         },
+        "handbook.AssignTemplateToEmployeeRequest": {
+            "type": "object",
+            "required": [
+                "employee_id",
+                "template_id"
+            ],
+            "properties": {
+                "employee_id": {
+                    "type": "string"
+                },
+                "template_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "handbook.AssignTemplateToEmployeeResponse": {
+            "type": "object",
+            "properties": {
+                "assigned_at": {
+                    "type": "string"
+                },
+                "employee_handbook_id": {
+                    "type": "string"
+                },
+                "employee_id": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "template_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "handbook.CompleteMyHandbookStepResponse": {
+            "type": "object",
+            "properties": {
+                "completed_at": {
+                    "type": "string"
+                },
+                "handbook_id": {
+                    "type": "string"
+                },
+                "handbook_status": {
+                    "type": "string"
+                },
+                "step_id": {
+                    "type": "string"
+                },
+                "step_status": {
+                    "type": "string"
+                }
+            }
+        },
+        "handbook.CreateStepResponse": {
+            "type": "object",
+            "properties": {
+                "body": {
+                    "type": "string"
+                },
+                "content": {},
+                "id": {
+                    "type": "string"
+                },
+                "is_required": {
+                    "type": "boolean"
+                },
+                "kind": {
+                    "$ref": "#/definitions/db.HandbookStepKindEnum"
+                },
+                "sort_order": {
+                    "type": "integer"
+                },
+                "template_id": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "handbook.CreateTemplateForDepartmentRequest": {
+            "type": "object",
+            "required": [
+                "department_id",
+                "title"
+            ],
+            "properties": {
+                "department_id": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "handbook.CreateTemplateForDepartmentResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "department_id": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "version": {
+                    "type": "integer"
+                }
+            }
+        },
+        "handbook.GetMyActiveHandbookResponse": {
+            "type": "object",
+            "properties": {
+                "assigned_at": {
+                    "type": "string"
+                },
+                "completed_at": {
+                    "type": "string"
+                },
+                "department_id": {
+                    "type": "string"
+                },
+                "department_name": {
+                    "type": "string"
+                },
+                "due_at": {
+                    "type": "string"
+                },
+                "handbook_id": {
+                    "type": "string"
+                },
+                "started_at": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "steps": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handbook.MyHandbookStep"
+                    }
+                },
+                "template_description": {
+                    "type": "string"
+                },
+                "template_id": {
+                    "type": "string"
+                },
+                "template_title": {
+                    "type": "string"
+                },
+                "template_version": {
+                    "type": "integer"
+                }
+            }
+        },
+        "handbook.MyHandbookStep": {
+            "type": "object",
+            "properties": {
+                "body": {
+                    "type": "string"
+                },
+                "completed_at": {
+                    "type": "string"
+                },
+                "content": {},
+                "is_required": {
+                    "type": "boolean"
+                },
+                "kind": {
+                    "$ref": "#/definitions/db.HandbookStepKindEnum"
+                },
+                "response": {},
+                "sort_order": {
+                    "type": "integer"
+                },
+                "started_at": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "step_id": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "handbook.StartMyHandbookResponse": {
+            "type": "object",
+            "properties": {
+                "handbook_id": {
+                    "type": "string"
+                },
+                "started_at": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
         "invoice.CreateInvoiceRequest": {
             "type": "object",
             "required": [
                 "client_id",
                 "due_date",
-                "extra_content",
-                "invoice_details",
                 "invoice_type",
                 "issue_date",
-                "status",
-                "total_amount"
+                "lines"
             ],
             "properties": {
                 "client_id": {
@@ -20921,12 +22527,6 @@ const docTemplate = `{
                 "extra_content": {
                     "$ref": "#/definitions/util.JSONObject"
                 },
-                "invoice_details": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/invoice.InvoiceDetails"
-                    }
-                },
                 "invoice_type": {
                     "type": "string",
                     "enum": [
@@ -20937,20 +22537,12 @@ const docTemplate = `{
                 "issue_date": {
                     "type": "string"
                 },
-                "status": {
-                    "type": "string",
-                    "enum": [
-                        "outstanding",
-                        "partially_paid",
-                        "paid",
-                        "expired",
-                        "overpaid",
-                        "imported",
-                        "concept"
-                    ]
-                },
-                "total_amount": {
-                    "type": "number"
+                "lines": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/invoice.InvoiceLineInput"
+                    }
                 }
             }
         },
@@ -20963,20 +22555,20 @@ const docTemplate = `{
                 "created_at": {
                     "type": "string"
                 },
+                "currency": {
+                    "type": "string"
+                },
                 "due_date": {
                     "type": "string"
                 },
                 "extra_content": {
                     "$ref": "#/definitions/util.JSONObject"
                 },
+                "gross_total_amount": {
+                    "type": "number"
+                },
                 "id": {
                     "type": "string"
-                },
-                "invoice_details": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/invoice.InvoiceDetails"
-                    }
                 },
                 "invoice_number": {
                     "type": "string"
@@ -20987,20 +22579,32 @@ const docTemplate = `{
                 "issue_date": {
                     "type": "string"
                 },
+                "lines": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/invoice.InvoiceLine"
+                    }
+                },
+                "net_total_amount": {
+                    "type": "number"
+                },
                 "pdf_attachment_id": {
                     "type": "string"
                 },
                 "sender_id": {
                     "type": "string"
                 },
+                "source": {
+                    "type": "string"
+                },
                 "status": {
                     "type": "string"
                 },
-                "total_amount": {
-                    "type": "number"
-                },
                 "updated_at": {
                     "type": "string"
+                },
+                "vat_total_amount": {
+                    "type": "number"
                 }
             }
         },
@@ -21136,11 +22740,21 @@ const docTemplate = `{
                 "start_date"
             ],
             "properties": {
+                "billing_cycle": {
+                    "description": "e.g. \"iso_4_week\"",
+                    "type": "string"
+                },
+                "billing_timezone": {
+                    "type": "string"
+                },
                 "client_id": {
                     "type": "string"
                 },
                 "end_date": {
                     "type": "string"
+                },
+                "force_new_document": {
+                    "type": "boolean"
                 },
                 "start_date": {
                     "type": "string"
@@ -21156,41 +22770,68 @@ const docTemplate = `{
                 "created_at": {
                     "type": "string"
                 },
+                "currency": {
+                    "type": "string"
+                },
                 "due_date": {
                     "type": "string"
                 },
                 "extra_content": {
                     "$ref": "#/definitions/util.JSONObject"
                 },
+                "gross_total_amount": {
+                    "type": "number"
+                },
                 "id": {
                     "type": "string"
                 },
-                "invoice_details": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/invoice.InvoiceDetails"
-                    }
-                },
                 "invoice_number": {
+                    "type": "string"
+                },
+                "invoice_type": {
                     "type": "string"
                 },
                 "issue_date": {
                     "type": "string"
                 },
+                "lines": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/invoice.InvoiceLine"
+                    }
+                },
+                "net_total_amount": {
+                    "type": "number"
+                },
                 "pdf_attachment_id": {
+                    "type": "string"
+                },
+                "period_end": {
+                    "type": "string"
+                },
+                "period_start": {
                     "type": "string"
                 },
                 "sender_id": {
                     "type": "string"
                 },
+                "source": {
+                    "type": "string"
+                },
                 "status": {
                     "type": "string"
                 },
-                "total_amount": {
-                    "type": "number"
-                },
                 "updated_at": {
                     "type": "string"
+                },
+                "vat_total_amount": {
+                    "type": "number"
+                },
+                "warnings": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
@@ -21235,6 +22876,9 @@ const docTemplate = `{
         "invoice.GetInvoiceByIDResponse": {
             "type": "object",
             "properties": {
+                "billing_timezone": {
+                    "type": "string"
+                },
                 "client_first_name": {
                     "type": "string"
                 },
@@ -21247,20 +22891,20 @@ const docTemplate = `{
                 "created_at": {
                     "type": "string"
                 },
+                "currency": {
+                    "type": "string"
+                },
                 "due_date": {
                     "type": "string"
                 },
                 "extra_content": {
                     "$ref": "#/definitions/util.JSONObject"
                 },
+                "gross_total_amount": {
+                    "type": "number"
+                },
                 "id": {
                     "type": "string"
-                },
-                "invoice_details": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/invoice.InvoiceDetails"
-                    }
                 },
                 "invoice_number": {
                     "type": "string"
@@ -21271,13 +22915,28 @@ const docTemplate = `{
                 "issue_date": {
                     "type": "string"
                 },
+                "lines": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/invoice.InvoiceLine"
+                    }
+                },
+                "net_total_amount": {
+                    "type": "number"
+                },
                 "original_invoice_id": {
                     "type": "string"
                 },
                 "payment_completion_prc": {
                     "type": "number"
                 },
-                "pdf_attachment_id": {
+                "period_end": {
+                    "type": "string"
+                },
+                "period_start": {
+                    "type": "string"
+                },
+                "replaces_invoice_id": {
                     "type": "string"
                 },
                 "sender_btwnumber": {
@@ -21292,14 +22951,17 @@ const docTemplate = `{
                 "sender_name": {
                     "type": "string"
                 },
+                "source": {
+                    "type": "string"
+                },
                 "status": {
                     "type": "string"
                 },
-                "total_amount": {
-                    "type": "number"
-                },
                 "updated_at": {
                     "type": "string"
+                },
+                "vat_total_amount": {
+                    "type": "number"
                 }
             }
         },
@@ -21367,64 +23029,119 @@ const docTemplate = `{
                 }
             }
         },
-        "invoice.InvoiceDetails": {
+        "invoice.InvoiceLine": {
             "type": "object",
             "properties": {
                 "contract_id": {
                     "type": "string"
                 },
-                "contract_name": {
+                "description": {
                     "type": "string"
                 },
-                "periods": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/invoice.InvoicePeriod"
-                    }
-                },
-                "pre_vat_total_price": {
+                "gross_amount": {
                     "type": "number"
                 },
-                "price": {
-                    "type": "number"
-                },
-                "price_time_unit": {
+                "id": {
                     "type": "string"
                 },
-                "total_price": {
+                "line_no": {
+                    "type": "integer"
+                },
+                "line_type": {
+                    "type": "string"
+                },
+                "net_amount": {
                     "type": "number"
                 },
-                "vat": {
+                "period_end": {
+                    "type": "string"
+                },
+                "period_start": {
+                    "type": "string"
+                },
+                "quantity": {
                     "type": "number"
                 },
-                "warnings": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                "service_type": {
+                    "type": "string"
+                },
+                "unit": {
+                    "type": "string"
+                },
+                "unit_price": {
+                    "type": "number"
+                },
+                "vat_amount": {
+                    "type": "number"
+                },
+                "vat_rate": {
+                    "type": "number"
                 }
             }
         },
-        "invoice.InvoicePeriod": {
+        "invoice.InvoiceLineInput": {
             "type": "object",
+            "required": [
+                "description",
+                "line_type",
+                "period_end",
+                "period_start",
+                "quantity",
+                "service_type",
+                "unit",
+                "unit_price"
+            ],
             "properties": {
-                "accommodation_time_frame": {
+                "contract_id": {
                     "type": "string"
                 },
-                "ambulante_total_minutes": {
-                    "type": "number"
-                },
-                "end_date": {
+                "description": {
                     "type": "string"
                 },
-                "start_date": {
+                "line_type": {
+                    "type": "string",
+                    "enum": [
+                        "contract",
+                        "manual",
+                        "adjustment"
+                    ]
+                },
+                "period_end": {
                     "type": "string"
+                },
+                "period_start": {
+                    "type": "string"
+                },
+                "quantity": {
+                    "type": "number",
+                    "minimum": 0
+                },
+                "service_type": {
+                    "type": "string"
+                },
+                "unit": {
+                    "type": "string"
+                },
+                "unit_price": {
+                    "type": "number",
+                    "minimum": 0
+                },
+                "vat_rate": {
+                    "type": "number",
+                    "maximum": 100,
+                    "minimum": 0
                 }
             }
         },
         "invoice.ListInvoicesResponse": {
             "type": "object",
             "properties": {
+                "balance_due_amount": {
+                    "type": "number"
+                },
+                "client_filenumber": {
+                    "type": "string"
+                },
                 "client_first_name": {
                     "type": "string"
                 },
@@ -21434,38 +23151,29 @@ const docTemplate = `{
                 "client_last_name": {
                     "type": "string"
                 },
-                "created_at": {
+                "currency": {
                     "type": "string"
                 },
                 "due_date": {
                     "type": "string"
                 },
-                "extra_content": {
-                    "$ref": "#/definitions/util.JSONObject"
+                "gross_total_amount": {
+                    "type": "number"
                 },
                 "id": {
                     "type": "string"
                 },
-                "invoice_details": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/invoice.InvoiceDetails"
-                    }
-                },
                 "invoice_number": {
                     "type": "string"
                 },
-                "invoice_type": {
-                    "type": "string"
+                "is_overdue": {
+                    "type": "boolean"
                 },
                 "issue_date": {
                     "type": "string"
                 },
-                "original_invoice_id": {
-                    "type": "string"
-                },
-                "pdf_attachment_id": {
-                    "type": "string"
+                "paid_total_amount": {
+                    "type": "number"
                 },
                 "sender_id": {
                     "type": "string"
@@ -21475,15 +23183,6 @@ const docTemplate = `{
                 },
                 "status": {
                     "type": "string"
-                },
-                "total_amount": {
-                    "type": "number"
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "warning_count": {
-                    "type": "integer"
                 }
             }
         },
@@ -21540,20 +23239,20 @@ const docTemplate = `{
                 "extra_content": {
                     "$ref": "#/definitions/util.JSONObject"
                 },
-                "invoice_details": {
+                "issue_date": {
+                    "type": "string"
+                },
+                "lines": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/invoice.InvoiceDetails"
+                        "$ref": "#/definitions/invoice.InvoiceLineInput"
                     }
                 },
-                "issue_date": {
+                "locked_at": {
                     "type": "string"
                 },
                 "status": {
                     "type": "string"
-                },
-                "total_amount": {
-                    "type": "number"
                 },
                 "warning_count": {
                     "type": "integer"
@@ -21569,26 +23268,29 @@ const docTemplate = `{
                 "created_at": {
                     "type": "string"
                 },
+                "currency": {
+                    "type": "string"
+                },
                 "due_date": {
                     "type": "string"
                 },
                 "extra_content": {
                     "$ref": "#/definitions/util.JSONObject"
                 },
+                "gross_total_amount": {
+                    "type": "number"
+                },
                 "id": {
                     "type": "string"
-                },
-                "invoice_details": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/invoice.InvoiceDetails"
-                    }
                 },
                 "invoice_number": {
                     "type": "string"
                 },
                 "issue_date": {
                     "type": "string"
+                },
+                "net_total_amount": {
+                    "type": "number"
                 },
                 "pdf_attachment_id": {
                     "type": "string"
@@ -21599,11 +23301,11 @@ const docTemplate = `{
                 "status": {
                     "type": "string"
                 },
-                "total_amount": {
-                    "type": "number"
-                },
                 "updated_at": {
                     "type": "string"
+                },
+                "vat_total_amount": {
+                    "type": "number"
                 }
             }
         },
@@ -22028,6 +23730,9 @@ const docTemplate = `{
                 "shift": {
                     "type": "string"
                 },
+                "slot": {
+                    "type": "integer"
+                },
                 "start_time": {
                     "type": "string"
                 }
@@ -22046,6 +23751,17 @@ const docTemplate = `{
             "properties": {
                 "id": {
                     "type": "string"
+                }
+            }
+        },
+        "organization.GetGlobalOrganisationCountResponse": {
+            "type": "object",
+            "properties": {
+                "total_capacity": {
+                    "type": "integer"
+                },
+                "total_locations": {
+                    "type": "integer"
                 }
             }
         },
@@ -22175,6 +23891,59 @@ const docTemplate = `{
                 "postal_code": {
                     "type": "string"
                 },
+                "shifts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/organization.ListShiftsByLocationIDResponse"
+                    }
+                },
+                "street": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "organization.ListOrgLocationsResponse": {
+            "type": "object",
+            "properties": {
+                "available": {
+                    "type": "integer"
+                },
+                "capacity": {
+                    "type": "integer"
+                },
+                "city": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "house_number": {
+                    "type": "string"
+                },
+                "house_number_addition": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "occupied": {
+                    "type": "integer"
+                },
+                "postal_code": {
+                    "type": "string"
+                },
+                "shifts": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/organization.ListShiftsByLocationIDResponse"
+                    }
+                },
                 "street": {
                     "type": "string"
                 },
@@ -22235,6 +24004,9 @@ const docTemplate = `{
                 },
                 "shift": {
                     "type": "string"
+                },
+                "slot": {
+                    "type": "integer"
                 },
                 "start_time": {
                     "type": "string"
@@ -22392,6 +24164,9 @@ const docTemplate = `{
                 "shift": {
                     "type": "string"
                 },
+                "slot": {
+                    "type": "integer"
+                },
                 "start_time": {
                     "type": "string"
                 }
@@ -22501,6 +24276,52 @@ const docTemplate = `{
                 }
             }
         },
+        "pagination.Response-clientp_ClientDiagnosisResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "next": {
+                    "type": "string"
+                },
+                "page_size": {
+                    "type": "integer"
+                },
+                "previous": {
+                    "type": "string"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/clientp.ClientDiagnosisResponse"
+                    }
+                }
+            }
+        },
+        "pagination.Response-clientp_ClientMedicationOrderResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "next": {
+                    "type": "string"
+                },
+                "page_size": {
+                    "type": "integer"
+                },
+                "previous": {
+                    "type": "string"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/clientp.ClientMedicationOrderResponse"
+                    }
+                }
+            }
+        },
         "pagination.Response-clientp_ListAllIncidentsResponse": {
             "type": "object",
             "properties": {
@@ -22547,29 +24368,6 @@ const docTemplate = `{
                 }
             }
         },
-        "pagination.Response-clientp_ListClientDiagnosesResponse": {
-            "type": "object",
-            "properties": {
-                "count": {
-                    "type": "integer"
-                },
-                "next": {
-                    "type": "string"
-                },
-                "page_size": {
-                    "type": "integer"
-                },
-                "previous": {
-                    "type": "string"
-                },
-                "results": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/clientp.ListClientDiagnosesResponse"
-                    }
-                }
-            }
-        },
         "pagination.Response-clientp_ListClientDocumentsApiResponse": {
             "type": "object",
             "properties": {
@@ -22593,7 +24391,7 @@ const docTemplate = `{
                 }
             }
         },
-        "pagination.Response-clientp_ListClientMedicationsResponse": {
+        "pagination.Response-clientp_ListClientSubmittedEvaluationsResponse": {
             "type": "object",
             "properties": {
                 "count": {
@@ -22611,7 +24409,7 @@ const docTemplate = `{
                 "results": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/clientp.ListClientMedicationsResponse"
+                        "$ref": "#/definitions/clientp.ListClientSubmittedEvaluationsResponse"
                     }
                 }
             }
@@ -22635,6 +24433,29 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/clientp.ListClientsApiResponse"
+                    }
+                }
+            }
+        },
+        "pagination.Response-clientp_ListGoalEvaluationHistoryResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "next": {
+                    "type": "string"
+                },
+                "page_size": {
+                    "type": "integer"
+                },
+                "previous": {
+                    "type": "string"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/clientp.ListGoalEvaluationHistoryResponse"
                     }
                 }
             }
@@ -22938,6 +24759,29 @@ const docTemplate = `{
                 }
             }
         },
+        "pagination.Response-organization_ListOrgLocationsResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "next": {
+                    "type": "string"
+                },
+                "page_size": {
+                    "type": "integer"
+                },
+                "previous": {
+                    "type": "string"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/organization.ListOrgLocationsResponse"
+                    }
+                }
+            }
+        },
         "pagination.Response-organization_ListOrganisationsResponse": {
             "type": "object",
             "properties": {
@@ -22984,20 +24828,6 @@ const docTemplate = `{
                 }
             }
         },
-        "pgtype.Date": {
-            "type": "object",
-            "properties": {
-                "infinityModifier": {
-                    "$ref": "#/definitions/pgtype.InfinityModifier"
-                },
-                "time": {
-                    "type": "string"
-                },
-                "valid": {
-                    "type": "boolean"
-                }
-            }
-        },
         "pgtype.InfinityModifier": {
             "type": "integer",
             "format": "int32",
@@ -23026,17 +24856,6 @@ const docTemplate = `{
                 }
             }
         },
-        "schedule.AssignedEmployee": {
-            "type": "object",
-            "properties": {
-                "employee_id": {
-                    "type": "string"
-                },
-                "employee_name": {
-                    "type": "string"
-                }
-            }
-        },
         "schedule.AutoGenerateSchedulesRequest": {
             "type": "object",
             "properties": {
@@ -23050,11 +24869,11 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "week": {
-                    "description": "e.g., \"2024-W27\"",
+                    "description": "ISO week number (1-53)",
                     "type": "integer"
                 },
                 "year": {
-                    "description": "e.g., 2024",
+                    "description": "e.g., 2026",
                     "type": "integer"
                 }
             }
@@ -23062,26 +24881,58 @@ const docTemplate = `{
         "schedule.AutoGenerateSchedulesResponse": {
             "type": "object",
             "properties": {
-                "grid_view": {
-                    "$ref": "#/definitions/schedule.GridView"
+                "constraints": {
+                    "$ref": "#/definitions/schedule.SchedulePlanConstraints"
                 },
-                "shifts": {
+                "employees": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/schedule.ScheduledShift"
+                        "$ref": "#/definitions/schedule.SchedulePlanEmployee"
+                    }
+                },
+                "location_id": {
+                    "type": "string"
+                },
+                "plan_id": {
+                    "type": "string"
+                },
+                "shift_templates": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/schedule.ScheduleShiftTemplate"
+                    }
+                },
+                "slots": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/schedule.SchedulePlanSlot"
                     }
                 },
                 "status": {
+                    "description": "optimal, feasible, infeasible",
                     "type": "string"
                 },
                 "summary": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/schedule.EmployeeSummary"
+                        "$ref": "#/definitions/schedule.ScheduleEmployeeSummary"
+                    }
+                },
+                "timezone": {
+                    "type": "string"
+                },
+                "warnings": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/schedule.SchedulePlanWarning"
                     }
                 },
                 "week": {
                     "type": "integer"
+                },
+                "week_start_date": {
+                    "description": "\"YYYY-MM-DD\" in location timezone",
+                    "type": "string"
                 },
                 "year": {
                     "type": "integer"
@@ -23091,13 +24942,11 @@ const docTemplate = `{
         "schedule.CreateScheduleRequest": {
             "type": "object",
             "properties": {
-                "color": {
-                    "description": "Optional color for the schedule",
-                    "type": "string",
-                    "example": "#FF5733"
-                },
-                "employee_id": {
-                    "type": "string"
+                "employee_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 },
                 "end_datetime": {
                     "type": "string",
@@ -23116,6 +24965,11 @@ const docTemplate = `{
                     "type": "string",
                     "example": "1"
                 },
+                "recurrence": {
+                    "description": "none (default), end_of_week, end_of_month",
+                    "type": "string",
+                    "example": "end_of_week"
+                },
                 "shift_date": {
                     "description": "Date to apply the shift",
                     "type": "string",
@@ -23131,9 +24985,6 @@ const docTemplate = `{
         "schedule.CreateScheduleResponse": {
             "type": "object",
             "properties": {
-                "color": {
-                    "type": "string"
-                },
                 "created_at": {
                     "type": "string"
                 },
@@ -23167,75 +25018,9 @@ const docTemplate = `{
                 }
             }
         },
-        "schedule.EmployeeSummary": {
-            "type": "object",
-            "properties": {
-                "actual_hours": {
-                    "type": "number"
-                },
-                "deviation": {
-                    "type": "number"
-                },
-                "first_name": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "last_name": {
-                    "type": "string"
-                },
-                "shifts": {
-                    "description": "shift type -\u003e count",
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "integer"
-                    }
-                },
-                "status": {
-                    "description": "\"perfect\", \"overtime\", or \"undertime\"",
-                    "type": "string"
-                },
-                "target_hours": {
-                    "type": "number"
-                }
-            }
-        },
-        "schedule.GetDailySchedulesByLocationResponse": {
-            "type": "object",
-            "properties": {
-                "date": {
-                    "type": "string"
-                },
-                "shifts": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/schedule.Shift"
-                    }
-                }
-            }
-        },
-        "schedule.GetMonthlySchedulesByLocationResponse": {
-            "type": "object",
-            "properties": {
-                "date": {
-                    "type": "string"
-                },
-                "shifts": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/schedule.Shift"
-                    }
-                }
-            }
-        },
         "schedule.GetScheduleByIdResponse": {
             "type": "object",
             "properties": {
-                "color": {
-                    "description": "Optional field for color coding",
-                    "type": "string"
-                },
                 "created_at": {
                     "type": "string"
                 },
@@ -23280,74 +25065,16 @@ const docTemplate = `{
                 }
             }
         },
-        "schedule.GridDay": {
+        "schedule.GetSchedulesByLocationInRangeResponse": {
             "type": "object",
             "properties": {
                 "date": {
-                    "description": "e.g., \"2024-07-01\"",
                     "type": "string"
                 },
                 "shifts": {
-                    "description": "shift_name -\u003e list of GridShift",
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/definitions/schedule.GridShift"
-                        }
-                    }
-                }
-            }
-        },
-        "schedule.GridShift": {
-            "type": "object",
-            "properties": {
-                "employees": {
-                    "description": "list of employee names",
                     "type": "array",
                     "items": {
-                        "type": "string"
-                    }
-                },
-                "end": {
-                    "description": "e.g., \"17:00\"",
-                    "type": "string"
-                },
-                "hours": {
-                    "description": "e.g., 8.0",
-                    "type": "number"
-                },
-                "start": {
-                    "description": "e.g., \"09:00\"",
-                    "type": "string"
-                }
-            }
-        },
-        "schedule.GridView": {
-            "type": "object",
-            "properties": {
-                "dates": {
-                    "description": "e.g., [\"Mon\", \"Tue\", ...]",
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "days": {
-                    "description": "e.g., [\"2024-07-01\", \"2024-07-02\", ...]",
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "shifts_by_day": {
-                    "description": "date -\u003e list of shifts",
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/definitions/schedule.GridDay"
-                        }
+                        "$ref": "#/definitions/schedule.Shift"
                     }
                 }
             }
@@ -23358,60 +25085,134 @@ const docTemplate = `{
                 "location_id": {
                     "type": "string"
                 },
-                "scheduled_shifts": {
+                "plan_id": {
+                    "type": "string"
+                },
+                "slots": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/schedule.ScheduledShift"
+                        "$ref": "#/definitions/schedule.SchedulePlanSlot"
                     }
+                },
+                "week": {
+                    "type": "integer"
+                },
+                "year": {
+                    "type": "integer"
                 }
             }
         },
-        "schedule.ScheduledShift": {
+        "schedule.ScheduleEmployeeSummary": {
+            "type": "object",
+            "properties": {
+                "assigned_minutes": {
+                    "type": "integer"
+                },
+                "employee_id": {
+                    "type": "string"
+                },
+                "overtime_minutes": {
+                    "type": "integer"
+                },
+                "shift_counts": {
+                    "description": "shift_id -\u003e count",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "target_minutes": {
+                    "type": "integer"
+                }
+            }
+        },
+        "schedule.SchedulePlanConstraints": {
+            "type": "object",
+            "properties": {
+                "allow_empty_shift": {
+                    "type": "boolean"
+                },
+                "max_staff_per_shift": {
+                    "type": "integer"
+                }
+            }
+        },
+        "schedule.SchedulePlanEmployee": {
+            "type": "object",
+            "properties": {
+                "first_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "target_minutes": {
+                    "type": "integer"
+                }
+            }
+        },
+        "schedule.SchedulePlanSlot": {
             "type": "object",
             "properties": {
                 "date": {
-                    "description": "e.g., \"2024-07-01\"",
+                    "description": "\"YYYY-MM-DD\" in location timezone",
                     "type": "string"
                 },
-                "day_name": {
-                    "description": "e.g., \"Monday\"",
-                    "type": "string"
-                },
-                "employees": {
+                "employee_ids": {
+                    "description": "0..MaxStaffPerShift",
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/schedule.AssignedEmployee"
+                        "type": "string"
                     }
                 },
-                "end_time": {
-                    "description": "e.g., \"17:00\"",
+                "shift_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "schedule.SchedulePlanWarning": {
+            "type": "object",
+            "properties": {
+                "code": {
                     "type": "string"
                 },
-                "hours": {
-                    "description": "e.g., 8.0",
-                    "type": "number"
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "schedule.ScheduleShiftTemplate": {
+            "type": "object",
+            "properties": {
+                "duration_minutes": {
+                    "description": "computed duration (handles overnight)",
+                    "type": "integer"
+                },
+                "end_minute": {
+                    "description": "minutes since 00:00 local time",
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "overnight": {
+                    "type": "boolean"
                 },
                 "shift_id": {
-                    "description": "e.g., 1",
                     "type": "string"
                 },
-                "shift_name": {
-                    "description": "e.g., \"Morning Shift\"",
-                    "type": "string"
-                },
-                "start_time": {
-                    "description": "e.g., \"09:00\"",
-                    "type": "string"
+                "start_minute": {
+                    "description": "minutes since 00:00 local time",
+                    "type": "integer"
                 }
             }
         },
         "schedule.Shift": {
             "type": "object",
             "properties": {
-                "color": {
-                    "description": "Optional field for color coding",
-                    "type": "string"
-                },
                 "employee_first_name": {
                     "type": "string"
                 },
@@ -23435,7 +25236,7 @@ const docTemplate = `{
                     "description": "Optional field for preset shift",
                     "type": "string"
                 },
-                "shift_id": {
+                "schedule_id": {
                     "type": "string"
                 },
                 "shift_name": {
@@ -23449,10 +25250,6 @@ const docTemplate = `{
         "schedule.UpdateScheduleRequest": {
             "type": "object",
             "properties": {
-                "color": {
-                    "type": "string",
-                    "example": "#FF5733"
-                },
                 "employee_id": {
                     "type": "string"
                 },
@@ -23488,9 +25285,6 @@ const docTemplate = `{
         "schedule.UpdateScheduleResponse": {
             "type": "object",
             "properties": {
-                "color": {
-                    "type": "string"
-                },
                 "created_at": {
                     "type": "string"
                 },
@@ -23929,6 +25723,384 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "settings.AddPermissionsToRoleRequest": {
+            "type": "object",
+            "required": [
+                "permission_ids"
+            ],
+            "properties": {
+                "permission_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "settings.AddPermissionsToRoleResponse": {
+            "type": "object",
+            "properties": {
+                "permission_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "role_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "settings.AssignRoleToEmployeeApiResponse": {
+            "type": "object",
+            "properties": {
+                "employee_id": {
+                    "type": "string"
+                },
+                "role_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "settings.AssignRoleToEmployeeParams": {
+            "type": "object",
+            "properties": {
+                "role_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "settings.CreateDepartmentRequest": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "department_head_employee_id": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "settings.CreateDepartmentResponse": {
+            "type": "object",
+            "properties": {
+                "department_head_employee_id": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "settings.CreateRoleRequest": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "settings.CreateRoleResponse": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "role_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "settings.GetOrganizationProfileResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "default_timezone": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "hq_city": {
+                    "type": "string"
+                },
+                "hq_house_number": {
+                    "type": "string"
+                },
+                "hq_house_number_addition": {
+                    "type": "string"
+                },
+                "hq_postal_code": {
+                    "type": "string"
+                },
+                "hq_street": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone_number": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "website": {
+                    "type": "string"
+                }
+            }
+        },
+        "settings.GrantUserPermissionsRequest": {
+            "type": "object",
+            "properties": {
+                "permission_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "settings.GrantUserPermissionsResponse": {
+            "type": "object",
+            "properties": {
+                "employee_id": {
+                    "type": "string"
+                },
+                "permission_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "settings.ListAllPermissionsApiResponse": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "display_name": {
+                    "type": "string"
+                },
+                "permission_id": {
+                    "type": "string"
+                },
+                "permission_name": {
+                    "type": "string"
+                },
+                "permission_resource": {
+                    "type": "string"
+                },
+                "sort_order": {
+                    "type": "integer"
+                }
+            }
+        },
+        "settings.ListAllRolePermissionsApiResponse": {
+            "type": "object",
+            "properties": {
+                "permission_id": {
+                    "type": "string"
+                },
+                "permission_name": {
+                    "type": "string"
+                },
+                "permission_resource": {
+                    "type": "string"
+                },
+                "role_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "settings.ListRolesApiResponse": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "employee_count": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "permission_count": {
+                    "type": "integer"
+                },
+                "role_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "settings.ListUserRolesAndPermissionsApiResponse": {
+            "type": "object",
+            "properties": {
+                "permissions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/settings.PermissionInfo"
+                    }
+                },
+                "roles": {
+                    "$ref": "#/definitions/settings.RoleInfo"
+                }
+            }
+        },
+        "settings.PermissionGroupResponse": {
+            "type": "object",
+            "properties": {
+                "group_key": {
+                    "type": "string"
+                },
+                "group_label": {
+                    "type": "string"
+                },
+                "sections": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/settings.PermissionSectionResponse"
+                    }
+                }
+            }
+        },
+        "settings.PermissionInfo": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "resource": {
+                    "type": "string"
+                }
+            }
+        },
+        "settings.PermissionSectionResponse": {
+            "type": "object",
+            "properties": {
+                "permissions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/settings.ListAllPermissionsApiResponse"
+                    }
+                },
+                "section_key": {
+                    "type": "string"
+                },
+                "section_label": {
+                    "type": "string"
+                }
+            }
+        },
+        "settings.RoleInfo": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "settings.UpdateDepartmentRequest": {
+            "type": "object",
+            "properties": {
+                "department_head_employee_id": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "settings.UpdateDepartmentResponse": {
+            "type": "object",
+            "properties": {
+                "department_head_employee_id": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "settings.UpdateOrganizationProfileRequest": {
+            "type": "object",
+            "required": [
+                "default_timezone",
+                "name"
+            ],
+            "properties": {
+                "default_timezone": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "hq_city": {
+                    "type": "string"
+                },
+                "hq_house_number": {
+                    "type": "string"
+                },
+                "hq_house_number_addition": {
+                    "type": "string"
+                },
+                "hq_postal_code": {
+                    "type": "string"
+                },
+                "hq_street": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "phone_number": {
+                    "type": "string"
+                },
+                "website": {
                     "type": "string"
                 }
             }

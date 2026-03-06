@@ -186,27 +186,6 @@ func ensureAdminRoleAndPermissions(ctx context.Context, store *db.Store, userID 
 		return fmt.Errorf("failed to assign admin role: %w", err)
 	}
 
-	rolePerms, err := store.ListAllRolePermissions(ctx, adminRoleID)
-	if err != nil {
-		return fmt.Errorf("failed to list admin role permissions: %w", err)
-	}
-
-	permissionIDs := make([]uuid.UUID, 0, len(rolePerms))
-	for _, perm := range rolePerms {
-		permissionIDs = append(permissionIDs, perm.PermissionID)
-	}
-
-	if len(permissionIDs) == 0 {
-		return nil
-	}
-
-	if err := store.GrantUserPermissions(ctx, db.GrantUserPermissionsParams{
-		UserID:        userID,
-		PermissionIds: permissionIDs,
-	}); err != nil {
-		return fmt.Errorf("failed to grant admin permissions: %w", err)
-	}
-
 	return nil
 }
 

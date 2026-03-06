@@ -206,6 +206,21 @@ permissions:
     - name: SETTINGS.VIEW
       resource: /settings
       method: [GET]
+    - name: SETTINGS.DEPARTMENT.VIEW
+      resource: /settings/departments
+      method: [GET]
+    - name: SETTINGS.DEPARTMENT.CREATE
+      resource: /settings/departments
+      method: [POST]
+    - name: SETTINGS.DEPARTMENT.UPDATE
+      resource: /settings/departments/:id
+      method: [PUT]
+    - name: SETTINGS.ORGANIZATION_PROFILE.VIEW
+      resource: /settings/organization-profile
+      method: [GET]
+    - name: SETTINGS.ORGANIZATION_PROFILE.UPDATE
+      resource: /settings/organization-profile
+      method: [PUT]
 
     # Employees
     - name: EMPLOYEE.CREATE
@@ -229,6 +244,29 @@ permissions:
     - name: EMPLOYEE.CONTRACT.UPDATE
       resource: /employees/contracts
       method: [PUT]
+
+    # Employee Handbook (Onboarding)
+    - name: HANDBOOK.SELF.VIEW
+      resource: /handbook/me
+      method: [GET]
+    - name: HANDBOOK.SELF.UPDATE
+      resource: /handbook/me
+      method: [POST]
+    - name: HANDBOOK.TEMPLATE.VIEW
+      resource: /handbook/templates
+      method: [GET]
+    - name: HANDBOOK.TEMPLATE.CREATE
+      resource: /handbook/templates
+      method: [POST]
+    - name: HANDBOOK.STEP.VIEW
+      resource: /handbook/steps
+      method: [GET]
+    - name: HANDBOOK.STEP.CREATE
+      resource: /handbook/steps
+      method: [POST]
+    - name: HANDBOOK.ASSIGN
+      resource: /handbook/assignments
+      method: [POST]
 
     # Incidents
     - name: INCIDENT.VIEW
@@ -471,6 +509,15 @@ roles:
           - EMPLOYEE.WORKING_HOURS.VIEW
           - EMPLOYEE.CONTRACT.VIEW
           - EMPLOYEE.CONTRACT.UPDATE
+          - HANDBOOK.SELF.VIEW
+          - HANDBOOK.SELF.UPDATE
+          - HANDBOOK.DEPARTMENT.VIEW
+          - HANDBOOK.DEPARTMENT.CREATE
+          - HANDBOOK.TEMPLATE.VIEW
+          - HANDBOOK.TEMPLATE.CREATE
+          - HANDBOOK.STEP.VIEW
+          - HANDBOOK.STEP.CREATE
+          - HANDBOOK.ASSIGN
           - FINANCE.VIEW
           - INVOICE.CREATE
           - INVOICE.DELETE
@@ -563,5 +610,14 @@ roles:
           - CLIENT.DOCUMENTS.VIEW
           - CLIENT.DOCUMENTS.UPLOAD
           - CLIENT.DOCUMENTS.DELETE
+          - HANDBOOK.SELF.VIEW
+          - HANDBOOK.SELF.UPDATE
+          - HANDBOOK.DEPARTMENT.VIEW
+          - HANDBOOK.DEPARTMENT.CREATE
+          - HANDBOOK.TEMPLATE.VIEW
+          - HANDBOOK.TEMPLATE.CREATE
+          - HANDBOOK.STEP.VIEW
+          - HANDBOOK.STEP.CREATE
+          - HANDBOOK.ASSIGN
           - SENDER.CREATE
           - SHIFT.VIEW

@@ -3,6 +3,7 @@ package api
 import (
 	"net/http"
 
+	_ "maicare_go/pagination" // for swagger
 	clientp "maicare_go/service/client"
 
 	"github.com/gin-gonic/gin"

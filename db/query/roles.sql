@@ -17,8 +17,8 @@
 
 -- name: CreateRole :one
 /* Insert a new role and return the created row. */
-INSERT INTO roles (name)
-VALUES ($1)
+INSERT INTO roles (name, description)
+VALUES (sqlc.arg('name'), sqlc.narg('description'))
 RETURNING *;
 
 -- name: GetAdminRoleId :one
@@ -28,13 +28,18 @@ FROM roles
 WHERE name = 'admin';
 
 -- name: ListRoles :many
-/* Returns every role ordered by id with count of permissions. */
+/* Returns every role ordered by id with count of permissions and employees. */
 SELECT 
-    r.*,
-        COALESCE(COUNT(rp.permission_id), 0)::BIGINT AS permission_count
+    r.id,
+    r.name,
+    r.description,
+    COALESCE(COUNT(DISTINCT rp.permission_id), 0)::BIGINT AS permission_count,
+    COALESCE(COUNT(DISTINCT ep.id), 0)::BIGINT AS employee_count
 FROM roles r
 LEFT JOIN role_permissions rp ON r.id = rp.role_id
-GROUP BY r.id, r.name
+LEFT JOIN user_roles ur ON r.id = ur.role_id
+LEFT JOIN employee_profile ep ON ep.user_id = ur.user_id
+GROUP BY r.id, r.name, r.description
 ORDER BY r.id;
 
 /* ---------- 2. PERMISSIONS ---------- */
@@ -43,7 +48,7 @@ ORDER BY r.id;
 /* Returns every permission ordered by id. */
 SELECT *
 FROM permissions
-ORDER BY id;
+ORDER BY group_key, section_key, sort_order, name;
 
 /* ---------- 3. ROLE-PERMISSION MAPPING ---------- */
 
@@ -83,45 +88,111 @@ INSERT INTO user_roles (user_id, role_id)
 VALUES ($1, $2)
 ON CONFLICT (user_id) DO UPDATE SET role_id = $2;
 
--- name: GrantRolePermissionsToUser :exec
-INSERT INTO user_permissions (user_id, permission_id)
-SELECT $1, rp.permission_id
-FROM role_permissions rp
-WHERE rp.role_id = $2;
+/* ---------- 5. USER-PERMISSION OVERRIDES ---------- */
 
-
-
-/* ---------- 5. USER-PERMISSION MAPPING ---------- */
-
--- name: ListUserPermissions :many
-/* Returns every permission granted to a user (direct or via roles). */
+-- name: ListInheritedUserPermissions :many
+/* Returns permissions inherited from the user's assigned role. */
 SELECT p.id   AS permission_id,
        p.name AS permission_name,
        p.resource
-FROM user_permissions up
-JOIN permissions p ON p.id = up.permission_id
-WHERE up.user_id = $1
+FROM user_roles ur
+JOIN role_permissions rp ON rp.role_id = ur.role_id
+JOIN permissions p ON p.id = rp.permission_id
+WHERE ur.user_id = $1
 ORDER BY p.id;
 
--- name: GrantUserPermissions :exec
-/* Bulk-insert permission IDs for a user (idempotent). */
-INSERT INTO user_permissions (user_id, permission_id)
-SELECT sqlc.arg('user_id'), unnest(sqlc.arg('permission_ids')::uuid[])
-ON CONFLICT (user_id, permission_id) DO NOTHING;
+-- name: ListUserPermissionOverrides :many
+/* Returns explicit allow/deny overrides configured for a user. */
+SELECT upo.permission_id,
+       p.name AS permission_name,
+       p.resource,
+       upo.effect
+FROM user_permission_overrides upo
+JOIN permissions p ON p.id = upo.permission_id
+WHERE upo.user_id = $1
+ORDER BY p.id;
 
--- name: DeleteUserPermissions :exec
-/* Removes *all* permissions from the given user. */
-DELETE FROM user_permissions
+-- name: ListEffectiveUserPermissions :many
+/* Returns effective permissions after applying role inheritance and overrides. */
+WITH inherited_permissions AS (
+    SELECT rp.permission_id
+    FROM user_roles ur
+    JOIN role_permissions rp ON rp.role_id = ur.role_id
+    WHERE ur.user_id = $1
+),
+allowed_overrides AS (
+    SELECT permission_id
+    FROM user_permission_overrides
+    WHERE user_id = $1
+      AND effect = 'allow'
+),
+base_permissions AS (
+    SELECT permission_id FROM inherited_permissions
+    UNION
+    SELECT permission_id FROM allowed_overrides
+),
+effective_permissions AS (
+    SELECT permission_id
+    FROM base_permissions
+    EXCEPT
+    SELECT permission_id
+    FROM user_permission_overrides
+    WHERE user_id = $1
+      AND effect = 'deny'
+)
+SELECT p.id AS permission_id,
+       p.name AS permission_name,
+       p.resource
+FROM effective_permissions ep
+JOIN permissions p ON p.id = ep.permission_id
+ORDER BY p.id;
+
+-- name: AddUserPermissionOverrides :exec
+/* Bulk-insert explicit overrides for a user (idempotent by replacement flow). */
+INSERT INTO user_permission_overrides (user_id, permission_id, effect)
+SELECT sqlc.arg('user_id'),
+       unnest(sqlc.arg('permission_ids')::uuid[]),
+       sqlc.arg('effect')
+ON CONFLICT (user_id, permission_id) DO UPDATE SET effect = EXCLUDED.effect;
+
+-- name: DeleteUserPermissionOverrides :exec
+/* Removes all explicit overrides for the given user. */
+DELETE FROM user_permission_overrides
 WHERE user_id = $1;
 
 /* ---------- 6. CHECK UTILITIES ---------- */
 
 -- name: CheckUserPermission :one
 /* Returns true/false whether the user has the named permission. */
+WITH inherited_permissions AS (
+    SELECT rp.permission_id
+    FROM user_roles ur
+    JOIN role_permissions rp ON rp.role_id = ur.role_id
+    WHERE ur.user_id = $1
+),
+allowed_overrides AS (
+    SELECT permission_id
+    FROM user_permission_overrides
+    WHERE user_id = $1
+      AND effect = 'allow'
+),
+base_permissions AS (
+    SELECT permission_id FROM inherited_permissions
+    UNION
+    SELECT permission_id FROM allowed_overrides
+),
+effective_permissions AS (
+    SELECT permission_id
+    FROM base_permissions
+    EXCEPT
+    SELECT permission_id
+    FROM user_permission_overrides
+    WHERE user_id = $1
+      AND effect = 'deny'
+)
 SELECT EXISTS (
     SELECT 1
-    FROM user_permissions up
-    JOIN permissions p ON p.id = up.permission_id
-    WHERE up.user_id = $1
-      AND p.name = $2
+    FROM effective_permissions ep
+    JOIN permissions p ON p.id = ep.permission_id
+    WHERE p.name = $2
 ) AS has_permission;

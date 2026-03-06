@@ -381,6 +381,25 @@ CREATE TABLE organisations (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE app_organization_profile (
+    singleton BOOLEAN PRIMARY KEY DEFAULT TRUE CHECK (singleton),
+    name TEXT NOT NULL DEFAULT '',
+    default_timezone TEXT NOT NULL DEFAULT 'Europe/Amsterdam',
+    email TEXT NULL,
+    phone_number TEXT NULL,
+    website TEXT NULL,
+    hq_street TEXT NULL,
+    hq_house_number TEXT NULL,
+    hq_house_number_addition TEXT NULL,
+    hq_postal_code TEXT NULL,
+    hq_city TEXT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO app_organization_profile (singleton)
+VALUES (TRUE);
+
 
 -- Create ENUM type for location_type
 CREATE TYPE location_type_enum AS ENUM ('care_home', 'office', 'other');
@@ -455,7 +474,8 @@ EXECUTE FUNCTION insert_default_shifts();
 -- Role templates
 CREATE TABLE roles (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR(255) NOT NULL UNIQUE
+    name VARCHAR(255) NOT NULL UNIQUE,
+    description TEXT NULL
 );
 
 -- System permissions
@@ -463,8 +483,15 @@ CREATE TABLE permissions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(255) NOT NULL,
     resource VARCHAR(255) NOT NULL,
-    method VARCHAR(255) NOT NULL
+    method VARCHAR(255) NOT NULL,
+    group_key VARCHAR(100) NOT NULL DEFAULT 'general',
+    section_key VARCHAR(100) NOT NULL DEFAULT 'general',
+    display_name VARCHAR(255) NOT NULL DEFAULT '',
+    description TEXT NULL,
+    sort_order INTEGER NOT NULL DEFAULT 0
 );
+
+CREATE TYPE permission_override_effect AS ENUM ('allow', 'deny');
 
 -- Role-to-Permission mapping (template)
 CREATE TABLE role_permissions (
@@ -493,10 +520,11 @@ CREATE TABLE custom_user (
 CREATE INDEX custom_user_email_idx ON custom_user(email);
 CREATE INDEX custom_user_id_idx ON custom_user(id);
 
--- Direct user-to-permission assignments
-CREATE TABLE user_permissions (
+-- Explicit per-user permission exceptions layered on top of role inheritance
+CREATE TABLE user_permission_overrides (
     user_id UUID NOT NULL,
     permission_id UUID NOT NULL,
+    effect permission_override_effect NOT NULL,
     PRIMARY KEY (user_id, permission_id),
     FOREIGN KEY (user_id) REFERENCES custom_user(id) ON DELETE CASCADE,
     FOREIGN KEY (permission_id) REFERENCES permissions(id) ON DELETE CASCADE
@@ -586,6 +614,20 @@ CREATE INDEX temporary_file_uploaded_at_idx ON temporary_file(uploaded_at);
 CREATE TYPE gender_enum AS ENUM ('male', 'female', 'other', 'unknown');
 -- Employee Contract Type ENUM
 CREATE TYPE employee_contract_type_enum AS ENUM ('loondienst', 'ZZP', 'none');
+
+-- Departments (used for employee assignment and handbook templates)
+CREATE TABLE departments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(100) NOT NULL UNIQUE,
+    description TEXT NULL,
+    department_head_employee_id UUID NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX departments_name_idx ON departments(name);
+CREATE INDEX departments_department_head_employee_id_idx ON departments(department_head_employee_id);
+
 -- Employee profile (linked to custom_user)
 CREATE TABLE employee_profile (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -599,7 +641,6 @@ CREATE TABLE employee_profile (
     postal_code TEXT NOT NULL,
     city TEXT NOT NULL,
     position VARCHAR(100) NULL,
-    department VARCHAR(100) NULL,
     employee_number VARCHAR(50) NULL,
     employment_number VARCHAR(50) NULL,
     private_email_address VARCHAR(254) NULL,
@@ -611,6 +652,8 @@ CREATE TABLE employee_profile (
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     gender gender_enum NOT NULL,
     location_id UUID NULL REFERENCES location(id) ON DELETE SET NULL,
+    department_id UUID NULL REFERENCES departments(id) ON DELETE SET NULL,
+    manager_employee_id UUID NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
     has_borrowed BOOLEAN NOT NULL DEFAULT FALSE,
     out_of_service BOOLEAN NULL DEFAULT FALSE,
     is_archived BOOLEAN NOT NULL DEFAULT FALSE,
@@ -618,14 +661,22 @@ CREATE TABLE employee_profile (
     contract_end_date DATE NULL,
     contract_start_date DATE NULL,
     contract_type employee_contract_type_enum NOT NULL DEFAULT 'none',
-    contract_rate DECIMAL(10,2) NULL DEFAULT 0.00
+    contract_rate DECIMAL(10,2) NULL DEFAULT 0.00,
+    CONSTRAINT employee_profile_manager_not_self
+        CHECK (manager_employee_id IS NULL OR manager_employee_id <> id)
 );
 
 CREATE INDEX employee_profile_user_id_idx ON employee_profile(user_id);
 CREATE INDEX employee_profile_location_id_idx ON employee_profile(location_id);
+CREATE INDEX idx_employee_profile_department_id ON employee_profile(department_id);
+CREATE INDEX idx_employee_profile_manager_employee_id ON employee_profile(manager_employee_id);
 CREATE INDEX employee_profile_id_desc_idx ON employee_profile(id DESC);
 CREATE INDEX idx_employee_profile_is_archived ON employee_profile(is_archived);
 CREATE INDEX idx_employee_profile_out_of_service ON employee_profile(out_of_service);
+
+ALTER TABLE departments
+    ADD CONSTRAINT departments_department_head_employee_id_fkey
+    FOREIGN KEY (department_head_employee_id) REFERENCES employee_profile(id) ON DELETE SET NULL;
 
 -- Employee education records
 CREATE TABLE employee_education (
@@ -666,6 +717,83 @@ CREATE TABLE employee_experience (
 );
 
 CREATE INDEX experience_employee_id_idx ON employee_experience(employee_id);
+
+-- ==========================================
+-- EMPLOYEE HANDBOOKS (ONBOARDING)
+-- ==========================================
+
+CREATE TYPE handbook_step_kind_enum AS ENUM ('content', 'ack', 'link', 'quiz');
+CREATE TYPE handbook_assignment_status_enum AS ENUM ('not_started', 'in_progress', 'completed', 'waived');
+CREATE TYPE handbook_step_status_enum AS ENUM ('pending', 'completed', 'skipped');
+
+-- A template is department-specific and can be versioned. Assignments point to a specific version.
+CREATE TABLE handbook_templates (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    department_id UUID NOT NULL REFERENCES departments(id) ON DELETE CASCADE,
+    title TEXT NOT NULL,
+    description TEXT NULL,
+    version INT NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_by_employee_id UUID NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (department_id, version)
+);
+
+-- Enforce at most one active template per department.
+CREATE UNIQUE INDEX handbook_templates_one_active_per_department
+    ON handbook_templates(department_id)
+    WHERE is_active;
+
+CREATE INDEX idx_handbook_templates_department_id ON handbook_templates(department_id);
+
+CREATE TABLE handbook_steps (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    template_id UUID NOT NULL REFERENCES handbook_templates(id) ON DELETE CASCADE,
+    sort_order INT NOT NULL CHECK (sort_order > 0),
+    kind handbook_step_kind_enum NOT NULL DEFAULT 'content',
+    title TEXT NOT NULL,
+    body TEXT NULL,
+    content JSONB NOT NULL DEFAULT '{}'::jsonb,
+    is_required BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (template_id, sort_order)
+);
+
+CREATE INDEX idx_handbook_steps_template_sort ON handbook_steps(template_id, sort_order);
+
+CREATE TABLE employee_handbooks (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    employee_id UUID NOT NULL REFERENCES employee_profile(id) ON DELETE CASCADE,
+    template_id UUID NOT NULL REFERENCES handbook_templates(id) ON DELETE RESTRICT,
+    assigned_by_employee_id UUID NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
+    status handbook_assignment_status_enum NOT NULL DEFAULT 'not_started',
+    assigned_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    started_at TIMESTAMPTZ NULL,
+    completed_at TIMESTAMPTZ NULL,
+    due_at TIMESTAMPTZ NULL
+);
+
+-- At most one active handbook (not_started/in_progress) per employee.
+CREATE UNIQUE INDEX employee_handbooks_one_active_per_employee
+    ON employee_handbooks(employee_id)
+    WHERE status IN ('not_started', 'in_progress');
+
+CREATE INDEX idx_employee_handbooks_employee_assigned_at ON employee_handbooks(employee_id, assigned_at DESC);
+
+CREATE TABLE employee_handbook_step_progress (
+    employee_handbook_id UUID NOT NULL REFERENCES employee_handbooks(id) ON DELETE CASCADE,
+    step_id UUID NOT NULL REFERENCES handbook_steps(id) ON DELETE RESTRICT,
+    status handbook_step_status_enum NOT NULL DEFAULT 'pending',
+    started_at TIMESTAMPTZ NULL,
+    completed_at TIMESTAMPTZ NULL,
+    response JSONB NOT NULL DEFAULT '{}'::jsonb,
+    PRIMARY KEY (employee_handbook_id, step_id)
+);
+
+CREATE INDEX idx_employee_handbook_step_progress_handbook_id
+    ON employee_handbook_step_progress(employee_handbook_id);
 
 -- ==========================================
 -- CLIENT MANAGEMENT & INTAKE

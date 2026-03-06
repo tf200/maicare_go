@@ -1241,6 +1241,137 @@ func (ns NullGenderEnum) Value() (driver.Value, error) {
 	return string(ns.GenderEnum), nil
 }
 
+type HandbookAssignmentStatusEnum string
+
+const (
+	HandbookAssignmentStatusEnumNotStarted HandbookAssignmentStatusEnum = "not_started"
+	HandbookAssignmentStatusEnumInProgress HandbookAssignmentStatusEnum = "in_progress"
+	HandbookAssignmentStatusEnumCompleted  HandbookAssignmentStatusEnum = "completed"
+	HandbookAssignmentStatusEnumWaived     HandbookAssignmentStatusEnum = "waived"
+)
+
+func (e *HandbookAssignmentStatusEnum) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = HandbookAssignmentStatusEnum(s)
+	case string:
+		*e = HandbookAssignmentStatusEnum(s)
+	default:
+		return fmt.Errorf("unsupported scan type for HandbookAssignmentStatusEnum: %T", src)
+	}
+	return nil
+}
+
+type NullHandbookAssignmentStatusEnum struct {
+	HandbookAssignmentStatusEnum HandbookAssignmentStatusEnum `json:"handbook_assignment_status_enum"`
+	Valid                        bool                         `json:"valid"` // Valid is true if HandbookAssignmentStatusEnum is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullHandbookAssignmentStatusEnum) Scan(value interface{}) error {
+	if value == nil {
+		ns.HandbookAssignmentStatusEnum, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.HandbookAssignmentStatusEnum.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullHandbookAssignmentStatusEnum) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.HandbookAssignmentStatusEnum), nil
+}
+
+type HandbookStepKindEnum string
+
+const (
+	HandbookStepKindEnumContent HandbookStepKindEnum = "content"
+	HandbookStepKindEnumAck     HandbookStepKindEnum = "ack"
+	HandbookStepKindEnumLink    HandbookStepKindEnum = "link"
+	HandbookStepKindEnumQuiz    HandbookStepKindEnum = "quiz"
+)
+
+func (e *HandbookStepKindEnum) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = HandbookStepKindEnum(s)
+	case string:
+		*e = HandbookStepKindEnum(s)
+	default:
+		return fmt.Errorf("unsupported scan type for HandbookStepKindEnum: %T", src)
+	}
+	return nil
+}
+
+type NullHandbookStepKindEnum struct {
+	HandbookStepKindEnum HandbookStepKindEnum `json:"handbook_step_kind_enum"`
+	Valid                bool                 `json:"valid"` // Valid is true if HandbookStepKindEnum is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullHandbookStepKindEnum) Scan(value interface{}) error {
+	if value == nil {
+		ns.HandbookStepKindEnum, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.HandbookStepKindEnum.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullHandbookStepKindEnum) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.HandbookStepKindEnum), nil
+}
+
+type HandbookStepStatusEnum string
+
+const (
+	HandbookStepStatusEnumPending   HandbookStepStatusEnum = "pending"
+	HandbookStepStatusEnumCompleted HandbookStepStatusEnum = "completed"
+	HandbookStepStatusEnumSkipped   HandbookStepStatusEnum = "skipped"
+)
+
+func (e *HandbookStepStatusEnum) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = HandbookStepStatusEnum(s)
+	case string:
+		*e = HandbookStepStatusEnum(s)
+	default:
+		return fmt.Errorf("unsupported scan type for HandbookStepStatusEnum: %T", src)
+	}
+	return nil
+}
+
+type NullHandbookStepStatusEnum struct {
+	HandbookStepStatusEnum HandbookStepStatusEnum `json:"handbook_step_status_enum"`
+	Valid                  bool                   `json:"valid"` // Valid is true if HandbookStepStatusEnum is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullHandbookStepStatusEnum) Scan(value interface{}) error {
+	if value == nil {
+		ns.HandbookStepStatusEnum, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.HandbookStepStatusEnum.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullHandbookStepStatusEnum) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.HandbookStepStatusEnum), nil
+}
+
 type HoursTypeEnum string
 
 const (
@@ -2270,6 +2401,48 @@ func (ns NullPaymentStatusEnum) Value() (driver.Value, error) {
 	return string(ns.PaymentStatusEnum), nil
 }
 
+type PermissionOverrideEffect string
+
+const (
+	PermissionOverrideEffectAllow PermissionOverrideEffect = "allow"
+	PermissionOverrideEffectDeny  PermissionOverrideEffect = "deny"
+)
+
+func (e *PermissionOverrideEffect) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = PermissionOverrideEffect(s)
+	case string:
+		*e = PermissionOverrideEffect(s)
+	default:
+		return fmt.Errorf("unsupported scan type for PermissionOverrideEffect: %T", src)
+	}
+	return nil
+}
+
+type NullPermissionOverrideEffect struct {
+	PermissionOverrideEffect PermissionOverrideEffect `json:"permission_override_effect"`
+	Valid                    bool                     `json:"valid"` // Valid is true if PermissionOverrideEffect is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullPermissionOverrideEffect) Scan(value interface{}) error {
+	if value == nil {
+		ns.PermissionOverrideEffect, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.PermissionOverrideEffect.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullPermissionOverrideEffect) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.PermissionOverrideEffect), nil
+}
+
 type PhysicalInjuryEnum string
 
 const (
@@ -2677,6 +2850,22 @@ type AiGeneratedReport struct {
 	StartDate  pgtype.Date        `json:"start_date"`
 	EndDate    pgtype.Date        `json:"end_date"`
 	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+}
+
+type AppOrganizationProfile struct {
+	Singleton             bool               `json:"singleton"`
+	Name                  string             `json:"name"`
+	DefaultTimezone       string             `json:"default_timezone"`
+	Email                 *string            `json:"email"`
+	PhoneNumber           *string            `json:"phone_number"`
+	Website               *string            `json:"website"`
+	HqStreet              *string            `json:"hq_street"`
+	HqHouseNumber         *string            `json:"hq_house_number"`
+	HqHouseNumberAddition *string            `json:"hq_house_number_addition"`
+	HqPostalCode          *string            `json:"hq_postal_code"`
+	HqCity                *string            `json:"hq_city"`
+	CreatedAt             pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt             pgtype.Timestamptz `json:"updated_at"`
 }
 
 type AppointmentCard struct {
@@ -3158,6 +3347,15 @@ type DataSharingStatement struct {
 	Created                                pgtype.Timestamptz `json:"created"`
 }
 
+type Department struct {
+	ID                       uuid.UUID          `json:"id"`
+	Name                     string             `json:"name"`
+	Description              *string            `json:"description"`
+	DepartmentHeadEmployeeID *uuid.UUID         `json:"department_head_employee_id"`
+	CreatedAt                pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt                pgtype.Timestamptz `json:"updated_at"`
+}
+
 type EmployeeEducation struct {
 	ID              uuid.UUID          `json:"id"`
 	EmployeeID      uuid.UUID          `json:"employee_id"`
@@ -3180,6 +3378,27 @@ type EmployeeExperience struct {
 	CreatedAt   pgtype.Timestamptz `json:"created_at"`
 }
 
+type EmployeeHandbook struct {
+	ID                   uuid.UUID                    `json:"id"`
+	EmployeeID           uuid.UUID                    `json:"employee_id"`
+	TemplateID           uuid.UUID                    `json:"template_id"`
+	AssignedByEmployeeID *uuid.UUID                   `json:"assigned_by_employee_id"`
+	Status               HandbookAssignmentStatusEnum `json:"status"`
+	AssignedAt           pgtype.Timestamptz           `json:"assigned_at"`
+	StartedAt            pgtype.Timestamptz           `json:"started_at"`
+	CompletedAt          pgtype.Timestamptz           `json:"completed_at"`
+	DueAt                pgtype.Timestamptz           `json:"due_at"`
+}
+
+type EmployeeHandbookStepProgress struct {
+	EmployeeHandbookID uuid.UUID              `json:"employee_handbook_id"`
+	StepID             uuid.UUID              `json:"step_id"`
+	Status             HandbookStepStatusEnum `json:"status"`
+	StartedAt          pgtype.Timestamptz     `json:"started_at"`
+	CompletedAt        pgtype.Timestamptz     `json:"completed_at"`
+	Response           []byte                 `json:"response"`
+}
+
 type EmployeeProfile struct {
 	ID                  uuid.UUID                `json:"id"`
 	UserID              uuid.UUID                `json:"user_id"`
@@ -3192,7 +3411,6 @@ type EmployeeProfile struct {
 	PostalCode          string                   `json:"postal_code"`
 	City                string                   `json:"city"`
 	Position            *string                  `json:"position"`
-	Department          *string                  `json:"department"`
 	EmployeeNumber      *string                  `json:"employee_number"`
 	EmploymentNumber    *string                  `json:"employment_number"`
 	PrivateEmailAddress *string                  `json:"private_email_address"`
@@ -3204,6 +3422,8 @@ type EmployeeProfile struct {
 	CreatedAt           pgtype.Timestamptz       `json:"created_at"`
 	Gender              GenderEnum               `json:"gender"`
 	LocationID          *uuid.UUID               `json:"location_id"`
+	DepartmentID        *uuid.UUID               `json:"department_id"`
+	ManagerEmployeeID   *uuid.UUID               `json:"manager_employee_id"`
 	HasBorrowed         bool                     `json:"has_borrowed"`
 	OutOfService        *bool                    `json:"out_of_service"`
 	IsArchived          bool                     `json:"is_archived"`
@@ -3219,6 +3439,31 @@ type FrameworkAgreement struct {
 	ClientID         uuid.UUID          `json:"client_id"`
 	AgreementDetails string             `json:"agreement_details"`
 	Created          pgtype.Timestamptz `json:"created"`
+}
+
+type HandbookStep struct {
+	ID         uuid.UUID            `json:"id"`
+	TemplateID uuid.UUID            `json:"template_id"`
+	SortOrder  int32                `json:"sort_order"`
+	Kind       HandbookStepKindEnum `json:"kind"`
+	Title      string               `json:"title"`
+	Body       *string              `json:"body"`
+	Content    []byte               `json:"content"`
+	IsRequired bool                 `json:"is_required"`
+	CreatedAt  pgtype.Timestamptz   `json:"created_at"`
+	UpdatedAt  pgtype.Timestamptz   `json:"updated_at"`
+}
+
+type HandbookTemplate struct {
+	ID                  uuid.UUID          `json:"id"`
+	DepartmentID        uuid.UUID          `json:"department_id"`
+	Title               string             `json:"title"`
+	Description         *string            `json:"description"`
+	Version             int32              `json:"version"`
+	IsActive            bool               `json:"is_active"`
+	CreatedByEmployeeID *uuid.UUID         `json:"created_by_employee_id"`
+	CreatedAt           pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt           pgtype.Timestamptz `json:"updated_at"`
 }
 
 type Incident struct {
@@ -3462,10 +3707,15 @@ type Organisation struct {
 }
 
 type Permission struct {
-	ID       uuid.UUID `json:"id"`
-	Name     string    `json:"name"`
-	Resource string    `json:"resource"`
-	Method   string    `json:"method"`
+	ID          uuid.UUID `json:"id"`
+	Name        string    `json:"name"`
+	Resource    string    `json:"resource"`
+	Method      string    `json:"method"`
+	GroupKey    string    `json:"group_key"`
+	SectionKey  string    `json:"section_key"`
+	DisplayName string    `json:"display_name"`
+	Description *string   `json:"description"`
+	SortOrder   int32     `json:"sort_order"`
 }
 
 type ProgressReport struct {
@@ -3621,8 +3871,9 @@ type RiskAssessment struct {
 }
 
 type Role struct {
-	ID   uuid.UUID `json:"id"`
-	Name string    `json:"name"`
+	ID          uuid.UUID `json:"id"`
+	Name        string    `json:"name"`
+	Description *string   `json:"description"`
 }
 
 type RolePermission struct {
@@ -3711,9 +3962,10 @@ type Topic struct {
 	LevelDescription []byte    `json:"level_description"`
 }
 
-type UserPermission struct {
-	UserID       uuid.UUID `json:"user_id"`
-	PermissionID uuid.UUID `json:"permission_id"`
+type UserPermissionOverride struct {
+	UserID       uuid.UUID                `json:"user_id"`
+	PermissionID uuid.UUID                `json:"permission_id"`
+	Effect       PermissionOverrideEffect `json:"effect"`
 }
 
 type UserRole struct {

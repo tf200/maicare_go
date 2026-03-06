@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	db "maicare_go/db/sqlc"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/crypto/bcrypt"
@@ -146,12 +148,26 @@ func seedEmployeeProfiles(ctx context.Context, store *db.Store, user *db.CustomU
 	// Random dates
 	dob := time.Now().AddDate(-rand.Intn(35)-25, -rand.Intn(12), -rand.Intn(28))
 
+	dept, err := store.GetDepartmentByName(ctx, department)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			dept, err = store.CreateDepartment(ctx, db.CreateDepartmentParams{
+				Name:                     department,
+				DepartmentHeadEmployeeID: nil,
+			})
+		}
+		if err != nil {
+			return nil, fmt.Errorf("failed to resolve department: %w", err)
+		}
+	}
+	departmentID := dept.ID
+
 	employee, err := store.CreateEmployeeProfile(ctx, db.CreateEmployeeProfileParams{
 		UserID:              user.ID,
 		FirstName:           gofakeit.FirstName(),
 		LastName:            gofakeit.LastName(),
 		Position:            &position,
-		Department:          &department,
+		DepartmentID:        &departmentID,
 		EmployeeNumber:      &employeeNumber,
 		EmploymentNumber:    &employmentNumber,
 		PrivateEmailAddress: &privateEmail,
@@ -177,10 +193,6 @@ func grantPermissions(ctx context.Context, store *db.Store, userID uuid.UUID) {
 		log.Fatalf("Failed to get admin role ID: %v", err)
 	}
 	store.AssignRoleToUser(ctx, db.AssignRoleToUserParams{
-		UserID: userID,
-		RoleID: roleID,
-	})
-	store.GrantRolePermissionsToUser(ctx, db.GrantRolePermissionsToUserParams{
 		UserID: userID,
 		RoleID: roleID,
 	})

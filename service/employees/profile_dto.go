@@ -22,7 +22,8 @@ type CreateEmployeeProfileRequest struct {
 	PostalCode          string     `json:"postal_code" binding:"required" example:"1234AB"`
 	City                string     `json:"city" binding:"required" example:"Amsterdam"`
 	Position            *string    `json:"position" example:"developer"`
-	Department          *string    `json:"department" example:"IT"`
+	DepartmentID        *uuid.UUID `json:"department_id" example:"1"`
+	ManagerEmployeeID   *uuid.UUID `json:"manager_employee_id" example:"1"`
 	PrivateEmailAddress *string    `json:"private_email_address" binding:"email" example:"joe@ex.com"`
 	WorkEmailAddress    string     `json:"work_email_address" binding:"required,email" example:"email@exe.com"`
 	WorkPhoneNumber     *string    `json:"work_phone_number" example:"1234567890"`
@@ -45,7 +46,11 @@ type CreateEmployeeProfileResponse struct {
 	FirstName           string     `json:"first_name"`
 	LastName            string     `json:"last_name"`
 	Position            *string    `json:"position"`
-	Department          *string    `json:"department"`
+	DepartmentID        *uuid.UUID `json:"department_id"`
+	DepartmentName      *string    `json:"department_name"`
+	ManagerEmployeeID   *uuid.UUID `json:"manager_employee_id"`
+	ManagerFirstName    *string    `json:"manager_first_name"`
+	ManagerLastName     *string    `json:"manager_last_name"`
 	EmployeeNumber      *string    `json:"employee_number"`
 	EmploymentNumber    *string    `json:"employment_number"`
 	PrivateEmailAddress *string    `json:"private_email_address"`
@@ -79,7 +84,7 @@ type ListEmployeeResponse struct {
 	LastName        string     `json:"last_name"`
 	Bsn             string     `json:"bsn"`
 	ContractType    string     `json:"contract_type"`
-	Department      *string    `json:"department"`
+	DepartmentName  *string    `json:"department_name"`
 	LocationAddress string     `json:"location_address"`
 	ContractEndDate *time.Time `json:"contract_end_date"`
 }
@@ -159,7 +164,11 @@ type GetEmployeeProfileDetailsResponse struct {
 	PostalCode          string                  `json:"postal_code"`
 	City                string                  `json:"city"`
 	Position            *string                 `json:"position"`
-	Department          *string                 `json:"department"`
+	DepartmentID        *uuid.UUID              `json:"department_id"`
+	DepartmentName      *string                 `json:"department_name"`
+	ManagerEmployeeID   *uuid.UUID              `json:"manager_employee_id"`
+	ManagerFirstName    *string                 `json:"manager_first_name"`
+	ManagerLastName     *string                 `json:"manager_last_name"`
 	EmployeeNumber      *string                 `json:"employee_number"`
 	EmploymentNumber    *string                 `json:"employment_number"`
 	PrivateEmailAddress *string                 `json:"private_email_address"`
@@ -197,7 +206,11 @@ type GetEmployeeProfileByIDResponse struct {
 	FirstName                 string     `json:"first_name"`
 	LastName                  string     `json:"last_name"`
 	Position                  *string    `json:"position"`
-	Department                *string    `json:"department"`
+	DepartmentID              *uuid.UUID `json:"department_id"`
+	DepartmentName            *string    `json:"department_name"`
+	ManagerEmployeeID         *uuid.UUID `json:"manager_employee_id"`
+	ManagerFirstName          *string    `json:"manager_first_name"`
+	ManagerLastName           *string    `json:"manager_last_name"`
 	EmployeeNumber            *string    `json:"employee_number"`
 	EmploymentNumber          *string    `json:"employment_number"`
 	PrivateEmailAddress       *string    `json:"private_email_address"`
@@ -224,7 +237,8 @@ type UpdateEmployeeProfileRequest struct {
 	FirstName                 *string    `json:"first_name"`
 	LastName                  *string    `json:"last_name"`
 	Position                  *string    `json:"position"`
-	Department                *string    `json:"department"`
+	DepartmentID              *uuid.UUID `json:"department_id"`
+	ManagerEmployeeID         *uuid.UUID `json:"manager_employee_id"`
 	EmployeeNumber            *string    `json:"employee_number"`
 	EmploymentNumber          *string    `json:"employment_number"`
 	PrivateEmailAddress       *string    `json:"private_email_address"`
@@ -249,7 +263,11 @@ type UpdateEmployeeProfileResponse struct {
 	FirstName                 string     `json:"first_name"`
 	LastName                  string     `json:"last_name"`
 	Position                  *string    `json:"position"`
-	Department                *string    `json:"department"`
+	DepartmentID              *uuid.UUID `json:"department_id"`
+	DepartmentName            *string    `json:"department_name"`
+	ManagerEmployeeID         *uuid.UUID `json:"manager_employee_id"`
+	ManagerFirstName          *string    `json:"manager_first_name"`
+	ManagerLastName           *string    `json:"manager_last_name"`
 	EmployeeNumber            *string    `json:"employee_number"`
 	EmploymentNumber          *string    `json:"employment_number"`
 	PrivateEmailAddress       *string    `json:"private_email_address"`

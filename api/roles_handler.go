@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"maicare_go/service/auth"
+	"maicare_go/service/settings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -15,11 +15,11 @@ import (
 // @Description List all roles
 // @Tags roles
 // @Produce json
-// @Success 200 {object} Response[[]auth.ListRolesApiResponse]
+// @Success 200 {object} Response[[]settings.ListRolesApiResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /roles [get]
 func (server *Server) ListRolesApi(ctx *gin.Context) {
-	response, err := server.businessService.AuthService.ListRoles(ctx)
+	response, err := server.businessService.SettingsService.ListRoles(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to list roles")))
 		return
@@ -32,11 +32,11 @@ func (server *Server) ListRolesApi(ctx *gin.Context) {
 // @Description List all permissions
 // @Tags roles
 // @Produce json
-// @Success 200 {object} Response[[]auth.ListAllPermissionsApiResponse]
+// @Success 200 {object} Response[[]settings.PermissionGroupResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /permissions [get]
 func (server *Server) ListAllPermissionsApi(ctx *gin.Context) {
-	response, err := server.businessService.AuthService.ListAllPermissions(ctx)
+	response, err := server.businessService.SettingsService.ListAllPermissions(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to list permissions")))
 		return
@@ -50,7 +50,7 @@ func (server *Server) ListAllPermissionsApi(ctx *gin.Context) {
 // @Tags roles
 // @Produce json
 // @Param role_id path uuid true "Role ID"
-// @Success 200 {object} Response[[]auth.ListAllRolePermissionsApiResponse]
+// @Success 200 {object} Response[[]settings.ListAllRolePermissionsApiResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /roles/{role_id}/permissions [get]
 func (server *Server) ListAllRolePermissionsApi(ctx *gin.Context) {
@@ -60,7 +60,7 @@ func (server *Server) ListAllRolePermissionsApi(ctx *gin.Context) {
 		return
 	}
 
-	response, err := server.businessService.AuthService.ListAllRolePermissions(ctx, roleID)
+	response, err := server.businessService.SettingsService.ListAllRolePermissions(ctx, roleID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to list role permissions")))
 		return
@@ -75,8 +75,8 @@ func (server *Server) ListAllRolePermissionsApi(ctx *gin.Context) {
 // @Param employee_id query int true "Employee ID"
 // @Accept json
 // @Produce json
-// @Param input body auth.AssignRoleToEmployeeParams true "Assign role to user"
-// @Success 200 {object} Response[auth.AssignRoleToEmployeeApiResponse]
+// @Param input body settings.AssignRoleToEmployeeParams true "Assign role to user"
+// @Success 200 {object} Response[settings.AssignRoleToEmployeeApiResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /employees/{employee_id}/roles [post]
 func (server *Server) AssignRoleToEmployeeApi(ctx *gin.Context) {
@@ -85,12 +85,12 @@ func (server *Server) AssignRoleToEmployeeApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid employee_id parameter")))
 		return
 	}
-	var req auth.AssignRoleToEmployeeParams
+	var req settings.AssignRoleToEmployeeParams
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body")))
 		return
 	}
-	response, err := server.businessService.AuthService.AssignRoleToEmployee(ctx, employeeID, &req)
+	response, err := server.businessService.SettingsService.AssignRoleToEmployee(ctx, employeeID, &req)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to assign role to user")))
 		return
@@ -104,7 +104,7 @@ func (server *Server) AssignRoleToEmployeeApi(ctx *gin.Context) {
 // @Tags roles
 // @Produce json
 // @Param employee_id path int true "Employee ID"
-// @Success 200 {object} Response[auth.ListUserRolesAndPermissionsApiResponse]
+// @Success 200 {object} Response[settings.ListUserRolesAndPermissionsApiResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /employees/{employee_id}/roles_permissions [get]
 func (server *Server) ListUserRolesAndPermissionsApi(ctx *gin.Context) {
@@ -113,7 +113,7 @@ func (server *Server) ListUserRolesAndPermissionsApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid employee_id parameter")))
 		return
 	}
-	response, err := server.businessService.AuthService.ListUserRolesAndPermissionsApi(ctx, employeeID)
+	response, err := server.businessService.SettingsService.ListUserRolesAndPermissionsApi(ctx, employeeID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to list user roles and permissions")))
 		return
@@ -122,35 +122,35 @@ func (server *Server) ListUserRolesAndPermissionsApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, SuccessResponse(response, "User roles and permissions retrieved successfully"))
 }
 
-// @Summary Grant user permissions
-// @Description Grant specific permissions to a user by employee ID
+// @Summary Replace user permission overrides
+// @Description Replace explicit allow and deny permission overrides for a user by employee ID
 // @Tags roles
 // @Accept json
 // @Produce json
 // @Param employee_id path int true "Employee ID"
-// @Param input body auth.GrantUserPermissionsRequest true "Grant user permissions"
-// @Success 200 {object} Response[auth.GrantUserPermissionsResponse]
+// @Param input body settings.ReplaceUserPermissionOverridesRequest true "Replace user permission overrides"
+// @Success 200 {object} Response[settings.ReplaceUserPermissionOverridesResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /employees/{employee_id}/permissions [post]
 func (server *Server) GrantUserPermissionsApi(ctx *gin.Context) {
-	employeeID, err := uuid.Parse(ctx.Param("employee_id"))
+	employeeID, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid employee_id parameter")))
 		return
 	}
 
-	var req auth.GrantUserPermissionsRequest
+	var req settings.ReplaceUserPermissionOverridesRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body")))
 		return
 	}
-	response, err := server.businessService.AuthService.GrantUserPermission(ctx, employeeID, &req)
+	response, err := server.businessService.SettingsService.ReplaceUserPermissionOverrides(ctx, employeeID, &req)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to grant user permissions")))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to replace user permission overrides")))
 		return
 	}
 
-	ctx.JSON(http.StatusOK, SuccessResponse(response, "User permissions granted successfully"))
+	ctx.JSON(http.StatusOK, SuccessResponse(response, "User permission overrides replaced successfully"))
 }
 
 // @Summary Create a new role
@@ -158,18 +158,18 @@ func (server *Server) GrantUserPermissionsApi(ctx *gin.Context) {
 // @Tags roles
 // @Accept json
 // @Produce json
-// @Param input body auth.CreateRoleRequest true "Create role"
-// @Success 200 {object} Response[auth.CreateRoleResponse]
+// @Param input body settings.CreateRoleRequest true "Create role"
+// @Success 200 {object} Response[settings.CreateRoleResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /roles [post]
 func (server *Server) CreateRoleApi(ctx *gin.Context) {
-	var req auth.CreateRoleRequest
+	var req settings.CreateRoleRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body")))
 		return
 	}
 
-	response, err := server.businessService.AuthService.CreateRole(ctx, &req)
+	response, err := server.businessService.SettingsService.CreateRole(ctx, &req)
 	if err != nil {
 		server.logBusinessEvent(LogLevelError, "CreateRoleApi", "Failed to create role", zap.Error(err))
 		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to create role")))
@@ -179,14 +179,14 @@ func (server *Server) CreateRoleApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, SuccessResponse(response, "Role created successfully"))
 }
 
-// @Summary Add permissions to a role
-// @Description Add specific permissions to a role by role ID
+// @Summary Replace role permissions
+// @Description Replace the permission set assigned to a role by role ID
 // @Tags roles
 // @Accept json
 // @Produce json
 // @Param role_id path uuid true "Role ID"
-// @Param input body auth.AddPermissionsToRoleRequest true "Add permissions to role"
-// @Success 200 {object} Response[auth.AddPermissionsToRoleResponse]
+// @Param input body settings.AddPermissionsToRoleRequest true "Add permissions to role"
+// @Success 200 {object} Response[settings.AddPermissionsToRoleResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /roles/{role_id}/permissions [post]
 func (server *Server) AddPermissionsToRoleApi(ctx *gin.Context) {
@@ -195,17 +195,17 @@ func (server *Server) AddPermissionsToRoleApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid role_id parameter")))
 		return
 	}
-	var req auth.AddPermissionsToRoleRequest
+	var req settings.AddPermissionsToRoleRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body")))
 		return
 	}
 
-	response, err := server.businessService.AuthService.AddPermissionsToRole(ctx, roleID, &req)
+	response, err := server.businessService.SettingsService.AddPermissionsToRole(ctx, roleID, &req)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to add permissions to role")))
+		ctx.JSON(http.StatusInternalServerError, errorResponse(fmt.Errorf("failed to replace permissions for role")))
 		return
 	}
 
-	ctx.JSON(http.StatusOK, SuccessResponse(response, "Permissions added to role successfully"))
+	ctx.JSON(http.StatusOK, SuccessResponse(response, "Role permissions replaced successfully"))
 }

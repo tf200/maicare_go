@@ -94,14 +94,15 @@ func (s *employeeService) CreateEmployee(
 				Street:              req.Street,
 				HouseNumber:         req.HouseNumber,
 				HouseNumberAddition: req.HouseNumberAddition,
-				PostalCode:          req.PostalCode,
-				City:                req.City,
-				Position:            req.Position,
-				Department:          req.Department,
-				EmployeeNumber:      req.EmployeeNumber,
-				EmploymentNumber:    req.EmploymentNumber,
-				PrivateEmailAddress: req.PrivateEmailAddress,
-				WorkEmailAddress:    &req.WorkEmailAddress,
+					PostalCode:          req.PostalCode,
+					City:                req.City,
+					Position:            req.Position,
+					DepartmentID:        req.DepartmentID,
+					ManagerEmployeeID:   req.ManagerEmployeeID,
+					EmployeeNumber:      req.EmployeeNumber,
+					EmploymentNumber:    req.EmploymentNumber,
+					PrivateEmailAddress: req.PrivateEmailAddress,
+					WorkEmailAddress:    &req.WorkEmailAddress,
 				WorkPhoneNumber:     req.WorkPhoneNumber,
 				PrivatePhoneNumber:  req.PrivatePhoneNumber,
 				DateOfBirth:         parsedDateOfBirth,
@@ -128,12 +129,31 @@ func (s *employeeService) CreateEmployee(
 		return nil, fmt.Errorf("failed to create employee with account: %v", err)
 	}
 
-	res := &CreateEmployeeProfileResponse{
-		ID:                  employee.Employee.ID,
-		EmployeeNumber:      employee.Employee.EmployeeNumber,
-		EmploymentNumber:    employee.Employee.EmploymentNumber,
-		FirstName:           employee.Employee.FirstName,
-		LastName:            employee.Employee.LastName,
+	enriched, err := s.Store.GetEmployeeProfileByID(ctx, employee.Employee.ID)
+	if err != nil {
+		s.Logger.LogBusinessEvent(
+			ctx,
+			logger.LogLevelError,
+			"CreateEmployee",
+			"Failed to load created employee for response",
+			zap.Error(err),
+			zap.String("EmployeeID", employee.Employee.ID.String()),
+		)
+		return nil, fmt.Errorf("failed to load created employee profile: %w", err)
+	}
+
+		res := &CreateEmployeeProfileResponse{
+			ID:                  employee.Employee.ID,
+			EmployeeNumber:      employee.Employee.EmployeeNumber,
+			EmploymentNumber:    employee.Employee.EmploymentNumber,
+			FirstName:           employee.Employee.FirstName,
+			LastName:            employee.Employee.LastName,
+			Position:            employee.Employee.Position,
+			DepartmentID:        enriched.DepartmentID,
+			DepartmentName:      enriched.DepartmentName,
+			ManagerEmployeeID:   enriched.ManagerEmployeeID,
+			ManagerFirstName:    enriched.ManagerFirstName,
+			ManagerLastName:     enriched.ManagerLastName,
 		DateOfBirth:         employee.Employee.DateOfBirth.Time,
 		Gender:              string(employee.Employee.Gender),
 		Email:               *employee.Employee.WorkEmailAddress,
@@ -206,17 +226,17 @@ func (s *employeeService) ListEmployees(
 			parsedDate := employee.ContractEndDate.Time
 			contractEndDate = &parsedDate
 		}
-		responseEmployees[i] = ListEmployeeResponse{
-			ID:              employee.ID,
-			FirstName:       employee.FirstName,
-			LastName:        employee.LastName,
-			Bsn:             employee.Bsn,
-			ContractType:    string(employee.ContractType),
-			Department:      employee.Department,
-			LocationAddress: employee.LocationAddress,
-			ContractEndDate: contractEndDate,
+			responseEmployees[i] = ListEmployeeResponse{
+				ID:              employee.ID,
+				FirstName:       employee.FirstName,
+				LastName:        employee.LastName,
+				Bsn:             employee.Bsn,
+				ContractType:    string(employee.ContractType),
+				DepartmentName:  employee.DepartmentName,
+				LocationAddress: employee.LocationAddress,
+				ContractEndDate: contractEndDate,
+			}
 		}
-	}
 
 	response := pagination.NewResponse(ctx, req.Request, responseEmployees, totalCount)
 
@@ -491,13 +511,17 @@ func (s *employeeService) GetEmployeeProfileDetails(
 		Street:              employee.Street,
 		HouseNumber:         employee.HouseNumber,
 		HouseNumberAddition: employee.HouseNumberAddition,
-		PostalCode:          employee.PostalCode,
-		City:                employee.City,
-		Position:            employee.Position,
-		Department:          employee.Department,
-		EmployeeNumber:      employee.EmployeeNumber,
-		EmploymentNumber:    employee.EmploymentNumber,
-		PrivateEmailAddress: employee.PrivateEmailAddress,
+			PostalCode:          employee.PostalCode,
+			City:                employee.City,
+			Position:            employee.Position,
+			DepartmentID:        employee.DepartmentID,
+			DepartmentName:      employee.DepartmentName,
+			ManagerEmployeeID:   employee.ManagerEmployeeID,
+			ManagerFirstName:    employee.ManagerFirstName,
+			ManagerLastName:     employee.ManagerLastName,
+			EmployeeNumber:      employee.EmployeeNumber,
+			EmploymentNumber:    employee.EmploymentNumber,
+			PrivateEmailAddress: employee.PrivateEmailAddress,
 		WorkEmailAddress:    employee.WorkEmailAddress,
 		PrivatePhoneNumber:  employee.PrivatePhoneNumber,
 		WorkPhoneNumber:     employee.WorkPhoneNumber,
@@ -537,6 +561,13 @@ func pgDatePtr(d pgtype.Date) *time.Time {
 	return &t
 }
 
+func strOrEmpty(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
+}
+
 func (s *employeeService) GetEmployeeProfileByID(
 	employeeID, currentUserID uuid.UUID,
 	ctx context.Context,
@@ -554,21 +585,26 @@ func (s *employeeService) GetEmployeeProfileByID(
 		return nil, fmt.Errorf("failed to get employee profile: %w", err)
 	}
 
-	res := &GetEmployeeProfileByIDResponse{
-		ID:                  employee.ID,
-		UserID:              employee.UserID,
-		FirstName:           employee.FirstName,
-		LastName:            employee.LastName,
-		Position:            employee.Position,
-		Department:          employee.Department,
-		EmployeeNumber:      employee.EmployeeNumber,
-		EmploymentNumber:    employee.EmploymentNumber,
-		PrivateEmailAddress: employee.PrivateEmailAddress,
-		PrivatePhoneNumber:  employee.PrivatePhoneNumber,
-		WorkPhoneNumber:     employee.WorkPhoneNumber,
-		DateOfBirth:         employee.DateOfBirth.Time,
-		HomeTelephoneNumber: employee.HomeTelephoneNumber,
-		CreatedAt:           employee.CreatedAt.Time,
+		res := &GetEmployeeProfileByIDResponse{
+			ID:                  employee.ID,
+			UserID:              employee.UserID,
+			FirstName:           employee.FirstName,
+			LastName:            employee.LastName,
+			Position:            employee.Position,
+		DepartmentID:        employee.DepartmentID,
+		DepartmentName:      employee.DepartmentName,
+		ManagerEmployeeID:   employee.ManagerEmployeeID,
+		ManagerFirstName:    employee.ManagerFirstName,
+		ManagerLastName:     employee.ManagerLastName,
+			EmployeeNumber:      employee.EmployeeNumber,
+			EmploymentNumber:    employee.EmploymentNumber,
+			PrivateEmailAddress: employee.PrivateEmailAddress,
+			Email:               strOrEmpty(employee.WorkEmailAddress),
+			PrivatePhoneNumber:  employee.PrivatePhoneNumber,
+			WorkPhoneNumber:     employee.WorkPhoneNumber,
+			DateOfBirth:         employee.DateOfBirth.Time,
+			HomeTelephoneNumber: employee.HomeTelephoneNumber,
+			CreatedAt:           employee.CreatedAt.Time,
 		Gender:              string(employee.Gender),
 		LocationID:          employee.LocationID,
 		HasBorrowed:         employee.HasBorrowed,
@@ -594,10 +630,11 @@ func (s *employeeService) UpdateEmployeeProfile(
 	employeeID uuid.UUID,
 	ctx context.Context,
 ) (*UpdateEmployeeProfileResponse, error) {
-	var parsedDate time.Time
 	var err error
+	parsedDateOfBirth := pgtype.Date{Valid: false}
 	if req.DateOfBirth != nil {
-		parsedDate, err = time.Parse("2006-01-02", *req.DateOfBirth)
+		parsedDate, parseErr := time.Parse("2006-01-02", *req.DateOfBirth)
+		err = parseErr
 		if err != nil {
 			s.Logger.LogBusinessEvent(
 				ctx,
@@ -609,20 +646,22 @@ func (s *employeeService) UpdateEmployeeProfile(
 			)
 			return nil, fmt.Errorf("invalid date of birth format: %w", err)
 		}
+		parsedDateOfBirth = pgtype.Date{Time: parsedDate, Valid: true}
 	}
 
-	employee, err := s.Store.UpdateEmployeeProfile(ctx, db.UpdateEmployeeProfileParams{
+	_, err = s.Store.UpdateEmployeeProfile(ctx, db.UpdateEmployeeProfileParams{
 		ID:                  employeeID,
 		FirstName:           req.FirstName,
 		LastName:            req.LastName,
 		Position:            req.Position,
-		Department:          req.Department,
+		DepartmentID:        req.DepartmentID,
+		ManagerEmployeeID:   req.ManagerEmployeeID,
 		EmployeeNumber:      req.EmployeeNumber,
 		EmploymentNumber:    req.EmploymentNumber,
 		PrivateEmailAddress: req.PrivateEmailAddress,
 		PrivatePhoneNumber:  req.PrivatePhoneNumber,
 		WorkPhoneNumber:     req.WorkPhoneNumber,
-		DateOfBirth:         pgtype.Date{Time: parsedDate, Valid: true},
+		DateOfBirth:         parsedDateOfBirth,
 		HomeTelephoneNumber: req.HomeTelephoneNumber,
 		Gender:              db.NullGenderFromPtr(req.Gender),
 		LocationID:          req.LocationID,
@@ -642,16 +681,34 @@ func (s *employeeService) UpdateEmployeeProfile(
 		return nil, fmt.Errorf("failed to update employee profile: %w", err)
 	}
 
+	employee, err := s.Store.GetEmployeeProfileByID(ctx, employeeID)
+	if err != nil {
+		s.Logger.LogBusinessEvent(
+			ctx,
+			logger.LogLevelError,
+			"UpdateEmployeeProfile",
+			"Failed to load employee profile after update",
+			zap.Error(err),
+			zap.String("EmployeeID", employeeID.String()),
+		)
+		return nil, fmt.Errorf("failed to load updated employee profile: %w", err)
+	}
+
 	res := &UpdateEmployeeProfileResponse{
 		ID:                  employee.ID,
 		UserID:              employee.UserID,
 		FirstName:           employee.FirstName,
 		LastName:            employee.LastName,
 		Position:            employee.Position,
-		Department:          employee.Department,
+		DepartmentID:        employee.DepartmentID,
+		DepartmentName:      employee.DepartmentName,
+		ManagerEmployeeID:   employee.ManagerEmployeeID,
+		ManagerFirstName:    employee.ManagerFirstName,
+		ManagerLastName:     employee.ManagerLastName,
 		EmployeeNumber:      employee.EmployeeNumber,
 		EmploymentNumber:    employee.EmploymentNumber,
 		PrivateEmailAddress: employee.PrivateEmailAddress,
+		Email:               strOrEmpty(employee.WorkEmailAddress),
 		PrivatePhoneNumber:  employee.PrivatePhoneNumber,
 		WorkPhoneNumber:     employee.WorkPhoneNumber,
 		DateOfBirth:         employee.DateOfBirth.Time,

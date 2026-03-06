@@ -18,11 +18,13 @@ import (
 	"maicare_go/service/deps"
 	"maicare_go/service/ecr"
 	"maicare_go/service/employees"
+	"maicare_go/service/handbook"
 	"maicare_go/service/invoice"
 	"maicare_go/service/notification"
 	"maicare_go/service/organization"
 	"maicare_go/service/schedule"
 	"maicare_go/service/sender"
+	"maicare_go/service/settings"
 	"maicare_go/token"
 	"maicare_go/util"
 )
@@ -32,6 +34,7 @@ type BusinessService struct {
 	AuthService         auth.AuthService
 	ClientService       clientp.ClientService
 	EmployeeService     employees.EmployeeService
+	HandbookService     handbook.HandbookService
 	InvoiceService      invoice.InvoiceService
 	AppointmentService  appointment.AppointmentService
 	AttachmentService   attachment.AttachmentService
@@ -42,6 +45,7 @@ type BusinessService struct {
 	NotificationService notification.NotificationService
 	ScheduleService     schedule.ScheduleService
 	SenderService       sender.SenderService
+	SettingsService     settings.SettingsService
 	AuditService        *audit.AuditService
 }
 
@@ -50,6 +54,7 @@ func NewBusinessService(store *db.Store, tokenMaker token.Maker, logger logger.L
 	authService := auth.NewAuthService(deps)
 	clientService := clientp.NewClientService(deps, asynqClient)
 	employeeService := employees.NewEmployeeService(deps, asynqClient)
+	handbookService := handbook.NewHandbookService(deps)
 	invoiceService := invoice.NewInvoiceService(deps)
 	appointmentService := appointment.NewAppointmentService(deps, asynqClient)
 	attachmentService := attachment.NewAttachmentService(deps)
@@ -60,12 +65,14 @@ func NewBusinessService(store *db.Store, tokenMaker token.Maker, logger logger.L
 	notificationService := notification.NewNotificationService(deps)
 	scheduleService := schedule.NewScheduleService(deps, asynqClient)
 	senderService := sender.NewSenderService(deps)
+	settingsService := settings.NewSettingsService(deps)
 	auditService := audit.NewAuditService(store)
 	return &BusinessService{
 		ServiceDependencies: deps,
 		AuthService:         authService,
 		ClientService:       clientService,
 		EmployeeService:     employeeService,
+		HandbookService:     handbookService,
 		InvoiceService:      invoiceService,
 		AppointmentService:  appointmentService,
 		AttachmentService:   attachmentService,
@@ -76,6 +83,7 @@ func NewBusinessService(store *db.Store, tokenMaker token.Maker, logger logger.L
 		NotificationService: notificationService,
 		ScheduleService:     scheduleService,
 		SenderService:       senderService,
+		SettingsService:     settingsService,
 		AuditService:        auditService,
 	}
 }

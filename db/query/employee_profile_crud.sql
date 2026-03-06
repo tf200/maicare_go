@@ -10,7 +10,8 @@ INSERT INTO employee_profile (
     postal_code,
     city,
     position,
-    department,
+    department_id,
+    manager_employee_id,
     employee_number,
     employment_number,
     private_email_address,
@@ -29,7 +30,7 @@ INSERT INTO employee_profile (
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
     $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
-    $21, $22, $23, $24, $25, $26
+    $21, $22, $23, $24, $25, $26, $27
 ) RETURNING *;
 
 -- name: ListEmployeeProfile :many
@@ -39,11 +40,12 @@ SELECT
     ep.last_name,
     ep.bsn,
     ep.contract_type,
-    ep.department,
+    d.name AS department_name,
     ep.contract_end_date,
     concat_ws(' ', l.street, l.house_number, l.house_number_addition, l.postal_code, l.city) AS location_address
 FROM employee_profile ep
 LEFT JOIN location l ON l.id = ep.location_id
+LEFT JOIN departments d ON d.id = ep.department_id
 WHERE
     (CASE
         WHEN sqlc.narg('include_archived')::boolean IS NULL THEN true
@@ -81,6 +83,32 @@ WHERE
     (contract_type = sqlc.narg('contract_type') OR sqlc.narg('contract_type') IS NULL);
 
 -- name: GetEmployeeProfileByUserID :one
+WITH inherited_permissions AS (
+    SELECT rp.permission_id
+    FROM user_roles ur
+    JOIN role_permissions rp ON rp.role_id = ur.role_id
+    WHERE ur.user_id = $1
+),
+allowed_overrides AS (
+    SELECT permission_id
+    FROM user_permission_overrides
+    WHERE user_id = $1
+      AND effect = 'allow'
+),
+base_permissions AS (
+    SELECT permission_id FROM inherited_permissions
+    UNION
+    SELECT permission_id FROM allowed_overrides
+),
+effective_permissions AS (
+    SELECT permission_id
+    FROM base_permissions
+    EXCEPT
+    SELECT permission_id
+    FROM user_permission_overrides
+    WHERE user_id = $1
+      AND effect = 'deny'
+)
 SELECT
     cu.id           AS user_id,
     cu.email        AS email,
@@ -96,9 +124,8 @@ SELECT
             'resource', p.resource,
             'method',   p.method
         )), '[]'::json)
-        FROM user_permissions up
-        JOIN permissions p ON p.id = up.permission_id
-        WHERE up.user_id = cu.id
+        FROM effective_permissions ep2
+        JOIN permissions p ON p.id = ep2.permission_id
     )::json AS permissions
 FROM custom_user cu
 JOIN employee_profile ep ON ep.user_id = cu.id
@@ -107,9 +134,14 @@ WHERE cu.id = $1;
 -- name: GetEmployeeProfileByID :one
 SELECT
     ep.*,
-    cu.profile_picture as profile_picture
+    cu.profile_picture as profile_picture,
+    d.name AS department_name,
+    mgr.first_name AS manager_first_name,
+    mgr.last_name AS manager_last_name
 FROM employee_profile ep
 JOIN custom_user cu ON ep.user_id = cu.id
+LEFT JOIN departments d ON d.id = ep.department_id
+LEFT JOIN employee_profile mgr ON mgr.id = ep.manager_employee_id
 WHERE ep.id = $1;
 
 -- name: UpdateEmployeeProfile :one
@@ -118,12 +150,12 @@ SET
     first_name = COALESCE(sqlc.narg('first_name'), first_name),
     last_name = COALESCE(sqlc.narg('last_name'), last_name),
     position = COALESCE(sqlc.narg('position'), position),
-    department = COALESCE(sqlc.narg('department'), department),
+    department_id = COALESCE(sqlc.narg('department_id'), department_id),
+    manager_employee_id = COALESCE(sqlc.narg('manager_employee_id'), manager_employee_id),
     employee_number = COALESCE(sqlc.narg('employee_number'), employee_number),
     employment_number = COALESCE(sqlc.narg('employment_number'), employment_number),
     private_email_address = COALESCE(sqlc.narg('private_email_address'), private_email_address),
     work_email_address = COALESCE(sqlc.narg('work_email_address'), work_email_address),
-    work_phone_number = COALESCE(sqlc.narg('work_phone_number'), authentication_phone_number),
     private_phone_number = COALESCE(sqlc.narg('private_phone_number'), private_phone_number),
     work_phone_number = COALESCE(sqlc.narg('work_phone_number'), work_phone_number),
     date_of_birth = COALESCE(sqlc.narg('date_of_birth'), date_of_birth),
