@@ -101,17 +101,6 @@ func main() {
 	}
 
 	store := db.NewStore(conn)
-	if err := ensureRolesAndPermissionsOnStartup(ctx, store); err != nil {
-		log.Fatalf("rbac bootstrap failed: %v", err)
-	}
-
-	if err := ensureAdminAccountOnStartup(ctx, store, config); err != nil {
-		if isConflictError(err) {
-			log.Printf("admin bootstrap conflict detected, continuing startup: %v", err)
-		} else {
-			log.Fatalf("admin bootstrap failed: %v", err)
-		}
-	}
 
 	var b2Client bucket.ObjectStorageInterface
 	if config.DisableBucket {

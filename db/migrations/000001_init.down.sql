@@ -81,6 +81,7 @@ DROP TABLE IF EXISTS location CASCADE;
 DROP TABLE IF EXISTS app_organization_profile CASCADE;
 DROP TABLE IF EXISTS organisations CASCADE;
 DROP TABLE IF EXISTS topics CASCADE;
+DROP TABLE IF EXISTS employee_handbook_assignment_history CASCADE;
 
 -- ==========================================
 -- FUNCTIONS
@@ -177,3 +178,6 @@ DROP TYPE IF EXISTS incident_type_enum CASCADE;
 DROP TYPE IF EXISTS informed_party_enum CASCADE;
 DROP TYPE IF EXISTS incident_cause_category_enum CASCADE;
 DROP TYPE IF EXISTS incident_follow_up_action_enum CASCADE;
+DROP TYPE IF EXISTS handbook_template_status_enum CASCADE;
+DROP TYPE IF EXISTS handbook_assignment_event_enum CASCADE;
+DROP TYPE IF EXISTS employee_handbook_assignment_history CASCADE;

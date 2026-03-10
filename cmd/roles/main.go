@@ -29,7 +29,7 @@ func main() {
 		panic(err)
 	}
 
-	dbSource := "postgres://maicare:maicare@localhost:5432/maicare?sslmode=disable"
+	dbSource := "postgres://maicare:maicare@167.86.75.250:5432/maicare?sslmode=disable"
 
 	conn, err := pgx.Connect(context.Background(), dbSource)
 	if err != nil {

@@ -12,6 +12,101 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const cloneHandbookTemplateToDraft = `-- name: CloneHandbookTemplateToDraft :one
+WITH source_template AS (
+    SELECT id, department_id, title, description
+    FROM handbook_templates
+    WHERE handbook_templates.id = $1
+    LIMIT 1
+), next_version AS (
+    SELECT COALESCE(MAX(version), 0) + 1 AS v
+    FROM handbook_templates
+    WHERE department_id = (SELECT department_id FROM source_template)
+), cloned_template AS (
+    INSERT INTO handbook_templates (
+        department_id,
+        title,
+        description,
+        version,
+        status,
+        created_by_employee_id
+    )
+    SELECT
+        st.department_id,
+        st.title,
+        st.description,
+        nv.v,
+        'draft',
+        $2
+    FROM source_template st
+    CROSS JOIN next_version nv
+    RETURNING id, department_id, title, description, version, status, created_by_employee_id, published_by_employee_id, published_at, archived_at, created_at, updated_at
+), cloned_steps AS (
+    INSERT INTO handbook_steps (
+        template_id,
+        sort_order,
+        kind,
+        title,
+        body,
+        content,
+        is_required
+    )
+    SELECT
+        ct.id,
+        hs.sort_order,
+        hs.kind,
+        hs.title,
+        hs.body,
+        hs.content,
+        hs.is_required
+    FROM cloned_template ct
+    JOIN source_template st ON TRUE
+    JOIN handbook_steps hs ON hs.template_id = st.id
+    RETURNING 1
+)
+SELECT id, department_id, title, description, version, status, created_by_employee_id, published_by_employee_id, published_at, archived_at, created_at, updated_at FROM cloned_template
+`
+
+type CloneHandbookTemplateToDraftParams struct {
+	SourceTemplateID    uuid.UUID  `json:"source_template_id"`
+	CreatedByEmployeeID *uuid.UUID `json:"created_by_employee_id"`
+}
+
+type CloneHandbookTemplateToDraftRow struct {
+	ID                    uuid.UUID                  `json:"id"`
+	DepartmentID          uuid.UUID                  `json:"department_id"`
+	Title                 string                     `json:"title"`
+	Description           *string                    `json:"description"`
+	Version               int32                      `json:"version"`
+	Status                HandbookTemplateStatusEnum `json:"status"`
+	CreatedByEmployeeID   *uuid.UUID                 `json:"created_by_employee_id"`
+	PublishedByEmployeeID *uuid.UUID                 `json:"published_by_employee_id"`
+	PublishedAt           pgtype.Timestamptz         `json:"published_at"`
+	ArchivedAt            pgtype.Timestamptz         `json:"archived_at"`
+	CreatedAt             pgtype.Timestamptz         `json:"created_at"`
+	UpdatedAt             pgtype.Timestamptz         `json:"updated_at"`
+}
+
+func (q *Queries) CloneHandbookTemplateToDraft(ctx context.Context, arg CloneHandbookTemplateToDraftParams) (CloneHandbookTemplateToDraftRow, error) {
+	row := q.db.QueryRow(ctx, cloneHandbookTemplateToDraft, arg.SourceTemplateID, arg.CreatedByEmployeeID)
+	var i CloneHandbookTemplateToDraftRow
+	err := row.Scan(
+		&i.ID,
+		&i.DepartmentID,
+		&i.Title,
+		&i.Description,
+		&i.Version,
+		&i.Status,
+		&i.CreatedByEmployeeID,
+		&i.PublishedByEmployeeID,
+		&i.PublishedAt,
+		&i.ArchivedAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const completeEmployeeHandbookStep = `-- name: CompleteEmployeeHandbookStep :one
 UPDATE employee_handbook_step_progress
 SET
@@ -44,6 +139,19 @@ func (q *Queries) CompleteEmployeeHandbookStep(ctx context.Context, arg Complete
 	return i, err
 }
 
+const countHandbookStepsByTemplateID = `-- name: CountHandbookStepsByTemplateID :one
+SELECT COUNT(*)::INT
+FROM handbook_steps
+WHERE template_id = $1
+`
+
+func (q *Queries) CountHandbookStepsByTemplateID(ctx context.Context, templateID uuid.UUID) (int32, error) {
+	row := q.db.QueryRow(ctx, countHandbookStepsByTemplateID, templateID)
+	var column_1 int32
+	err := row.Scan(&column_1)
+	return column_1, err
+}
+
 const countRemainingRequiredHandbookSteps = `-- name: CountRemainingRequiredHandbookSteps :one
 SELECT COUNT(*)::INT
 FROM employee_handbook_step_progress p
@@ -60,38 +168,99 @@ func (q *Queries) CountRemainingRequiredHandbookSteps(ctx context.Context, emplo
 	return column_1, err
 }
 
+const createEmployeeHandbookAssignmentHistory = `-- name: CreateEmployeeHandbookAssignmentHistory :one
+INSERT INTO employee_handbook_assignment_history (
+    employee_handbook_id,
+    employee_id,
+    template_id,
+    template_version,
+    event,
+    actor_employee_id,
+    metadata
+)
+VALUES (
+    $1,
+    $2,
+    $3,
+    $4,
+    $5,
+    $6,
+    COALESCE($7, '{}'::jsonb)
+)
+RETURNING id, employee_handbook_id, employee_id, template_id, template_version, event, actor_employee_id, metadata, created_at
+`
+
+type CreateEmployeeHandbookAssignmentHistoryParams struct {
+	EmployeeHandbookID *uuid.UUID                  `json:"employee_handbook_id"`
+	EmployeeID         uuid.UUID                   `json:"employee_id"`
+	TemplateID         uuid.UUID                   `json:"template_id"`
+	TemplateVersion    int32                       `json:"template_version"`
+	Event              HandbookAssignmentEventEnum `json:"event"`
+	ActorEmployeeID    *uuid.UUID                  `json:"actor_employee_id"`
+	Metadata           interface{}                 `json:"metadata"`
+}
+
+func (q *Queries) CreateEmployeeHandbookAssignmentHistory(ctx context.Context, arg CreateEmployeeHandbookAssignmentHistoryParams) (EmployeeHandbookAssignmentHistory, error) {
+	row := q.db.QueryRow(ctx, createEmployeeHandbookAssignmentHistory,
+		arg.EmployeeHandbookID,
+		arg.EmployeeID,
+		arg.TemplateID,
+		arg.TemplateVersion,
+		arg.Event,
+		arg.ActorEmployeeID,
+		arg.Metadata,
+	)
+	var i EmployeeHandbookAssignmentHistory
+	err := row.Scan(
+		&i.ID,
+		&i.EmployeeHandbookID,
+		&i.EmployeeID,
+		&i.TemplateID,
+		&i.TemplateVersion,
+		&i.Event,
+		&i.ActorEmployeeID,
+		&i.Metadata,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const createEmployeeHandbookFromTemplate = `-- name: CreateEmployeeHandbookFromTemplate :one
 WITH hb AS (
     INSERT INTO employee_handbooks (
         employee_id,
         template_id,
+        template_version,
         assigned_by_employee_id
     )
-    VALUES (
+    SELECT
         $1,
-        $2,
-        $3
-    )
-    RETURNING id, employee_id, template_id, assigned_by_employee_id, status, assigned_at, started_at, completed_at, due_at
+        t.id,
+        t.version,
+        $2
+    FROM handbook_templates t
+    WHERE t.id = $3
+    RETURNING id, employee_id, template_id, template_version, assigned_by_employee_id, status, assigned_at, started_at, completed_at, due_at
 ), progress AS (
     INSERT INTO employee_handbook_step_progress (employee_handbook_id, step_id)
     SELECT hb.id, hs.id
     FROM hb
     JOIN handbook_steps hs ON hs.template_id = hb.template_id
 )
-SELECT id, employee_id, template_id, assigned_by_employee_id, status, assigned_at, started_at, completed_at, due_at FROM hb
+SELECT id, employee_id, template_id, template_version, assigned_by_employee_id, status, assigned_at, started_at, completed_at, due_at FROM hb
 `
 
 type CreateEmployeeHandbookFromTemplateParams struct {
 	EmployeeID           uuid.UUID  `json:"employee_id"`
-	TemplateID           uuid.UUID  `json:"template_id"`
 	AssignedByEmployeeID *uuid.UUID `json:"assigned_by_employee_id"`
+	TemplateID           uuid.UUID  `json:"template_id"`
 }
 
 type CreateEmployeeHandbookFromTemplateRow struct {
 	ID                   uuid.UUID                    `json:"id"`
 	EmployeeID           uuid.UUID                    `json:"employee_id"`
 	TemplateID           uuid.UUID                    `json:"template_id"`
+	TemplateVersion      int32                        `json:"template_version"`
 	AssignedByEmployeeID *uuid.UUID                   `json:"assigned_by_employee_id"`
 	Status               HandbookAssignmentStatusEnum `json:"status"`
 	AssignedAt           pgtype.Timestamptz           `json:"assigned_at"`
@@ -101,12 +270,13 @@ type CreateEmployeeHandbookFromTemplateRow struct {
 }
 
 func (q *Queries) CreateEmployeeHandbookFromTemplate(ctx context.Context, arg CreateEmployeeHandbookFromTemplateParams) (CreateEmployeeHandbookFromTemplateRow, error) {
-	row := q.db.QueryRow(ctx, createEmployeeHandbookFromTemplate, arg.EmployeeID, arg.TemplateID, arg.AssignedByEmployeeID)
+	row := q.db.QueryRow(ctx, createEmployeeHandbookFromTemplate, arg.EmployeeID, arg.AssignedByEmployeeID, arg.TemplateID)
 	var i CreateEmployeeHandbookFromTemplateRow
 	err := row.Scan(
 		&i.ID,
 		&i.EmployeeID,
 		&i.TemplateID,
+		&i.TemplateVersion,
 		&i.AssignedByEmployeeID,
 		&i.Status,
 		&i.AssignedAt,
@@ -180,17 +350,13 @@ WITH next_version AS (
     SELECT COALESCE(MAX(version), 0) + 1 AS v
     FROM handbook_templates
     WHERE department_id = $1
-), deactivated AS (
-    UPDATE handbook_templates
-    SET is_active = FALSE, updated_at = CURRENT_TIMESTAMP
-    WHERE department_id = $1 AND is_active = TRUE
 )
 INSERT INTO handbook_templates (
     department_id,
     title,
     description,
     version,
-    is_active,
+    status,
     created_by_employee_id
 )
 SELECT
@@ -198,10 +364,10 @@ SELECT
     $2,
     $3,
     next_version.v,
-    TRUE,
+    'draft',
     $4
 FROM next_version
-RETURNING id, department_id, title, description, version, is_active, created_by_employee_id, created_at, updated_at
+RETURNING id, department_id, title, description, version, status, created_by_employee_id, published_by_employee_id, published_at, archived_at, created_at, updated_at
 `
 
 type CreateHandbookTemplateForDepartmentParams struct {
@@ -225,20 +391,32 @@ func (q *Queries) CreateHandbookTemplateForDepartment(ctx context.Context, arg C
 		&i.Title,
 		&i.Description,
 		&i.Version,
-		&i.IsActive,
+		&i.Status,
 		&i.CreatedByEmployeeID,
+		&i.PublishedByEmployeeID,
+		&i.PublishedAt,
+		&i.ArchivedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
 	return i, err
 }
 
+const deleteHandbookStepByID = `-- name: DeleteHandbookStepByID :exec
+DELETE FROM handbook_steps
+WHERE id = $1
+`
+
+func (q *Queries) DeleteHandbookStepByID(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteHandbookStepByID, id)
+	return err
+}
+
 const getActiveEmployeeHandbookByEmployeeID = `-- name: GetActiveEmployeeHandbookByEmployeeID :one
 SELECT
-    eh.id, eh.employee_id, eh.template_id, eh.assigned_by_employee_id, eh.status, eh.assigned_at, eh.started_at, eh.completed_at, eh.due_at,
+    eh.id, eh.employee_id, eh.template_id, eh.template_version, eh.assigned_by_employee_id, eh.status, eh.assigned_at, eh.started_at, eh.completed_at, eh.due_at,
     ht.title AS template_title,
     ht.description AS template_description,
-    ht.version AS template_version,
     d.id AS department_id,
     d.name AS department_name
 FROM employee_handbooks eh
@@ -254,6 +432,7 @@ type GetActiveEmployeeHandbookByEmployeeIDRow struct {
 	ID                   uuid.UUID                    `json:"id"`
 	EmployeeID           uuid.UUID                    `json:"employee_id"`
 	TemplateID           uuid.UUID                    `json:"template_id"`
+	TemplateVersion      int32                        `json:"template_version"`
 	AssignedByEmployeeID *uuid.UUID                   `json:"assigned_by_employee_id"`
 	Status               HandbookAssignmentStatusEnum `json:"status"`
 	AssignedAt           pgtype.Timestamptz           `json:"assigned_at"`
@@ -262,7 +441,6 @@ type GetActiveEmployeeHandbookByEmployeeIDRow struct {
 	DueAt                pgtype.Timestamptz           `json:"due_at"`
 	TemplateTitle        string                       `json:"template_title"`
 	TemplateDescription  *string                      `json:"template_description"`
-	TemplateVersion      int32                        `json:"template_version"`
 	DepartmentID         uuid.UUID                    `json:"department_id"`
 	DepartmentName       string                       `json:"department_name"`
 }
@@ -274,6 +452,7 @@ func (q *Queries) GetActiveEmployeeHandbookByEmployeeID(ctx context.Context, emp
 		&i.ID,
 		&i.EmployeeID,
 		&i.TemplateID,
+		&i.TemplateVersion,
 		&i.AssignedByEmployeeID,
 		&i.Status,
 		&i.AssignedAt,
@@ -282,7 +461,6 @@ func (q *Queries) GetActiveEmployeeHandbookByEmployeeID(ctx context.Context, emp
 		&i.DueAt,
 		&i.TemplateTitle,
 		&i.TemplateDescription,
-		&i.TemplateVersion,
 		&i.DepartmentID,
 		&i.DepartmentName,
 	)
@@ -290,9 +468,9 @@ func (q *Queries) GetActiveEmployeeHandbookByEmployeeID(ctx context.Context, emp
 }
 
 const getActiveHandbookTemplateByDepartment = `-- name: GetActiveHandbookTemplateByDepartment :one
-SELECT id, department_id, title, description, version, is_active, created_by_employee_id, created_at, updated_at
+SELECT id, department_id, title, description, version, status, created_by_employee_id, published_by_employee_id, published_at, archived_at, created_at, updated_at
 FROM handbook_templates
-WHERE department_id = $1 AND is_active = TRUE
+WHERE department_id = $1 AND status = 'published'
 LIMIT 1
 `
 
@@ -305,8 +483,36 @@ func (q *Queries) GetActiveHandbookTemplateByDepartment(ctx context.Context, dep
 		&i.Title,
 		&i.Description,
 		&i.Version,
-		&i.IsActive,
+		&i.Status,
 		&i.CreatedByEmployeeID,
+		&i.PublishedByEmployeeID,
+		&i.PublishedAt,
+		&i.ArchivedAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getHandbookStepByID = `-- name: GetHandbookStepByID :one
+SELECT id, template_id, sort_order, kind, title, body, content, is_required, created_at, updated_at
+FROM handbook_steps
+WHERE id = $1
+LIMIT 1
+`
+
+func (q *Queries) GetHandbookStepByID(ctx context.Context, id uuid.UUID) (HandbookStep, error) {
+	row := q.db.QueryRow(ctx, getHandbookStepByID, id)
+	var i HandbookStep
+	err := row.Scan(
+		&i.ID,
+		&i.TemplateID,
+		&i.SortOrder,
+		&i.Kind,
+		&i.Title,
+		&i.Body,
+		&i.Content,
+		&i.IsRequired,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -314,7 +520,7 @@ func (q *Queries) GetActiveHandbookTemplateByDepartment(ctx context.Context, dep
 }
 
 const getHandbookTemplateByID = `-- name: GetHandbookTemplateByID :one
-SELECT id, department_id, title, description, version, is_active, created_by_employee_id, created_at, updated_at
+SELECT id, department_id, title, description, version, status, created_by_employee_id, published_by_employee_id, published_at, archived_at, created_at, updated_at
 FROM handbook_templates
 WHERE id = $1
 LIMIT 1
@@ -329,8 +535,11 @@ func (q *Queries) GetHandbookTemplateByID(ctx context.Context, id uuid.UUID) (Ha
 		&i.Title,
 		&i.Description,
 		&i.Version,
-		&i.IsActive,
+		&i.Status,
 		&i.CreatedByEmployeeID,
+		&i.PublishedByEmployeeID,
+		&i.PublishedAt,
+		&i.ArchivedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -441,7 +650,7 @@ func (q *Queries) ListHandbookStepsByTemplate(ctx context.Context, templateID uu
 }
 
 const listHandbookTemplatesByDepartment = `-- name: ListHandbookTemplatesByDepartment :many
-SELECT id, department_id, title, description, version, is_active, created_by_employee_id, created_at, updated_at
+SELECT id, department_id, title, description, version, status, created_by_employee_id, published_by_employee_id, published_at, archived_at, created_at, updated_at
 FROM handbook_templates
 WHERE department_id = $1
 ORDER BY version DESC
@@ -462,8 +671,11 @@ func (q *Queries) ListHandbookTemplatesByDepartment(ctx context.Context, departm
 			&i.Title,
 			&i.Description,
 			&i.Version,
-			&i.IsActive,
+			&i.Status,
 			&i.CreatedByEmployeeID,
+			&i.PublishedByEmployeeID,
+			&i.PublishedAt,
+			&i.ArchivedAt,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -483,7 +695,7 @@ SET
     status = 'completed',
     completed_at = CURRENT_TIMESTAMP
 WHERE id = $1
-RETURNING id, employee_id, template_id, assigned_by_employee_id, status, assigned_at, started_at, completed_at, due_at
+RETURNING id, employee_id, template_id, template_version, assigned_by_employee_id, status, assigned_at, started_at, completed_at, due_at
 `
 
 func (q *Queries) MarkEmployeeHandbookCompleted(ctx context.Context, id uuid.UUID) (EmployeeHandbook, error) {
@@ -493,6 +705,7 @@ func (q *Queries) MarkEmployeeHandbookCompleted(ctx context.Context, id uuid.UUI
 		&i.ID,
 		&i.EmployeeID,
 		&i.TemplateID,
+		&i.TemplateVersion,
 		&i.AssignedByEmployeeID,
 		&i.Status,
 		&i.AssignedAt,
@@ -509,7 +722,7 @@ SET
     status = 'in_progress',
     started_at = COALESCE(started_at, CURRENT_TIMESTAMP)
 WHERE id = $1
-RETURNING id, employee_id, template_id, assigned_by_employee_id, status, assigned_at, started_at, completed_at, due_at
+RETURNING id, employee_id, template_id, template_version, assigned_by_employee_id, status, assigned_at, started_at, completed_at, due_at
 `
 
 func (q *Queries) MarkEmployeeHandbookStarted(ctx context.Context, id uuid.UUID) (EmployeeHandbook, error) {
@@ -519,12 +732,200 @@ func (q *Queries) MarkEmployeeHandbookStarted(ctx context.Context, id uuid.UUID)
 		&i.ID,
 		&i.EmployeeID,
 		&i.TemplateID,
+		&i.TemplateVersion,
 		&i.AssignedByEmployeeID,
 		&i.Status,
 		&i.AssignedAt,
 		&i.StartedAt,
 		&i.CompletedAt,
 		&i.DueAt,
+	)
+	return i, err
+}
+
+const publishHandbookTemplate = `-- name: PublishHandbookTemplate :one
+WITH target AS (
+    SELECT id, department_id
+    FROM handbook_templates
+    WHERE handbook_templates.id = $2
+      AND status = 'draft'
+    LIMIT 1
+), archived AS (
+    UPDATE handbook_templates ht
+    SET
+        status = 'archived',
+        archived_at = CURRENT_TIMESTAMP,
+        updated_at = CURRENT_TIMESTAMP
+    FROM target t
+    WHERE ht.department_id = t.department_id
+      AND ht.status = 'published'
+)
+UPDATE handbook_templates ht
+SET
+    status = 'published',
+    published_by_employee_id = $1,
+    published_at = CURRENT_TIMESTAMP,
+    archived_at = NULL,
+    updated_at = CURRENT_TIMESTAMP
+FROM target t
+WHERE ht.id = t.id
+RETURNING ht.id, ht.department_id, ht.title, ht.description, ht.version, ht.status, ht.created_by_employee_id, ht.published_by_employee_id, ht.published_at, ht.archived_at, ht.created_at, ht.updated_at
+`
+
+type PublishHandbookTemplateParams struct {
+	PublishedByEmployeeID *uuid.UUID `json:"published_by_employee_id"`
+	TemplateID            uuid.UUID  `json:"template_id"`
+}
+
+func (q *Queries) PublishHandbookTemplate(ctx context.Context, arg PublishHandbookTemplateParams) (HandbookTemplate, error) {
+	row := q.db.QueryRow(ctx, publishHandbookTemplate, arg.PublishedByEmployeeID, arg.TemplateID)
+	var i HandbookTemplate
+	err := row.Scan(
+		&i.ID,
+		&i.DepartmentID,
+		&i.Title,
+		&i.Description,
+		&i.Version,
+		&i.Status,
+		&i.CreatedByEmployeeID,
+		&i.PublishedByEmployeeID,
+		&i.PublishedAt,
+		&i.ArchivedAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const updateHandbookStepByID = `-- name: UpdateHandbookStepByID :one
+UPDATE handbook_steps
+SET
+    title = CASE
+        WHEN $1::boolean THEN COALESCE($2, title)
+        ELSE title
+    END,
+    body = CASE
+        WHEN $3::boolean THEN $4
+        ELSE body
+    END,
+    content = CASE
+        WHEN $5::boolean THEN COALESCE($6, 'null'::jsonb)
+        ELSE content
+    END,
+    is_required = CASE
+        WHEN $7::boolean THEN COALESCE($8::boolean, is_required)
+        ELSE is_required
+    END,
+    updated_at = CURRENT_TIMESTAMP
+WHERE id = $9
+RETURNING id, template_id, sort_order, kind, title, body, content, is_required, created_at, updated_at
+`
+
+type UpdateHandbookStepByIDParams struct {
+	SetTitle      bool      `json:"set_title"`
+	Title         *string   `json:"title"`
+	SetBody       bool      `json:"set_body"`
+	Body          *string   `json:"body"`
+	SetContent    bool      `json:"set_content"`
+	Content       []byte    `json:"content"`
+	SetIsRequired bool      `json:"set_is_required"`
+	IsRequired    *bool     `json:"is_required"`
+	StepID        uuid.UUID `json:"step_id"`
+}
+
+func (q *Queries) UpdateHandbookStepByID(ctx context.Context, arg UpdateHandbookStepByIDParams) (HandbookStep, error) {
+	row := q.db.QueryRow(ctx, updateHandbookStepByID,
+		arg.SetTitle,
+		arg.Title,
+		arg.SetBody,
+		arg.Body,
+		arg.SetContent,
+		arg.Content,
+		arg.SetIsRequired,
+		arg.IsRequired,
+		arg.StepID,
+	)
+	var i HandbookStep
+	err := row.Scan(
+		&i.ID,
+		&i.TemplateID,
+		&i.SortOrder,
+		&i.Kind,
+		&i.Title,
+		&i.Body,
+		&i.Content,
+		&i.IsRequired,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const updateHandbookStepSortOrder = `-- name: UpdateHandbookStepSortOrder :exec
+UPDATE handbook_steps
+SET
+    sort_order = $1,
+    updated_at = CURRENT_TIMESTAMP
+WHERE id = $2
+`
+
+type UpdateHandbookStepSortOrderParams struct {
+	SortOrder int32     `json:"sort_order"`
+	StepID    uuid.UUID `json:"step_id"`
+}
+
+func (q *Queries) UpdateHandbookStepSortOrder(ctx context.Context, arg UpdateHandbookStepSortOrderParams) error {
+	_, err := q.db.Exec(ctx, updateHandbookStepSortOrder, arg.SortOrder, arg.StepID)
+	return err
+}
+
+const updateHandbookTemplateMetadata = `-- name: UpdateHandbookTemplateMetadata :one
+UPDATE handbook_templates
+SET
+    title = CASE
+        WHEN $1::boolean THEN COALESCE($2, title)
+        ELSE title
+    END,
+    description = CASE
+        WHEN $3::boolean THEN $4
+        ELSE description
+    END,
+    updated_at = CURRENT_TIMESTAMP
+WHERE id = $5
+  AND status = 'draft'
+RETURNING id, department_id, title, description, version, status, created_by_employee_id, published_by_employee_id, published_at, archived_at, created_at, updated_at
+`
+
+type UpdateHandbookTemplateMetadataParams struct {
+	SetTitle       bool      `json:"set_title"`
+	Title          *string   `json:"title"`
+	SetDescription bool      `json:"set_description"`
+	Description    *string   `json:"description"`
+	TemplateID     uuid.UUID `json:"template_id"`
+}
+
+func (q *Queries) UpdateHandbookTemplateMetadata(ctx context.Context, arg UpdateHandbookTemplateMetadataParams) (HandbookTemplate, error) {
+	row := q.db.QueryRow(ctx, updateHandbookTemplateMetadata,
+		arg.SetTitle,
+		arg.Title,
+		arg.SetDescription,
+		arg.Description,
+		arg.TemplateID,
+	)
+	var i HandbookTemplate
+	err := row.Scan(
+		&i.ID,
+		&i.DepartmentID,
+		&i.Title,
+		&i.Description,
+		&i.Version,
+		&i.Status,
+		&i.CreatedByEmployeeID,
+		&i.PublishedByEmployeeID,
+		&i.PublishedAt,
+		&i.ArchivedAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }

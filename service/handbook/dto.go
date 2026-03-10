@@ -15,23 +15,33 @@ type CreateTemplateForDepartmentRequest struct {
 	Description  *string   `json:"description"`
 }
 
-type CreateTemplateForDepartmentResponse struct {
-	ID           uuid.UUID `json:"id"`
-	DepartmentID uuid.UUID `json:"department_id"`
-	Title        string    `json:"title"`
-	Description  *string   `json:"description"`
-	Version      int32     `json:"version"`
-	IsActive     bool      `json:"is_active"`
-	CreatedAt    time.Time `json:"created_at"`
+type HandbookTemplateAPI struct {
+	ID           uuid.UUID  `json:"id"`
+	DepartmentID uuid.UUID  `json:"department_id"`
+	Title        string     `json:"title"`
+	Description  *string    `json:"description"`
+	Version      int32      `json:"version"`
+	Status       string     `json:"status"`
+	PublishedAt  *time.Time `json:"published_at,omitempty"`
+	ArchivedAt   *time.Time `json:"archived_at,omitempty"`
+	CreatedAt    time.Time  `json:"created_at"`
+	UpdatedAt    time.Time  `json:"updated_at"`
 }
 
-type ListTemplateResponse struct {
-	ID           uuid.UUID `json:"id"`
-	DepartmentID uuid.UUID `json:"department_id"`
-	Title        string    `json:"title"`
-	Description  *string   `json:"description"`
-	Version      int32     `json:"version"`
-	IsActive     bool      `json:"is_active"`
+type CloneTemplateToDraftRequest struct {
+	SourceTemplateID uuid.UUID `json:"source_template_id" binding:"required"`
+}
+
+type UpdateTemplateRequest struct {
+	TemplateID     uuid.UUID `json:"template_id" binding:"required"`
+	Title          *string   `json:"title"`
+	SetTitle       bool      `json:"set_title"`
+	Description    *string   `json:"description"`
+	SetDescription bool      `json:"set_description"`
+}
+
+type PublishTemplateRequest struct {
+	TemplateID uuid.UUID `json:"template_id" binding:"required"`
 }
 
 type CreateStepRequest struct {
@@ -63,6 +73,49 @@ type ListStepResponse struct {
 	Body       *string                 `json:"body"`
 	Content    any                     `json:"content"`
 	IsRequired bool                    `json:"is_required"`
+}
+
+type UpdateStepRequest struct {
+	StepID          uuid.UUID `json:"step_id" binding:"required"`
+	Title           *string   `json:"title"`
+	SetTitle        bool      `json:"set_title"`
+	Body            *string   `json:"body"`
+	SetBody         bool      `json:"set_body"`
+	Content         any       `json:"content"`
+	ContentProvided bool      `json:"content_provided"`
+	IsRequired      *bool     `json:"is_required"`
+	SetIsRequired   bool      `json:"set_is_required"`
+}
+
+type UpdateStepResponse struct {
+	ID         uuid.UUID               `json:"id"`
+	TemplateID uuid.UUID               `json:"template_id"`
+	SortOrder  int32                   `json:"sort_order"`
+	Kind       db.HandbookStepKindEnum `json:"kind"`
+	Title      string                  `json:"title"`
+	Body       *string                 `json:"body"`
+	Content    any                     `json:"content"`
+	IsRequired bool                    `json:"is_required"`
+	UpdatedAt  time.Time               `json:"updated_at"`
+}
+
+type DeleteStepRequest struct {
+	StepID uuid.UUID `json:"step_id" binding:"required"`
+}
+
+type DeleteStepResponse struct {
+	StepID  uuid.UUID `json:"step_id"`
+	Deleted bool      `json:"deleted"`
+}
+
+type ReorderStepsRequest struct {
+	TemplateID     uuid.UUID   `json:"template_id" binding:"required"`
+	OrderedStepIDs []uuid.UUID `json:"ordered_step_ids" binding:"required,min=1"`
+}
+
+type ReorderStepsResponse struct {
+	TemplateID uuid.UUID          `json:"template_id"`
+	Steps      []ListStepResponse `json:"steps"`
 }
 
 type AssignTemplateToEmployeeRequest struct {

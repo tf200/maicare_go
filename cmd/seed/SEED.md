@@ -12,22 +12,25 @@ The script currently seeds the following, in this order:
 
 1. `organisations`
 2. `location` (depends on organisation IDs)
-3. `sender`
-4. `registration_form`
-5. `intake_forms` + `intake_topic_assessments` (suitable only)
-6. `client_details` (promoted to **On Waiting List**)
-7. `client_details` promoted to **In Care** with:
+3. `departments`
+4. `handbook_templates` + default `handbook_steps` (published per department)
+5. `employee_profile` coordinators + `employee_handbooks` assignment from active department template
+6. `sender`
+7. `registration_form`
+8. `intake_forms` + `intake_topic_assessments` (suitable only)
+9. `client_details` (promoted to **On Waiting List**)
+10. `client_details` promoted to **In Care** with:
    - care dates (`placed_in_care_at`, `care_start_date`)
-   - coordinator assignment (`assigned_employee` with role `coordinator`)
+   - coordinator assignment from pre-seeded coordinator pool
    - approved active contract (`contract`)
-8. `client_details` promoted to **Out Of Care** with:
+11. `client_details` promoted to **Out Of Care** with:
    - full intake + waiting-list + in-care history
    - seeded evaluations before discharge
    - discharge data (`discharge_date`, `discharge_reason`, `final_evaluation`)
    - status history transition to `out_of_care`
-9. `client_goal_evaluations` + `client_goal_evaluation_items` for active in-care clients
-10. `client_diagnosis` + `client_medication_order` for seeded clients
-11. `invoice` + `invoice_line` + `invoice_payment_history` for in-care clients via invoice service logic:
+12. `client_goal_evaluations` + `client_goal_evaluation_items` for active in-care clients
+13. `client_diagnosis` + `client_medication_order` for seeded clients
+14. `invoice` + `invoice_line` + `invoice_payment_history` for in-care clients via invoice service logic:
    - seeds billable `calendar_events` appointments per in-care client in 4-week windows
    - calls `GenerateInvoice` (auto logic) to create invoices from approved contracts
    - calls `CreatePayment` to create completed payments and trigger invoice status transitions
@@ -89,6 +92,9 @@ go run ./cmd/seed -in-care-clients 8 -invoices-per-client 2 -payments-per-invoic
 
 - `-organisations`: number of organisations to create (default: `6`)
 - `-locations-per-org`: locations per organisation (default: `2`)
+- `-departments`: number of departments to seed (default: `1`)
+- `-handbook-templates-per-department`: number of handbook templates to seed per department (default: `1`)
+- `-coordinators`: number of coordinators to seed (default: `in-care-clients + out-of-care-clients`)
 - `-senders`: number of senders to create (default: `12`)
 - `-count`: number of registration forms to create (default: `25`)
 - `-waiting-list-clients`: number of clients to create through intake->client promotion flow (default: `12`)
@@ -109,7 +115,7 @@ For each requested in-care client, the seeder performs a realistic flow:
 
 1. Seeds a regular waiting-list client through registration + intake + goals.
 2. Promotes that client to status `in_care` using `PutClientInCare`.
-3. Creates a dedicated coordinator user/profile and assigns them as main coordinator.
+3. Picks a coordinator from the pre-seeded coordinator pool and assigns them as main coordinator.
 4. Creates an `approved` contract with pricing/hours fields aligned to care type constraints.
 5. Seeds compact goal-evaluation history per in-care client:
    - tries to create one `completed` evaluation when the 14-day completion window allows it
@@ -130,6 +136,7 @@ DB connection fallback order:
 
 - `cmd/seed/main.go`: CLI flags, DB bootstrap, and execution order.
 - `cmd/seed/types.go`: `SeedData`, `Seeder`, and `newSeeder`.
+- `cmd/seed/seed_department_handbook_employee.go`: department, handbook template, and coordinator seeding.
 - `cmd/seed/seed_org_sender.go`: organisation/location/sender seeding methods.
 - `cmd/seed/seed_registration_waiting.go`: registration form + waiting-list seeding.
 - `cmd/seed/seed_incare_eval.go`: in-care promotion and goal-evaluation seeding, including coordinator/evaluation helpers.

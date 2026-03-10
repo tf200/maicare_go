@@ -208,7 +208,7 @@ func main() {
 		log.Fatal("ADMIN_EMAIL and ADMIN_PASSWORD must be set in the environment variables")
 	}
 	ctx := context.Background()
-	dbSource := "postgres://maicare:maicare@localhost:5432/maicare?sslmode=disable"
+	dbSource := "postgres://maicare:maicare@167.86.75.250:5432/maicare?sslmode=disable"
 	connPool, err := pgxpool.New(ctx, dbSource)
 	if err != nil {
 		log.Fatal("Cannot connect to db:", err)

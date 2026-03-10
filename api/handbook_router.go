@@ -13,10 +13,16 @@ func (server *Server) setupHandbookRoutes(baseRouter *gin.RouterGroup) {
 
 	// Admin/manager
 	handbook.POST("/templates", server.RBACMiddleware("HANDBOOK.TEMPLATE.CREATE"), server.CreateHandbookTemplateApi)
+	handbook.POST("/templates/clone", server.RBACMiddleware("HANDBOOK.TEMPLATE.CREATE"), server.CloneHandbookTemplateApi)
+	handbook.PATCH("/templates/:template_id", server.RBACMiddleware("HANDBOOK.TEMPLATE.UPDATE"), server.UpdateHandbookTemplateApi)
+	handbook.POST("/templates/publish", server.RBACMiddleware("HANDBOOK.TEMPLATE.PUBLISH"), server.PublishHandbookTemplateApi)
 	handbook.GET("/departments/:department_id/templates", server.RBACMiddleware("HANDBOOK.TEMPLATE.VIEW"), server.ListHandbookTemplatesByDepartmentApi)
 
 	handbook.POST("/steps", server.RBACMiddleware("HANDBOOK.STEP.CREATE"), server.CreateHandbookStepApi)
+	handbook.PATCH("/steps/:step_id", server.RBACMiddleware("HANDBOOK.STEP.UPDATE"), server.UpdateHandbookStepApi)
+	handbook.DELETE("/steps/:step_id", server.RBACMiddleware("HANDBOOK.STEP.DELETE"), server.DeleteHandbookStepApi)
 	handbook.GET("/templates/:template_id/steps", server.RBACMiddleware("HANDBOOK.STEP.VIEW"), server.ListHandbookStepsByTemplateApi)
+	handbook.POST("/templates/:template_id/steps/reorder", server.RBACMiddleware("HANDBOOK.STEP.UPDATE"), server.ReorderHandbookStepsApi)
 
 	handbook.POST("/assignments", server.RBACMiddleware("HANDBOOK.ASSIGN"), server.AssignHandbookTemplateToEmployeeApi)
 }

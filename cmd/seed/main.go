@@ -25,6 +25,9 @@ import (
 func main() {
 	organisationCount := flag.Int("organisations", 6, "number of organisations to seed")
 	locationsPerOrg := flag.Int("locations-per-org", 2, "locations per organisation")
+	departmentCount := flag.Int("departments", 1, "number of departments to seed")
+	handbookTemplatesPerDepartment := flag.Int("handbook-templates-per-department", 1, "number of handbook templates to seed per department")
+	coordinatorCount := flag.Int("coordinators", -1, "number of coordinators to seed (defaults to in-care-clients + out-of-care-clients)")
 	senderCount := flag.Int("senders", 12, "number of senders to seed")
 	count := flag.Int("count", 25, "number of registration forms to seed")
 	otherIntakeForms := flag.Int("other-intake-forms", 10, "number of non-suitable intake forms to seed without promoting to clients")
@@ -39,7 +42,7 @@ func main() {
 	paymentsPerInvoice := flag.Int("payments-per-invoice", 2, "max number of payments to seed per generated invoice")
 	seedValue := flag.Int64("seed", time.Now().UnixNano(), "random seed")
 	seedTimeout := flag.Duration("timeout", 10*time.Minute, "overall seed timeout")
-	dataSource := flag.String("db", "", "database connection string (defaults to DB_SOURCE or local default)")
+	// dataSource := flag.String("db", "", "database connection string (defaults to DB_SOURCE or local default)")
 	flag.Parse()
 
 	gofakeit.Seed(*seedValue)
@@ -47,7 +50,7 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), *seedTimeout)
 	defer cancel()
 
-	dsn := strings.TrimSpace(*dataSource)
+	dsn := "postgres://maicare:maicare@localhost:5432/maicare?sslmode=disable"
 	if dsn == "" {
 		appEnvDSN, err := dbSourceFromAppEnv("app.env")
 		if err != nil {
@@ -84,6 +87,11 @@ func main() {
 		log.Fatalf("cannot ping db: %v", err)
 	}
 
+	resolvedCoordinatorCount := *coordinatorCount
+	if resolvedCoordinatorCount < 0 {
+		resolvedCoordinatorCount = *inCareClients + *outOfCareClients
+	}
+
 	store := db.NewStore(pool)
 
 	appLogger, err := logger.SetupLogger("development")
@@ -106,14 +114,26 @@ func main() {
 	seeder := newSeeder(store, invoiceService)
 
 	startedAt := time.Now()
-	fmt.Printf("[seed] start organisations=%d locations_per_org=%d senders=%d registration_forms=%d other_intake_forms=%d waiting_list_clients=%d in_care_clients=%d out_of_care_clients=%d evaluations_per_in_care_client=%d diagnoses_per_client=%d medication_orders_per_client=%d incidents_per_client=%d invoices_per_client=%d payments_per_invoice=%d timeout=%s\n",
-		*organisationCount, *locationsPerOrg, *senderCount, *count, *otherIntakeForms, *waitingListClients, *inCareClients, *outOfCareClients, *evaluationsPerInCareClient, *diagnosesPerClient, *medicationOrdersPerClient, *incidentsPerClient, *invoicesPerClient, *paymentsPerInvoice, (*seedTimeout).String())
+	fmt.Printf("[seed] start organisations=%d locations_per_org=%d departments=%d handbook_templates_per_department=%d coordinators=%d senders=%d registration_forms=%d other_intake_forms=%d waiting_list_clients=%d in_care_clients=%d out_of_care_clients=%d evaluations_per_in_care_client=%d diagnoses_per_client=%d medication_orders_per_client=%d incidents_per_client=%d invoices_per_client=%d payments_per_invoice=%d timeout=%s\n",
+		*organisationCount, *locationsPerOrg, *departmentCount, *handbookTemplatesPerDepartment, resolvedCoordinatorCount, *senderCount, *count, *otherIntakeForms, *waitingListClients, *inCareClients, *outOfCareClients, *evaluationsPerInCareClient, *diagnosesPerClient, *medicationOrdersPerClient, *incidentsPerClient, *invoicesPerClient, *paymentsPerInvoice, (*seedTimeout).String())
 	if err := seeder.SeedOrganisations(ctx, *organisationCount); err != nil {
 		log.Fatalf("seeding organisations failed: %v", err)
 	}
 
 	if err := seeder.SeedLocations(ctx, *locationsPerOrg); err != nil {
 		log.Fatalf("seeding locations failed: %v", err)
+	}
+
+	if err := seeder.SeedDepartments(ctx, *departmentCount); err != nil {
+		log.Fatalf("seeding departments failed: %v", err)
+	}
+
+	if err := seeder.SeedHandbookTemplates(ctx, *handbookTemplatesPerDepartment); err != nil {
+		log.Fatalf("seeding handbook templates failed: %v", err)
+	}
+
+	if err := seeder.SeedCoordinators(ctx, resolvedCoordinatorCount); err != nil {
+		log.Fatalf("seeding coordinators failed: %v", err)
 	}
 
 	if err := seeder.SeedSenders(ctx, *senderCount); err != nil {
@@ -156,9 +176,12 @@ func main() {
 		log.Fatalf("seeding invoices and payments failed: %v", err)
 	}
 
-	fmt.Printf("Seeded %d organisations, %d locations, %d senders, %d registration forms, %d intake forms, %d total clients, %d waiting list clients, %d in-care clients, %d out-of-care clients, %d coordinators, %d goal evaluations, %d diagnoses, %d medication orders, %d incidents, %d invoices, %d payments in %s\n",
+	fmt.Printf("Seeded %d organisations, %d locations, %d departments, %d handbook templates, %d coordinators, %d senders, %d registration forms, %d intake forms, %d total clients, %d waiting list clients, %d in-care clients, %d out-of-care clients, %d goal evaluations, %d diagnoses, %d medication orders, %d incidents, %d invoices, %d payments in %s\n",
 		len(seeder.data.OrganisationIDs),
 		len(seeder.data.LocationIDs),
+		len(seeder.data.DepartmentIDs),
+		len(seeder.data.HandbookTemplateIDs),
+		len(seeder.data.CoordinatorIDs),
 		len(seeder.data.SenderIDs),
 		len(seeder.data.RegistrationFormIDs),
 		len(seeder.data.IntakeFormIDs),
@@ -166,7 +189,6 @@ func main() {
 		len(seeder.data.ClientIDs)-len(seeder.data.InCareClientIDs)-len(seeder.data.OutOfCareClientIDs),
 		len(seeder.data.InCareClientIDs),
 		len(seeder.data.OutOfCareClientIDs),
-		len(seeder.data.CoordinatorIDs),
 		len(seeder.data.EvaluationIDs),
 		len(seeder.data.DiagnosisIDs),
 		len(seeder.data.MedicationOrderIDs),

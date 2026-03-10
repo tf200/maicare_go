@@ -36,6 +36,7 @@ type Querier interface {
 	// ---------- 6. CHECK UTILITIES ----------
 	// Returns true/false whether the user has the named permission.
 	CheckUserPermission(ctx context.Context, arg CheckUserPermissionParams) (bool, error)
+	CloneHandbookTemplateToDraft(ctx context.Context, arg CloneHandbookTemplateToDraftParams) (CloneHandbookTemplateToDraftRow, error)
 	CompleteEmployeeHandbookStep(ctx context.Context, arg CompleteEmployeeHandbookStepParams) (EmployeeHandbookStepProgress, error)
 	ConfirmIncident(ctx context.Context, arg ConfirmIncidentParams) (int64, error)
 	ContractEndCount(ctx context.Context) (int64, error)
@@ -43,6 +44,7 @@ type Querier interface {
 	CountAllIncidents(ctx context.Context, arg CountAllIncidentsParams) (int64, error)
 	CountBilledCalendarEventsByInvoice(ctx context.Context, invoiceID uuid.UUID) (int64, error)
 	CountEmployeeProfile(ctx context.Context, arg CountEmployeeProfileParams) (int64, error)
+	CountHandbookStepsByTemplateID(ctx context.Context, templateID uuid.UUID) (int32, error)
 	CountInvoiceLineCalendarEventsByInvoice(ctx context.Context, invoiceID uuid.UUID) (int64, error)
 	CountRegistrationForms(ctx context.Context, arg CountRegistrationFormsParams) (int64, error)
 	CountRemainingRequiredHandbookSteps(ctx context.Context, employeeHandbookID uuid.UUID) (int32, error)
@@ -69,6 +71,7 @@ type Querier interface {
 	CreateContractType(ctx context.Context, name string) (ContractType, error)
 	CreateDepartment(ctx context.Context, arg CreateDepartmentParams) (Department, error)
 	CreateEmemrgencyContact(ctx context.Context, arg CreateEmemrgencyContactParams) (ClientEmergencyContact, error)
+	CreateEmployeeHandbookAssignmentHistory(ctx context.Context, arg CreateEmployeeHandbookAssignmentHistoryParams) (EmployeeHandbookAssignmentHistory, error)
 	CreateEmployeeHandbookFromTemplate(ctx context.Context, arg CreateEmployeeHandbookFromTemplateParams) (CreateEmployeeHandbookFromTemplateRow, error)
 	CreateEmployeeProfile(ctx context.Context, arg CreateEmployeeProfileParams) (EmployeeProfile, error)
 	CreateGoalEvaluation(ctx context.Context, arg CreateGoalEvaluationParams) (ClientGoalEvaluation, error)
@@ -117,6 +120,7 @@ type Querier interface {
 	DeleteEmployeeCertification(ctx context.Context, id uuid.UUID) (Certification, error)
 	DeleteEmployeeEducation(ctx context.Context, id uuid.UUID) (EmployeeEducation, error)
 	DeleteEmployeeExperience(ctx context.Context, id uuid.UUID) (EmployeeExperience, error)
+	DeleteHandbookStepByID(ctx context.Context, id uuid.UUID) error
 	DeleteIncident(ctx context.Context, id uuid.UUID) error
 	DeleteIntakeTopicAssessmentsByIntakeForm(ctx context.Context, intakeFormID uuid.UUID) error
 	DeleteIntakeTopicsAssessment(ctx context.Context, id uuid.UUID) error
@@ -182,6 +186,7 @@ type Querier interface {
 	GetGlobalOrganisationCounts(ctx context.Context) (GetGlobalOrganisationCountsRow, error)
 	GetGoalEvaluationByID(ctx context.Context, id uuid.UUID) (GetGoalEvaluationByIDRow, error)
 	GetGoalEvaluationItems(ctx context.Context, evaluationID uuid.UUID) ([]GetGoalEvaluationItemsRow, error)
+	GetHandbookStepByID(ctx context.Context, id uuid.UUID) (HandbookStep, error)
 	GetHandbookTemplateByID(ctx context.Context, id uuid.UUID) (HandbookTemplate, error)
 	GetIncident(ctx context.Context, id uuid.UUID) (GetIncidentRow, error)
 	GetIncidentCounts(ctx context.Context) (GetIncidentCountsRow, error)
@@ -341,6 +346,7 @@ type Querier interface {
 	MarkEmployeeHandbookStarted(ctx context.Context, id uuid.UUID) (EmployeeHandbook, error)
 	MarkIncidentConfirmationEmailSent(ctx context.Context, id uuid.UUID) (int64, error)
 	MarkNotificationAsRead(ctx context.Context, id uuid.UUID) (Notification, error)
+	PublishHandbookTemplate(ctx context.Context, arg PublishHandbookTemplateParams) (HandbookTemplate, error)
 	PutClientInCare(ctx context.Context, arg PutClientInCareParams) (ClientDetail, error)
 	PutClientOutOfCare(ctx context.Context, arg PutClientOutOfCareParams) (ClientDetail, error)
 	// Removes *all* permissions from the given role.
@@ -406,6 +412,9 @@ type Querier interface {
 	UpdateEmployeeIsSubcontractor(ctx context.Context, arg UpdateEmployeeIsSubcontractorParams) (EmployeeProfile, error)
 	UpdateEmployeeProfile(ctx context.Context, arg UpdateEmployeeProfileParams) (EmployeeProfile, error)
 	UpdateGoalEvaluation(ctx context.Context, arg UpdateGoalEvaluationParams) (ClientGoalEvaluation, error)
+	UpdateHandbookStepByID(ctx context.Context, arg UpdateHandbookStepByIDParams) (HandbookStep, error)
+	UpdateHandbookStepSortOrder(ctx context.Context, arg UpdateHandbookStepSortOrderParams) error
+	UpdateHandbookTemplateMetadata(ctx context.Context, arg UpdateHandbookTemplateMetadataParams) (HandbookTemplate, error)
 	UpdateIncident(ctx context.Context, arg UpdateIncidentParams) (Incident, error)
 	UpdateIncidentFileUrl(ctx context.Context, arg UpdateIncidentFileUrlParams) (*string, error)
 	UpdateIntakeConclusion(ctx context.Context, arg UpdateIntakeConclusionParams) (IntakeForm, error)

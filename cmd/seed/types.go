@@ -9,6 +9,8 @@ import (
 
 type SeedData struct {
 	OrganisationIDs     []uuid.UUID
+	DepartmentIDs       []uuid.UUID
+	HandbookTemplateIDs []uuid.UUID
 	RegistrationFormIDs []uuid.UUID
 	NextRegistrationIdx int
 	IntakeFormIDs       []uuid.UUID
@@ -21,7 +23,9 @@ type SeedData struct {
 	EvaluationIDs       []uuid.UUID
 	EmployeeIDs         []uuid.UUID
 	CoordinatorIDs      []uuid.UUID
+	NextCoordinatorIdx  int
 	ClientCoordinators  map[uuid.UUID]uuid.UUID
+	DepartmentHandbooks map[uuid.UUID]uuid.UUID
 	AttachmentIDs       []uuid.UUID
 	LocationIDs         []uuid.UUID
 	SenderIDs           []uuid.UUID
@@ -40,7 +44,8 @@ func newSeeder(store *db.Store, invoiceService invoicesvc.InvoiceService) *Seede
 		store:          store,
 		invoiceService: invoiceService,
 		data: &SeedData{
-			ClientCoordinators: make(map[uuid.UUID]uuid.UUID),
+			ClientCoordinators:  make(map[uuid.UUID]uuid.UUID),
+			DepartmentHandbooks: make(map[uuid.UUID]uuid.UUID),
 		},
 	}
 }

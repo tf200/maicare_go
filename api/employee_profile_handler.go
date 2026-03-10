@@ -1,6 +1,9 @@
 package api
 
 import (
+	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -27,7 +30,14 @@ func (server *Server) GetEmployeeProfileApi(ctx *gin.Context) {
 
 	profile, err := server.businessService.EmployeeService.GetEmployeeProfile(payload.UserId, ctx)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+		case errors.Is(err, context.DeadlineExceeded):
+			ctx.JSON(http.StatusRequestTimeout, errorResponse(err))
+		default:
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		}
 		return
 	}
 

@@ -44,7 +44,7 @@ func (s *Seeder) seedIncidentsForClient(ctx context.Context, clientID uuid.UUID,
 
 		incidentCount := gofakeit.Number(1, maxIncidentsPerClient)
 		for range incidentCount {
-			employeeID, err := s.pickOrCreateIncidentEmployee(ctx, q, client.LocationID)
+			employeeID, err := s.pickIncidentEmployee()
 			if err != nil {
 				return err
 			}
@@ -71,7 +71,7 @@ func (s *Seeder) seedIncidentsForClient(ctx context.Context, clientID uuid.UUID,
 	return nil
 }
 
-func (s *Seeder) pickOrCreateIncidentEmployee(ctx context.Context, q *db.Queries, locationID *uuid.UUID) (uuid.UUID, error) {
+func (s *Seeder) pickIncidentEmployee() (uuid.UUID, error) {
 	if len(s.data.CoordinatorIDs) > 0 {
 		return oneOf(s.data.CoordinatorIDs), nil
 	}
@@ -79,12 +79,7 @@ func (s *Seeder) pickOrCreateIncidentEmployee(ctx context.Context, q *db.Queries
 		return oneOf(s.data.EmployeeIDs), nil
 	}
 
-	employeeID, err := s.createSeedCoordinatorProfile(ctx, q, locationID)
-	if err != nil {
-		return uuid.Nil, fmt.Errorf("create seed employee for incidents: %w", err)
-	}
-
-	return employeeID, nil
+	return uuid.Nil, fmt.Errorf("no employees available for incidents; seed coordinators or employees first")
 }
 
 func (s *Seeder) resolveIncidentLocation(clientLocationID *uuid.UUID) (uuid.UUID, error) {

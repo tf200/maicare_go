@@ -2,6 +2,8 @@ package employees
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 	"time"
 
@@ -94,15 +96,15 @@ func (s *employeeService) CreateEmployee(
 				Street:              req.Street,
 				HouseNumber:         req.HouseNumber,
 				HouseNumberAddition: req.HouseNumberAddition,
-					PostalCode:          req.PostalCode,
-					City:                req.City,
-					Position:            req.Position,
-					DepartmentID:        req.DepartmentID,
-					ManagerEmployeeID:   req.ManagerEmployeeID,
-					EmployeeNumber:      req.EmployeeNumber,
-					EmploymentNumber:    req.EmploymentNumber,
-					PrivateEmailAddress: req.PrivateEmailAddress,
-					WorkEmailAddress:    &req.WorkEmailAddress,
+				PostalCode:          req.PostalCode,
+				City:                req.City,
+				Position:            req.Position,
+				DepartmentID:        req.DepartmentID,
+				ManagerEmployeeID:   req.ManagerEmployeeID,
+				EmployeeNumber:      req.EmployeeNumber,
+				EmploymentNumber:    req.EmploymentNumber,
+				PrivateEmailAddress: req.PrivateEmailAddress,
+				WorkEmailAddress:    &req.WorkEmailAddress,
 				WorkPhoneNumber:     req.WorkPhoneNumber,
 				PrivatePhoneNumber:  req.PrivatePhoneNumber,
 				DateOfBirth:         parsedDateOfBirth,
@@ -142,18 +144,18 @@ func (s *employeeService) CreateEmployee(
 		return nil, fmt.Errorf("failed to load created employee profile: %w", err)
 	}
 
-		res := &CreateEmployeeProfileResponse{
-			ID:                  employee.Employee.ID,
-			EmployeeNumber:      employee.Employee.EmployeeNumber,
-			EmploymentNumber:    employee.Employee.EmploymentNumber,
-			FirstName:           employee.Employee.FirstName,
-			LastName:            employee.Employee.LastName,
-			Position:            employee.Employee.Position,
-			DepartmentID:        enriched.DepartmentID,
-			DepartmentName:      enriched.DepartmentName,
-			ManagerEmployeeID:   enriched.ManagerEmployeeID,
-			ManagerFirstName:    enriched.ManagerFirstName,
-			ManagerLastName:     enriched.ManagerLastName,
+	res := &CreateEmployeeProfileResponse{
+		ID:                  employee.Employee.ID,
+		EmployeeNumber:      employee.Employee.EmployeeNumber,
+		EmploymentNumber:    employee.Employee.EmploymentNumber,
+		FirstName:           employee.Employee.FirstName,
+		LastName:            employee.Employee.LastName,
+		Position:            employee.Employee.Position,
+		DepartmentID:        enriched.DepartmentID,
+		DepartmentName:      enriched.DepartmentName,
+		ManagerEmployeeID:   enriched.ManagerEmployeeID,
+		ManagerFirstName:    enriched.ManagerFirstName,
+		ManagerLastName:     enriched.ManagerLastName,
 		DateOfBirth:         employee.Employee.DateOfBirth.Time,
 		Gender:              string(employee.Employee.Gender),
 		Email:               *employee.Employee.WorkEmailAddress,
@@ -226,17 +228,17 @@ func (s *employeeService) ListEmployees(
 			parsedDate := employee.ContractEndDate.Time
 			contractEndDate = &parsedDate
 		}
-			responseEmployees[i] = ListEmployeeResponse{
-				ID:              employee.ID,
-				FirstName:       employee.FirstName,
-				LastName:        employee.LastName,
-				Bsn:             employee.Bsn,
-				ContractType:    string(employee.ContractType),
-				DepartmentName:  employee.DepartmentName,
-				LocationAddress: employee.LocationAddress,
-				ContractEndDate: contractEndDate,
-			}
+		responseEmployees[i] = ListEmployeeResponse{
+			ID:              employee.ID,
+			FirstName:       employee.FirstName,
+			LastName:        employee.LastName,
+			Bsn:             employee.Bsn,
+			ContractType:    string(employee.ContractType),
+			DepartmentName:  employee.DepartmentName,
+			LocationAddress: employee.LocationAddress,
+			ContractEndDate: contractEndDate,
 		}
+	}
 
 	response := pagination.NewResponse(ctx, req.Request, responseEmployees, totalCount)
 
@@ -348,6 +350,9 @@ func (s *employeeService) GetEmployeeProfileDetails(
 ) (*GetEmployeeProfileDetailsResponse, error) {
 	accountProfile, err := s.Store.GetEmployeeProfileByUserID(ctx, userID)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, fmt.Errorf("user not found")
+		}
 		s.Logger.LogBusinessEvent(
 			ctx,
 			logger.LogLevelError,
@@ -511,17 +516,17 @@ func (s *employeeService) GetEmployeeProfileDetails(
 		Street:              employee.Street,
 		HouseNumber:         employee.HouseNumber,
 		HouseNumberAddition: employee.HouseNumberAddition,
-			PostalCode:          employee.PostalCode,
-			City:                employee.City,
-			Position:            employee.Position,
-			DepartmentID:        employee.DepartmentID,
-			DepartmentName:      employee.DepartmentName,
-			ManagerEmployeeID:   employee.ManagerEmployeeID,
-			ManagerFirstName:    employee.ManagerFirstName,
-			ManagerLastName:     employee.ManagerLastName,
-			EmployeeNumber:      employee.EmployeeNumber,
-			EmploymentNumber:    employee.EmploymentNumber,
-			PrivateEmailAddress: employee.PrivateEmailAddress,
+		PostalCode:          employee.PostalCode,
+		City:                employee.City,
+		Position:            employee.Position,
+		DepartmentID:        employee.DepartmentID,
+		DepartmentName:      employee.DepartmentName,
+		ManagerEmployeeID:   employee.ManagerEmployeeID,
+		ManagerFirstName:    employee.ManagerFirstName,
+		ManagerLastName:     employee.ManagerLastName,
+		EmployeeNumber:      employee.EmployeeNumber,
+		EmploymentNumber:    employee.EmploymentNumber,
+		PrivateEmailAddress: employee.PrivateEmailAddress,
 		WorkEmailAddress:    employee.WorkEmailAddress,
 		PrivatePhoneNumber:  employee.PrivatePhoneNumber,
 		WorkPhoneNumber:     employee.WorkPhoneNumber,
@@ -585,26 +590,26 @@ func (s *employeeService) GetEmployeeProfileByID(
 		return nil, fmt.Errorf("failed to get employee profile: %w", err)
 	}
 
-		res := &GetEmployeeProfileByIDResponse{
-			ID:                  employee.ID,
-			UserID:              employee.UserID,
-			FirstName:           employee.FirstName,
-			LastName:            employee.LastName,
-			Position:            employee.Position,
+	res := &GetEmployeeProfileByIDResponse{
+		ID:                  employee.ID,
+		UserID:              employee.UserID,
+		FirstName:           employee.FirstName,
+		LastName:            employee.LastName,
+		Position:            employee.Position,
 		DepartmentID:        employee.DepartmentID,
 		DepartmentName:      employee.DepartmentName,
 		ManagerEmployeeID:   employee.ManagerEmployeeID,
 		ManagerFirstName:    employee.ManagerFirstName,
 		ManagerLastName:     employee.ManagerLastName,
-			EmployeeNumber:      employee.EmployeeNumber,
-			EmploymentNumber:    employee.EmploymentNumber,
-			PrivateEmailAddress: employee.PrivateEmailAddress,
-			Email:               strOrEmpty(employee.WorkEmailAddress),
-			PrivatePhoneNumber:  employee.PrivatePhoneNumber,
-			WorkPhoneNumber:     employee.WorkPhoneNumber,
-			DateOfBirth:         employee.DateOfBirth.Time,
-			HomeTelephoneNumber: employee.HomeTelephoneNumber,
-			CreatedAt:           employee.CreatedAt.Time,
+		EmployeeNumber:      employee.EmployeeNumber,
+		EmploymentNumber:    employee.EmploymentNumber,
+		PrivateEmailAddress: employee.PrivateEmailAddress,
+		Email:               strOrEmpty(employee.WorkEmailAddress),
+		PrivatePhoneNumber:  employee.PrivatePhoneNumber,
+		WorkPhoneNumber:     employee.WorkPhoneNumber,
+		DateOfBirth:         employee.DateOfBirth.Time,
+		HomeTelephoneNumber: employee.HomeTelephoneNumber,
+		CreatedAt:           employee.CreatedAt.Time,
 		Gender:              string(employee.Gender),
 		LocationID:          employee.LocationID,
 		HasBorrowed:         employee.HasBorrowed,

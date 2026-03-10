@@ -9,6 +9,14 @@ migrateforce:
 migratedown:
 	migrate -path db/migrations -database "postgresql://maicare:maicare@167.86.75.250:5432/maicare?sslmode=disable" -verbose down 1
 
+migrateup-local:
+	migrate -path db/migrations -database "postgresql://maicare:maicare@127.0.0.1:5432/maicare?sslmode=disable" -verbose up 1
+
+migrateforce-local:
+	migrate -path db/migrations -database "postgresql://maicare:maicare@127.0.0.1:5432/maicare?sslmode=disable" force 1
+
+migratedown-local:
+	migrate -path db/migrations -database "postgresql://maicare:maicare@127.0.0.1:5432/maicare?sslmode=disable" -verbose down 1
 sqlc:
 	sqlc generate
 

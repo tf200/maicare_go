@@ -3,6 +3,7 @@ package api
 // Response represents a generic API response
 type Response[T any] struct {
 	Success bool   `json:"success"`
+	Code    string `json:"code,omitempty"`
 	Message string `json:"message"`
 	Data    T      `json:"data"`
 }
@@ -20,6 +21,14 @@ func SuccessResponse[T any](data T, message string) Response[T] {
 func errorResponse(message error) Response[struct{}] {
 	return Response[struct{}]{
 		Success: false,
+		Message: message.Error(),
+	}
+}
+
+func errorResponseWithCode(message error, code string) Response[struct{}] {
+	return Response[struct{}]{
+		Success: false,
+		Code:    code,
 		Message: message.Error(),
 	}
 }

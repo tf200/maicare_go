@@ -97,10 +97,22 @@ func (store *Store) CreateEmployeeWithAccountTx(ctx context.Context, arg CreateE
 				if assignedBy != uuid.Nil {
 					assignedByPtr = &assignedBy
 				}
-				_, err = q.CreateEmployeeHandbookFromTemplate(ctx, CreateEmployeeHandbookFromTemplateParams{
+				assigned, err := q.CreateEmployeeHandbookFromTemplate(ctx, CreateEmployeeHandbookFromTemplateParams{
 					EmployeeID:           result.Employee.ID,
 					TemplateID:           template.ID,
 					AssignedByEmployeeID: assignedByPtr,
+				})
+				if err != nil {
+					return err
+				}
+
+				_, err = q.CreateEmployeeHandbookAssignmentHistory(ctx, CreateEmployeeHandbookAssignmentHistoryParams{
+					EmployeeHandbookID: &assigned.ID,
+					EmployeeID:         result.Employee.ID,
+					TemplateID:         template.ID,
+					TemplateVersion:    assigned.TemplateVersion,
+					Event:              HandbookAssignmentEventEnumAssigned,
+					ActorEmployeeID:    assignedByPtr,
 				})
 				if err != nil {
 					return err

@@ -725,6 +725,8 @@ CREATE INDEX experience_employee_id_idx ON employee_experience(employee_id);
 CREATE TYPE handbook_step_kind_enum AS ENUM ('content', 'ack', 'link', 'quiz');
 CREATE TYPE handbook_assignment_status_enum AS ENUM ('not_started', 'in_progress', 'completed', 'waived');
 CREATE TYPE handbook_step_status_enum AS ENUM ('pending', 'completed', 'skipped');
+CREATE TYPE handbook_template_status_enum AS ENUM ('draft', 'published', 'archived');
+CREATE TYPE handbook_assignment_event_enum AS ENUM ('assigned', 'reassigned', 'waived', 'started', 'completed');
 
 -- A template is department-specific and can be versioned. Assignments point to a specific version.
 CREATE TABLE handbook_templates (
@@ -733,17 +735,25 @@ CREATE TABLE handbook_templates (
     title TEXT NOT NULL,
     description TEXT NULL,
     version INT NOT NULL,
-    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    status handbook_template_status_enum NOT NULL DEFAULT 'draft',
     created_by_employee_id UUID NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
+    published_by_employee_id UUID NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
+    published_at TIMESTAMPTZ NULL,
+    archived_at TIMESTAMPTZ NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (department_id, version)
 );
 
--- Enforce at most one active template per department.
-CREATE UNIQUE INDEX handbook_templates_one_active_per_department
+-- Enforce at most one published template per department.
+CREATE UNIQUE INDEX handbook_templates_one_published_per_department
     ON handbook_templates(department_id)
-    WHERE is_active;
+    WHERE status = 'published';
+
+-- Enforce at most one draft template per department.
+CREATE UNIQUE INDEX handbook_templates_one_draft_per_department
+    ON handbook_templates(department_id)
+    WHERE status = 'draft';
 
 CREATE INDEX idx_handbook_templates_department_id ON handbook_templates(department_id);
 
@@ -767,6 +777,7 @@ CREATE TABLE employee_handbooks (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     employee_id UUID NOT NULL REFERENCES employee_profile(id) ON DELETE CASCADE,
     template_id UUID NOT NULL REFERENCES handbook_templates(id) ON DELETE RESTRICT,
+    template_version INT NOT NULL,
     assigned_by_employee_id UUID NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
     status handbook_assignment_status_enum NOT NULL DEFAULT 'not_started',
     assigned_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -781,6 +792,21 @@ CREATE UNIQUE INDEX employee_handbooks_one_active_per_employee
     WHERE status IN ('not_started', 'in_progress');
 
 CREATE INDEX idx_employee_handbooks_employee_assigned_at ON employee_handbooks(employee_id, assigned_at DESC);
+
+CREATE TABLE employee_handbook_assignment_history (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    employee_handbook_id UUID NULL REFERENCES employee_handbooks(id) ON DELETE SET NULL,
+    employee_id UUID NOT NULL REFERENCES employee_profile(id) ON DELETE CASCADE,
+    template_id UUID NOT NULL REFERENCES handbook_templates(id) ON DELETE RESTRICT,
+    template_version INT NOT NULL,
+    event handbook_assignment_event_enum NOT NULL,
+    actor_employee_id UUID NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
+    metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_employee_handbook_assignment_history_employee_created_at
+    ON employee_handbook_assignment_history(employee_id, created_at DESC);
 
 CREATE TABLE employee_handbook_step_progress (
     employee_handbook_id UUID NOT NULL REFERENCES employee_handbooks(id) ON DELETE CASCADE,

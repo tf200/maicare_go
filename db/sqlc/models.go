@@ -1241,6 +1241,51 @@ func (ns NullGenderEnum) Value() (driver.Value, error) {
 	return string(ns.GenderEnum), nil
 }
 
+type HandbookAssignmentEventEnum string
+
+const (
+	HandbookAssignmentEventEnumAssigned   HandbookAssignmentEventEnum = "assigned"
+	HandbookAssignmentEventEnumReassigned HandbookAssignmentEventEnum = "reassigned"
+	HandbookAssignmentEventEnumWaived     HandbookAssignmentEventEnum = "waived"
+	HandbookAssignmentEventEnumStarted    HandbookAssignmentEventEnum = "started"
+	HandbookAssignmentEventEnumCompleted  HandbookAssignmentEventEnum = "completed"
+)
+
+func (e *HandbookAssignmentEventEnum) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = HandbookAssignmentEventEnum(s)
+	case string:
+		*e = HandbookAssignmentEventEnum(s)
+	default:
+		return fmt.Errorf("unsupported scan type for HandbookAssignmentEventEnum: %T", src)
+	}
+	return nil
+}
+
+type NullHandbookAssignmentEventEnum struct {
+	HandbookAssignmentEventEnum HandbookAssignmentEventEnum `json:"handbook_assignment_event_enum"`
+	Valid                       bool                        `json:"valid"` // Valid is true if HandbookAssignmentEventEnum is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullHandbookAssignmentEventEnum) Scan(value interface{}) error {
+	if value == nil {
+		ns.HandbookAssignmentEventEnum, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.HandbookAssignmentEventEnum.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullHandbookAssignmentEventEnum) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.HandbookAssignmentEventEnum), nil
+}
+
 type HandbookAssignmentStatusEnum string
 
 const (
@@ -1370,6 +1415,49 @@ func (ns NullHandbookStepStatusEnum) Value() (driver.Value, error) {
 		return nil, nil
 	}
 	return string(ns.HandbookStepStatusEnum), nil
+}
+
+type HandbookTemplateStatusEnum string
+
+const (
+	HandbookTemplateStatusEnumDraft     HandbookTemplateStatusEnum = "draft"
+	HandbookTemplateStatusEnumPublished HandbookTemplateStatusEnum = "published"
+	HandbookTemplateStatusEnumArchived  HandbookTemplateStatusEnum = "archived"
+)
+
+func (e *HandbookTemplateStatusEnum) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = HandbookTemplateStatusEnum(s)
+	case string:
+		*e = HandbookTemplateStatusEnum(s)
+	default:
+		return fmt.Errorf("unsupported scan type for HandbookTemplateStatusEnum: %T", src)
+	}
+	return nil
+}
+
+type NullHandbookTemplateStatusEnum struct {
+	HandbookTemplateStatusEnum HandbookTemplateStatusEnum `json:"handbook_template_status_enum"`
+	Valid                      bool                       `json:"valid"` // Valid is true if HandbookTemplateStatusEnum is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullHandbookTemplateStatusEnum) Scan(value interface{}) error {
+	if value == nil {
+		ns.HandbookTemplateStatusEnum, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.HandbookTemplateStatusEnum.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullHandbookTemplateStatusEnum) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.HandbookTemplateStatusEnum), nil
 }
 
 type HoursTypeEnum string
@@ -3382,12 +3470,25 @@ type EmployeeHandbook struct {
 	ID                   uuid.UUID                    `json:"id"`
 	EmployeeID           uuid.UUID                    `json:"employee_id"`
 	TemplateID           uuid.UUID                    `json:"template_id"`
+	TemplateVersion      int32                        `json:"template_version"`
 	AssignedByEmployeeID *uuid.UUID                   `json:"assigned_by_employee_id"`
 	Status               HandbookAssignmentStatusEnum `json:"status"`
 	AssignedAt           pgtype.Timestamptz           `json:"assigned_at"`
 	StartedAt            pgtype.Timestamptz           `json:"started_at"`
 	CompletedAt          pgtype.Timestamptz           `json:"completed_at"`
 	DueAt                pgtype.Timestamptz           `json:"due_at"`
+}
+
+type EmployeeHandbookAssignmentHistory struct {
+	ID                 uuid.UUID                   `json:"id"`
+	EmployeeHandbookID *uuid.UUID                  `json:"employee_handbook_id"`
+	EmployeeID         uuid.UUID                   `json:"employee_id"`
+	TemplateID         uuid.UUID                   `json:"template_id"`
+	TemplateVersion    int32                       `json:"template_version"`
+	Event              HandbookAssignmentEventEnum `json:"event"`
+	ActorEmployeeID    *uuid.UUID                  `json:"actor_employee_id"`
+	Metadata           []byte                      `json:"metadata"`
+	CreatedAt          pgtype.Timestamptz          `json:"created_at"`
 }
 
 type EmployeeHandbookStepProgress struct {
@@ -3455,15 +3556,18 @@ type HandbookStep struct {
 }
 
 type HandbookTemplate struct {
-	ID                  uuid.UUID          `json:"id"`
-	DepartmentID        uuid.UUID          `json:"department_id"`
-	Title               string             `json:"title"`
-	Description         *string            `json:"description"`
-	Version             int32              `json:"version"`
-	IsActive            bool               `json:"is_active"`
-	CreatedByEmployeeID *uuid.UUID         `json:"created_by_employee_id"`
-	CreatedAt           pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt           pgtype.Timestamptz `json:"updated_at"`
+	ID                    uuid.UUID                  `json:"id"`
+	DepartmentID          uuid.UUID                  `json:"department_id"`
+	Title                 string                     `json:"title"`
+	Description           *string                    `json:"description"`
+	Version               int32                      `json:"version"`
+	Status                HandbookTemplateStatusEnum `json:"status"`
+	CreatedByEmployeeID   *uuid.UUID                 `json:"created_by_employee_id"`
+	PublishedByEmployeeID *uuid.UUID                 `json:"published_by_employee_id"`
+	PublishedAt           pgtype.Timestamptz         `json:"published_at"`
+	ArchivedAt            pgtype.Timestamptz         `json:"archived_at"`
+	CreatedAt             pgtype.Timestamptz         `json:"created_at"`
+	UpdatedAt             pgtype.Timestamptz         `json:"updated_at"`
 }
 
 type Incident struct {

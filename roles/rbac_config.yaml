@@ -258,12 +258,24 @@ permissions:
     - name: HANDBOOK.TEMPLATE.CREATE
       resource: /handbook/templates
       method: [POST]
+    - name: HANDBOOK.TEMPLATE.UPDATE
+      resource: /handbook/templates
+      method: [PATCH]
+    - name: HANDBOOK.TEMPLATE.PUBLISH
+      resource: /handbook/templates/publish
+      method: [POST]
     - name: HANDBOOK.STEP.VIEW
       resource: /handbook/steps
       method: [GET]
     - name: HANDBOOK.STEP.CREATE
       resource: /handbook/steps
       method: [POST]
+    - name: HANDBOOK.STEP.UPDATE
+      resource: /handbook/steps
+      method: [PATCH]
+    - name: HANDBOOK.STEP.DELETE
+      resource: /handbook/steps
+      method: [DELETE]
     - name: HANDBOOK.ASSIGN
       resource: /handbook/assignments
       method: [POST]
@@ -515,8 +527,12 @@ roles:
           - HANDBOOK.DEPARTMENT.CREATE
           - HANDBOOK.TEMPLATE.VIEW
           - HANDBOOK.TEMPLATE.CREATE
+          - HANDBOOK.TEMPLATE.UPDATE
+          - HANDBOOK.TEMPLATE.PUBLISH
           - HANDBOOK.STEP.VIEW
           - HANDBOOK.STEP.CREATE
+          - HANDBOOK.STEP.UPDATE
+          - HANDBOOK.STEP.DELETE
           - HANDBOOK.ASSIGN
           - FINANCE.VIEW
           - INVOICE.CREATE
@@ -557,6 +573,11 @@ roles:
           - SENDER.UPDATE
           - SENDER.VIEW
           - SETTINGS.VIEW
+          - SETTINGS.DEPARTMENT.VIEW
+          - SETTINGS.DEPARTMENT.CREATE
+          - SETTINGS.DEPARTMENT.UPDATE
+          - SETTINGS.ORGANIZATION_PROFILE.VIEW
+          - SETTINGS.ORGANIZATION_PROFILE.UPDATE
           - SHIFT.CREATE
           - SHIFT.DELETE
           - SHIFT.UPDATE
@@ -616,8 +637,12 @@ roles:
           - HANDBOOK.DEPARTMENT.CREATE
           - HANDBOOK.TEMPLATE.VIEW
           - HANDBOOK.TEMPLATE.CREATE
+          - HANDBOOK.TEMPLATE.UPDATE
+          - HANDBOOK.TEMPLATE.PUBLISH
           - HANDBOOK.STEP.VIEW
           - HANDBOOK.STEP.CREATE
+          - HANDBOOK.STEP.UPDATE
+          - HANDBOOK.STEP.DELETE
           - HANDBOOK.ASSIGN
           - SENDER.CREATE
           - SHIFT.VIEW
