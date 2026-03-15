@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"github.com/goccy/go-json"
 	"errors"
 	"fmt"
 	"maicare_go/infra"
@@ -113,6 +114,9 @@ func (store *Store) CreateEmployeeWithAccountTx(ctx context.Context, arg CreateE
 					TemplateVersion:    assigned.TemplateVersion,
 					Event:              HandbookAssignmentEventEnumAssigned,
 					ActorEmployeeID:    assignedByPtr,
+					Metadata: mustMarshalAssignmentMetadata(map[string]any{
+						"source": "employee_creation",
+					}),
 				})
 				if err != nil {
 					return err
@@ -132,4 +136,12 @@ func (store *Store) CreateEmployeeWithAccountTx(ctx context.Context, arg CreateE
 	})
 
 	return result, err
+}
+
+func mustMarshalAssignmentMetadata(v any) []byte {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return []byte(`{}`)
+	}
+	return b
 }

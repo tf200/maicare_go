@@ -23,6 +23,11 @@ func (server *Server) setupHandbookRoutes(baseRouter *gin.RouterGroup) {
 	handbook.DELETE("/steps/:step_id", server.RBACMiddleware("HANDBOOK.STEP.DELETE"), server.DeleteHandbookStepApi)
 	handbook.GET("/templates/:template_id/steps", server.RBACMiddleware("HANDBOOK.STEP.VIEW"), server.ListHandbookStepsByTemplateApi)
 	handbook.POST("/templates/:template_id/steps/reorder", server.RBACMiddleware("HANDBOOK.STEP.UPDATE"), server.ReorderHandbookStepsApi)
+	handbook.GET("/employees/:employee_id/history", server.RBACMiddleware("HANDBOOK.ASSIGN"), server.ListEmployeeHandbookHistoryApi)
 
+	handbook.GET("/assignments", server.RBACMiddleware("HANDBOOK.ASSIGN"), server.ListEmployeeHandbookAssignmentsApi)
+	handbook.GET("/assignments/eligible-employees", server.RBACMiddleware("HANDBOOK.ASSIGN"), server.ListEligibleEmployeesApi)
+	handbook.GET("/assignments/:handbook_id", server.RBACMiddleware("HANDBOOK.ASSIGN"), server.GetEmployeeHandbookDetailsApi)
 	handbook.POST("/assignments", server.RBACMiddleware("HANDBOOK.ASSIGN"), server.AssignHandbookTemplateToEmployeeApi)
+	handbook.POST("/assignments/:handbook_id/waive", server.RBACMiddleware("HANDBOOK.ASSIGN"), server.WaiveEmployeeHandbookApi)
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/goccy/go-json"
 	"errors"
 	"fmt"
 	"strings"
@@ -87,11 +88,21 @@ func (s *Seeder) SeedHandbookTemplates(ctx context.Context, perDepartment int) e
 				}
 
 				var draftTemplate *db.HandbookTemplate
+				var existingPublishedTemplate *db.HandbookTemplate
 				for idx := range templates {
 					if templates[idx].Status == db.HandbookTemplateStatusEnumDraft {
 						draftTemplate = &templates[idx]
-						break
 					}
+					if templates[idx].Status == db.HandbookTemplateStatusEnumPublished && existingPublishedTemplate == nil {
+						existingPublishedTemplate = &templates[idx]
+					}
+				}
+
+				// Keep the seed idempotent. If a department already has an active published
+				// template and there is no draft to publish, reuse the active template.
+				if draftTemplate == nil && existingPublishedTemplate != nil {
+					publishedTemplateID = existingPublishedTemplate.ID
+					return nil
 				}
 
 				if draftTemplate == nil {
@@ -177,6 +188,7 @@ func (s *Seeder) SeedCoordinators(ctx context.Context, count int) error {
 
 		s.data.EmployeeIDs = append(s.data.EmployeeIDs, employeeID)
 		s.data.CoordinatorIDs = append(s.data.CoordinatorIDs, employeeID)
+		s.data.HandbookAssignmentCount++
 	}
 
 	return nil
@@ -309,15 +321,88 @@ func (s *Seeder) createSeedCoordinatorProfileForDepartment(
 		return uuid.Nil, fmt.Errorf("create employee profile: %w", err)
 	}
 
-	if _, err := q.CreateEmployeeHandbookFromTemplate(ctx, db.CreateEmployeeHandbookFromTemplateParams{
-		EmployeeID:           employee.ID,
-		TemplateID:           templateID,
-		AssignedByEmployeeID: nil,
-	}); err != nil {
-		return uuid.Nil, fmt.Errorf("assign employee handbook: %w", err)
+	if err := createSeedHandbookAssignment(ctx, q, employee.ID, templateID, "seed_coordinator_creation"); err != nil {
+		return uuid.Nil, err
 	}
 
 	return employee.ID, nil
+}
+
+func (s *Seeder) SeedEmployeeHandbookAssignments(ctx context.Context, perDepartment int) error {
+	if perDepartment <= 0 {
+		return nil
+	}
+	if len(s.data.DepartmentIDs) == 0 {
+		return fmt.Errorf("no departments available; seed departments first")
+	}
+
+	for _, departmentID := range s.data.DepartmentIDs {
+		var assignedCount int
+		err := s.store.ExecTx(ctx, func(q *db.Queries) error {
+			templateID, err := s.resolveDepartmentHandbookTemplateID(ctx, q, departmentID)
+			if err != nil {
+				return err
+			}
+
+			employeeIDs, err := q.ListEmployeesEligibleForDepartmentHandbookSeed(ctx, db.ListEmployeesEligibleForDepartmentHandbookSeedParams{
+				DepartmentID: &departmentID,
+				Limit:        int32(perDepartment),
+			})
+			if err != nil {
+				return fmt.Errorf("list eligible employees for department handbook seed: %w", err)
+			}
+
+			for _, employeeID := range employeeIDs {
+				if err := createSeedHandbookAssignment(ctx, q, employeeID, templateID, "seed_department_assignment"); err != nil {
+					return err
+				}
+				assignedCount++
+			}
+
+			return nil
+		})
+		if err != nil {
+			return fmt.Errorf("seed employee handbook assignments for department %s: %w", departmentID, err)
+		}
+
+		fmt.Printf("[seed] employee handbook assignments: department=%s assigned=%d requested=%d\n", departmentID, assignedCount, perDepartment)
+		s.data.HandbookAssignmentCount += assignedCount
+	}
+
+	return nil
+}
+
+func createSeedHandbookAssignment(ctx context.Context, q *db.Queries, employeeID, templateID uuid.UUID, source string) error {
+	assigned, err := q.CreateEmployeeHandbookFromTemplate(ctx, db.CreateEmployeeHandbookFromTemplateParams{
+		EmployeeID:           employeeID,
+		TemplateID:           templateID,
+		AssignedByEmployeeID: nil,
+	})
+	if err != nil {
+		return fmt.Errorf("assign employee handbook: %w", err)
+	}
+
+	metadata, err := json.Marshal(map[string]any{
+		"source": source,
+	})
+	if err != nil {
+		return fmt.Errorf("marshal handbook assignment history metadata: %w", err)
+	}
+
+	_, err = q.CreateEmployeeHandbookAssignmentHistory(ctx, db.CreateEmployeeHandbookAssignmentHistoryParams{
+		EmployeeHandbookID: &assigned.ID,
+		EmployeeID:         assigned.EmployeeID,
+		TemplateID:         assigned.TemplateID,
+		TemplateVersion:    assigned.TemplateVersion,
+		Event:              db.HandbookAssignmentEventEnumAssigned,
+		ActorEmployeeID:    nil,
+		Metadata:           metadata,
+	})
+	if err != nil {
+		return fmt.Errorf("create handbook assignment history: %w", err)
+	}
+
+	return nil
 }
 
 func (s *Seeder) nextCoordinatorID() (uuid.UUID, error) {

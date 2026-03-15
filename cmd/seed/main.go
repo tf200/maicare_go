@@ -27,6 +27,7 @@ func main() {
 	locationsPerOrg := flag.Int("locations-per-org", 2, "locations per organisation")
 	departmentCount := flag.Int("departments", 1, "number of departments to seed")
 	handbookTemplatesPerDepartment := flag.Int("handbook-templates-per-department", 1, "number of handbook templates to seed per department")
+	employeeHandbookAssignmentsPerDepartment := flag.Int("employee-handbook-assignments-per-department", 0, "number of existing employees without an active handbook to assign per department")
 	coordinatorCount := flag.Int("coordinators", -1, "number of coordinators to seed (defaults to in-care-clients + out-of-care-clients)")
 	senderCount := flag.Int("senders", 12, "number of senders to seed")
 	count := flag.Int("count", 25, "number of registration forms to seed")
@@ -114,8 +115,8 @@ func main() {
 	seeder := newSeeder(store, invoiceService)
 
 	startedAt := time.Now()
-	fmt.Printf("[seed] start organisations=%d locations_per_org=%d departments=%d handbook_templates_per_department=%d coordinators=%d senders=%d registration_forms=%d other_intake_forms=%d waiting_list_clients=%d in_care_clients=%d out_of_care_clients=%d evaluations_per_in_care_client=%d diagnoses_per_client=%d medication_orders_per_client=%d incidents_per_client=%d invoices_per_client=%d payments_per_invoice=%d timeout=%s\n",
-		*organisationCount, *locationsPerOrg, *departmentCount, *handbookTemplatesPerDepartment, resolvedCoordinatorCount, *senderCount, *count, *otherIntakeForms, *waitingListClients, *inCareClients, *outOfCareClients, *evaluationsPerInCareClient, *diagnosesPerClient, *medicationOrdersPerClient, *incidentsPerClient, *invoicesPerClient, *paymentsPerInvoice, (*seedTimeout).String())
+	fmt.Printf("[seed] start organisations=%d locations_per_org=%d departments=%d handbook_templates_per_department=%d employee_handbook_assignments_per_department=%d coordinators=%d senders=%d registration_forms=%d other_intake_forms=%d waiting_list_clients=%d in_care_clients=%d out_of_care_clients=%d evaluations_per_in_care_client=%d diagnoses_per_client=%d medication_orders_per_client=%d incidents_per_client=%d invoices_per_client=%d payments_per_invoice=%d timeout=%s\n",
+		*organisationCount, *locationsPerOrg, *departmentCount, *handbookTemplatesPerDepartment, *employeeHandbookAssignmentsPerDepartment, resolvedCoordinatorCount, *senderCount, *count, *otherIntakeForms, *waitingListClients, *inCareClients, *outOfCareClients, *evaluationsPerInCareClient, *diagnosesPerClient, *medicationOrdersPerClient, *incidentsPerClient, *invoicesPerClient, *paymentsPerInvoice, (*seedTimeout).String())
 	if err := seeder.SeedOrganisations(ctx, *organisationCount); err != nil {
 		log.Fatalf("seeding organisations failed: %v", err)
 	}
@@ -134,6 +135,10 @@ func main() {
 
 	if err := seeder.SeedCoordinators(ctx, resolvedCoordinatorCount); err != nil {
 		log.Fatalf("seeding coordinators failed: %v", err)
+	}
+
+	if err := seeder.SeedEmployeeHandbookAssignments(ctx, *employeeHandbookAssignmentsPerDepartment); err != nil {
+		log.Fatalf("seeding employee handbook assignments failed: %v", err)
 	}
 
 	if err := seeder.SeedSenders(ctx, *senderCount); err != nil {
@@ -176,11 +181,12 @@ func main() {
 		log.Fatalf("seeding invoices and payments failed: %v", err)
 	}
 
-	fmt.Printf("Seeded %d organisations, %d locations, %d departments, %d handbook templates, %d coordinators, %d senders, %d registration forms, %d intake forms, %d total clients, %d waiting list clients, %d in-care clients, %d out-of-care clients, %d goal evaluations, %d diagnoses, %d medication orders, %d incidents, %d invoices, %d payments in %s\n",
+	fmt.Printf("Seeded %d organisations, %d locations, %d departments, %d handbook templates, %d handbook assignments, %d coordinators, %d senders, %d registration forms, %d intake forms, %d total clients, %d waiting list clients, %d in-care clients, %d out-of-care clients, %d goal evaluations, %d diagnoses, %d medication orders, %d incidents, %d invoices, %d payments in %s\n",
 		len(seeder.data.OrganisationIDs),
 		len(seeder.data.LocationIDs),
 		len(seeder.data.DepartmentIDs),
 		len(seeder.data.HandbookTemplateIDs),
+		seeder.data.HandbookAssignmentCount,
 		len(seeder.data.CoordinatorIDs),
 		len(seeder.data.SenderIDs),
 		len(seeder.data.RegistrationFormIDs),

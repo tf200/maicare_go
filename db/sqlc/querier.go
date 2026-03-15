@@ -43,6 +43,8 @@ type Querier interface {
 	CountActiveGoalsByClientID(ctx context.Context, clientID uuid.UUID) (int64, error)
 	CountAllIncidents(ctx context.Context, arg CountAllIncidentsParams) (int64, error)
 	CountBilledCalendarEventsByInvoice(ctx context.Context, invoiceID uuid.UUID) (int64, error)
+	CountEligibleEmployeesForHandbookAssignment(ctx context.Context, arg CountEligibleEmployeesForHandbookAssignmentParams) (int64, error)
+	CountEmployeeHandbookAssignments(ctx context.Context, arg CountEmployeeHandbookAssignmentsParams) (int64, error)
 	CountEmployeeProfile(ctx context.Context, arg CountEmployeeProfileParams) (int64, error)
 	CountHandbookStepsByTemplateID(ctx context.Context, templateID uuid.UUID) (int32, error)
 	CountInvoiceLineCalendarEventsByInvoice(ctx context.Context, invoiceID uuid.UUID) (int64, error)
@@ -180,6 +182,8 @@ type Querier interface {
 	GetEmergencyContact(ctx context.Context, id uuid.UUID) (ClientEmergencyContact, error)
 	GetEmployeeContractDetails(ctx context.Context, id uuid.UUID) (GetEmployeeContractDetailsRow, error)
 	GetEmployeeCounts(ctx context.Context) (GetEmployeeCountsRow, error)
+	GetEmployeeHandbookByID(ctx context.Context, id uuid.UUID) (EmployeeHandbook, error)
+	GetEmployeeHandbookDetailsByID(ctx context.Context, id uuid.UUID) (GetEmployeeHandbookDetailsByIDRow, error)
 	GetEmployeeProfileByID(ctx context.Context, id uuid.UUID) (GetEmployeeProfileByIDRow, error)
 	GetEmployeeProfileByUserID(ctx context.Context, id uuid.UUID) (GetEmployeeProfileByUserIDRow, error)
 	GetEmployeeSchedules(ctx context.Context, arg GetEmployeeSchedulesParams) ([]GetEmployeeSchedulesRow, error)
@@ -276,14 +280,18 @@ type Querier interface {
 	ListEducations(ctx context.Context, employeeID uuid.UUID) ([]EmployeeEducation, error)
 	// Returns effective permissions after applying role inheritance and overrides.
 	ListEffectiveUserPermissions(ctx context.Context, userID uuid.UUID) ([]ListEffectiveUserPermissionsRow, error)
+	ListEligibleEmployeesForHandbookAssignment(ctx context.Context, arg ListEligibleEmployeesForHandbookAssignmentParams) ([]ListEligibleEmployeesForHandbookAssignmentRow, error)
 	ListEmergencyContacts(ctx context.Context, arg ListEmergencyContactsParams) ([]ListEmergencyContactsRow, error)
 	ListEmployeeAppointmentsInRange(ctx context.Context, arg ListEmployeeAppointmentsInRangeParams) ([]ListEmployeeAppointmentsInRangeRow, error)
 	ListEmployeeCertifications(ctx context.Context, employeeID uuid.UUID) ([]Certification, error)
 	ListEmployeeExperience(ctx context.Context, employeeID uuid.UUID) ([]EmployeeExperience, error)
+	ListEmployeeHandbookAssignmentHistoryByEmployeeID(ctx context.Context, arg ListEmployeeHandbookAssignmentHistoryByEmployeeIDParams) ([]EmployeeHandbookAssignmentHistory, error)
+	ListEmployeeHandbookAssignments(ctx context.Context, arg ListEmployeeHandbookAssignmentsParams) ([]ListEmployeeHandbookAssignmentsRow, error)
 	ListEmployeeHandbookStepsByHandbookID(ctx context.Context, employeeHandbookID uuid.UUID) ([]ListEmployeeHandbookStepsByHandbookIDRow, error)
 	ListEmployeeNamesByIDs(ctx context.Context, employeeIds []uuid.UUID) ([]ListEmployeeNamesByIDsRow, error)
 	ListEmployeeProfile(ctx context.Context, arg ListEmployeeProfileParams) ([]ListEmployeeProfileRow, error)
 	ListEmployeesByContractEndDate(ctx context.Context) ([]ListEmployeesByContractEndDateRow, error)
+	ListEmployeesEligibleForDepartmentHandbookSeed(ctx context.Context, arg ListEmployeesEligibleForDepartmentHandbookSeedParams) ([]uuid.UUID, error)
 	ListEmployeesWithContractHours(ctx context.Context, dollar_1 []uuid.UUID) ([]ListEmployeesWithContractHoursRow, error)
 	ListExistingClientDocumentLabels(ctx context.Context, clientID uuid.UUID) ([]string, error)
 	ListGoalEvaluationHistoryByClientAndGoal(ctx context.Context, arg ListGoalEvaluationHistoryByClientAndGoalParams) ([]ListGoalEvaluationHistoryByClientAndGoalRow, error)
@@ -443,6 +451,7 @@ type Querier interface {
 	UrgentCasesCount(ctx context.Context) (int64, error)
 	VoidBilledCalendarEventsByInvoice(ctx context.Context, invoiceID uuid.UUID) error
 	WaiveActiveEmployeeHandbooksByEmployeeID(ctx context.Context, employeeID uuid.UUID) error
+	WaiveEmployeeHandbookByID(ctx context.Context, id uuid.UUID) (EmployeeHandbook, error)
 }
 
 var _ Querier = (*Queries)(nil)

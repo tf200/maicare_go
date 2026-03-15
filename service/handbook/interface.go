@@ -5,6 +5,7 @@ import (
 
 	"maicare_go/pagination"
 
+	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
 
@@ -26,4 +27,9 @@ type HandbookService interface {
 	ReorderTemplateSteps(ctx context.Context, req ReorderStepsRequest) (*ReorderStepsResponse, error)
 	ListStepsByTemplate(ctx context.Context, templateID uuid.UUID) ([]ListStepResponse, error)
 	AssignTemplateToEmployee(ctx context.Context, actorEmployeeID uuid.UUID, req AssignTemplateToEmployeeRequest) (*AssignTemplateToEmployeeResponse, error)
+	WaiveEmployeeHandbook(ctx context.Context, actorEmployeeID uuid.UUID, req WaiveEmployeeHandbookRequest) (*WaiveEmployeeHandbookResponse, error)
+	ListEmployeeHandbookHistory(ctx context.Context, employeeID uuid.UUID) ([]HandbookAssignmentHistoryEntry, error)
+	ListEligibleEmployees(ctx *gin.Context, actorEmployeeID uuid.UUID, req ListEligibleEmployeesRequest) (*pagination.Response[ListEligibleEmployeesResponse], error)
+	ListEmployeeHandbookAssignments(ctx *gin.Context, req ListEmployeeHandbookAssignmentsRequest) (*pagination.Response[EmployeeHandbookAssignmentSummary], error)
+	GetEmployeeHandbookDetails(ctx context.Context, handbookID uuid.UUID) (*GetEmployeeHandbookDetailsResponse, error)
 }

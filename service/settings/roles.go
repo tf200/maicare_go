@@ -2,11 +2,12 @@ package settings
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"strings"
+	"unicode"
 
 	db "maicare_go/db/sqlc"
+	"maicare_go/util"
 
 	"github.com/google/uuid"
 )
@@ -38,8 +39,9 @@ func (s *settingsService) ListAllPermissions(ctx context.Context) ([]PermissionG
 		return nil, fmt.Errorf("failed to list permissions: %w", err)
 	}
 
-	groupOrder := make([]string, 0)
-	grouped := make(map[string]*PermissionGroupResponse)
+	// 1. Add capacity hints based on estimated domain scale
+	groupOrder := make([]string, 0, 16)
+	grouped := make(map[string]*PermissionGroupResponse, 16)
 
 	for _, perm := range permissions {
 		permission := ListAllPermissionsApiResponse{
@@ -57,7 +59,8 @@ func (s *settingsService) ListAllPermissions(ctx context.Context) ([]PermissionG
 			group = &PermissionGroupResponse{
 				GroupKey:   perm.GroupKey,
 				GroupLabel: humanizePermissionKey(perm.GroupKey),
-				Sections:   make([]PermissionSectionResponse, 0),
+				// 2. Hint capacity for sections per group
+				Sections: make([]PermissionSectionResponse, 0, 4),
 			}
 			grouped[perm.GroupKey] = group
 		}
@@ -74,11 +77,13 @@ func (s *settingsService) ListAllPermissions(ctx context.Context) ([]PermissionG
 			group.Sections = append(group.Sections, PermissionSectionResponse{
 				SectionKey:   perm.SectionKey,
 				SectionLabel: humanizePermissionKey(perm.SectionKey),
-				Permissions:  make([]ListAllPermissionsApiResponse, 0),
+				// 3. Hint capacity for permissions per section
+				Permissions: make([]ListAllPermissionsApiResponse, 0, 8),
 			})
 			sectionIndex = len(group.Sections) - 1
 		}
 
+		// Update the slice in place
 		group.Sections[sectionIndex].Permissions = append(group.Sections[sectionIndex].Permissions, permission)
 	}
 
@@ -86,6 +91,7 @@ func (s *settingsService) ListAllPermissions(ctx context.Context) ([]PermissionG
 	for _, key := range groupOrder {
 		response = append(response, *grouped[key])
 	}
+
 	return response, nil
 }
 
@@ -115,31 +121,15 @@ func (s *settingsService) AssignRoleToEmployee(ctx context.Context, employeeID u
 		return nil, fmt.Errorf("failed to get user ID: %w", err)
 	}
 
-	tx, err := s.Store.ConnPool.Begin(ctx)
-	if err != nil {
-		s.Logger.LogError(ctx, "AssignRoleToEmployee", "Failed to begin transaction", err)
-		return nil, fmt.Errorf("failed to begin transaction: %w", err)
-	}
-	defer func() {
-		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil && rollbackErr != sql.ErrTxDone {
-			s.Logger.LogError(ctx, "AssignRoleToEmployee", "Failed to rollback transaction", rollbackErr)
-		}
-	}()
-
-	qtx := s.Store.WithTx(tx)
-
-	err = qtx.AssignRoleToUser(ctx, db.AssignRoleToUserParams{
-		UserID: userID,
-		RoleID: req.RoleID,
+	err = s.Store.ExecTx(ctx, func(q *db.Queries) error {
+		return q.AssignRoleToUser(ctx, db.AssignRoleToUserParams{
+			UserID: userID,
+			RoleID: req.RoleID,
+		})
 	})
 	if err != nil {
 		s.Logger.LogError(ctx, "AssignRoleToEmployee", "Failed to assign role to user", err)
 		return nil, fmt.Errorf("failed to assign role to user: %w", err)
-	}
-
-	if err := tx.Commit(ctx); err != nil {
-		s.Logger.LogError(ctx, "AssignRoleToEmployee", "Failed to commit transaction", err)
-		return nil, fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
 	return &AssignRoleToEmployeeApiResponse{
@@ -240,53 +230,41 @@ func (s *settingsService) ReplaceUserPermissionOverrides(ctx context.Context, em
 		return nil, fmt.Errorf("failed to get user ID: %w", err)
 	}
 
-	tx, err := s.Store.ConnPool.Begin(ctx)
-	if err != nil {
-		s.Logger.LogError(ctx, "ReplaceUserPermissionOverrides", "Failed to begin transaction", err)
-		return nil, fmt.Errorf("failed to begin transaction: %w", err)
-	}
-	defer func() {
-		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil && rollbackErr != sql.ErrTxDone {
-			s.Logger.LogError(ctx, "ReplaceUserPermissionOverrides", "Failed to rollback transaction", rollbackErr)
-		}
-	}()
-
-	qtx := s.Store.WithTx(tx)
-
-	err = qtx.DeleteUserPermissionOverrides(ctx, userID)
-	if err != nil {
-		s.Logger.LogError(ctx, "ReplaceUserPermissionOverrides", "Failed to delete user permission overrides", err)
-		return nil, fmt.Errorf("failed to delete user permission overrides: %w", err)
-	}
-
-	if len(req.AllowPermissionIDs) > 0 {
-		err = qtx.AddUserPermissionOverrides(ctx, db.AddUserPermissionOverridesParams{
-			UserID:        userID,
-			PermissionIds: req.AllowPermissionIDs,
-			Effect:        db.PermissionOverrideEffectAllow,
-		})
+	err = s.Store.ExecTx(ctx, func(q *db.Queries) error {
+		err := q.DeleteUserPermissionOverrides(ctx, userID)
 		if err != nil {
-			s.Logger.LogError(ctx, "ReplaceUserPermissionOverrides", "Failed to add allow overrides", err)
-			return nil, fmt.Errorf("failed to add allow overrides: %w", err)
+			return err
 		}
+
+		if len(req.AllowPermissionIDs) > 0 {
+			err = q.AddUserPermissionOverrides(ctx, db.AddUserPermissionOverridesParams{
+				UserID:        userID,
+				PermissionIds: req.AllowPermissionIDs,
+				Effect:        db.PermissionOverrideEffectAllow,
+			})
+			if err != nil {
+				return err
+			}
+		}
+
+		if len(req.DenyPermissionIDs) > 0 {
+			err = q.AddUserPermissionOverrides(ctx, db.AddUserPermissionOverridesParams{
+				UserID:        userID,
+				PermissionIds: req.DenyPermissionIDs,
+				Effect:        db.PermissionOverrideEffectDeny,
+			})
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+	if err != nil {
+		s.Logger.LogError(ctx, "ReplaceUserPermissionOverrides", "Failed to replace user permission overrides", err)
+		return nil, fmt.Errorf("failed to replace user permission overrides: %w", err)
 	}
 
-	if len(req.DenyPermissionIDs) > 0 {
-		err = qtx.AddUserPermissionOverrides(ctx, db.AddUserPermissionOverridesParams{
-			UserID:        userID,
-			PermissionIds: req.DenyPermissionIDs,
-			Effect:        db.PermissionOverrideEffectDeny,
-		})
-		if err != nil {
-			s.Logger.LogError(ctx, "ReplaceUserPermissionOverrides", "Failed to add deny overrides", err)
-			return nil, fmt.Errorf("failed to add deny overrides: %w", err)
-		}
-	}
-
-	if err := tx.Commit(ctx); err != nil {
-		s.Logger.LogError(ctx, "ReplaceUserPermissionOverrides", "Failed to commit transaction", err)
-		return nil, fmt.Errorf("failed to commit transaction: %w", err)
-	}
 	return &ReplaceUserPermissionOverridesResponse{
 		EmployeeID:         employeeID,
 		AllowPermissionIDs: req.AllowPermissionIDs,
@@ -295,37 +273,25 @@ func (s *settingsService) ReplaceUserPermissionOverrides(ctx context.Context, em
 }
 
 func (s *settingsService) AddPermissionsToRole(ctx context.Context, roleID uuid.UUID, req *AddPermissionsToRoleRequest) (*AddPermissionsToRoleResponse, error) {
-	tx, err := s.Store.ConnPool.Begin(ctx)
-	if err != nil {
-		s.Logger.LogError(ctx, "AddPermissionsToRole", "Failed to begin transaction", err)
-		return nil, fmt.Errorf("failed to begin transaction: %w", err)
-	}
-	defer func() {
-		if rollbackErr := tx.Rollback(ctx); rollbackErr != nil && rollbackErr != sql.ErrTxDone {
-			s.Logger.LogError(ctx, "AddPermissionsToRole", "Failed to rollback transaction", rollbackErr)
+	err := s.Store.ExecTx(ctx, func(q *db.Queries) error {
+		err := q.RemovePermissionsFromRole(ctx, roleID)
+		if err != nil {
+			return err
 		}
-	}()
 
-	qtx := s.Store.WithTx(tx)
+		err = q.AddPermissionsToRole(ctx, db.AddPermissionsToRoleParams{
+			RoleID:        roleID,
+			PermissionIds: req.PermissionIDs,
+		})
+		if err != nil {
+			return err
+		}
 
-	err = qtx.RemovePermissionsFromRole(ctx, roleID)
-	if err != nil {
-		s.Logger.LogError(ctx, "AddPermissionsToRole", "Failed to remove existing permissions from role", err)
-		return nil, fmt.Errorf("failed to remove existing permissions from role: %w", err)
-	}
-
-	err = qtx.AddPermissionsToRole(ctx, db.AddPermissionsToRoleParams{
-		RoleID:        roleID,
-		PermissionIds: req.PermissionIDs,
+		return nil
 	})
 	if err != nil {
 		s.Logger.LogError(ctx, "AddPermissionsToRole", "Failed to add permissions to role", err)
 		return nil, fmt.Errorf("failed to add permissions to role: %w", err)
-	}
-
-	if err := tx.Commit(ctx); err != nil {
-		s.Logger.LogError(ctx, "AddPermissionsToRole", "Failed to commit transaction", err)
-		return nil, fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
 	return &AddPermissionsToRoleResponse{
@@ -337,7 +303,7 @@ func (s *settingsService) AddPermissionsToRole(ctx context.Context, roleID uuid.
 func (s *settingsService) CreateRole(ctx context.Context, req *CreateRoleRequest) (*CreateRoleResponse, error) {
 	role, err := s.Store.CreateRole(ctx, db.CreateRoleParams{
 		Name:        req.Name,
-		Description: normalizeOptionalString(req.Description),
+		Description: util.OtpString(req.Description),
 	})
 	if err != nil {
 		s.Logger.LogError(ctx, "CreateRole", "Failed to create role", err)
@@ -352,12 +318,40 @@ func (s *settingsService) CreateRole(ctx context.Context, req *CreateRoleRequest
 }
 
 func humanizePermissionKey(value string) string {
-	parts := strings.Fields(strings.ReplaceAll(strings.ReplaceAll(value, "_", " "), ".", " "))
-	for i, part := range parts {
-		lower := strings.ToLower(part)
-		parts[i] = strings.ToUpper(lower[:1]) + lower[1:]
+	if value == "" {
+		return ""
 	}
-	return strings.Join(parts, " ")
+
+	var b strings.Builder
+	b.Grow(len(value)) // Pre-allocate exact required capacity
+
+	capitalizeNext := true
+	lastWasSpace := false
+
+	for _, r := range value {
+		if r == '_' || r == '.' || r == ' ' {
+			if b.Len() > 0 && !lastWasSpace {
+				b.WriteByte(' ')
+				lastWasSpace = true
+			}
+			capitalizeNext = true
+		} else {
+			if capitalizeNext {
+				b.WriteRune(unicode.ToUpper(r))
+				capitalizeNext = false
+			} else {
+				b.WriteRune(unicode.ToLower(r))
+			}
+			lastWasSpace = false
+		}
+	}
+
+	// Clean up trailing space if the original string ended with a separator
+	res := b.String()
+	if len(res) > 0 && res[len(res)-1] == ' ' {
+		return res[:len(res)-1]
+	}
+	return res
 }
 
 func hasPermissionOverlap(allowIDs []uuid.UUID, denyIDs []uuid.UUID) bool {

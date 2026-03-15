@@ -2,22 +2,23 @@ package handbook
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/url"
 	"strings"
-	"time"
+
+	"github.com/goccy/go-json"
 
 	db "maicare_go/db/sqlc"
 	"maicare_go/logger"
 	"maicare_go/pagination"
 	"maicare_go/service/deps"
+	"maicare_go/util"
 
+	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
 )
 
@@ -33,6 +34,9 @@ var ErrTemplateHasNoSteps = errors.New("template must contain at least one step 
 var ErrStepNotFound = errors.New("step not found")
 var ErrInvalidStepReorder = errors.New("ordered_step_ids must match the template steps exactly")
 var ErrInvalidStepContent = errors.New("invalid step content")
+var ErrEmployeeHandbookNotFound = errors.New("employee handbook not found")
+var ErrEmployeeHandbookNotActive = errors.New("employee handbook is not active")
+var ErrInvalidAssignmentStatusFilter = errors.New("invalid assignment status filter")
 
 func NewHandbookService(deps *deps.ServiceDependencies) HandbookService {
 	return &handbookService{ServiceDependencies: deps}
@@ -54,20 +58,18 @@ func (s *handbookService) GetMyActiveHandbook(ctx context.Context, employeeID uu
 
 	steps := make([]MyHandbookStep, 0, len(rows))
 	for _, row := range rows {
-		content := normalizeStepContentForOutput(row.Kind, mustUnmarshalJSON(row.Content))
-		response := mustUnmarshalJSON(row.ProgressResponse)
 		steps = append(steps, MyHandbookStep{
 			StepID:      row.StepID,
 			SortOrder:   row.SortOrder,
 			Kind:        row.Kind,
 			Title:       row.Title,
 			Body:        row.Body,
-			Content:     content,
+			Content:     mustUnmarshalJSON(row.Content),
 			IsRequired:  row.IsRequired,
 			Status:      string(row.ProgressStatus),
-			StartedAt:   tsPtr(row.ProgressStartedAt),
-			CompletedAt: tsPtr(row.ProgressCompletedAt),
-			Response:    response,
+			StartedAt:   util.TsPtr(row.ProgressStartedAt),
+			CompletedAt: util.TsPtr(row.ProgressCompletedAt),
+			Response:    mustUnmarshalJSON(row.ProgressResponse),
 		})
 	}
 
@@ -75,9 +77,9 @@ func (s *handbookService) GetMyActiveHandbook(ctx context.Context, employeeID uu
 		HandbookID:      hb.ID,
 		Status:          string(hb.Status),
 		AssignedAt:      hb.AssignedAt.Time,
-		StartedAt:       tsPtr(hb.StartedAt),
-		CompletedAt:     tsPtr(hb.CompletedAt),
-		DueAt:           tsPtr(hb.DueAt),
+		StartedAt:       util.TsPtr(hb.StartedAt),
+		CompletedAt:     util.TsPtr(hb.CompletedAt),
+		DueAt:           util.TsPtr(hb.DueAt),
 		TemplateID:      hb.TemplateID,
 		TemplateTitle:   hb.TemplateTitle,
 		TemplateDesc:    hb.TemplateDescription,
@@ -95,14 +97,45 @@ func (s *handbookService) StartMyHandbook(ctx context.Context, employeeID uuid.U
 	if err != nil {
 		return nil, err
 	}
-	updated, err := s.Store.MarkEmployeeHandbookStarted(ctx, hb.ID)
+
+	var updated db.EmployeeHandbook
+	err = s.Store.ExecTx(ctx, func(q *db.Queries) error {
+		row, err := q.MarkEmployeeHandbookStarted(ctx, hb.ID)
+		if err != nil {
+			return err
+		}
+		updated = row
+
+		if hb.Status == db.HandbookAssignmentStatusEnumNotStarted {
+			metadata, err := marshalJSONPayload(map[string]any{
+				"source": "employee_self_service",
+			})
+			if err != nil {
+				return err
+			}
+			_, err = q.CreateEmployeeHandbookAssignmentHistory(ctx, db.CreateEmployeeHandbookAssignmentHistoryParams{
+				EmployeeHandbookID: &hb.ID,
+				EmployeeID:         hb.EmployeeID,
+				TemplateID:         hb.TemplateID,
+				TemplateVersion:    hb.TemplateVersion,
+				Event:              db.HandbookAssignmentEventEnumStarted,
+				ActorEmployeeID:    &hb.EmployeeID,
+				Metadata:           metadata,
+			})
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
 	if err != nil {
 		return nil, err
 	}
 	return &StartMyHandbookResponse{
 		HandbookID: updated.ID,
 		Status:     string(updated.Status),
-		StartedAt:  tsPtr(updated.StartedAt),
+		StartedAt:  util.TsPtr(updated.StartedAt),
 	}, nil
 }
 
@@ -117,27 +150,56 @@ func (s *handbookService) CompleteMyHandbookStep(ctx context.Context, employeeID
 		return nil, fmt.Errorf("invalid response payload: %w", err)
 	}
 
-	progress, err := s.Store.CompleteEmployeeHandbookStep(ctx, db.CompleteEmployeeHandbookStepParams{
-		Response:           respBytes,
-		EmployeeHandbookID: hb.ID,
-		StepID:             stepID,
+	var progress db.EmployeeHandbookStepProgress
+	handbookStatus := string(hb.Status)
+	err = s.Store.ExecTx(ctx, func(q *db.Queries) error {
+		row, err := q.CompleteEmployeeHandbookStep(ctx, db.CompleteEmployeeHandbookStepParams{
+			Response:           respBytes,
+			EmployeeHandbookID: hb.ID,
+			StepID:             stepID,
+		})
+		if err != nil {
+			return err
+		}
+		progress = row
+
+		remaining, err := q.CountRemainingRequiredHandbookSteps(ctx, hb.ID)
+		if err != nil {
+			return err
+		}
+
+		if remaining == 0 {
+			completed, err := q.MarkEmployeeHandbookCompleted(ctx, hb.ID)
+			if err != nil {
+				return err
+			}
+			handbookStatus = string(completed.Status)
+
+			metadata, err := marshalJSONPayload(map[string]any{
+				"source":            "employee_self_service",
+				"completed_step_id": stepID.String(),
+			})
+			if err != nil {
+				return err
+			}
+			_, err = q.CreateEmployeeHandbookAssignmentHistory(ctx, db.CreateEmployeeHandbookAssignmentHistoryParams{
+				EmployeeHandbookID: &hb.ID,
+				EmployeeID:         hb.EmployeeID,
+				TemplateID:         hb.TemplateID,
+				TemplateVersion:    hb.TemplateVersion,
+				Event:              db.HandbookAssignmentEventEnumCompleted,
+				ActorEmployeeID:    &hb.EmployeeID,
+				Metadata:           metadata,
+			})
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
 	})
 	if err != nil {
 		return nil, err
-	}
-
-	remaining, err := s.Store.CountRemainingRequiredHandbookSteps(ctx, hb.ID)
-	if err != nil {
-		return nil, err
-	}
-
-	handbookStatus := string(hb.Status)
-	if remaining == 0 {
-		completed, err := s.Store.MarkEmployeeHandbookCompleted(ctx, hb.ID)
-		if err != nil {
-			return nil, err
-		}
-		handbookStatus = string(completed.Status)
 	}
 
 	return &CompleteMyHandbookStepResponse{
@@ -170,8 +232,8 @@ func (s *handbookService) CreateTemplateForDepartment(ctx context.Context, actor
 		Description:  t.Description,
 		Version:      t.Version,
 		Status:       string(t.Status),
-		PublishedAt:  tsPtr(t.PublishedAt),
-		ArchivedAt:   tsPtr(t.ArchivedAt),
+		PublishedAt:  util.TsPtr(t.PublishedAt),
+		ArchivedAt:   util.TsPtr(t.ArchivedAt),
 		CreatedAt:    t.CreatedAt.Time,
 		UpdatedAt:    t.UpdatedAt.Time,
 	}, nil
@@ -199,8 +261,8 @@ func (s *handbookService) CloneTemplateToDraft(ctx context.Context, actorEmploye
 		Description:  t.Description,
 		Version:      t.Version,
 		Status:       string(t.Status),
-		PublishedAt:  tsPtr(t.PublishedAt),
-		ArchivedAt:   tsPtr(t.ArchivedAt),
+		PublishedAt:  util.TsPtr(t.PublishedAt),
+		ArchivedAt:   util.TsPtr(t.ArchivedAt),
 		CreatedAt:    t.CreatedAt.Time,
 		UpdatedAt:    t.UpdatedAt.Time,
 	}, nil
@@ -298,10 +360,10 @@ func (s *handbookService) CreateStep(ctx context.Context, req CreateStepRequest)
 	if tmpl.Status != db.HandbookTemplateStatusEnumDraft {
 		return nil, ErrTemplateNotDraft
 	}
-	if err := validateStepContentByKind(req.Kind, req.Content); err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrInvalidStepContent, err)
-	}
-	normalizedContent, err := normalizeStepContentByKind(req.Kind, req.Content)
+
+	dbKind := mapFrontendKindToDB(req.Kind)
+
+	normalizedContent, err := normalizeAndValidateContent(dbKind, req.Content)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrInvalidStepContent, err)
 	}
@@ -309,7 +371,7 @@ func (s *handbookService) CreateStep(ctx context.Context, req CreateStepRequest)
 	step, err := s.Store.CreateHandbookStep(ctx, db.CreateHandbookStepParams{
 		TemplateID: req.TemplateID,
 		SortOrder:  req.SortOrder,
-		Kind:       req.Kind,
+		Kind:       dbKind,
 		Title:      req.Title,
 		Body:       req.Body,
 		Content:    normalizedContent,
@@ -325,7 +387,7 @@ func (s *handbookService) CreateStep(ctx context.Context, req CreateStepRequest)
 		Kind:       step.Kind,
 		Title:      step.Title,
 		Body:       step.Body,
-		Content:    normalizeStepContentForOutput(step.Kind, mustUnmarshalJSON(step.Content)),
+		Content:    mustUnmarshalJSON(step.Content),
 		IsRequired: step.IsRequired,
 	}, nil
 }
@@ -343,7 +405,7 @@ func (s *handbookService) ListStepsByTemplate(ctx context.Context, templateID uu
 			Kind:       step.Kind,
 			Title:      step.Title,
 			Body:       step.Body,
-			Content:    normalizeStepContentForOutput(step.Kind, mustUnmarshalJSON(step.Content)),
+			Content:    mustUnmarshalJSON(step.Content),
 			IsRequired: step.IsRequired,
 		})
 	}
@@ -372,18 +434,11 @@ func (s *handbookService) UpdateStep(ctx context.Context, req UpdateStepRequest)
 
 	var content []byte
 	if req.ContentProvided {
-		if err := validateStepContentByKind(step.Kind, req.Content); err != nil {
+		normalizedContent, err := normalizeAndValidateContent(step.Kind, req.Content)
+		if err != nil {
 			return nil, fmt.Errorf("%w: %v", ErrInvalidStepContent, err)
 		}
-		normalizedContent, normErr := normalizeStepContentByKind(step.Kind, req.Content)
-		if normErr != nil {
-			return nil, fmt.Errorf("%w: %v", ErrInvalidStepContent, normErr)
-		}
-		contentBytes, marshalErr := json.Marshal(normalizedContent)
-		if marshalErr != nil {
-			return nil, fmt.Errorf("invalid content payload: %w", marshalErr)
-		}
-		content = contentBytes
+		content = normalizedContent
 	}
 
 	updated, err := s.Store.UpdateHandbookStepByID(ctx, db.UpdateHandbookStepByIDParams{
@@ -411,7 +466,7 @@ func (s *handbookService) UpdateStep(ctx context.Context, req UpdateStepRequest)
 		Kind:       updated.Kind,
 		Title:      updated.Title,
 		Body:       updated.Body,
-		Content:    normalizeStepContentForOutput(updated.Kind, mustUnmarshalJSON(updated.Content)),
+		Content:    mustUnmarshalJSON(updated.Content),
 		IsRequired: updated.IsRequired,
 		UpdatedAt:  updated.UpdatedAt.Time,
 	}, nil
@@ -538,7 +593,7 @@ func (s *handbookService) ReorderTemplateSteps(ctx context.Context, req ReorderS
 			Kind:       step.Kind,
 			Title:      step.Title,
 			Body:       step.Body,
-			Content:    normalizeStepContentForOutput(step.Kind, mustUnmarshalJSON(step.Content)),
+			Content:    mustUnmarshalJSON(step.Content),
 			IsRequired: step.IsRequired,
 		})
 	}
@@ -559,6 +614,14 @@ func (s *handbookService) AssignTemplateToEmployee(ctx context.Context, actorEmp
 		return nil, ErrTemplateNotPublished
 	}
 
+	var previousActive *db.GetActiveEmployeeHandbookByEmployeeIDRow
+	current, err := s.Store.GetActiveEmployeeHandbookByEmployeeID(ctx, req.EmployeeID)
+	if err == nil {
+		previousActive = &current
+	} else if !errors.Is(err, pgx.ErrNoRows) {
+		return nil, err
+	}
+
 	var result db.CreateEmployeeHandbookFromTemplateRow
 	err = s.Store.ExecTx(ctx, func(q *db.Queries) error {
 		if err := q.WaiveActiveEmployeeHandbooksByEmployeeID(ctx, req.EmployeeID); err != nil {
@@ -575,6 +638,37 @@ func (s *handbookService) AssignTemplateToEmployee(ctx context.Context, actorEmp
 		}
 		result = row
 
+		if previousActive != nil {
+			metadata, err := marshalJSONPayload(map[string]any{
+				"source":                  "manual_assignment",
+				"replaced_by_handbook_id": result.ID.String(),
+				"new_template_id":         result.TemplateID.String(),
+			})
+			if err != nil {
+				return err
+			}
+			_, err = q.CreateEmployeeHandbookAssignmentHistory(ctx, db.CreateEmployeeHandbookAssignmentHistoryParams{
+				EmployeeHandbookID: &previousActive.ID,
+				EmployeeID:         previousActive.EmployeeID,
+				TemplateID:         previousActive.TemplateID,
+				TemplateVersion:    previousActive.TemplateVersion,
+				Event:              db.HandbookAssignmentEventEnumReassigned,
+				ActorEmployeeID:    uuidPtrOrNil(actorEmployeeID),
+				Metadata:           metadata,
+			})
+			if err != nil {
+				return err
+			}
+		}
+
+		metadata, err := marshalJSONPayload(map[string]any{
+			"source":               "manual_assignment",
+			"previous_handbook_id": uuidStringOrEmpty(previousActive),
+			"previous_template_id": templateStringOrEmpty(previousActive),
+		})
+		if err != nil {
+			return err
+		}
 		_, err = q.CreateEmployeeHandbookAssignmentHistory(ctx, db.CreateEmployeeHandbookAssignmentHistoryParams{
 			EmployeeHandbookID: &result.ID,
 			EmployeeID:         result.EmployeeID,
@@ -582,6 +676,7 @@ func (s *handbookService) AssignTemplateToEmployee(ctx context.Context, actorEmp
 			TemplateVersion:    result.TemplateVersion,
 			Event:              db.HandbookAssignmentEventEnumAssigned,
 			ActorEmployeeID:    uuidPtrOrNil(actorEmployeeID),
+			Metadata:           metadata,
 		})
 		if err != nil {
 			return err
@@ -602,11 +697,322 @@ func (s *handbookService) AssignTemplateToEmployee(ctx context.Context, actorEmp
 	}, nil
 }
 
+func (s *handbookService) WaiveEmployeeHandbook(ctx context.Context, actorEmployeeID uuid.UUID, req WaiveEmployeeHandbookRequest) (*WaiveEmployeeHandbookResponse, error) {
+	hb, err := s.Store.GetEmployeeHandbookByID(ctx, req.EmployeeHandbookID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrEmployeeHandbookNotFound
+		}
+		return nil, err
+	}
+	if hb.Status != db.HandbookAssignmentStatusEnumNotStarted && hb.Status != db.HandbookAssignmentStatusEnumInProgress {
+		return nil, ErrEmployeeHandbookNotActive
+	}
+
+	var waived db.EmployeeHandbook
+	err = s.Store.ExecTx(ctx, func(q *db.Queries) error {
+		row, err := q.WaiveEmployeeHandbookByID(ctx, req.EmployeeHandbookID)
+		if err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				return ErrEmployeeHandbookNotActive
+			}
+			return err
+		}
+		waived = row
+
+		metadataMap := map[string]any{
+			"source": "manual_waive",
+		}
+		if req.Reason != nil && strings.TrimSpace(*req.Reason) != "" {
+			metadataMap["reason"] = strings.TrimSpace(*req.Reason)
+		}
+		metadata, err := marshalJSONPayload(metadataMap)
+		if err != nil {
+			return err
+		}
+		_, err = q.CreateEmployeeHandbookAssignmentHistory(ctx, db.CreateEmployeeHandbookAssignmentHistoryParams{
+			EmployeeHandbookID: &waived.ID,
+			EmployeeID:         waived.EmployeeID,
+			TemplateID:         waived.TemplateID,
+			TemplateVersion:    waived.TemplateVersion,
+			Event:              db.HandbookAssignmentEventEnumWaived,
+			ActorEmployeeID:    uuidPtrOrNil(actorEmployeeID),
+			Metadata:           metadata,
+		})
+		return err
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &WaiveEmployeeHandbookResponse{
+		EmployeeHandbookID: waived.ID,
+		EmployeeID:         waived.EmployeeID,
+		Status:             string(waived.Status),
+		CompletedAt:        util.TsPtr(waived.CompletedAt),
+	}, nil
+}
+
+func (s *handbookService) ListEmployeeHandbookHistory(ctx context.Context, employeeID uuid.UUID) ([]HandbookAssignmentHistoryEntry, error) {
+	rows, err := s.Store.ListEmployeeHandbookAssignmentHistoryByEmployeeID(ctx, db.ListEmployeeHandbookAssignmentHistoryByEmployeeIDParams{
+		EmployeeID: employeeID,
+		Limit:      50,
+		Offset:     0,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	history := make([]HandbookAssignmentHistoryEntry, 0, len(rows))
+	for _, row := range rows {
+		history = append(history, HandbookAssignmentHistoryEntry{
+			ID:                 row.ID,
+			EmployeeHandbookID: row.EmployeeHandbookID,
+			EmployeeID:         row.EmployeeID,
+			TemplateID:         row.TemplateID,
+			TemplateVersion:    row.TemplateVersion,
+			Event:              string(row.Event),
+			ActorEmployeeID:    row.ActorEmployeeID,
+			Metadata:           mustUnmarshalJSON(row.Metadata),
+			CreatedAt:          row.CreatedAt.Time,
+		})
+	}
+
+	return history, nil
+}
+
+func (s *handbookService) ListEmployeeHandbookAssignments(ctx *gin.Context, req ListEmployeeHandbookAssignmentsRequest) (*pagination.Response[EmployeeHandbookAssignmentSummary], error) {
+	params := req.GetParams()
+	statusFilter, err := normalizeAssignmentStatusFilter(req.Status)
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := s.Store.ListEmployeeHandbookAssignments(ctx, db.ListEmployeeHandbookAssignmentsParams{
+		Limit:        params.Limit,
+		Offset:       params.Offset,
+		DepartmentID: req.DepartmentID,
+		StatusFilter: statusFilter,
+		Search:       req.Search,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	totalCount, err := s.Store.CountEmployeeHandbookAssignments(ctx, db.CountEmployeeHandbookAssignmentsParams{
+		DepartmentID: req.DepartmentID,
+		StatusFilter: statusFilter,
+		Search:       req.Search,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	results := make([]EmployeeHandbookAssignmentSummary, 0, len(rows))
+	for _, row := range rows {
+		results = append(results, EmployeeHandbookAssignmentSummary{
+			EmployeeID:             row.EmployeeID,
+			FirstName:              row.FirstName,
+			LastName:               row.LastName,
+			DepartmentID:           row.EmployeeDepartmentID,
+			DepartmentName:         row.DepartmentName,
+			EmployeeHandbookID:     row.EmployeeHandbookID,
+			TemplateID:             row.HandbookTemplateID,
+			TemplateTitle:          row.TemplateTitle,
+			TemplateVersion:        row.TemplateVersion,
+			HandbookStatus:         interfaceString(row.EmployeeHandbookStatus),
+			AssignedAt:             util.TsPtr(row.AssignedAt),
+			StartedAt:              util.TsPtr(row.StartedAt),
+			CompletedAt:            util.TsPtr(row.CompletedAt),
+			DueAt:                  util.TsPtr(row.DueAt),
+			RequiredStepsTotal:     row.RequiredStepsTotal,
+			RequiredStepsCompleted: row.RequiredStepsCompleted,
+		})
+	}
+
+	response := pagination.NewResponse(ctx, req.Request, results, totalCount)
+	return &response, nil
+}
+
+func (s *handbookService) GetEmployeeHandbookDetails(ctx context.Context, handbookID uuid.UUID) (*GetEmployeeHandbookDetailsResponse, error) {
+	hb, err := s.Store.GetEmployeeHandbookDetailsByID(ctx, handbookID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrEmployeeHandbookNotFound
+		}
+		return nil, err
+	}
+
+	rows, err := s.Store.ListEmployeeHandbookStepsByHandbookID(ctx, handbookID)
+	if err != nil {
+		return nil, err
+	}
+
+	steps := make([]MyHandbookStep, 0, len(rows))
+	for _, row := range rows {
+		steps = append(steps, MyHandbookStep{
+			StepID:      row.StepID,
+			SortOrder:   row.SortOrder,
+			Kind:        row.Kind,
+			Title:       row.Title,
+			Body:        row.Body,
+			Content:     mustUnmarshalJSON(row.Content),
+			IsRequired:  row.IsRequired,
+			Status:      string(row.ProgressStatus),
+			StartedAt:   util.TsPtr(row.ProgressStartedAt),
+			CompletedAt: util.TsPtr(row.ProgressCompletedAt),
+			Response:    mustUnmarshalJSON(row.ProgressResponse),
+		})
+	}
+
+	return &GetEmployeeHandbookDetailsResponse{
+		EmployeeHandbookID: hb.ID,
+		EmployeeID:         hb.EmployeeID,
+		FirstName:          hb.FirstName,
+		LastName:           hb.LastName,
+		Status:             string(hb.Status),
+		AssignedAt:         hb.AssignedAt.Time,
+		StartedAt:          util.TsPtr(hb.StartedAt),
+		CompletedAt:        util.TsPtr(hb.CompletedAt),
+		DueAt:              util.TsPtr(hb.DueAt),
+		TemplateID:         hb.TemplateID,
+		TemplateTitle:      hb.TemplateTitle,
+		TemplateDesc:       hb.TemplateDescription,
+		TemplateVersion:    hb.TemplateVersion,
+		DepartmentID:       hb.DepartmentID,
+		DepartmentName:     hb.DepartmentName,
+		Steps:              steps,
+	}, nil
+}
+
+func (s *handbookService) ListEligibleEmployees(ctx *gin.Context, actorEmployeeID uuid.UUID, req ListEligibleEmployeesRequest) (*pagination.Response[ListEligibleEmployeesResponse], error) {
+	params := req.GetParams()
+	effectiveDepartmentID := req.DepartmentID
+	search := normalizeOptionalSearch(req.Search)
+
+	userID, err := s.Store.GetUserIDByEmployeeID(ctx, actorEmployeeID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user id: %w", err)
+	}
+
+	hasViewAll, err := s.Store.CheckUserPermission(ctx, db.CheckUserPermissionParams{
+		UserID: userID,
+		Name:   "HANDBOOK.ELIGIBLE_EMPLOYEES.VIEW_ALL",
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to check handbook eligible employee permission: %w", err)
+	}
+
+	if !hasViewAll {
+		actorProfile, err := s.Store.GetEmployeeProfileByID(ctx, actorEmployeeID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get actor employee profile: %w", err)
+		}
+
+		if actorProfile.DepartmentID == nil {
+			response := pagination.NewResponse(ctx, req.Request, []ListEligibleEmployeesResponse{}, 0)
+			return &response, nil
+		}
+
+		effectiveDepartmentID = actorProfile.DepartmentID
+	}
+
+	rows, err := s.Store.ListEligibleEmployeesForHandbookAssignment(ctx, db.ListEligibleEmployeesForHandbookAssignmentParams{
+		Limit:        params.Limit,
+		Offset:       params.Offset,
+		DepartmentID: effectiveDepartmentID,
+		Search:       search,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to list eligible employees: %w", err)
+	}
+
+	totalCount, err := s.Store.CountEligibleEmployeesForHandbookAssignment(ctx, db.CountEligibleEmployeesForHandbookAssignmentParams{
+		DepartmentID: effectiveDepartmentID,
+		Search:       search,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to count eligible employees: %w", err)
+	}
+
+	results := make([]ListEligibleEmployeesResponse, 0, len(rows))
+	for _, row := range rows {
+		results = append(results, ListEligibleEmployeesResponse{
+			EmployeeID:     row.EmployeeID,
+			FirstName:      row.FirstName,
+			LastName:       row.LastName,
+			DepartmentID:   row.DepartmentID,
+			DepartmentName: row.DepartmentName,
+		})
+	}
+
+	response := pagination.NewResponse(ctx, req.Request, results, totalCount)
+	return &response, nil
+}
+
 func uuidPtrOrNil(id uuid.UUID) *uuid.UUID {
 	if id == uuid.Nil {
 		return nil
 	}
 	return &id
+}
+
+func marshalJSONPayload(v any) ([]byte, error) {
+	if v == nil {
+		return []byte(`{}`), nil
+	}
+	return json.Marshal(v)
+}
+
+func uuidStringOrEmpty(hb *db.GetActiveEmployeeHandbookByEmployeeIDRow) string {
+	if hb == nil {
+		return ""
+	}
+	return hb.ID.String()
+}
+
+func templateStringOrEmpty(hb *db.GetActiveEmployeeHandbookByEmployeeIDRow) string {
+	if hb == nil {
+		return ""
+	}
+	return hb.TemplateID.String()
+}
+
+func interfaceString(v any) string {
+	switch typed := v.(type) {
+	case string:
+		return typed
+	case []byte:
+		return string(typed)
+	default:
+		return fmt.Sprint(v)
+	}
+}
+
+func normalizeAssignmentStatusFilter(status *string) (*string, error) {
+	if status == nil {
+		return nil, nil
+	}
+	normalized := strings.TrimSpace(strings.ToLower(*status))
+	switch normalized {
+	case "":
+		return nil, nil
+	case "unassigned", "not_started", "in_progress", "completed", "waived":
+		return &normalized, nil
+	default:
+		return nil, ErrInvalidAssignmentStatusFilter
+	}
+}
+
+func normalizeOptionalSearch(search *string) *string {
+	if search == nil {
+		return nil
+	}
+	trimmed := strings.TrimSpace(*search)
+	if trimmed == "" {
+		return nil
+	}
+	return &trimmed
 }
 
 func mustUnmarshalJSON(b []byte) any {
@@ -621,164 +1027,91 @@ func mustUnmarshalJSON(b []byte) any {
 	return v
 }
 
-func validateLinkStepContent(content any) error {
-	if content == nil {
-		return fmt.Errorf("link step content is required")
-	}
-
-	obj, ok := content.(map[string]any)
-	if !ok {
-		return fmt.Errorf("link step content must be an object containing a URL")
-	}
-
-	var rawURL any
-	for _, key := range []string{"url", "href", "link"} {
-		if v, exists := obj[key]; exists {
-			rawURL = v
-			break
-		}
-	}
-	if rawURL == nil {
-		return fmt.Errorf("link step content must include one of: url, href, link")
-	}
-
-	urlStr, ok := rawURL.(string)
-	if !ok || strings.TrimSpace(urlStr) == "" {
-		return fmt.Errorf("link URL must be a non-empty string")
-	}
-	urlStr = strings.TrimSpace(urlStr)
-
-	parsed, err := url.Parse(urlStr)
-	if err != nil || parsed.Host == "" {
-		return fmt.Errorf("link URL must be a valid absolute URL")
-	}
-	if parsed.Scheme != "http" && parsed.Scheme != "https" {
-		return fmt.Errorf("link URL must use http or https")
-	}
-
-	return nil
-}
-
-func validateQuizStepContent(content any) error {
-	if content == nil {
-		return fmt.Errorf("quiz step content is required")
-	}
-
-	obj, ok := content.(map[string]any)
-	if !ok {
-		return fmt.Errorf("quiz step content must be an object")
-	}
-
-	questionRaw, ok := obj["question"]
-	if !ok {
-		return fmt.Errorf("quiz content must include question")
-	}
-	question, ok := questionRaw.(string)
-	if !ok || strings.TrimSpace(question) == "" {
-		return fmt.Errorf("quiz question must be a non-empty string")
-	}
-
-	optionsRaw, ok := obj["options"]
-	if !ok {
-		return fmt.Errorf("quiz content must include options")
-	}
-	optionsAny, ok := optionsRaw.([]any)
-	if !ok || len(optionsAny) < 2 {
-		return fmt.Errorf("quiz options must be an array with at least 2 items")
-	}
-
-	options := make([]string, 0, len(optionsAny))
-	for _, opt := range optionsAny {
-		str, ok := opt.(string)
-		if !ok || strings.TrimSpace(str) == "" {
-			return fmt.Errorf("quiz options must be non-empty strings")
-		}
-		options = append(options, strings.TrimSpace(str))
-	}
-
-	idxRaw, exists := obj["correct_option_index"]
-	if !exists {
-		return fmt.Errorf("quiz content must include correct_option_index")
-	}
-	switch v := idxRaw.(type) {
-	case float64:
-		if v != float64(int(v)) {
-			return fmt.Errorf("correct_option_index must be an integer")
-		}
-		i := int(v)
-		if i < 0 || i >= len(options) {
-			return fmt.Errorf("correct_option_index out of range")
-		}
+func mapFrontendKindToDB(kind string) db.HandbookStepKindEnum {
+	switch kind {
+	case "rich_text":
+		return db.HandbookStepKindEnumContent
+	case "link":
+		return db.HandbookStepKindEnumLink
+	case "quiz":
+		return db.HandbookStepKindEnumQuiz
+	case "content":
+		return db.HandbookStepKindEnumContent
+	case "ack":
+		return db.HandbookStepKindEnumAck
 	default:
-		return fmt.Errorf("correct_option_index must be an integer")
+		return db.HandbookStepKindEnum(kind)
 	}
-
-	return nil
 }
 
-func validateStepContentByKind(kind db.HandbookStepKindEnum, content any) error {
+func normalizeAndValidateContent(kind db.HandbookStepKindEnum, raw json.RawMessage) ([]byte, error) {
 	switch kind {
 	case db.HandbookStepKindEnumLink:
-		return validateLinkStepContent(content)
-	case db.HandbookStepKindEnumQuiz:
-		return validateQuizStepContent(content)
-	default:
-		return nil
-	}
-}
-
-func normalizeStepContentByKind(kind db.HandbookStepKindEnum, content any) (any, error) {
-	switch kind {
-	case db.HandbookStepKindEnumLink:
-		return normalizeLinkStepContent(content)
-	case db.HandbookStepKindEnumQuiz:
-		return normalizeQuizStepContent(content)
-	default:
-		return content, nil
-	}
-}
-
-func normalizeStepContentForOutput(kind db.HandbookStepKindEnum, content any) any {
-	normalized, err := normalizeStepContentByKind(kind, content)
-	if err != nil {
-		return content
-	}
-	return normalized
-}
-
-func normalizeLinkStepContent(content any) (any, error) {
-	if err := validateLinkStepContent(content); err != nil {
-		return nil, err
-	}
-	obj := content.(map[string]any)
-	var rawURL any
-	for _, key := range []string{"url", "href", "link"} {
-		if v, exists := obj[key]; exists {
-			rawURL = v
-			break
+		if len(raw) == 0 || string(raw) == "null" {
+			return nil, fmt.Errorf("link content is required")
 		}
-	}
-	urlStr := strings.TrimSpace(rawURL.(string))
-	return map[string]any{"url": urlStr}, nil
-}
 
-func normalizeQuizStepContent(content any) (any, error) {
-	if err := validateQuizStepContent(content); err != nil {
-		return nil, err
+		var content LinkStepContent
+		if err := json.Unmarshal(raw, &content); err != nil {
+			return nil, fmt.Errorf("invalid link content: %w", err)
+		}
+
+		urlStr := strings.TrimSpace(content.URL)
+		if urlStr == "" {
+			return nil, fmt.Errorf("link URL is required")
+		}
+
+		parsed, err := url.Parse(urlStr)
+		if err != nil || parsed.Host == "" {
+			return nil, fmt.Errorf("invalid link URL")
+		}
+		if parsed.Scheme != "http" && parsed.Scheme != "https" {
+			return nil, fmt.Errorf("URL must use http or https")
+		}
+
+		return json.Marshal(LinkStepContent{URL: urlStr})
+
+	case db.HandbookStepKindEnumQuiz:
+		if len(raw) == 0 || string(raw) == "null" {
+			return nil, fmt.Errorf("quiz content is required")
+		}
+
+		var content QuizStepContent
+		if err := json.Unmarshal(raw, &content); err != nil {
+			return nil, fmt.Errorf("invalid quiz content: %w", err)
+		}
+
+		if strings.TrimSpace(content.Question) == "" {
+			return nil, fmt.Errorf("quiz question is required")
+		}
+		if len(content.Options) < 2 {
+			return nil, fmt.Errorf("quiz must have at least 2 options")
+		}
+		if content.CorrectOptionIndex < 0 || content.CorrectOptionIndex >= len(content.Options) {
+			return nil, fmt.Errorf("correct_option_index out of range")
+		}
+
+		options := make([]string, 0, len(content.Options))
+		for _, opt := range content.Options {
+			trimmed := strings.TrimSpace(opt)
+			if trimmed == "" {
+				return nil, fmt.Errorf("quiz options must be non-empty")
+			}
+			options = append(options, trimmed)
+		}
+
+		return json.Marshal(QuizStepContent{
+			Question:           strings.TrimSpace(content.Question),
+			Options:            options,
+			CorrectOptionIndex: content.CorrectOptionIndex,
+		})
+
+	default:
+		if len(raw) == 0 || string(raw) == "null" {
+			return []byte("{}"), nil
+		}
+		return []byte("{}"), nil
 	}
-	obj := content.(map[string]any)
-	question := strings.TrimSpace(obj["question"].(string))
-	optionsAny := obj["options"].([]any)
-	options := make([]string, 0, len(optionsAny))
-	for _, opt := range optionsAny {
-		options = append(options, strings.TrimSpace(opt.(string)))
-	}
-	idx := int(obj["correct_option_index"].(float64))
-	return map[string]any{
-		"question":             question,
-		"options":              options,
-		"correct_option_index": idx,
-	}, nil
 }
 
 func mapTemplateAPI(t db.HandbookTemplate) HandbookTemplateAPI {
@@ -789,17 +1122,9 @@ func mapTemplateAPI(t db.HandbookTemplate) HandbookTemplateAPI {
 		Description:  t.Description,
 		Version:      t.Version,
 		Status:       string(t.Status),
-		PublishedAt:  tsPtr(t.PublishedAt),
-		ArchivedAt:   tsPtr(t.ArchivedAt),
+		PublishedAt:  util.TsPtr(t.PublishedAt),
+		ArchivedAt:   util.TsPtr(t.ArchivedAt),
 		CreatedAt:    t.CreatedAt.Time,
 		UpdatedAt:    t.UpdatedAt.Time,
 	}
-}
-
-func tsPtr(ts pgtype.Timestamptz) *time.Time {
-	if !ts.Valid {
-		return nil
-	}
-	t := ts.Time
-	return &t
 }

@@ -229,6 +229,156 @@ WITH hb AS (
 )
 SELECT * FROM hb;
 
+-- name: ListEmployeesEligibleForDepartmentHandbookSeed :many
+SELECT ep.id
+FROM employee_profile ep
+LEFT JOIN employee_handbooks eh
+    ON eh.employee_id = ep.id
+   AND eh.status IN ('not_started', 'in_progress')
+WHERE ep.department_id = $1
+  AND NOT ep.is_archived
+  AND NOT COALESCE(ep.out_of_service, false)
+  AND eh.id IS NULL
+ORDER BY ep.created_at DESC
+LIMIT $2;
+
+-- name: ListEligibleEmployeesForHandbookAssignment :many
+WITH active_assignments AS (
+    SELECT DISTINCT employee_id
+    FROM employee_handbooks
+    WHERE status IN ('not_started', 'in_progress')
+)
+SELECT
+    ep.id AS employee_id,
+    ep.first_name,
+    ep.last_name,
+    ep.department_id,
+    d.name AS department_name
+FROM employee_profile ep
+LEFT JOIN departments d ON d.id = ep.department_id
+LEFT JOIN active_assignments aa ON aa.employee_id = ep.id
+WHERE
+    NOT ep.is_archived AND
+    NOT COALESCE(ep.out_of_service, false) AND
+    aa.employee_id IS NULL AND
+    (ep.department_id = sqlc.narg('department_id') OR sqlc.narg('department_id') IS NULL) AND
+    (sqlc.narg('search')::TEXT IS NULL OR
+        ep.first_name ILIKE '%' || sqlc.narg('search') || '%' OR
+        ep.last_name ILIKE '%' || sqlc.narg('search') || '%')
+ORDER BY ep.first_name ASC, ep.last_name ASC, ep.id ASC
+LIMIT $1 OFFSET $2;
+
+-- name: CountEligibleEmployeesForHandbookAssignment :one
+WITH active_assignments AS (
+    SELECT DISTINCT employee_id
+    FROM employee_handbooks
+    WHERE status IN ('not_started', 'in_progress')
+)
+SELECT COUNT(*)
+FROM employee_profile ep
+LEFT JOIN active_assignments aa ON aa.employee_id = ep.id
+WHERE
+    NOT ep.is_archived AND
+    NOT COALESCE(ep.out_of_service, false) AND
+    aa.employee_id IS NULL AND
+    (ep.department_id = sqlc.narg('department_id') OR sqlc.narg('department_id') IS NULL) AND
+    (sqlc.narg('search')::TEXT IS NULL OR
+        ep.first_name ILIKE '%' || sqlc.narg('search') || '%' OR
+        ep.last_name ILIKE '%' || sqlc.narg('search') || '%');
+
+-- name: ListEmployeeHandbookAssignments :many
+WITH latest_handbooks AS (
+    SELECT
+        eh.*,
+        ROW_NUMBER() OVER (PARTITION BY eh.employee_id ORDER BY eh.assigned_at DESC) AS rn
+    FROM employee_handbooks eh
+)
+SELECT
+    ar.employee_id,
+    ar.first_name,
+    ar.last_name,
+    ar.employee_department_id,
+    ar.department_name,
+    ar.employee_handbook_id,
+    ar.handbook_template_id,
+    ar.template_title,
+    ar.template_version,
+    ar.employee_handbook_status,
+    ar.assigned_at,
+    ar.started_at,
+    ar.completed_at,
+    ar.due_at,
+    ar.required_steps_total,
+    ar.required_steps_completed
+FROM (
+    SELECT
+        ep.id AS employee_id,
+        ep.first_name,
+        ep.last_name,
+        ep.department_id AS employee_department_id,
+        d.name AS department_name,
+        latest_handbooks.id AS employee_handbook_id,
+        latest_handbooks.template_id AS handbook_template_id,
+        ht.title AS template_title,
+        latest_handbooks.template_version,
+        COALESCE(latest_handbooks.status::text, 'unassigned') AS employee_handbook_status,
+        latest_handbooks.assigned_at,
+        latest_handbooks.started_at,
+        latest_handbooks.completed_at,
+        latest_handbooks.due_at,
+        COALESCE(progress.required_steps_total, 0)::INT AS required_steps_total,
+        COALESCE(progress.required_steps_completed, 0)::INT AS required_steps_completed,
+        ep.is_archived
+    FROM employee_profile ep
+    LEFT JOIN departments d ON d.id = ep.department_id
+    LEFT JOIN latest_handbooks ON latest_handbooks.employee_id = ep.id AND latest_handbooks.rn = 1
+    LEFT JOIN handbook_templates ht ON ht.id = latest_handbooks.template_id
+    LEFT JOIN LATERAL (
+        SELECT
+            COUNT(*) FILTER (WHERE hs.is_required = TRUE)::INT AS required_steps_total,
+            COUNT(*) FILTER (WHERE hs.is_required = TRUE AND ehsp.status = 'completed')::INT AS required_steps_completed
+        FROM employee_handbook_step_progress ehsp
+        JOIN handbook_steps hs ON hs.id = ehsp.step_id
+        WHERE ehsp.employee_handbook_id = latest_handbooks.id
+    ) progress ON TRUE
+    WHERE
+        (ep.department_id = sqlc.narg('department_id') OR sqlc.narg('department_id') IS NULL) AND
+        (sqlc.narg('status_filter')::TEXT IS NULL OR COALESCE(latest_handbooks.status::text, 'unassigned') = sqlc.narg('status_filter')::TEXT) AND
+        (sqlc.narg('search')::TEXT IS NULL OR
+            ep.first_name ILIKE '%' || sqlc.narg('search') || '%' OR
+            ep.last_name ILIKE '%' || sqlc.narg('search') || '%')
+) AS ar
+ORDER BY ar.assigned_at DESC NULLS LAST, ar.employee_id
+LIMIT $1 OFFSET $2;
+
+-- name: CountEmployeeHandbookAssignments :one
+WITH latest_handbooks AS (
+    SELECT
+        eh.*,
+        ROW_NUMBER() OVER (PARTITION BY eh.employee_id ORDER BY eh.assigned_at DESC) AS rn
+    FROM employee_handbooks eh
+)
+SELECT COUNT(*)
+FROM (
+    SELECT
+        ep.id AS employee_id,
+        ep.first_name,
+        ep.last_name,
+        ep.department_id AS employee_department_id,
+        latest_handbooks.template_id AS handbook_template_id,
+        COALESCE(latest_handbooks.status::text, 'unassigned') AS employee_handbook_status,
+        ep.is_archived
+    FROM employee_profile ep
+    LEFT JOIN latest_handbooks ON latest_handbooks.employee_id = ep.id AND latest_handbooks.rn = 1
+    WHERE
+        (ep.department_id = sqlc.narg('department_id') OR sqlc.narg('department_id') IS NULL) AND
+        (sqlc.narg('status_filter')::TEXT IS NULL OR COALESCE(latest_handbooks.status::text, 'unassigned') = sqlc.narg('status_filter')::TEXT) AND
+        (sqlc.narg('search')::TEXT IS NULL OR
+            ep.first_name ILIKE '%' || sqlc.narg('search') || '%' OR
+            ep.last_name ILIKE '%' || sqlc.narg('search') || '%')
+) AS ar
+;
+
 -- name: GetActiveEmployeeHandbookByEmployeeID :one
 SELECT
     eh.*,
@@ -242,6 +392,28 @@ JOIN departments d ON d.id = ht.department_id
 WHERE eh.employee_id = $1
   AND eh.status IN ('not_started', 'in_progress')
 ORDER BY eh.assigned_at DESC
+LIMIT 1;
+
+-- name: GetEmployeeHandbookByID :one
+SELECT *
+FROM employee_handbooks
+WHERE id = $1
+LIMIT 1;
+
+-- name: GetEmployeeHandbookDetailsByID :one
+SELECT
+    eh.*,
+    ht.title AS template_title,
+    ht.description AS template_description,
+    d.id AS department_id,
+    d.name AS department_name,
+    ep.first_name,
+    ep.last_name
+FROM employee_handbooks eh
+JOIN handbook_templates ht ON ht.id = eh.template_id
+JOIN departments d ON d.id = ht.department_id
+JOIN employee_profile ep ON ep.id = eh.employee_id
+WHERE eh.id = $1
 LIMIT 1;
 
 -- name: ListEmployeeHandbookStepsByHandbookID :many
@@ -278,6 +450,15 @@ SET
 WHERE employee_id = $1
   AND status IN ('not_started', 'in_progress');
 
+-- name: WaiveEmployeeHandbookByID :one
+UPDATE employee_handbooks
+SET
+    status = 'waived',
+    completed_at = COALESCE(completed_at, CURRENT_TIMESTAMP)
+WHERE id = $1
+  AND status IN ('not_started', 'in_progress')
+RETURNING *;
+
 -- name: CreateEmployeeHandbookAssignmentHistory :one
 INSERT INTO employee_handbook_assignment_history (
     employee_handbook_id,
@@ -298,6 +479,14 @@ VALUES (
     COALESCE(sqlc.narg('metadata'), '{}'::jsonb)
 )
 RETURNING *;
+
+-- name: ListEmployeeHandbookAssignmentHistoryByEmployeeID :many
+SELECT *
+FROM employee_handbook_assignment_history
+WHERE employee_id = sqlc.arg('employee_id')
+ORDER BY created_at DESC
+LIMIT sqlc.arg('limit')
+OFFSET sqlc.arg('offset');
 
 -- name: CompleteEmployeeHandbookStep :one
 UPDATE employee_handbook_step_progress

@@ -11,6 +11,7 @@ import (
 	db "maicare_go/db/sqlc"
 	"maicare_go/pagination"
 	"maicare_go/service/deps"
+	"maicare_go/util"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -54,7 +55,7 @@ func (s *settingsService) ListDepartments(ctx *gin.Context) (*pagination.Respons
 func (s *settingsService) CreateDepartment(ctx context.Context, req CreateDepartmentRequest) (*CreateDepartmentResponse, error) {
 	dept, err := s.Store.CreateDepartment(ctx, db.CreateDepartmentParams{
 		Name:                     req.Name,
-		Description:              normalizeOptionalString(req.Description),
+		Description:              util.OtpString(req.Description),
 		DepartmentHeadEmployeeID: req.DepartmentHeadEmployeeID,
 	})
 	if err != nil {
@@ -70,7 +71,7 @@ func (s *settingsService) CreateDepartment(ctx context.Context, req CreateDepart
 }
 
 func (s *settingsService) UpdateDepartment(ctx context.Context, departmentID uuid.UUID, req UpdateDepartmentRequest) (*UpdateDepartmentResponse, error) {
-	name := normalizeOptionalString(req.Name)
+	name := util.OtpString(req.Name)
 	if req.Name != nil && name == nil {
 		return nil, fmt.Errorf("name cannot be empty")
 	}
@@ -78,7 +79,7 @@ func (s *settingsService) UpdateDepartment(ctx context.Context, departmentID uui
 	dept, err := s.Store.UpdateDepartment(ctx, db.UpdateDepartmentParams{
 		ID:                       departmentID,
 		Name:                     name,
-		Description:              normalizeOptionalString(req.Description),
+		Description:              util.OtpString(req.Description),
 		DepartmentHeadEmployeeID: req.DepartmentHeadEmployeeID,
 	})
 	if err != nil {
@@ -117,14 +118,14 @@ func (s *settingsService) UpdateOrganizationProfile(ctx context.Context, req Upd
 		return nil, fmt.Errorf("invalid default_timezone: %w", err)
 	}
 
-	email := normalizeOptionalString(req.Email)
+	email := util.OtpString(req.Email)
 	if email != nil {
 		if _, err := mail.ParseAddress(*email); err != nil {
 			return nil, fmt.Errorf("invalid email")
 		}
 	}
 
-	website := normalizeOptionalString(req.Website)
+	website := util.OtpString(req.Website)
 	if website != nil {
 		parsed, err := url.ParseRequestURI(*website)
 		if err != nil || parsed.Scheme == "" || parsed.Host == "" {
@@ -136,13 +137,13 @@ func (s *settingsService) UpdateOrganizationProfile(ctx context.Context, req Upd
 		Name:                  name,
 		DefaultTimezone:       defaultTimezone,
 		Email:                 email,
-		PhoneNumber:           normalizeOptionalString(req.PhoneNumber),
+		PhoneNumber:           util.OtpString(req.PhoneNumber),
 		Website:               website,
-		HqStreet:              normalizeOptionalString(req.HQStreet),
-		HqHouseNumber:         normalizeOptionalString(req.HQHouseNumber),
-		HqHouseNumberAddition: normalizeOptionalString(req.HQHouseNumberAddition),
-		HqPostalCode:          normalizeOptionalString(req.HQPostalCode),
-		HqCity:                normalizeOptionalString(req.HQCity),
+		HqStreet:              util.OtpString(req.HQStreet),
+		HqHouseNumber:         util.OtpString(req.HQHouseNumber),
+		HqHouseNumberAddition: util.OtpString(req.HQHouseNumberAddition),
+		HqPostalCode:          util.OtpString(req.HQPostalCode),
+		HqCity:                util.OtpString(req.HQCity),
 	})
 	if err != nil {
 		return nil, err
@@ -166,17 +167,4 @@ func mapOrganizationProfile(profile db.AppOrganizationProfile) *GetOrganizationP
 		CreatedAt:             profile.CreatedAt.Time,
 		UpdatedAt:             profile.UpdatedAt.Time,
 	}
-}
-
-func normalizeOptionalString(value *string) *string {
-	if value == nil {
-		return nil
-	}
-
-	trimmed := strings.TrimSpace(*value)
-	if trimmed == "" {
-		return nil
-	}
-
-	return &trimmed
 }

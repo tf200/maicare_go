@@ -139,6 +139,78 @@ func (q *Queries) CompleteEmployeeHandbookStep(ctx context.Context, arg Complete
 	return i, err
 }
 
+const countEligibleEmployeesForHandbookAssignment = `-- name: CountEligibleEmployeesForHandbookAssignment :one
+WITH active_assignments AS (
+    SELECT DISTINCT employee_id
+    FROM employee_handbooks
+    WHERE status IN ('not_started', 'in_progress')
+)
+SELECT COUNT(*)
+FROM employee_profile ep
+LEFT JOIN active_assignments aa ON aa.employee_id = ep.id
+WHERE
+    NOT ep.is_archived AND
+    NOT COALESCE(ep.out_of_service, false) AND
+    aa.employee_id IS NULL AND
+    (ep.department_id = $1 OR $1 IS NULL) AND
+    ($2::TEXT IS NULL OR
+        ep.first_name ILIKE '%' || $2 || '%' OR
+        ep.last_name ILIKE '%' || $2 || '%')
+`
+
+type CountEligibleEmployeesForHandbookAssignmentParams struct {
+	DepartmentID *uuid.UUID `json:"department_id"`
+	Search       *string    `json:"search"`
+}
+
+func (q *Queries) CountEligibleEmployeesForHandbookAssignment(ctx context.Context, arg CountEligibleEmployeesForHandbookAssignmentParams) (int64, error) {
+	row := q.db.QueryRow(ctx, countEligibleEmployeesForHandbookAssignment, arg.DepartmentID, arg.Search)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
+const countEmployeeHandbookAssignments = `-- name: CountEmployeeHandbookAssignments :one
+WITH latest_handbooks AS (
+    SELECT
+        eh.id, eh.employee_id, eh.template_id, eh.template_version, eh.assigned_by_employee_id, eh.status, eh.assigned_at, eh.started_at, eh.completed_at, eh.due_at,
+        ROW_NUMBER() OVER (PARTITION BY eh.employee_id ORDER BY eh.assigned_at DESC) AS rn
+    FROM employee_handbooks eh
+)
+SELECT COUNT(*)
+FROM (
+    SELECT
+        ep.id AS employee_id,
+        ep.first_name,
+        ep.last_name,
+        ep.department_id AS employee_department_id,
+        latest_handbooks.template_id AS handbook_template_id,
+        COALESCE(latest_handbooks.status::text, 'unassigned') AS employee_handbook_status,
+        ep.is_archived
+    FROM employee_profile ep
+    LEFT JOIN latest_handbooks ON latest_handbooks.employee_id = ep.id AND latest_handbooks.rn = 1
+    WHERE
+        (ep.department_id = $1 OR $1 IS NULL) AND
+        ($2::TEXT IS NULL OR COALESCE(latest_handbooks.status::text, 'unassigned') = $2::TEXT) AND
+        ($3::TEXT IS NULL OR
+            ep.first_name ILIKE '%' || $3 || '%' OR
+            ep.last_name ILIKE '%' || $3 || '%')
+) AS ar
+`
+
+type CountEmployeeHandbookAssignmentsParams struct {
+	DepartmentID *uuid.UUID `json:"department_id"`
+	StatusFilter *string    `json:"status_filter"`
+	Search       *string    `json:"search"`
+}
+
+func (q *Queries) CountEmployeeHandbookAssignments(ctx context.Context, arg CountEmployeeHandbookAssignmentsParams) (int64, error) {
+	row := q.db.QueryRow(ctx, countEmployeeHandbookAssignments, arg.DepartmentID, arg.StatusFilter, arg.Search)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const countHandbookStepsByTemplateID = `-- name: CountHandbookStepsByTemplateID :one
 SELECT COUNT(*)::INT
 FROM handbook_steps
@@ -494,6 +566,91 @@ func (q *Queries) GetActiveHandbookTemplateByDepartment(ctx context.Context, dep
 	return i, err
 }
 
+const getEmployeeHandbookByID = `-- name: GetEmployeeHandbookByID :one
+SELECT id, employee_id, template_id, template_version, assigned_by_employee_id, status, assigned_at, started_at, completed_at, due_at
+FROM employee_handbooks
+WHERE id = $1
+LIMIT 1
+`
+
+func (q *Queries) GetEmployeeHandbookByID(ctx context.Context, id uuid.UUID) (EmployeeHandbook, error) {
+	row := q.db.QueryRow(ctx, getEmployeeHandbookByID, id)
+	var i EmployeeHandbook
+	err := row.Scan(
+		&i.ID,
+		&i.EmployeeID,
+		&i.TemplateID,
+		&i.TemplateVersion,
+		&i.AssignedByEmployeeID,
+		&i.Status,
+		&i.AssignedAt,
+		&i.StartedAt,
+		&i.CompletedAt,
+		&i.DueAt,
+	)
+	return i, err
+}
+
+const getEmployeeHandbookDetailsByID = `-- name: GetEmployeeHandbookDetailsByID :one
+SELECT
+    eh.id, eh.employee_id, eh.template_id, eh.template_version, eh.assigned_by_employee_id, eh.status, eh.assigned_at, eh.started_at, eh.completed_at, eh.due_at,
+    ht.title AS template_title,
+    ht.description AS template_description,
+    d.id AS department_id,
+    d.name AS department_name,
+    ep.first_name,
+    ep.last_name
+FROM employee_handbooks eh
+JOIN handbook_templates ht ON ht.id = eh.template_id
+JOIN departments d ON d.id = ht.department_id
+JOIN employee_profile ep ON ep.id = eh.employee_id
+WHERE eh.id = $1
+LIMIT 1
+`
+
+type GetEmployeeHandbookDetailsByIDRow struct {
+	ID                   uuid.UUID                    `json:"id"`
+	EmployeeID           uuid.UUID                    `json:"employee_id"`
+	TemplateID           uuid.UUID                    `json:"template_id"`
+	TemplateVersion      int32                        `json:"template_version"`
+	AssignedByEmployeeID *uuid.UUID                   `json:"assigned_by_employee_id"`
+	Status               HandbookAssignmentStatusEnum `json:"status"`
+	AssignedAt           pgtype.Timestamptz           `json:"assigned_at"`
+	StartedAt            pgtype.Timestamptz           `json:"started_at"`
+	CompletedAt          pgtype.Timestamptz           `json:"completed_at"`
+	DueAt                pgtype.Timestamptz           `json:"due_at"`
+	TemplateTitle        string                       `json:"template_title"`
+	TemplateDescription  *string                      `json:"template_description"`
+	DepartmentID         uuid.UUID                    `json:"department_id"`
+	DepartmentName       string                       `json:"department_name"`
+	FirstName            string                       `json:"first_name"`
+	LastName             string                       `json:"last_name"`
+}
+
+func (q *Queries) GetEmployeeHandbookDetailsByID(ctx context.Context, id uuid.UUID) (GetEmployeeHandbookDetailsByIDRow, error) {
+	row := q.db.QueryRow(ctx, getEmployeeHandbookDetailsByID, id)
+	var i GetEmployeeHandbookDetailsByIDRow
+	err := row.Scan(
+		&i.ID,
+		&i.EmployeeID,
+		&i.TemplateID,
+		&i.TemplateVersion,
+		&i.AssignedByEmployeeID,
+		&i.Status,
+		&i.AssignedAt,
+		&i.StartedAt,
+		&i.CompletedAt,
+		&i.DueAt,
+		&i.TemplateTitle,
+		&i.TemplateDescription,
+		&i.DepartmentID,
+		&i.DepartmentName,
+		&i.FirstName,
+		&i.LastName,
+	)
+	return i, err
+}
+
 const getHandbookStepByID = `-- name: GetHandbookStepByID :one
 SELECT id, template_id, sort_order, kind, title, body, content, is_required, created_at, updated_at
 FROM handbook_steps
@@ -544,6 +701,260 @@ func (q *Queries) GetHandbookTemplateByID(ctx context.Context, id uuid.UUID) (Ha
 		&i.UpdatedAt,
 	)
 	return i, err
+}
+
+const listEligibleEmployeesForHandbookAssignment = `-- name: ListEligibleEmployeesForHandbookAssignment :many
+WITH active_assignments AS (
+    SELECT DISTINCT employee_id
+    FROM employee_handbooks
+    WHERE status IN ('not_started', 'in_progress')
+)
+SELECT
+    ep.id AS employee_id,
+    ep.first_name,
+    ep.last_name,
+    ep.department_id,
+    d.name AS department_name
+FROM employee_profile ep
+LEFT JOIN departments d ON d.id = ep.department_id
+LEFT JOIN active_assignments aa ON aa.employee_id = ep.id
+WHERE
+    NOT ep.is_archived AND
+    NOT COALESCE(ep.out_of_service, false) AND
+    aa.employee_id IS NULL AND
+    (ep.department_id = $3 OR $3 IS NULL) AND
+    ($4::TEXT IS NULL OR
+        ep.first_name ILIKE '%' || $4 || '%' OR
+        ep.last_name ILIKE '%' || $4 || '%')
+ORDER BY ep.first_name ASC, ep.last_name ASC, ep.id ASC
+LIMIT $1 OFFSET $2
+`
+
+type ListEligibleEmployeesForHandbookAssignmentParams struct {
+	Limit        int32      `json:"limit"`
+	Offset       int32      `json:"offset"`
+	DepartmentID *uuid.UUID `json:"department_id"`
+	Search       *string    `json:"search"`
+}
+
+type ListEligibleEmployeesForHandbookAssignmentRow struct {
+	EmployeeID     uuid.UUID  `json:"employee_id"`
+	FirstName      string     `json:"first_name"`
+	LastName       string     `json:"last_name"`
+	DepartmentID   *uuid.UUID `json:"department_id"`
+	DepartmentName *string    `json:"department_name"`
+}
+
+func (q *Queries) ListEligibleEmployeesForHandbookAssignment(ctx context.Context, arg ListEligibleEmployeesForHandbookAssignmentParams) ([]ListEligibleEmployeesForHandbookAssignmentRow, error) {
+	rows, err := q.db.Query(ctx, listEligibleEmployeesForHandbookAssignment,
+		arg.Limit,
+		arg.Offset,
+		arg.DepartmentID,
+		arg.Search,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListEligibleEmployeesForHandbookAssignmentRow{}
+	for rows.Next() {
+		var i ListEligibleEmployeesForHandbookAssignmentRow
+		if err := rows.Scan(
+			&i.EmployeeID,
+			&i.FirstName,
+			&i.LastName,
+			&i.DepartmentID,
+			&i.DepartmentName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listEmployeeHandbookAssignmentHistoryByEmployeeID = `-- name: ListEmployeeHandbookAssignmentHistoryByEmployeeID :many
+SELECT id, employee_handbook_id, employee_id, template_id, template_version, event, actor_employee_id, metadata, created_at
+FROM employee_handbook_assignment_history
+WHERE employee_id = $1
+ORDER BY created_at DESC
+LIMIT $3
+OFFSET $2
+`
+
+type ListEmployeeHandbookAssignmentHistoryByEmployeeIDParams struct {
+	EmployeeID uuid.UUID `json:"employee_id"`
+	Offset     int32     `json:"offset"`
+	Limit      int32     `json:"limit"`
+}
+
+func (q *Queries) ListEmployeeHandbookAssignmentHistoryByEmployeeID(ctx context.Context, arg ListEmployeeHandbookAssignmentHistoryByEmployeeIDParams) ([]EmployeeHandbookAssignmentHistory, error) {
+	rows, err := q.db.Query(ctx, listEmployeeHandbookAssignmentHistoryByEmployeeID, arg.EmployeeID, arg.Offset, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []EmployeeHandbookAssignmentHistory{}
+	for rows.Next() {
+		var i EmployeeHandbookAssignmentHistory
+		if err := rows.Scan(
+			&i.ID,
+			&i.EmployeeHandbookID,
+			&i.EmployeeID,
+			&i.TemplateID,
+			&i.TemplateVersion,
+			&i.Event,
+			&i.ActorEmployeeID,
+			&i.Metadata,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listEmployeeHandbookAssignments = `-- name: ListEmployeeHandbookAssignments :many
+WITH latest_handbooks AS (
+    SELECT
+        eh.id, eh.employee_id, eh.template_id, eh.template_version, eh.assigned_by_employee_id, eh.status, eh.assigned_at, eh.started_at, eh.completed_at, eh.due_at,
+        ROW_NUMBER() OVER (PARTITION BY eh.employee_id ORDER BY eh.assigned_at DESC) AS rn
+    FROM employee_handbooks eh
+)
+SELECT
+    ar.employee_id,
+    ar.first_name,
+    ar.last_name,
+    ar.employee_department_id,
+    ar.department_name,
+    ar.employee_handbook_id,
+    ar.handbook_template_id,
+    ar.template_title,
+    ar.template_version,
+    ar.employee_handbook_status,
+    ar.assigned_at,
+    ar.started_at,
+    ar.completed_at,
+    ar.due_at,
+    ar.required_steps_total,
+    ar.required_steps_completed
+FROM (
+    SELECT
+        ep.id AS employee_id,
+        ep.first_name,
+        ep.last_name,
+        ep.department_id AS employee_department_id,
+        d.name AS department_name,
+        latest_handbooks.id AS employee_handbook_id,
+        latest_handbooks.template_id AS handbook_template_id,
+        ht.title AS template_title,
+        latest_handbooks.template_version,
+        COALESCE(latest_handbooks.status::text, 'unassigned') AS employee_handbook_status,
+        latest_handbooks.assigned_at,
+        latest_handbooks.started_at,
+        latest_handbooks.completed_at,
+        latest_handbooks.due_at,
+        COALESCE(progress.required_steps_total, 0)::INT AS required_steps_total,
+        COALESCE(progress.required_steps_completed, 0)::INT AS required_steps_completed,
+        ep.is_archived
+    FROM employee_profile ep
+    LEFT JOIN departments d ON d.id = ep.department_id
+    LEFT JOIN latest_handbooks ON latest_handbooks.employee_id = ep.id AND latest_handbooks.rn = 1
+    LEFT JOIN handbook_templates ht ON ht.id = latest_handbooks.template_id
+    LEFT JOIN LATERAL (
+        SELECT
+            COUNT(*) FILTER (WHERE hs.is_required = TRUE)::INT AS required_steps_total,
+            COUNT(*) FILTER (WHERE hs.is_required = TRUE AND ehsp.status = 'completed')::INT AS required_steps_completed
+        FROM employee_handbook_step_progress ehsp
+        JOIN handbook_steps hs ON hs.id = ehsp.step_id
+        WHERE ehsp.employee_handbook_id = latest_handbooks.id
+    ) progress ON TRUE
+    WHERE
+        (ep.department_id = $3 OR $3 IS NULL) AND
+        ($4::TEXT IS NULL OR COALESCE(latest_handbooks.status::text, 'unassigned') = $4::TEXT) AND
+        ($5::TEXT IS NULL OR
+            ep.first_name ILIKE '%' || $5 || '%' OR
+            ep.last_name ILIKE '%' || $5 || '%')
+) AS ar
+ORDER BY ar.assigned_at DESC NULLS LAST, ar.employee_id
+LIMIT $1 OFFSET $2
+`
+
+type ListEmployeeHandbookAssignmentsParams struct {
+	Limit        int32      `json:"limit"`
+	Offset       int32      `json:"offset"`
+	DepartmentID *uuid.UUID `json:"department_id"`
+	StatusFilter *string    `json:"status_filter"`
+	Search       *string    `json:"search"`
+}
+
+type ListEmployeeHandbookAssignmentsRow struct {
+	EmployeeID             uuid.UUID          `json:"employee_id"`
+	FirstName              string             `json:"first_name"`
+	LastName               string             `json:"last_name"`
+	EmployeeDepartmentID   *uuid.UUID         `json:"employee_department_id"`
+	DepartmentName         *string            `json:"department_name"`
+	EmployeeHandbookID     *uuid.UUID         `json:"employee_handbook_id"`
+	HandbookTemplateID     *uuid.UUID         `json:"handbook_template_id"`
+	TemplateTitle          *string            `json:"template_title"`
+	TemplateVersion        *int32             `json:"template_version"`
+	EmployeeHandbookStatus interface{}        `json:"employee_handbook_status"`
+	AssignedAt             pgtype.Timestamptz `json:"assigned_at"`
+	StartedAt              pgtype.Timestamptz `json:"started_at"`
+	CompletedAt            pgtype.Timestamptz `json:"completed_at"`
+	DueAt                  pgtype.Timestamptz `json:"due_at"`
+	RequiredStepsTotal     int32              `json:"required_steps_total"`
+	RequiredStepsCompleted int32              `json:"required_steps_completed"`
+}
+
+func (q *Queries) ListEmployeeHandbookAssignments(ctx context.Context, arg ListEmployeeHandbookAssignmentsParams) ([]ListEmployeeHandbookAssignmentsRow, error) {
+	rows, err := q.db.Query(ctx, listEmployeeHandbookAssignments,
+		arg.Limit,
+		arg.Offset,
+		arg.DepartmentID,
+		arg.StatusFilter,
+		arg.Search,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListEmployeeHandbookAssignmentsRow{}
+	for rows.Next() {
+		var i ListEmployeeHandbookAssignmentsRow
+		if err := rows.Scan(
+			&i.EmployeeID,
+			&i.FirstName,
+			&i.LastName,
+			&i.EmployeeDepartmentID,
+			&i.DepartmentName,
+			&i.EmployeeHandbookID,
+			&i.HandbookTemplateID,
+			&i.TemplateTitle,
+			&i.TemplateVersion,
+			&i.EmployeeHandbookStatus,
+			&i.AssignedAt,
+			&i.StartedAt,
+			&i.CompletedAt,
+			&i.DueAt,
+			&i.RequiredStepsTotal,
+			&i.RequiredStepsCompleted,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listEmployeeHandbookStepsByHandbookID = `-- name: ListEmployeeHandbookStepsByHandbookID :many
@@ -604,6 +1015,45 @@ func (q *Queries) ListEmployeeHandbookStepsByHandbookID(ctx context.Context, emp
 			return nil, err
 		}
 		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listEmployeesEligibleForDepartmentHandbookSeed = `-- name: ListEmployeesEligibleForDepartmentHandbookSeed :many
+SELECT ep.id
+FROM employee_profile ep
+LEFT JOIN employee_handbooks eh
+    ON eh.employee_id = ep.id
+   AND eh.status IN ('not_started', 'in_progress')
+WHERE ep.department_id = $1
+  AND NOT ep.is_archived
+  AND NOT COALESCE(ep.out_of_service, false)
+  AND eh.id IS NULL
+ORDER BY ep.created_at DESC
+LIMIT $2
+`
+
+type ListEmployeesEligibleForDepartmentHandbookSeedParams struct {
+	DepartmentID *uuid.UUID `json:"department_id"`
+	Limit        int32      `json:"limit"`
+}
+
+func (q *Queries) ListEmployeesEligibleForDepartmentHandbookSeed(ctx context.Context, arg ListEmployeesEligibleForDepartmentHandbookSeedParams) ([]uuid.UUID, error) {
+	rows, err := q.db.Query(ctx, listEmployeesEligibleForDepartmentHandbookSeed, arg.DepartmentID, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []uuid.UUID{}
+	for rows.Next() {
+		var id uuid.UUID
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err
@@ -942,4 +1392,32 @@ WHERE employee_id = $1
 func (q *Queries) WaiveActiveEmployeeHandbooksByEmployeeID(ctx context.Context, employeeID uuid.UUID) error {
 	_, err := q.db.Exec(ctx, waiveActiveEmployeeHandbooksByEmployeeID, employeeID)
 	return err
+}
+
+const waiveEmployeeHandbookByID = `-- name: WaiveEmployeeHandbookByID :one
+UPDATE employee_handbooks
+SET
+    status = 'waived',
+    completed_at = COALESCE(completed_at, CURRENT_TIMESTAMP)
+WHERE id = $1
+  AND status IN ('not_started', 'in_progress')
+RETURNING id, employee_id, template_id, template_version, assigned_by_employee_id, status, assigned_at, started_at, completed_at, due_at
+`
+
+func (q *Queries) WaiveEmployeeHandbookByID(ctx context.Context, id uuid.UUID) (EmployeeHandbook, error) {
+	row := q.db.QueryRow(ctx, waiveEmployeeHandbookByID, id)
+	var i EmployeeHandbook
+	err := row.Scan(
+		&i.ID,
+		&i.EmployeeID,
+		&i.TemplateID,
+		&i.TemplateVersion,
+		&i.AssignedByEmployeeID,
+		&i.Status,
+		&i.AssignedAt,
+		&i.StartedAt,
+		&i.CompletedAt,
+		&i.DueAt,
+	)
+	return i, err
 }

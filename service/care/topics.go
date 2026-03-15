@@ -2,7 +2,7 @@ package care
 
 import (
 	"context"
-	"encoding/json"
+	"github.com/goccy/go-json"
 	"fmt"
 
 	"maicare_go/logger"

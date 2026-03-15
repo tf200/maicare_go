@@ -1,8 +1,9 @@
 package util
 
 import (
-	"encoding/json"
+	"github.com/goccy/go-json"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -276,4 +277,17 @@ func UniqueUUIDsPtr(ids *[]uuid.UUID) []uuid.UUID {
 		return []uuid.UUID{}
 	}
 	return UniqueUUIDs(*ids)
+}
+
+func OtpString(value *string) *string {
+	if value == nil {
+		return nil
+	}
+
+	trimmed := strings.TrimSpace(*value)
+	if trimmed == "" {
+		return nil
+	}
+
+	return &trimmed
 }

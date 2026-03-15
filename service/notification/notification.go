@@ -3,7 +3,7 @@ package notification
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
+	"github.com/goccy/go-json"
 	"fmt"
 
 	db "maicare_go/db/sqlc"

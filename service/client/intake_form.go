@@ -2,7 +2,7 @@ package clientp
 
 import (
 	"context"
-	"encoding/json"
+	"github.com/goccy/go-json"
 	"errors"
 	"fmt"
 	db "maicare_go/db/sqlc"

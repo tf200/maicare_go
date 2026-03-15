@@ -56,3 +56,10 @@ func ParseRFC3339OrYYYYMMDD(s string) (time.Time, bool, error) {
 	}
 	return ParseYYYYMMDD(s)
 }
+func TsPtr(ts pgtype.Timestamptz) *time.Time {
+	if !ts.Valid {
+		return nil
+	}
+	t := ts.Time
+	return &t
+}

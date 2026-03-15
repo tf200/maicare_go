@@ -2,7 +2,7 @@ package invoice
 
 import (
 	"context"
-	"encoding/json"
+	"github.com/goccy/go-json"
 	"fmt"
 	"math"
 	"time"

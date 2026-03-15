@@ -1,13 +1,14 @@
 package api
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
 	"strings"
 
-	db "maicare_go/db/sqlc"
+	"github.com/goccy/go-json"
+
+	"maicare_go/pagination"
 	"maicare_go/service/handbook"
 
 	"github.com/gin-gonic/gin"
@@ -21,6 +22,8 @@ const (
 	errCodeHandbookTemplateNotPublished = "HANDBOOK_TEMPLATE_NOT_PUBLISHED"
 	errCodeHandbookTemplateNoSteps      = "HANDBOOK_TEMPLATE_NO_STEPS"
 	errCodeHandbookStepNotFound         = "HANDBOOK_STEP_NOT_FOUND"
+	errCodeEmployeeHandbookNotFound     = "EMPLOYEE_HANDBOOK_NOT_FOUND"
+	errCodeEmployeeHandbookNotActive    = "EMPLOYEE_HANDBOOK_NOT_ACTIVE"
 	errCodeHandbookLinkURLInvalid       = "HANDBOOK_LINK_URL_INVALID"
 	errCodeHandbookQuizContentInvalid   = "HANDBOOK_QUIZ_CONTENT_INVALID"
 	errCodeHandbookStepReorderMismatch  = "HANDBOOK_STEP_REORDER_SET_MISMATCH"
@@ -325,7 +328,7 @@ func (server *Server) ListHandbookTemplatesByDepartmentApi(ctx *gin.Context) {
 type createHandbookStepRequest struct {
 	TemplateID uuid.UUID       `json:"template_id" binding:"required"`
 	SortOrder  int32           `json:"sort_order" binding:"required,min=1"`
-	Kind       string          `json:"kind" binding:"required,oneof=content ack link quiz"`
+	Kind       string          `json:"kind" binding:"required,oneof=content ack link quiz rich_text"`
 	Title      string          `json:"title" binding:"required"`
 	Body       *string         `json:"body"`
 	Content    json.RawMessage `json:"content"`
@@ -369,10 +372,10 @@ func (server *Server) CreateHandbookStepApi(ctx *gin.Context) {
 	res, err := server.businessService.HandbookService.CreateStep(ctx, handbook.CreateStepRequest{
 		TemplateID: req.TemplateID,
 		SortOrder:  req.SortOrder,
-		Kind:       db.HandbookStepKindEnum(req.Kind),
+		Kind:       req.Kind,
 		Title:      req.Title,
 		Body:       req.Body,
-		Content:    content,
+		Content:    req.Content,
 		IsRequired: req.IsRequired,
 	})
 	if err != nil {
@@ -420,7 +423,7 @@ func (server *Server) UpdateHandbookStepApi(ctx *gin.Context) {
 		setTitle      bool
 		bodyVal       *string
 		setBody       bool
-		content       any
+		content       []byte
 		contentSet    bool
 		isRequiredVal *bool
 		setIsRequired bool
@@ -451,10 +454,12 @@ func (server *Server) UpdateHandbookStepApi(ctx *gin.Context) {
 	}
 	if req.Content != nil {
 		contentSet = true
-		if err := json.Unmarshal(*req.Content, &content); err != nil {
+		var payload any
+		if err := json.Unmarshal(*req.Content, &payload); err != nil {
 			ctx.JSON(http.StatusBadRequest, errorResponseWithCode(fmt.Errorf("invalid content JSON"), errCodeInvalidRequest))
 			return
 		}
+		content = append([]byte(nil), (*req.Content)...)
 	}
 	if req.IsRequired != nil {
 		setIsRequired = true
@@ -536,7 +541,7 @@ func (server *Server) DeleteHandbookStepApi(ctx *gin.Context) {
 // @Failure 400,401,403,404,500 {object} Response[any]
 // @Router /handbook/templates/{template_id}/steps/reorder [post]
 func (server *Server) ReorderHandbookStepsApi(ctx *gin.Context) {
-	templateID, err := uuid.Parse(ctx.Param("template_i	d"))
+	templateID, err := uuid.Parse(ctx.Param("template_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponseWithCode(fmt.Errorf("invalid template_id"), errCodeInvalidRequest))
 		return
@@ -621,9 +626,231 @@ func (server *Server) AssignHandbookTemplateToEmployeeApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, SuccessResponse(res, "Handbook assigned"))
 }
 
+// @Summary List handbook assignment history for an employee
+// @Tags handbook
+// @Produce json
+// @Param employee_id path uuid true "Employee ID"
+// @Success 200 {object} Response[[]handbook.HandbookAssignmentHistoryEntry]
+// @Failure 400,401,403,500 {object} Response[any]
+// @Router /handbook/employees/{employee_id}/history [get]
+func (server *Server) ListEmployeeHandbookHistoryApi(ctx *gin.Context) {
+	employeeID, err := uuid.Parse(ctx.Param("employee_id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponseWithCode(fmt.Errorf("invalid employee_id"), errCodeInvalidRequest))
+		return
+	}
+
+	res, err := server.businessService.HandbookService.ListEmployeeHandbookHistory(ctx, employeeID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, SuccessResponse(res, "Handbook history retrieved"))
+}
+
+type waiveEmployeeHandbookRequest struct {
+	Reason *string `json:"reason"`
+}
+
+type listHandbookAssignmentsQuery struct {
+	pagination.Request
+	DepartmentID *string `form:"department_id"`
+	Search       *string `form:"search"`
+	Status       *string `form:"status"`
+}
+
+type listEligibleEmployeesQuery struct {
+	pagination.Request
+	DepartmentID *string `form:"department_id"`
+	Search       *string `form:"search"`
+}
+
+// @Summary List employee handbook assignments
+// @Tags handbook
+// @Produce json
+// @Param page query int true "Page number"
+// @Param page_size query int true "Page size"
+// @Param department_id query uuid false "Department ID"
+// @Param search query string false "Employee name search"
+// @Param status query string false "Assignment status: unassigned, not_started, in_progress, completed, waived"
+// @Success 200 {object} Response[pagination.Response[handbook.EmployeeHandbookAssignmentSummary]]
+// @Failure 400,401,403,500 {object} Response[any]
+// @Router /handbook/assignments [get]
+func (server *Server) ListEmployeeHandbookAssignmentsApi(ctx *gin.Context) {
+	var query listHandbookAssignmentsQuery
+	if err := ctx.ShouldBindQuery(&query); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponseWithCode(fmt.Errorf("invalid query parameters"), errCodeInvalidRequest))
+		return
+	}
+
+	departmentID, err := parseOptionalUUIDQueryParam(query.DepartmentID)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponseWithCode(fmt.Errorf("invalid department_id"), errCodeInvalidRequest))
+		return
+	}
+
+	req := handbook.ListEmployeeHandbookAssignmentsRequest{
+		Request:      query.Request,
+		DepartmentID: departmentID,
+		Search:       query.Search,
+		Status:       query.Status,
+	}
+
+	res, err := server.businessService.HandbookService.ListEmployeeHandbookAssignments(ctx, req)
+	if err != nil {
+		if errors.Is(err, handbook.ErrInvalidAssignmentStatusFilter) {
+			ctx.JSON(http.StatusBadRequest, errorResponseWithCode(err, errCodeInvalidRequest))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, SuccessResponse(res, "Employee handbook assignments retrieved"))
+}
+
+// @Summary List employees eligible for handbook assignment
+// @Tags handbook
+// @Produce json
+// @Param page query int true "Page number"
+// @Param page_size query int true "Page size"
+// @Param department_id query uuid false "Department ID"
+// @Param search query string false "Employee name search"
+// @Success 200 {object} Response[pagination.Response[handbook.ListEligibleEmployeesResponse]]
+// @Failure 400,401,403,500 {object} Response[any]
+// @Router /handbook/assignments/eligible-employees [get]
+func (server *Server) ListEligibleEmployeesApi(ctx *gin.Context) {
+	payload, err := GetAuthPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
+	var query listEligibleEmployeesQuery
+	if err := ctx.ShouldBindQuery(&query); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponseWithCode(fmt.Errorf("invalid query parameters"), errCodeInvalidRequest))
+		return
+	}
+
+	departmentID, err := parseOptionalUUIDQueryParam(query.DepartmentID)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponseWithCode(fmt.Errorf("invalid department_id"), errCodeInvalidRequest))
+		return
+	}
+
+	req := handbook.ListEligibleEmployeesRequest{
+		Request:      query.Request,
+		DepartmentID: departmentID,
+		Search:       query.Search,
+	}
+
+	res, err := server.businessService.HandbookService.ListEligibleEmployees(ctx, payload.EmployeeID, req)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, SuccessResponse(res, "Eligible employees retrieved"))
+}
+
+// @Summary Get employee handbook details
+// @Tags handbook
+// @Produce json
+// @Param handbook_id path uuid true "Employee handbook ID"
+// @Success 200 {object} Response[handbook.GetEmployeeHandbookDetailsResponse]
+// @Failure 400,401,403,404,500 {object} Response[any]
+// @Router /handbook/assignments/{handbook_id} [get]
+func (server *Server) GetEmployeeHandbookDetailsApi(ctx *gin.Context) {
+	handbookID, err := uuid.Parse(ctx.Param("handbook_id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponseWithCode(fmt.Errorf("invalid handbook_id"), errCodeInvalidRequest))
+		return
+	}
+
+	res, err := server.businessService.HandbookService.GetEmployeeHandbookDetails(ctx, handbookID)
+	if err != nil {
+		if errors.Is(err, handbook.ErrEmployeeHandbookNotFound) {
+			ctx.JSON(http.StatusNotFound, errorResponseWithCode(err, errCodeEmployeeHandbookNotFound))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, SuccessResponse(res, "Employee handbook details retrieved"))
+}
+
+// @Summary Waive an active employee handbook
+// @Tags handbook
+// @Accept json
+// @Produce json
+// @Param handbook_id path uuid true "Employee handbook ID"
+// @Param request body waiveEmployeeHandbookRequest false "Waive payload"
+// @Success 200 {object} Response[handbook.WaiveEmployeeHandbookResponse]
+// @Failure 400,401,403,404,500 {object} Response[any]
+// @Router /handbook/assignments/{handbook_id}/waive [post]
+func (server *Server) WaiveEmployeeHandbookApi(ctx *gin.Context) {
+	payload, err := GetAuthPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
+	handbookID, err := uuid.Parse(ctx.Param("handbook_id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponseWithCode(fmt.Errorf("invalid handbook_id"), errCodeInvalidRequest))
+		return
+	}
+
+	var req waiveEmployeeHandbookRequest
+	if ctx.Request.ContentLength > 0 {
+		if err := ctx.ShouldBindJSON(&req); err != nil {
+			ctx.JSON(http.StatusBadRequest, errorResponseWithCode(fmt.Errorf("invalid request body"), errCodeInvalidRequest))
+			return
+		}
+	}
+
+	res, err := server.businessService.HandbookService.WaiveEmployeeHandbook(ctx, payload.EmployeeID, handbook.WaiveEmployeeHandbookRequest{
+		EmployeeHandbookID: handbookID,
+		Reason:             req.Reason,
+	})
+	if err != nil {
+		switch {
+		case errors.Is(err, handbook.ErrEmployeeHandbookNotFound):
+			ctx.JSON(http.StatusNotFound, errorResponseWithCode(err, errCodeEmployeeHandbookNotFound))
+		case errors.Is(err, handbook.ErrEmployeeHandbookNotActive):
+			ctx.JSON(http.StatusBadRequest, errorResponseWithCode(err, errCodeEmployeeHandbookNotActive))
+		default:
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		}
+		return
+	}
+
+	ctx.JSON(http.StatusOK, SuccessResponse(res, "Handbook waived"))
+}
+
 func stepContentErrorCode(err error) string {
 	if strings.Contains(strings.ToLower(err.Error()), "quiz") {
 		return errCodeHandbookQuizContentInvalid
 	}
 	return errCodeHandbookLinkURLInvalid
+}
+
+func parseOptionalUUIDQueryParam(raw *string) (*uuid.UUID, error) {
+	if raw == nil {
+		return nil, nil
+	}
+
+	trimmed := strings.TrimSpace(*raw)
+	if trimmed == "" {
+		return nil, nil
+	}
+
+	parsed, err := uuid.Parse(trimmed)
+	if err != nil {
+		return nil, err
+	}
+
+	return &parsed, nil
 }

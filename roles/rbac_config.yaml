@@ -279,6 +279,9 @@ permissions:
     - name: HANDBOOK.ASSIGN
       resource: /handbook/assignments
       method: [POST]
+    - name: HANDBOOK.ELIGIBLE_EMPLOYEES.VIEW_ALL
+      resource: /handbook/assignments/eligible-employees
+      method: [GET]
 
     # Incidents
     - name: INCIDENT.VIEW
@@ -534,6 +537,7 @@ roles:
           - HANDBOOK.STEP.UPDATE
           - HANDBOOK.STEP.DELETE
           - HANDBOOK.ASSIGN
+          - HANDBOOK.ELIGIBLE_EMPLOYEES.VIEW_ALL
           - FINANCE.VIEW
           - INVOICE.CREATE
           - INVOICE.DELETE

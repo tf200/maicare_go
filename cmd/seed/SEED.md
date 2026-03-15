@@ -15,22 +15,23 @@ The script currently seeds the following, in this order:
 3. `departments`
 4. `handbook_templates` + default `handbook_steps` (published per department)
 5. `employee_profile` coordinators + `employee_handbooks` assignment from active department template
-6. `sender`
-7. `registration_form`
-8. `intake_forms` + `intake_topic_assessments` (suitable only)
-9. `client_details` (promoted to **On Waiting List**)
-10. `client_details` promoted to **In Care** with:
+6. optional additional `employee_handbooks` assignment for existing employees in seeded departments
+7. `sender`
+8. `registration_form`
+9. `intake_forms` + `intake_topic_assessments` (suitable only)
+10. `client_details` (promoted to **On Waiting List**)
+11. `client_details` promoted to **In Care** with:
    - care dates (`placed_in_care_at`, `care_start_date`)
    - coordinator assignment from pre-seeded coordinator pool
    - approved active contract (`contract`)
-11. `client_details` promoted to **Out Of Care** with:
+12. `client_details` promoted to **Out Of Care** with:
    - full intake + waiting-list + in-care history
    - seeded evaluations before discharge
    - discharge data (`discharge_date`, `discharge_reason`, `final_evaluation`)
    - status history transition to `out_of_care`
-12. `client_goal_evaluations` + `client_goal_evaluation_items` for active in-care clients
-13. `client_diagnosis` + `client_medication_order` for seeded clients
-14. `invoice` + `invoice_line` + `invoice_payment_history` for in-care clients via invoice service logic:
+13. `client_goal_evaluations` + `client_goal_evaluation_items` for active in-care clients
+14. `client_diagnosis` + `client_medication_order` for seeded clients
+15. `invoice` + `invoice_line` + `invoice_payment_history` for in-care clients via invoice service logic:
    - seeds billable `calendar_events` appointments per in-care client in 4-week windows
    - calls `GenerateInvoice` (auto logic) to create invoices from approved contracts
    - calls `CreatePayment` to create completed payments and trigger invoice status transitions
@@ -94,6 +95,7 @@ go run ./cmd/seed -in-care-clients 8 -invoices-per-client 2 -payments-per-invoic
 - `-locations-per-org`: locations per organisation (default: `2`)
 - `-departments`: number of departments to seed (default: `1`)
 - `-handbook-templates-per-department`: number of handbook templates to seed per department (default: `1`)
+- `-employee-handbook-assignments-per-department`: number of existing employees without an active handbook to assign per seeded department (default: `0`)
 - `-coordinators`: number of coordinators to seed (default: `in-care-clients + out-of-care-clients`)
 - `-senders`: number of senders to create (default: `12`)
 - `-count`: number of registration forms to create (default: `25`)
