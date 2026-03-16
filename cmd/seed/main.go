@@ -43,7 +43,7 @@ func main() {
 	paymentsPerInvoice := flag.Int("payments-per-invoice", 2, "max number of payments to seed per generated invoice")
 	seedValue := flag.Int64("seed", time.Now().UnixNano(), "random seed")
 	seedTimeout := flag.Duration("timeout", 10*time.Minute, "overall seed timeout")
-	// dataSource := flag.String("db", "", "database connection string (defaults to DB_SOURCE or local default)")
+	dataSource := flag.String("db", "", "database connection string (defaults to DB_SOURCE, app.env, or local default)")
 	flag.Parse()
 
 	gofakeit.Seed(*seedValue)
@@ -51,7 +51,10 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), *seedTimeout)
 	defer cancel()
 
-	dsn := "postgres://maicare:maicare@localhost:5432/maicare?sslmode=disable"
+	dsn := strings.TrimSpace(*dataSource)
+	if dsn == "" {
+		dsn = strings.TrimSpace(os.Getenv("DB_SOURCE"))
+	}
 	if dsn == "" {
 		appEnvDSN, err := dbSourceFromAppEnv("app.env")
 		if err != nil {
@@ -61,9 +64,6 @@ func main() {
 		} else {
 			dsn = strings.TrimSpace(appEnvDSN)
 		}
-	}
-	if dsn == "" {
-		dsn = strings.TrimSpace(os.Getenv("DB_SOURCE"))
 	}
 	if dsn == "" {
 		dsn = "postgres://maicare:maicare@localhost:5432/maicare?sslmode=disable"

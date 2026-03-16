@@ -2,9 +2,12 @@ package main
 
 import (
 	"context"
-	"github.com/goccy/go-json"
+	"flag"
 	"fmt"
 	"os"
+	"strings"
+
+	"github.com/goccy/go-json"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -18,6 +21,9 @@ type Role = rolecfg.Role
 type Config = rolecfg.Config
 
 func main() {
+	dbSourceFlag := flag.String("db", "", "database connection string (defaults to DB_SOURCE then local default)")
+	flag.Parse()
+
 	configFile, err := os.ReadFile("roles/rbac_config.yaml")
 	if err != nil {
 		panic(err)
@@ -29,7 +35,13 @@ func main() {
 		panic(err)
 	}
 
-	dbSource := "postgres://maicare:maicare@167.86.75.250:5432/maicare?sslmode=disable"
+	dbSource := strings.TrimSpace(*dbSourceFlag)
+	if dbSource == "" {
+		dbSource = strings.TrimSpace(os.Getenv("DB_SOURCE"))
+	}
+	if dbSource == "" {
+		dbSource = "postgres://maicare:maicare@localhost:5432/maicare?sslmode=disable"
+	}
 
 	conn, err := pgx.Connect(context.Background(), dbSource)
 	if err != nil {
