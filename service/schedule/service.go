@@ -4,8 +4,10 @@ import (
 	"context"
 
 	"maicare_go/async/aclient"
+	"maicare_go/pagination"
 	"maicare_go/service/deps"
 
+	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
 
@@ -17,6 +19,11 @@ type ScheduleService interface {
 	DeleteSchedule(ctx context.Context, scheduleID uuid.UUID) error
 	AutoGenerateSchedules(ctx context.Context, req *AutoGenerateSchedulesRequest) (*AutoGenerateSchedulesResponse, error)
 	SaveGeneratedSchedules(ctx context.Context, creatorID uuid.UUID, req *SaveGeneratedSchedulesRequest) error
+	CreateShiftSwapRequest(ctx context.Context, requesterEmployeeID uuid.UUID, req *CreateShiftSwapRequest) (*CreateShiftSwapResponse, error)
+	RespondToShiftSwapRequest(ctx context.Context, recipientEmployeeID, swapID uuid.UUID, req *RespondShiftSwapRequest) (*ShiftSwapResponse, error)
+	AdminDecisionShiftSwapRequest(ctx context.Context, adminEmployeeID, swapID uuid.UUID, req *AdminDecisionShiftSwapRequest) (*ShiftSwapResponse, error)
+	ListMyShiftSwapRequests(ctx context.Context, employeeID uuid.UUID) ([]ShiftSwapResponse, error)
+	ListShiftSwapRequests(ctx *gin.Context, req *ListShiftSwapRequestsRequest) (*pagination.Response[ShiftSwapResponse], error)
 }
 
 type scheduleService struct {

@@ -407,6 +407,19 @@ permissions:
       resource: /schedules
       method: [GET]
 
+    - name: SCHEDULE_SWAP.REQUEST
+      resource: /shift-swaps
+      method: [POST]
+    - name: SCHEDULE_SWAP.RESPOND
+      resource: /shift-swaps/respond
+      method: [POST]
+    - name: SCHEDULE_SWAP.APPROVE
+      resource: /shift-swaps/admin-decision
+      method: [POST, GET]
+    - name: SCHEDULE_SWAP.VIEW
+      resource: /shift-swaps
+      method: [GET]
+
     - name: SHIFT.CREATE
       resource: /shifts
       method: [POST]
@@ -573,6 +586,10 @@ roles:
           - SCHEDULE.DELETE
           - SCHEDULE.UPDATE
           - SCHEDULE.VIEW
+          - SCHEDULE_SWAP.REQUEST
+          - SCHEDULE_SWAP.RESPOND
+          - SCHEDULE_SWAP.APPROVE
+          - SCHEDULE_SWAP.VIEW
           - SENDER.CREATE
           - SENDER.UPDATE
           - SENDER.VIEW
@@ -648,5 +665,9 @@ roles:
           - HANDBOOK.STEP.UPDATE
           - HANDBOOK.STEP.DELETE
           - HANDBOOK.ASSIGN
+          - SCHEDULE_SWAP.REQUEST
+          - SCHEDULE_SWAP.RESPOND
+          - SCHEDULE_SWAP.VIEW
+          - SCHEDULE_SWAP.APPROVE
           - SENDER.CREATE
           - SHIFT.VIEW

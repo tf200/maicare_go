@@ -2931,6 +2931,53 @@ func (ns NullSeverityOfIncidentEnum) Value() (driver.Value, error) {
 	return string(ns.SeverityOfIncidentEnum), nil
 }
 
+type ShiftSwapStatusEnum string
+
+const (
+	ShiftSwapStatusEnumPendingRecipient  ShiftSwapStatusEnum = "pending_recipient"
+	ShiftSwapStatusEnumRecipientRejected ShiftSwapStatusEnum = "recipient_rejected"
+	ShiftSwapStatusEnumPendingAdmin      ShiftSwapStatusEnum = "pending_admin"
+	ShiftSwapStatusEnumAdminRejected     ShiftSwapStatusEnum = "admin_rejected"
+	ShiftSwapStatusEnumConfirmed         ShiftSwapStatusEnum = "confirmed"
+	ShiftSwapStatusEnumCancelled         ShiftSwapStatusEnum = "cancelled"
+	ShiftSwapStatusEnumExpired           ShiftSwapStatusEnum = "expired"
+)
+
+func (e *ShiftSwapStatusEnum) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = ShiftSwapStatusEnum(s)
+	case string:
+		*e = ShiftSwapStatusEnum(s)
+	default:
+		return fmt.Errorf("unsupported scan type for ShiftSwapStatusEnum: %T", src)
+	}
+	return nil
+}
+
+type NullShiftSwapStatusEnum struct {
+	ShiftSwapStatusEnum ShiftSwapStatusEnum `json:"shift_swap_status_enum"`
+	Valid               bool                `json:"valid"` // Valid is true if ShiftSwapStatusEnum is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullShiftSwapStatusEnum) Scan(value interface{}) error {
+	if value == nil {
+		ns.ShiftSwapStatusEnum, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.ShiftSwapStatusEnum.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullShiftSwapStatusEnum) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.ShiftSwapStatusEnum), nil
+}
+
 type AiGeneratedReport struct {
 	ID         uuid.UUID          `json:"id"`
 	ReportText string             `json:"report_text"`
@@ -4044,6 +4091,24 @@ type Session struct {
 	ExpiresAt    pgtype.Timestamptz `json:"expires_at"`
 	CreatedAt    pgtype.Timestamptz `json:"created_at"`
 	UserID       uuid.UUID          `json:"user_id"`
+}
+
+type ShiftSwapRequest struct {
+	ID                    uuid.UUID           `json:"id"`
+	RequesterEmployeeID   uuid.UUID           `json:"requester_employee_id"`
+	RecipientEmployeeID   uuid.UUID           `json:"recipient_employee_id"`
+	RequesterScheduleID   uuid.UUID           `json:"requester_schedule_id"`
+	RecipientScheduleID   uuid.UUID           `json:"recipient_schedule_id"`
+	Status                ShiftSwapStatusEnum `json:"status"`
+	RequestedAt           pgtype.Timestamptz  `json:"requested_at"`
+	RecipientRespondedAt  pgtype.Timestamptz  `json:"recipient_responded_at"`
+	AdminDecidedAt        pgtype.Timestamptz  `json:"admin_decided_at"`
+	RecipientResponseNote *string             `json:"recipient_response_note"`
+	AdminDecisionNote     *string             `json:"admin_decision_note"`
+	AdminEmployeeID       *uuid.UUID          `json:"admin_employee_id"`
+	ExpiresAt             pgtype.Timestamptz  `json:"expires_at"`
+	CreatedAt             pgtype.Timestamptz  `json:"created_at"`
+	UpdatedAt             pgtype.Timestamptz  `json:"updated_at"`
 }
 
 type TemplateItem struct {

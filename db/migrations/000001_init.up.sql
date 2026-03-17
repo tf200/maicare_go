@@ -2184,6 +2184,79 @@ CREATE TABLE schedules (
     )
 );
 
+CREATE TYPE shift_swap_status_enum AS ENUM (
+    'pending_recipient',
+    'recipient_rejected',
+    'pending_admin',
+    'admin_rejected',
+    'confirmed',
+    'cancelled',
+    'expired'
+);
+
+CREATE TABLE shift_swap_requests (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    requester_employee_id UUID NOT NULL REFERENCES employee_profile(id) ON DELETE CASCADE,
+    recipient_employee_id UUID NOT NULL REFERENCES employee_profile(id) ON DELETE CASCADE,
+    requester_schedule_id UUID NOT NULL REFERENCES schedules(id) ON DELETE CASCADE,
+    recipient_schedule_id UUID NOT NULL REFERENCES schedules(id) ON DELETE CASCADE,
+    status shift_swap_status_enum NOT NULL DEFAULT 'pending_recipient',
+    requested_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    recipient_responded_at TIMESTAMPTZ NULL,
+    admin_decided_at TIMESTAMPTZ NULL,
+    recipient_response_note TEXT NULL,
+    admin_decision_note TEXT NULL,
+    admin_employee_id UUID NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
+    expires_at TIMESTAMPTZ NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT shift_swap_requester_not_recipient CHECK (requester_employee_id <> recipient_employee_id),
+    CONSTRAINT shift_swap_schedule_pair_not_same CHECK (requester_schedule_id <> recipient_schedule_id)
+);
+
+CREATE INDEX idx_shift_swap_requests_requester_employee_id ON shift_swap_requests(requester_employee_id);
+CREATE INDEX idx_shift_swap_requests_recipient_employee_id ON shift_swap_requests(recipient_employee_id);
+CREATE INDEX idx_shift_swap_requests_status ON shift_swap_requests(status);
+CREATE INDEX idx_shift_swap_requests_requested_at_desc ON shift_swap_requests(requested_at DESC);
+CREATE INDEX idx_shift_swap_requests_expires_at ON shift_swap_requests(expires_at);
+
+CREATE UNIQUE INDEX uq_shift_swap_active_requester_schedule
+    ON shift_swap_requests(requester_schedule_id)
+    WHERE status IN ('pending_recipient', 'pending_admin');
+
+CREATE UNIQUE INDEX uq_shift_swap_active_recipient_schedule
+    ON shift_swap_requests(recipient_schedule_id)
+    WHERE status IN ('pending_recipient', 'pending_admin');
+
+CREATE OR REPLACE FUNCTION enforce_shift_swap_active_schedule_uniqueness()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.status IN ('pending_recipient', 'pending_admin') THEN
+        IF EXISTS (
+            SELECT 1
+            FROM shift_swap_requests ssr
+            WHERE ssr.id <> NEW.id
+              AND ssr.status IN ('pending_recipient', 'pending_admin')
+              AND (
+                ssr.requester_schedule_id IN (NEW.requester_schedule_id, NEW.recipient_schedule_id)
+                OR ssr.recipient_schedule_id IN (NEW.requester_schedule_id, NEW.recipient_schedule_id)
+              )
+        ) THEN
+            RAISE EXCEPTION 'one of the schedules is already in an active swap request'
+                USING ERRCODE = '23505', CONSTRAINT = 'uq_shift_swap_active_schedule_any';
+        END IF;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_shift_swap_active_schedule_uniqueness
+BEFORE INSERT OR UPDATE OF requester_schedule_id, recipient_schedule_id, status
+ON shift_swap_requests
+FOR EACH ROW
+EXECUTE FUNCTION enforce_shift_swap_active_schedule_uniqueness();
+
 CREATE TYPE calendar_event_kind_enum AS ENUM ('appointment', 'reminder');
 CREATE TYPE calendar_event_status_enum AS ENUM ('confirmed', 'cancelled');
 -- Work approval status for appointments (hours are counted/billed only after admin approval)

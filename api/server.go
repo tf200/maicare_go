@@ -149,6 +149,7 @@ func (server *Server) setupRoutes() {
 	server.setupIncidentsAllRoutes(baseRouter)
 	server.setupRegistrationFormRoutes(baseRouter)
 	server.setupScheduleRoutes(baseRouter)
+	server.setupShiftSwapRoutes(baseRouter)
 	server.setupShiftsRoutes(baseRouter)
 	server.setupWorkingHours(baseRouter)
 	server.setupInvoiceRoutes(baseRouter)
