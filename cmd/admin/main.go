@@ -3,11 +3,14 @@ package main
 import (
 	"context"
 	"errors"
+	"flag"
 	"fmt"
 	"log"
 	db "maicare_go/db/sqlc"
 	"maicare_go/util"
 	"math/rand"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/brianvoe/gofakeit/v7"
@@ -199,6 +202,8 @@ func grantPermissions(ctx context.Context, store *db.Store, userID uuid.UUID) {
 }
 
 func main() {
+	dbSourceFlag := flag.String("db", "", "database connection string (defaults to DB_SOURCE then local default)")
+	flag.Parse()
 
 	config, err := util.LoadConfig(".")
 	if err != nil {
@@ -208,7 +213,14 @@ func main() {
 		log.Fatal("ADMIN_EMAIL and ADMIN_PASSWORD must be set in the environment variables")
 	}
 	ctx := context.Background()
-	dbSource := "postgres://maicare:maicare@167.86.75.250:5432/maicare?sslmode=disable"
+	dbSource := strings.TrimSpace(*dbSourceFlag)
+	if dbSource == "" {
+		dbSource = strings.TrimSpace(os.Getenv("DB_SOURCE"))
+	}
+	if dbSource == "" {
+		dbSource = "postgres://maicare:maicare@localhost:5432/maicare?sslmode=disable"
+	}
+
 	connPool, err := pgxpool.New(ctx, dbSource)
 	if err != nil {
 		log.Fatal("Cannot connect to db:", err)
