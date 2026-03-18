@@ -420,6 +420,22 @@ permissions:
       resource: /shift-swaps
       method: [GET]
 
+    - name: LEAVE.REQUEST.CREATE
+      resource: /leave-requests
+      method: [POST]
+    - name: LEAVE.REQUEST.UPDATE
+      resource: /leave-requests/:id
+      method: [PUT]
+    - name: LEAVE.REQUEST.UPDATE_ALL
+      resource: /leave-requests/:id/admin
+      method: [PUT]
+    - name: LEAVE.REQUEST.VIEW
+      resource: /leave-requests/my
+      method: [GET]
+    - name: LEAVE.REQUEST.VIEW_ALL
+      resource: /leave-requests
+      method: [GET]
+
     - name: SHIFT.CREATE
       resource: /shifts
       method: [POST]
@@ -590,6 +606,11 @@ roles:
           - SCHEDULE_SWAP.RESPOND
           - SCHEDULE_SWAP.APPROVE
           - SCHEDULE_SWAP.VIEW
+          - LEAVE.REQUEST.CREATE
+          - LEAVE.REQUEST.UPDATE
+          - LEAVE.REQUEST.UPDATE_ALL
+          - LEAVE.REQUEST.VIEW
+          - LEAVE.REQUEST.VIEW_ALL
           - SENDER.CREATE
           - SENDER.UPDATE
           - SENDER.VIEW
@@ -669,5 +690,10 @@ roles:
           - SCHEDULE_SWAP.RESPOND
           - SCHEDULE_SWAP.VIEW
           - SCHEDULE_SWAP.APPROVE
+          - LEAVE.REQUEST.CREATE
+          - LEAVE.REQUEST.UPDATE
+          - LEAVE.REQUEST.UPDATE_ALL
+          - LEAVE.REQUEST.VIEW
+          - LEAVE.REQUEST.VIEW_ALL
           - SENDER.CREATE
           - SHIFT.VIEW

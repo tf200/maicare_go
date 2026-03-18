@@ -150,6 +150,7 @@ func (server *Server) setupRoutes() {
 	server.setupRegistrationFormRoutes(baseRouter)
 	server.setupScheduleRoutes(baseRouter)
 	server.setupShiftSwapRoutes(baseRouter)
+	server.setupLeaveRoutes(baseRouter)
 	server.setupShiftsRoutes(baseRouter)
 	server.setupWorkingHours(baseRouter)
 	server.setupInvoiceRoutes(baseRouter)

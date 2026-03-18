@@ -71,3 +71,291 @@ func (q *Queries) CreateLeaveRequest(ctx context.Context, arg CreateLeaveRequest
 	)
 	return i, err
 }
+
+const listLeaveRequestsPaginated = `-- name: ListLeaveRequestsPaginated :many
+SELECT
+    lr.id,
+    lr.employee_id,
+    lr.created_by_employee_id,
+    lr.leave_type,
+    lr.status,
+    lr.start_date,
+    lr.end_date,
+    lr.reason,
+    lr.decision_note,
+    lr.decided_by_employee_id,
+    lr.requested_at,
+    lr.decided_at,
+    lr.cancelled_at,
+    lr.created_at,
+    lr.updated_at,
+    ep.first_name AS employee_first_name,
+    ep.last_name AS employee_last_name,
+    COUNT(*) OVER() AS total_count
+FROM leave_requests lr
+JOIN employee_profile ep ON ep.id = lr.employee_id
+WHERE (
+    $1::leave_request_status_enum IS NULL
+    OR lr.status = $1::leave_request_status_enum
+)
+  AND (
+    $2::uuid IS NULL
+    OR lr.employee_id = $2::uuid
+  )
+ORDER BY lr.requested_at DESC
+LIMIT $4 OFFSET $3
+`
+
+type ListLeaveRequestsPaginatedParams struct {
+	Status     NullLeaveRequestStatusEnum `json:"status"`
+	EmployeeID *uuid.UUID                 `json:"employee_id"`
+	Offset     int32                      `json:"offset"`
+	Limit      int32                      `json:"limit"`
+}
+
+type ListLeaveRequestsPaginatedRow struct {
+	ID                  uuid.UUID              `json:"id"`
+	EmployeeID          uuid.UUID              `json:"employee_id"`
+	CreatedByEmployeeID *uuid.UUID             `json:"created_by_employee_id"`
+	LeaveType           LeaveRequestTypeEnum   `json:"leave_type"`
+	Status              LeaveRequestStatusEnum `json:"status"`
+	StartDate           pgtype.Date            `json:"start_date"`
+	EndDate             pgtype.Date            `json:"end_date"`
+	Reason              *string                `json:"reason"`
+	DecisionNote        *string                `json:"decision_note"`
+	DecidedByEmployeeID *uuid.UUID             `json:"decided_by_employee_id"`
+	RequestedAt         pgtype.Timestamptz     `json:"requested_at"`
+	DecidedAt           pgtype.Timestamptz     `json:"decided_at"`
+	CancelledAt         pgtype.Timestamptz     `json:"cancelled_at"`
+	CreatedAt           pgtype.Timestamptz     `json:"created_at"`
+	UpdatedAt           pgtype.Timestamptz     `json:"updated_at"`
+	EmployeeFirstName   string                 `json:"employee_first_name"`
+	EmployeeLastName    string                 `json:"employee_last_name"`
+	TotalCount          int64                  `json:"total_count"`
+}
+
+func (q *Queries) ListLeaveRequestsPaginated(ctx context.Context, arg ListLeaveRequestsPaginatedParams) ([]ListLeaveRequestsPaginatedRow, error) {
+	rows, err := q.db.Query(ctx, listLeaveRequestsPaginated,
+		arg.Status,
+		arg.EmployeeID,
+		arg.Offset,
+		arg.Limit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListLeaveRequestsPaginatedRow{}
+	for rows.Next() {
+		var i ListLeaveRequestsPaginatedRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.EmployeeID,
+			&i.CreatedByEmployeeID,
+			&i.LeaveType,
+			&i.Status,
+			&i.StartDate,
+			&i.EndDate,
+			&i.Reason,
+			&i.DecisionNote,
+			&i.DecidedByEmployeeID,
+			&i.RequestedAt,
+			&i.DecidedAt,
+			&i.CancelledAt,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.EmployeeFirstName,
+			&i.EmployeeLastName,
+			&i.TotalCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listMyLeaveRequestsPaginated = `-- name: ListMyLeaveRequestsPaginated :many
+SELECT
+    lr.id,
+    lr.employee_id,
+    lr.created_by_employee_id,
+    lr.leave_type,
+    lr.status,
+    lr.start_date,
+    lr.end_date,
+    lr.reason,
+    lr.decision_note,
+    lr.decided_by_employee_id,
+    lr.requested_at,
+    lr.decided_at,
+    lr.cancelled_at,
+    lr.created_at,
+    lr.updated_at,
+    ep.first_name AS employee_first_name,
+    ep.last_name AS employee_last_name,
+    COUNT(*) OVER() AS total_count
+FROM leave_requests lr
+JOIN employee_profile ep ON ep.id = lr.employee_id
+WHERE lr.employee_id = $1
+  AND (
+    $2::leave_request_status_enum IS NULL
+    OR lr.status = $2::leave_request_status_enum
+  )
+ORDER BY lr.requested_at DESC
+LIMIT $4 OFFSET $3
+`
+
+type ListMyLeaveRequestsPaginatedParams struct {
+	EmployeeID uuid.UUID                  `json:"employee_id"`
+	Status     NullLeaveRequestStatusEnum `json:"status"`
+	Offset     int32                      `json:"offset"`
+	Limit      int32                      `json:"limit"`
+}
+
+type ListMyLeaveRequestsPaginatedRow struct {
+	ID                  uuid.UUID              `json:"id"`
+	EmployeeID          uuid.UUID              `json:"employee_id"`
+	CreatedByEmployeeID *uuid.UUID             `json:"created_by_employee_id"`
+	LeaveType           LeaveRequestTypeEnum   `json:"leave_type"`
+	Status              LeaveRequestStatusEnum `json:"status"`
+	StartDate           pgtype.Date            `json:"start_date"`
+	EndDate             pgtype.Date            `json:"end_date"`
+	Reason              *string                `json:"reason"`
+	DecisionNote        *string                `json:"decision_note"`
+	DecidedByEmployeeID *uuid.UUID             `json:"decided_by_employee_id"`
+	RequestedAt         pgtype.Timestamptz     `json:"requested_at"`
+	DecidedAt           pgtype.Timestamptz     `json:"decided_at"`
+	CancelledAt         pgtype.Timestamptz     `json:"cancelled_at"`
+	CreatedAt           pgtype.Timestamptz     `json:"created_at"`
+	UpdatedAt           pgtype.Timestamptz     `json:"updated_at"`
+	EmployeeFirstName   string                 `json:"employee_first_name"`
+	EmployeeLastName    string                 `json:"employee_last_name"`
+	TotalCount          int64                  `json:"total_count"`
+}
+
+func (q *Queries) ListMyLeaveRequestsPaginated(ctx context.Context, arg ListMyLeaveRequestsPaginatedParams) ([]ListMyLeaveRequestsPaginatedRow, error) {
+	rows, err := q.db.Query(ctx, listMyLeaveRequestsPaginated,
+		arg.EmployeeID,
+		arg.Status,
+		arg.Offset,
+		arg.Limit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListMyLeaveRequestsPaginatedRow{}
+	for rows.Next() {
+		var i ListMyLeaveRequestsPaginatedRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.EmployeeID,
+			&i.CreatedByEmployeeID,
+			&i.LeaveType,
+			&i.Status,
+			&i.StartDate,
+			&i.EndDate,
+			&i.Reason,
+			&i.DecisionNote,
+			&i.DecidedByEmployeeID,
+			&i.RequestedAt,
+			&i.DecidedAt,
+			&i.CancelledAt,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.EmployeeFirstName,
+			&i.EmployeeLastName,
+			&i.TotalCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const lockLeaveRequestByID = `-- name: LockLeaveRequestByID :one
+SELECT id, employee_id, created_by_employee_id, leave_type, status, start_date, end_date, reason, decision_note, decided_by_employee_id, requested_at, decided_at, cancelled_at, created_at, updated_at
+FROM leave_requests
+WHERE id = $1
+FOR UPDATE
+`
+
+func (q *Queries) LockLeaveRequestByID(ctx context.Context, id uuid.UUID) (LeaveRequest, error) {
+	row := q.db.QueryRow(ctx, lockLeaveRequestByID, id)
+	var i LeaveRequest
+	err := row.Scan(
+		&i.ID,
+		&i.EmployeeID,
+		&i.CreatedByEmployeeID,
+		&i.LeaveType,
+		&i.Status,
+		&i.StartDate,
+		&i.EndDate,
+		&i.Reason,
+		&i.DecisionNote,
+		&i.DecidedByEmployeeID,
+		&i.RequestedAt,
+		&i.DecidedAt,
+		&i.CancelledAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const updateLeaveRequestEditableFields = `-- name: UpdateLeaveRequestEditableFields :one
+UPDATE leave_requests
+SET
+    leave_type = COALESCE($1::leave_request_type_enum, leave_type),
+    start_date = COALESCE($2::date, start_date),
+    end_date = COALESCE($3::date, end_date),
+    reason = COALESCE($4::text, reason),
+    updated_at = NOW()
+WHERE id = $5
+RETURNING id, employee_id, created_by_employee_id, leave_type, status, start_date, end_date, reason, decision_note, decided_by_employee_id, requested_at, decided_at, cancelled_at, created_at, updated_at
+`
+
+type UpdateLeaveRequestEditableFieldsParams struct {
+	LeaveType NullLeaveRequestTypeEnum `json:"leave_type"`
+	StartDate pgtype.Date              `json:"start_date"`
+	EndDate   pgtype.Date              `json:"end_date"`
+	Reason    *string                  `json:"reason"`
+	ID        uuid.UUID                `json:"id"`
+}
+
+func (q *Queries) UpdateLeaveRequestEditableFields(ctx context.Context, arg UpdateLeaveRequestEditableFieldsParams) (LeaveRequest, error) {
+	row := q.db.QueryRow(ctx, updateLeaveRequestEditableFields,
+		arg.LeaveType,
+		arg.StartDate,
+		arg.EndDate,
+		arg.Reason,
+		arg.ID,
+	)
+	var i LeaveRequest
+	err := row.Scan(
+		&i.ID,
+		&i.EmployeeID,
+		&i.CreatedByEmployeeID,
+		&i.LeaveType,
+		&i.Status,
+		&i.StartDate,
+		&i.EndDate,
+		&i.Reason,
+		&i.DecisionNote,
+		&i.DecidedByEmployeeID,
+		&i.RequestedAt,
+		&i.DecidedAt,
+		&i.CancelledAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}

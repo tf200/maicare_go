@@ -17,3 +17,83 @@ INSERT INTO leave_requests (
     NOW()
 )
 RETURNING *;
+
+-- name: ListMyLeaveRequestsPaginated :many
+SELECT
+    lr.id,
+    lr.employee_id,
+    lr.created_by_employee_id,
+    lr.leave_type,
+    lr.status,
+    lr.start_date,
+    lr.end_date,
+    lr.reason,
+    lr.decision_note,
+    lr.decided_by_employee_id,
+    lr.requested_at,
+    lr.decided_at,
+    lr.cancelled_at,
+    lr.created_at,
+    lr.updated_at,
+    ep.first_name AS employee_first_name,
+    ep.last_name AS employee_last_name,
+    COUNT(*) OVER() AS total_count
+FROM leave_requests lr
+JOIN employee_profile ep ON ep.id = lr.employee_id
+WHERE lr.employee_id = sqlc.arg(employee_id)
+  AND (
+    sqlc.narg('status')::leave_request_status_enum IS NULL
+    OR lr.status = sqlc.narg('status')::leave_request_status_enum
+  )
+ORDER BY lr.requested_at DESC
+LIMIT sqlc.arg('limit') OFFSET sqlc.arg('offset');
+
+-- name: ListLeaveRequestsPaginated :many
+SELECT
+    lr.id,
+    lr.employee_id,
+    lr.created_by_employee_id,
+    lr.leave_type,
+    lr.status,
+    lr.start_date,
+    lr.end_date,
+    lr.reason,
+    lr.decision_note,
+    lr.decided_by_employee_id,
+    lr.requested_at,
+    lr.decided_at,
+    lr.cancelled_at,
+    lr.created_at,
+    lr.updated_at,
+    ep.first_name AS employee_first_name,
+    ep.last_name AS employee_last_name,
+    COUNT(*) OVER() AS total_count
+FROM leave_requests lr
+JOIN employee_profile ep ON ep.id = lr.employee_id
+WHERE (
+    sqlc.narg('status')::leave_request_status_enum IS NULL
+    OR lr.status = sqlc.narg('status')::leave_request_status_enum
+)
+  AND (
+    sqlc.narg('employee_id')::uuid IS NULL
+    OR lr.employee_id = sqlc.narg('employee_id')::uuid
+  )
+ORDER BY lr.requested_at DESC
+LIMIT sqlc.arg('limit') OFFSET sqlc.arg('offset');
+
+-- name: LockLeaveRequestByID :one
+SELECT *
+FROM leave_requests
+WHERE id = $1
+FOR UPDATE;
+
+-- name: UpdateLeaveRequestEditableFields :one
+UPDATE leave_requests
+SET
+    leave_type = COALESCE(sqlc.narg('leave_type')::leave_request_type_enum, leave_type),
+    start_date = COALESCE(sqlc.narg('start_date')::date, start_date),
+    end_date = COALESCE(sqlc.narg('end_date')::date, end_date),
+    reason = COALESCE(sqlc.narg('reason')::text, reason),
+    updated_at = NOW()
+WHERE id = sqlc.arg('id')
+RETURNING *;
