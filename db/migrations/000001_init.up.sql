@@ -2322,6 +2322,28 @@ CREATE TABLE leave_balances (
 
 CREATE INDEX idx_leave_balances_employee_year ON leave_balances(employee_id, year);
 
+CREATE TABLE leave_balance_adjustments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    leave_balance_id UUID NOT NULL REFERENCES leave_balances(id) ON DELETE CASCADE,
+    employee_id UUID NOT NULL REFERENCES employee_profile(id) ON DELETE CASCADE,
+    year INT NOT NULL,
+    legal_days_delta INT NOT NULL DEFAULT 0,
+    extra_days_delta INT NOT NULL DEFAULT 0,
+    reason TEXT NOT NULL,
+    adjusted_by_employee_id UUID NOT NULL REFERENCES employee_profile(id) ON DELETE RESTRICT,
+    legal_total_days_before INT NOT NULL,
+    extra_total_days_before INT NOT NULL,
+    legal_total_days_after INT NOT NULL,
+    extra_total_days_after INT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT leave_balance_adjustments_non_zero_delta CHECK (
+        legal_days_delta <> 0 OR extra_days_delta <> 0
+    )
+);
+
+CREATE INDEX idx_leave_balance_adjustments_employee_year_created_at
+ON leave_balance_adjustments(employee_id, year, created_at DESC);
+
 CREATE OR REPLACE FUNCTION initialize_leave_balance_on_employee_insert()
 RETURNS TRIGGER AS $$
 DECLARE

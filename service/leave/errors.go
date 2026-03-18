@@ -8,4 +8,5 @@ var (
 	ErrLeaveRequestStateInvalid   = errors.New("leave request is not in an editable state")
 	ErrLeaveRequestForbidden      = errors.New("leave request is not accessible by the actor")
 	ErrLeaveBalanceInsufficient   = errors.New("insufficient leave balance")
+	ErrLeaveBalanceInvalidAdjust  = errors.New("invalid leave balance adjustment")
 )

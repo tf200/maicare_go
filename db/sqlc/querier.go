@@ -27,6 +27,7 @@ type Querier interface {
 	// Bulk-insert explicit overrides for a user (idempotent by replacement flow).
 	AddUserPermissionOverrides(ctx context.Context, arg AddUserPermissionOverridesParams) error
 	ApplyLeaveBalanceDeduction(ctx context.Context, arg ApplyLeaveBalanceDeductionParams) (LeaveBalance, error)
+	ApplyLeaveBalanceTotalAdjustment(ctx context.Context, arg ApplyLeaveBalanceTotalAdjustmentParams) (LeaveBalance, error)
 	ApproveOrRejectClientLocationTransfer(ctx context.Context, arg ApproveOrRejectClientLocationTransferParams) error
 	// Select the columns from the inserted row AND join to get the user_id
 	AssignEmployee(ctx context.Context, arg AssignEmployeeParams) (AssignEmployeeRow, error)
@@ -94,6 +95,7 @@ type Querier interface {
 	// ////////////////////// Batch Runs //////////////////////
 	CreateInvoiceRun(ctx context.Context, arg CreateInvoiceRunParams) (InvoiceRun, error)
 	CreateInvoiceRunItem(ctx context.Context, arg CreateInvoiceRunItemParams) (InvoiceRunItem, error)
+	CreateLeaveBalanceAdjustmentAudit(ctx context.Context, arg CreateLeaveBalanceAdjustmentAuditParams) (LeaveBalanceAdjustment, error)
 	CreateLeaveRequest(ctx context.Context, arg CreateLeaveRequestParams) (LeaveRequest, error)
 	CreateLocation(ctx context.Context, arg CreateLocationParams) (Location, error)
 	CreateNotification(ctx context.Context, arg CreateNotificationParams) (Notification, error)
@@ -324,9 +326,11 @@ type Querier interface {
 	ListInvoices(ctx context.Context, arg ListInvoicesParams) ([]ListInvoicesRow, error)
 	ListLatestCompletedGoalProgressByClient(ctx context.Context, clientID uuid.UUID) ([]ListLatestCompletedGoalProgressByClientRow, error)
 	ListLatestPayments(ctx context.Context) ([]ListLatestPaymentsRow, error)
+	ListLeaveBalancesPaginated(ctx context.Context, arg ListLeaveBalancesPaginatedParams) ([]ListLeaveBalancesPaginatedRow, error)
 	ListLeaveRequestsPaginated(ctx context.Context, arg ListLeaveRequestsPaginatedParams) ([]ListLeaveRequestsPaginatedRow, error)
 	ListLocations(ctx context.Context, organisationID uuid.UUID) ([]ListLocationsRow, error)
 	ListLocationsPaginated(ctx context.Context, arg ListLocationsPaginatedParams) ([]ListLocationsPaginatedRow, error)
+	ListMyLeaveBalancesPaginated(ctx context.Context, arg ListMyLeaveBalancesPaginatedParams) ([]ListMyLeaveBalancesPaginatedRow, error)
 	ListMyLeaveRequestsPaginated(ctx context.Context, arg ListMyLeaveRequestsPaginatedParams) ([]ListMyLeaveRequestsPaginatedRow, error)
 	ListMyShiftSwapRequests(ctx context.Context, requesterEmployeeID uuid.UUID) ([]ListMyShiftSwapRequestsRow, error)
 	ListNotifications(ctx context.Context, arg ListNotificationsParams) ([]Notification, error)

@@ -438,6 +438,15 @@ permissions:
     - name: LEAVE.REQUEST.VIEW_ALL
       resource: /leave-requests
       method: [GET]
+    - name: LEAVE.BALANCE.VIEW
+      resource: /leave-balances/my
+      method: [GET]
+    - name: LEAVE.BALANCE.VIEW_ALL
+      resource: /leave-balances
+      method: [GET]
+    - name: LEAVE.BALANCE.ADJUST
+      resource: /leave-balances/adjust
+      method: [POST]
 
     - name: SHIFT.CREATE
       resource: /shifts
@@ -615,6 +624,9 @@ roles:
           - LEAVE.REQUEST.DECIDE
           - LEAVE.REQUEST.VIEW
           - LEAVE.REQUEST.VIEW_ALL
+          - LEAVE.BALANCE.VIEW
+          - LEAVE.BALANCE.VIEW_ALL
+          - LEAVE.BALANCE.ADJUST
           - SENDER.CREATE
           - SENDER.UPDATE
           - SENDER.VIEW
@@ -700,5 +712,8 @@ roles:
           - LEAVE.REQUEST.DECIDE
           - LEAVE.REQUEST.VIEW
           - LEAVE.REQUEST.VIEW_ALL
+          - LEAVE.BALANCE.VIEW
+          - LEAVE.BALANCE.VIEW_ALL
+          - LEAVE.BALANCE.ADJUST
           - SENDER.CREATE
           - SHIFT.VIEW

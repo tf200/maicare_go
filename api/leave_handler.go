@@ -199,6 +199,8 @@ func mapLeaveRequestErrorStatus(err error) int {
 	switch {
 	case errors.Is(err, leave.ErrLeaveRequestInvalidRequest):
 		return http.StatusBadRequest
+	case errors.Is(err, leave.ErrLeaveBalanceInvalidAdjust):
+		return http.StatusBadRequest
 	case errors.Is(err, leave.ErrLeaveRequestForbidden):
 		return http.StatusForbidden
 	case errors.Is(err, leave.ErrLeaveRequestNotFound):
@@ -241,4 +243,102 @@ func (server *Server) ListLeaveRequestsApi(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, SuccessResponse(res, "Leave requests retrieved successfully"))
+}
+
+// ListLeaveBalancesApi lists leave balances for admins with filters.
+// @Summary List leave balances
+// @Description Lists paginated leave balances with optional employee and year filters.
+// @Tags leave-balances
+// @Produce json
+// @Param page query int true "Page number"
+// @Param page_size query int true "Page size"
+// @Param employee_id query string false "Employee ID filter"
+// @Param year query int false "Year filter"
+// @Success 200 {object} Response[pagination.Response[leave.LeaveBalanceListItem]]
+// @Router /leave-balances [get]
+func (server *Server) ListLeaveBalancesApi(ctx *gin.Context) {
+	var req leave.ListLeaveBalancesRequest
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	res, err := server.businessService.LeaveService.ListLeaveBalances(ctx, &req)
+	if err != nil {
+		if errors.Is(err, leave.ErrLeaveRequestInvalidRequest) {
+			ctx.JSON(http.StatusBadRequest, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, SuccessResponse(res, "Leave balances retrieved successfully"))
+}
+
+// ListMyLeaveBalancesApi lists leave balances for the authenticated employee.
+// @Summary List my leave balances
+// @Description Lists paginated leave balances for the authenticated employee with optional year filter.
+// @Tags leave-balances
+// @Produce json
+// @Param page query int true "Page number"
+// @Param page_size query int true "Page size"
+// @Param year query int false "Year filter"
+// @Success 200 {object} Response[pagination.Response[leave.LeaveBalanceListItem]]
+// @Router /leave-balances/my [get]
+func (server *Server) ListMyLeaveBalancesApi(ctx *gin.Context) {
+	var req leave.ListMyLeaveBalancesRequest
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	payload, err := GetAuthPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
+	res, err := server.businessService.LeaveService.ListMyLeaveBalances(ctx, payload.EmployeeID, &req)
+	if err != nil {
+		if errors.Is(err, leave.ErrLeaveRequestInvalidRequest) {
+			ctx.JSON(http.StatusBadRequest, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, SuccessResponse(res, "Leave balances retrieved successfully"))
+}
+
+// AdjustLeaveBalanceApi applies an admin adjustment to leave balance totals.
+// @Summary Adjust leave balance
+// @Description Applies admin correction deltas to leave balance totals and records an audit note.
+// @Tags leave-balances
+// @Accept json
+// @Produce json
+// @Param request body leave.AdjustLeaveBalanceRequest true "Leave balance adjustment payload"
+// @Success 200 {object} Response[leave.AdjustLeaveBalanceResponse]
+// @Router /leave-balances/adjust [post]
+func (server *Server) AdjustLeaveBalanceApi(ctx *gin.Context) {
+	var req leave.AdjustLeaveBalanceRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	payload, err := GetAuthPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
+	res, err := server.businessService.LeaveService.AdjustLeaveBalance(ctx, payload.EmployeeID, &req)
+	if err != nil {
+		ctx.JSON(mapLeaveRequestErrorStatus(err), errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, SuccessResponse(res, "Leave balance adjusted successfully"))
 }

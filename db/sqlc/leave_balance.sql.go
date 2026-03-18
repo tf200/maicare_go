@@ -9,6 +9,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const applyLeaveBalanceDeduction = `-- name: ApplyLeaveBalanceDeduction :one
@@ -44,6 +45,115 @@ func (q *Queries) ApplyLeaveBalanceDeduction(ctx context.Context, arg ApplyLeave
 	return i, err
 }
 
+const applyLeaveBalanceTotalAdjustment = `-- name: ApplyLeaveBalanceTotalAdjustment :one
+UPDATE leave_balances
+SET
+    legal_total_days = legal_total_days + $1,
+    extra_total_days = extra_total_days + $2,
+    updated_at = NOW()
+WHERE id = $3
+RETURNING id, employee_id, year, legal_total_days, extra_total_days, legal_used_days, extra_used_days, created_at, updated_at
+`
+
+type ApplyLeaveBalanceTotalAdjustmentParams struct {
+	LegalDaysDelta int32     `json:"legal_days_delta"`
+	ExtraDaysDelta int32     `json:"extra_days_delta"`
+	ID             uuid.UUID `json:"id"`
+}
+
+func (q *Queries) ApplyLeaveBalanceTotalAdjustment(ctx context.Context, arg ApplyLeaveBalanceTotalAdjustmentParams) (LeaveBalance, error) {
+	row := q.db.QueryRow(ctx, applyLeaveBalanceTotalAdjustment, arg.LegalDaysDelta, arg.ExtraDaysDelta, arg.ID)
+	var i LeaveBalance
+	err := row.Scan(
+		&i.ID,
+		&i.EmployeeID,
+		&i.Year,
+		&i.LegalTotalDays,
+		&i.ExtraTotalDays,
+		&i.LegalUsedDays,
+		&i.ExtraUsedDays,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const createLeaveBalanceAdjustmentAudit = `-- name: CreateLeaveBalanceAdjustmentAudit :one
+INSERT INTO leave_balance_adjustments (
+    leave_balance_id,
+    employee_id,
+    year,
+    legal_days_delta,
+    extra_days_delta,
+    reason,
+    adjusted_by_employee_id,
+    legal_total_days_before,
+    extra_total_days_before,
+    legal_total_days_after,
+    extra_total_days_after
+) VALUES (
+    $1,
+    $2,
+    $3,
+    $4,
+    $5,
+    $6,
+    $7,
+    $8,
+    $9,
+    $10,
+    $11
+)
+RETURNING id, leave_balance_id, employee_id, year, legal_days_delta, extra_days_delta, reason, adjusted_by_employee_id, legal_total_days_before, extra_total_days_before, legal_total_days_after, extra_total_days_after, created_at
+`
+
+type CreateLeaveBalanceAdjustmentAuditParams struct {
+	LeaveBalanceID       uuid.UUID `json:"leave_balance_id"`
+	EmployeeID           uuid.UUID `json:"employee_id"`
+	Year                 int32     `json:"year"`
+	LegalDaysDelta       int32     `json:"legal_days_delta"`
+	ExtraDaysDelta       int32     `json:"extra_days_delta"`
+	Reason               string    `json:"reason"`
+	AdjustedByEmployeeID uuid.UUID `json:"adjusted_by_employee_id"`
+	LegalTotalDaysBefore int32     `json:"legal_total_days_before"`
+	ExtraTotalDaysBefore int32     `json:"extra_total_days_before"`
+	LegalTotalDaysAfter  int32     `json:"legal_total_days_after"`
+	ExtraTotalDaysAfter  int32     `json:"extra_total_days_after"`
+}
+
+func (q *Queries) CreateLeaveBalanceAdjustmentAudit(ctx context.Context, arg CreateLeaveBalanceAdjustmentAuditParams) (LeaveBalanceAdjustment, error) {
+	row := q.db.QueryRow(ctx, createLeaveBalanceAdjustmentAudit,
+		arg.LeaveBalanceID,
+		arg.EmployeeID,
+		arg.Year,
+		arg.LegalDaysDelta,
+		arg.ExtraDaysDelta,
+		arg.Reason,
+		arg.AdjustedByEmployeeID,
+		arg.LegalTotalDaysBefore,
+		arg.ExtraTotalDaysBefore,
+		arg.LegalTotalDaysAfter,
+		arg.ExtraTotalDaysAfter,
+	)
+	var i LeaveBalanceAdjustment
+	err := row.Scan(
+		&i.ID,
+		&i.LeaveBalanceID,
+		&i.EmployeeID,
+		&i.Year,
+		&i.LegalDaysDelta,
+		&i.ExtraDaysDelta,
+		&i.Reason,
+		&i.AdjustedByEmployeeID,
+		&i.LegalTotalDaysBefore,
+		&i.ExtraTotalDaysBefore,
+		&i.LegalTotalDaysAfter,
+		&i.ExtraTotalDaysAfter,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const ensureLeaveBalanceForYear = `-- name: EnsureLeaveBalanceForYear :exec
 INSERT INTO leave_balances (
     employee_id,
@@ -63,6 +173,179 @@ type EnsureLeaveBalanceForYearParams struct {
 func (q *Queries) EnsureLeaveBalanceForYear(ctx context.Context, arg EnsureLeaveBalanceForYearParams) error {
 	_, err := q.db.Exec(ctx, ensureLeaveBalanceForYear, arg.EmployeeID, arg.Year)
 	return err
+}
+
+const listLeaveBalancesPaginated = `-- name: ListLeaveBalancesPaginated :many
+SELECT
+    lb.id,
+    lb.employee_id,
+    lb.year,
+    lb.legal_total_days,
+    lb.extra_total_days,
+    lb.legal_used_days,
+    lb.extra_used_days,
+    lb.created_at,
+    lb.updated_at,
+    ep.first_name AS employee_first_name,
+    ep.last_name AS employee_last_name,
+    COUNT(*) OVER() AS total_count
+FROM leave_balances lb
+JOIN employee_profile ep ON ep.id = lb.employee_id
+WHERE (
+    $1::uuid IS NULL
+    OR lb.employee_id = $1::uuid
+)
+  AND (
+    $2::int IS NULL
+    OR lb.year = $2::int
+)
+ORDER BY lb.year DESC, lb.updated_at DESC
+LIMIT $4 OFFSET $3
+`
+
+type ListLeaveBalancesPaginatedParams struct {
+	EmployeeID *uuid.UUID `json:"employee_id"`
+	Year       *int32     `json:"year"`
+	Offset     int32      `json:"offset"`
+	Limit      int32      `json:"limit"`
+}
+
+type ListLeaveBalancesPaginatedRow struct {
+	ID                uuid.UUID          `json:"id"`
+	EmployeeID        uuid.UUID          `json:"employee_id"`
+	Year              int32              `json:"year"`
+	LegalTotalDays    int32              `json:"legal_total_days"`
+	ExtraTotalDays    int32              `json:"extra_total_days"`
+	LegalUsedDays     int32              `json:"legal_used_days"`
+	ExtraUsedDays     int32              `json:"extra_used_days"`
+	CreatedAt         pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt         pgtype.Timestamptz `json:"updated_at"`
+	EmployeeFirstName string             `json:"employee_first_name"`
+	EmployeeLastName  string             `json:"employee_last_name"`
+	TotalCount        int64              `json:"total_count"`
+}
+
+func (q *Queries) ListLeaveBalancesPaginated(ctx context.Context, arg ListLeaveBalancesPaginatedParams) ([]ListLeaveBalancesPaginatedRow, error) {
+	rows, err := q.db.Query(ctx, listLeaveBalancesPaginated,
+		arg.EmployeeID,
+		arg.Year,
+		arg.Offset,
+		arg.Limit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListLeaveBalancesPaginatedRow{}
+	for rows.Next() {
+		var i ListLeaveBalancesPaginatedRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.EmployeeID,
+			&i.Year,
+			&i.LegalTotalDays,
+			&i.ExtraTotalDays,
+			&i.LegalUsedDays,
+			&i.ExtraUsedDays,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.EmployeeFirstName,
+			&i.EmployeeLastName,
+			&i.TotalCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listMyLeaveBalancesPaginated = `-- name: ListMyLeaveBalancesPaginated :many
+SELECT
+    lb.id,
+    lb.employee_id,
+    lb.year,
+    lb.legal_total_days,
+    lb.extra_total_days,
+    lb.legal_used_days,
+    lb.extra_used_days,
+    lb.created_at,
+    lb.updated_at,
+    ep.first_name AS employee_first_name,
+    ep.last_name AS employee_last_name,
+    COUNT(*) OVER() AS total_count
+FROM leave_balances lb
+JOIN employee_profile ep ON ep.id = lb.employee_id
+WHERE lb.employee_id = $1
+  AND (
+    $2::int IS NULL
+    OR lb.year = $2::int
+)
+ORDER BY lb.year DESC, lb.updated_at DESC
+LIMIT $4 OFFSET $3
+`
+
+type ListMyLeaveBalancesPaginatedParams struct {
+	EmployeeID uuid.UUID `json:"employee_id"`
+	Year       *int32    `json:"year"`
+	Offset     int32     `json:"offset"`
+	Limit      int32     `json:"limit"`
+}
+
+type ListMyLeaveBalancesPaginatedRow struct {
+	ID                uuid.UUID          `json:"id"`
+	EmployeeID        uuid.UUID          `json:"employee_id"`
+	Year              int32              `json:"year"`
+	LegalTotalDays    int32              `json:"legal_total_days"`
+	ExtraTotalDays    int32              `json:"extra_total_days"`
+	LegalUsedDays     int32              `json:"legal_used_days"`
+	ExtraUsedDays     int32              `json:"extra_used_days"`
+	CreatedAt         pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt         pgtype.Timestamptz `json:"updated_at"`
+	EmployeeFirstName string             `json:"employee_first_name"`
+	EmployeeLastName  string             `json:"employee_last_name"`
+	TotalCount        int64              `json:"total_count"`
+}
+
+func (q *Queries) ListMyLeaveBalancesPaginated(ctx context.Context, arg ListMyLeaveBalancesPaginatedParams) ([]ListMyLeaveBalancesPaginatedRow, error) {
+	rows, err := q.db.Query(ctx, listMyLeaveBalancesPaginated,
+		arg.EmployeeID,
+		arg.Year,
+		arg.Offset,
+		arg.Limit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListMyLeaveBalancesPaginatedRow{}
+	for rows.Next() {
+		var i ListMyLeaveBalancesPaginatedRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.EmployeeID,
+			&i.Year,
+			&i.LegalTotalDays,
+			&i.ExtraTotalDays,
+			&i.LegalUsedDays,
+			&i.ExtraUsedDays,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.EmployeeFirstName,
+			&i.EmployeeLastName,
+			&i.TotalCount,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const lockLeaveBalanceByEmployeeYear = `-- name: LockLeaveBalanceByEmployeeYear :one

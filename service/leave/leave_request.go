@@ -15,6 +15,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
 	"go.uber.org/zap"
 )
@@ -785,5 +786,229 @@ func mapLeaveListRowToResponse(
 		CancelledAt:         timestamptzPtr(cancelledAt),
 		CreatedAt:           createdAt.Time,
 		UpdatedAt:           updatedAt.Time,
+	}
+}
+
+func (s *leaveService) ListLeaveBalances(
+	ctx *gin.Context,
+	req *ListLeaveBalancesRequest,
+) (*pagination.Response[LeaveBalanceListItem], error) {
+	if req == nil {
+		return nil, ErrLeaveRequestInvalidRequest
+	}
+
+	params := req.Request.GetParams()
+	queryArg := db.ListLeaveBalancesPaginatedParams{
+		EmployeeID: req.EmployeeID,
+		Year:       nil,
+		Limit:      params.Limit,
+		Offset:     params.Offset,
+	}
+	if req.Year != nil {
+		queryArg.Year = req.Year
+	}
+
+	rows, err := s.Store.ListLeaveBalancesPaginated(ctx, queryArg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list leave balances: %w", err)
+	}
+
+	items := make([]LeaveBalanceListItem, 0, len(rows))
+	for _, row := range rows {
+		items = append(items, mapLeaveBalanceListRow(
+			row.ID,
+			row.EmployeeID,
+			strings.TrimSpace(row.EmployeeFirstName+" "+row.EmployeeLastName),
+			row.Year,
+			row.LegalTotalDays,
+			row.ExtraTotalDays,
+			row.LegalUsedDays,
+			row.ExtraUsedDays,
+			row.CreatedAt,
+			row.UpdatedAt,
+		))
+	}
+
+	var totalCount int64
+	if len(rows) > 0 {
+		totalCount = rows[0].TotalCount
+	}
+	resp := pagination.NewResponse(ctx, req.Request, items, totalCount)
+	return &resp, nil
+}
+
+func (s *leaveService) ListMyLeaveBalances(
+	ctx *gin.Context,
+	employeeID uuid.UUID,
+	req *ListMyLeaveBalancesRequest,
+) (*pagination.Response[LeaveBalanceListItem], error) {
+	if req == nil {
+		return nil, ErrLeaveRequestInvalidRequest
+	}
+
+	params := req.Request.GetParams()
+	queryArg := db.ListMyLeaveBalancesPaginatedParams{
+		EmployeeID: employeeID,
+		Year:       nil,
+		Limit:      params.Limit,
+		Offset:     params.Offset,
+	}
+	if req.Year != nil {
+		queryArg.Year = req.Year
+	}
+
+	rows, err := s.Store.ListMyLeaveBalancesPaginated(ctx, queryArg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list leave balances: %w", err)
+	}
+
+	items := make([]LeaveBalanceListItem, 0, len(rows))
+	for _, row := range rows {
+		items = append(items, mapLeaveBalanceListRow(
+			row.ID,
+			row.EmployeeID,
+			strings.TrimSpace(row.EmployeeFirstName+" "+row.EmployeeLastName),
+			row.Year,
+			row.LegalTotalDays,
+			row.ExtraTotalDays,
+			row.LegalUsedDays,
+			row.ExtraUsedDays,
+			row.CreatedAt,
+			row.UpdatedAt,
+		))
+	}
+
+	var totalCount int64
+	if len(rows) > 0 {
+		totalCount = rows[0].TotalCount
+	}
+	resp := pagination.NewResponse(ctx, req.Request, items, totalCount)
+	return &resp, nil
+}
+
+func (s *leaveService) AdjustLeaveBalance(
+	ctx context.Context,
+	adminEmployeeID uuid.UUID,
+	req *AdjustLeaveBalanceRequest,
+) (*AdjustLeaveBalanceResponse, error) {
+	if req == nil || adminEmployeeID == uuid.Nil || req.EmployeeID == uuid.Nil {
+		return nil, ErrLeaveRequestInvalidRequest
+	}
+	if req.LegalDaysDelta == 0 && req.ExtraDaysDelta == 0 {
+		return nil, fmt.Errorf("%w: at least one delta is required", ErrLeaveBalanceInvalidAdjust)
+	}
+	reason := strings.TrimSpace(req.Reason)
+	if reason == "" {
+		return nil, fmt.Errorf("%w: reason is required", ErrLeaveBalanceInvalidAdjust)
+	}
+
+	var adjusted db.LeaveBalance
+	err := s.Store.ExecTx(ctx, func(q *db.Queries) error {
+		if err := q.EnsureLeaveBalanceForYear(ctx, db.EnsureLeaveBalanceForYearParams{
+			EmployeeID: req.EmployeeID,
+			Year:       req.Year,
+		}); err != nil {
+			var pgErr *pgconn.PgError
+			if errors.As(err, &pgErr) && pgErr.Code == "23503" {
+				return ErrLeaveRequestNotFound
+			}
+			return fmt.Errorf("failed to ensure leave balance row: %w", err)
+		}
+
+		current, err := q.LockLeaveBalanceByEmployeeYear(ctx, db.LockLeaveBalanceByEmployeeYearParams{
+			EmployeeID: req.EmployeeID,
+			Year:       req.Year,
+		})
+		if err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				return ErrLeaveRequestNotFound
+			}
+			return fmt.Errorf("failed to lock leave balance: %w", err)
+		}
+
+		nextLegalTotal := current.LegalTotalDays + req.LegalDaysDelta
+		nextExtraTotal := current.ExtraTotalDays + req.ExtraDaysDelta
+		if nextLegalTotal < 0 || nextExtraTotal < 0 {
+			return fmt.Errorf("%w: totals cannot be negative", ErrLeaveBalanceInvalidAdjust)
+		}
+		if nextLegalTotal < current.LegalUsedDays || nextExtraTotal < current.ExtraUsedDays {
+			return fmt.Errorf("%w: totals cannot be lower than already used days", ErrLeaveBalanceInvalidAdjust)
+		}
+
+		adjusted, err = q.ApplyLeaveBalanceTotalAdjustment(ctx, db.ApplyLeaveBalanceTotalAdjustmentParams{
+			ID:             current.ID,
+			LegalDaysDelta: req.LegalDaysDelta,
+			ExtraDaysDelta: req.ExtraDaysDelta,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to apply leave balance adjustment: %w", err)
+		}
+
+		if _, err := q.CreateLeaveBalanceAdjustmentAudit(ctx, db.CreateLeaveBalanceAdjustmentAuditParams{
+			LeaveBalanceID:       current.ID,
+			EmployeeID:           req.EmployeeID,
+			Year:                 req.Year,
+			LegalDaysDelta:       req.LegalDaysDelta,
+			ExtraDaysDelta:       req.ExtraDaysDelta,
+			Reason:               reason,
+			AdjustedByEmployeeID: adminEmployeeID,
+			LegalTotalDaysBefore: current.LegalTotalDays,
+			ExtraTotalDaysBefore: current.ExtraTotalDays,
+			LegalTotalDaysAfter:  adjusted.LegalTotalDays,
+			ExtraTotalDaysAfter:  adjusted.ExtraTotalDays,
+		}); err != nil {
+			return fmt.Errorf("failed to create leave balance adjustment audit: %w", err)
+		}
+
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &AdjustLeaveBalanceResponse{
+		Balance: mapLeaveBalanceListRow(
+			adjusted.ID,
+			adjusted.EmployeeID,
+			"",
+			adjusted.Year,
+			adjusted.LegalTotalDays,
+			adjusted.ExtraTotalDays,
+			adjusted.LegalUsedDays,
+			adjusted.ExtraUsedDays,
+			adjusted.CreatedAt,
+			adjusted.UpdatedAt,
+		),
+	}, nil
+}
+
+func mapLeaveBalanceListRow(
+	id uuid.UUID,
+	employeeID uuid.UUID,
+	employeeName string,
+	year int32,
+	legalTotalDays int32,
+	extraTotalDays int32,
+	legalUsedDays int32,
+	extraUsedDays int32,
+	createdAt pgtype.Timestamptz,
+	updatedAt pgtype.Timestamptz,
+) LeaveBalanceListItem {
+	legalRemaining := legalTotalDays - legalUsedDays
+	extraRemaining := extraTotalDays - extraUsedDays
+	return LeaveBalanceListItem{
+		ID:             id,
+		EmployeeID:     employeeID,
+		EmployeeName:   employeeName,
+		Year:           year,
+		LegalTotalDays: legalTotalDays,
+		ExtraTotalDays: extraTotalDays,
+		LegalUsedDays:  legalUsedDays,
+		ExtraUsedDays:  extraUsedDays,
+		LegalRemaining: legalRemaining,
+		ExtraRemaining: extraRemaining,
+		TotalRemaining: legalRemaining + extraRemaining,
+		CreatedAt:      createdAt.Time,
+		UpdatedAt:      updatedAt.Time,
 	}
 }

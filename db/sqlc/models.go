@@ -3907,6 +3907,22 @@ type LeaveBalance struct {
 	UpdatedAt      pgtype.Timestamptz `json:"updated_at"`
 }
 
+type LeaveBalanceAdjustment struct {
+	ID                   uuid.UUID          `json:"id"`
+	LeaveBalanceID       uuid.UUID          `json:"leave_balance_id"`
+	EmployeeID           uuid.UUID          `json:"employee_id"`
+	Year                 int32              `json:"year"`
+	LegalDaysDelta       int32              `json:"legal_days_delta"`
+	ExtraDaysDelta       int32              `json:"extra_days_delta"`
+	Reason               string             `json:"reason"`
+	AdjustedByEmployeeID uuid.UUID          `json:"adjusted_by_employee_id"`
+	LegalTotalDaysBefore int32              `json:"legal_total_days_before"`
+	ExtraTotalDaysBefore int32              `json:"extra_total_days_before"`
+	LegalTotalDaysAfter  int32              `json:"legal_total_days_after"`
+	ExtraTotalDaysAfter  int32              `json:"extra_total_days_after"`
+	CreatedAt            pgtype.Timestamptz `json:"created_at"`
+}
+
 type LeavePolicy struct {
 	LeaveType        LeaveRequestTypeEnum `json:"leave_type"`
 	RequiresApproval bool                 `json:"requires_approval"`

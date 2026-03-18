@@ -86,3 +86,42 @@ type LeaveRequestListItem struct {
 	CreatedAt           time.Time  `json:"created_at"`
 	UpdatedAt           time.Time  `json:"updated_at"`
 }
+
+type ListLeaveBalancesRequest struct {
+	pagination.Request
+	EmployeeID *uuid.UUID `form:"employee_id" json:"employee_id"`
+	Year       *int32     `form:"year" json:"year" binding:"omitempty,min=2000,max=2100"`
+}
+
+type ListMyLeaveBalancesRequest struct {
+	pagination.Request
+	Year *int32 `form:"year" json:"year" binding:"omitempty,min=2000,max=2100"`
+}
+
+type LeaveBalanceListItem struct {
+	ID             uuid.UUID `json:"id"`
+	EmployeeID     uuid.UUID `json:"employee_id"`
+	EmployeeName   string    `json:"employee_name"`
+	Year           int32     `json:"year"`
+	LegalTotalDays int32     `json:"legal_total_days"`
+	ExtraTotalDays int32     `json:"extra_total_days"`
+	LegalUsedDays  int32     `json:"legal_used_days"`
+	ExtraUsedDays  int32     `json:"extra_used_days"`
+	LegalRemaining int32     `json:"legal_remaining_days"`
+	ExtraRemaining int32     `json:"extra_remaining_days"`
+	TotalRemaining int32     `json:"total_remaining_days"`
+	CreatedAt      time.Time `json:"created_at"`
+	UpdatedAt      time.Time `json:"updated_at"`
+}
+
+type AdjustLeaveBalanceRequest struct {
+	EmployeeID     uuid.UUID `json:"employee_id" binding:"required"`
+	Year           int32     `json:"year" binding:"required,min=2000,max=2100"`
+	LegalDaysDelta int32     `json:"legal_days_delta"`
+	ExtraDaysDelta int32     `json:"extra_days_delta"`
+	Reason         string    `json:"reason" binding:"required"`
+}
+
+type AdjustLeaveBalanceResponse struct {
+	Balance LeaveBalanceListItem `json:"balance"`
+}
