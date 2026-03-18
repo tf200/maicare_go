@@ -26,6 +26,7 @@ type Querier interface {
 	AddPermissionsToRole(ctx context.Context, arg AddPermissionsToRoleParams) error
 	// Bulk-insert explicit overrides for a user (idempotent by replacement flow).
 	AddUserPermissionOverrides(ctx context.Context, arg AddUserPermissionOverridesParams) error
+	ApplyLeaveBalanceDeduction(ctx context.Context, arg ApplyLeaveBalanceDeductionParams) (LeaveBalance, error)
 	ApproveOrRejectClientLocationTransfer(ctx context.Context, arg ApproveOrRejectClientLocationTransferParams) error
 	// Select the columns from the inserted row AND join to get the user_id
 	AssignEmployee(ctx context.Context, arg AssignEmployeeParams) (AssignEmployeeRow, error)
@@ -145,9 +146,11 @@ type Querier interface {
 	DeleteUserPermissionOverrides(ctx context.Context, userID uuid.UUID) error
 	DischargeOverview(ctx context.Context, arg DischargeOverviewParams) ([]DischargeOverviewRow, error)
 	Enable2Fa(ctx context.Context, arg Enable2FaParams) (int64, error)
+	EnsureLeaveBalanceForYear(ctx context.Context, arg EnsureLeaveBalanceForYearParams) error
 	ExpirePendingShiftSwapRequests(ctx context.Context) error
 	GetActiveEmployeeHandbookByEmployeeID(ctx context.Context, employeeID uuid.UUID) (GetActiveEmployeeHandbookByEmployeeIDRow, error)
 	GetActiveHandbookTemplateByDepartment(ctx context.Context, departmentID uuid.UUID) (HandbookTemplate, error)
+	GetActiveLeavePolicyByType(ctx context.Context, leaveType LeaveRequestTypeEnum) (LeavePolicy, error)
 	// Returns the ID of the admin role.
 	GetAdminRoleId(ctx context.Context) (uuid.UUID, error)
 	GetAiGeneratedReport(ctx context.Context, id uuid.UUID) (AiGeneratedReport, error)
@@ -361,6 +364,7 @@ type Querier interface {
 	ListWorkApprovalQueueOneOffAppointmentsStartingInRange(ctx context.Context, arg ListWorkApprovalQueueOneOffAppointmentsStartingInRangeParams) ([]CalendarEvent, error)
 	ListWorkApprovalQueueRecurringMastersStartingBeforeEnd(ctx context.Context, arg ListWorkApprovalQueueRecurringMastersStartingBeforeEndParams) ([]CalendarEvent, error)
 	LockIntakeFormByID(ctx context.Context, id uuid.UUID) (uuid.UUID, error)
+	LockLeaveBalanceByEmployeeYear(ctx context.Context, arg LockLeaveBalanceByEmployeeYearParams) (LeaveBalance, error)
 	LockLeaveRequestByID(ctx context.Context, id uuid.UUID) (LeaveRequest, error)
 	LockSchedulesByIDsForSwap(ctx context.Context, dollar_1 []uuid.UUID) ([]LockSchedulesByIDsForSwapRow, error)
 	LockShiftSwapRequestForAdminDecision(ctx context.Context, id uuid.UUID) (ShiftSwapRequest, error)
@@ -448,6 +452,7 @@ type Querier interface {
 	UpdateInvoiceRun(ctx context.Context, arg UpdateInvoiceRunParams) (InvoiceRun, error)
 	UpdateInvoiceRunItem(ctx context.Context, arg UpdateInvoiceRunItemParams) (InvoiceRunItem, error)
 	UpdateInvoiceStatus(ctx context.Context, arg UpdateInvoiceStatusParams) (Invoice, error)
+	UpdateLeaveRequestDecision(ctx context.Context, arg UpdateLeaveRequestDecisionParams) (LeaveRequest, error)
 	UpdateLeaveRequestEditableFields(ctx context.Context, arg UpdateLeaveRequestEditableFieldsParams) (LeaveRequest, error)
 	UpdateLocation(ctx context.Context, arg UpdateLocationParams) (Location, error)
 	UpdateOrganisation(ctx context.Context, arg UpdateOrganisationParams) (Organisation, error)

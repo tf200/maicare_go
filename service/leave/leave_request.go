@@ -41,6 +41,18 @@ func (s *leaveService) CreateLeaveRequest(
 		)
 		return nil, fmt.Errorf("%w: %v", ErrLeaveRequestInvalidRequest, err)
 	}
+	if err := ensureLeaveTypePolicyActive(ctx, s.Store, leaveType); err != nil {
+		s.Logger.LogBusinessEvent(
+			ctx,
+			logger.LogLevelError,
+			"CreateLeaveRequest",
+			"Leave type is not active in policy",
+			zap.Error(err),
+			zap.String("EmployeeID", employeeID.String()),
+			zap.String("LeaveType", string(leaveType)),
+		)
+		return nil, err
+	}
 
 	startDate, ok, err := util.ParseYYYYMMDD(req.StartDate)
 	if err != nil {
@@ -87,6 +99,13 @@ func (s *leaveService) CreateLeaveRequest(
 		)
 		return nil, fmt.Errorf("%w: end date must be on or after start date", ErrLeaveRequestInvalidRequest)
 	}
+	policy, err := getActiveLeavePolicy(ctx, s.Store, leaveType)
+	if err != nil {
+		return nil, err
+	}
+	if err := validateDeductibleRange(policy, startDate, endDate); err != nil {
+		return nil, err
+	}
 
 	createdByEmployeeID := employeeID
 	created, err := s.Store.CreateLeaveRequest(ctx, db.CreateLeaveRequestParams{
@@ -124,6 +143,118 @@ func (s *leaveService) CreateLeaveRequest(
 	return res, nil
 }
 
+func (s *leaveService) DecideLeaveRequestByAdmin(
+	ctx context.Context,
+	adminEmployeeID, leaveRequestID uuid.UUID,
+	req *DecideLeaveRequestRequest,
+) (*DecideLeaveRequestResponse, error) {
+	if req == nil || adminEmployeeID == uuid.Nil || leaveRequestID == uuid.Nil {
+		return nil, ErrLeaveRequestInvalidRequest
+	}
+
+	decision := strings.TrimSpace(req.Decision)
+	if decision != "approve" && decision != "reject" {
+		return nil, ErrLeaveRequestInvalidRequest
+	}
+
+	var updated db.LeaveRequest
+	err := s.Store.ExecTx(ctx, func(q *db.Queries) error {
+		current, err := q.LockLeaveRequestByID(ctx, leaveRequestID)
+		if err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				return ErrLeaveRequestNotFound
+			}
+			return fmt.Errorf("failed to lock leave request: %w", err)
+		}
+		if current.Status != db.LeaveRequestStatusEnumPending {
+			return ErrLeaveRequestStateInvalid
+		}
+
+		nextStatus := db.LeaveRequestStatusEnumRejected
+		if decision == "approve" {
+			nextStatus = db.LeaveRequestStatusEnumApproved
+
+			policy, err := q.GetActiveLeavePolicyByType(ctx, current.LeaveType)
+			if err != nil {
+				if errors.Is(err, pgx.ErrNoRows) {
+					return fmt.Errorf("%w: leave type is not enabled", ErrLeaveRequestInvalidRequest)
+				}
+				return fmt.Errorf("failed to load leave policy: %w", err)
+			}
+
+			if policy.DeductsBalance {
+				start := dateOnlyUTC(current.StartDate.Time)
+				end := dateOnlyUTC(current.EndDate.Time)
+				if start.Year() != end.Year() {
+					return fmt.Errorf("%w: leave date range must be within one year", ErrLeaveRequestInvalidRequest)
+				}
+
+				requestedDays := int32(end.Sub(start).Hours()/24) + 1
+				if requestedDays <= 0 {
+					return fmt.Errorf("%w: invalid leave duration", ErrLeaveRequestInvalidRequest)
+				}
+
+				year := int32(start.Year())
+				if err := q.EnsureLeaveBalanceForYear(ctx, db.EnsureLeaveBalanceForYearParams{
+					EmployeeID: current.EmployeeID,
+					Year:       year,
+				}); err != nil {
+					return fmt.Errorf("failed to ensure leave balance row: %w", err)
+				}
+
+				balance, err := q.LockLeaveBalanceByEmployeeYear(ctx, db.LockLeaveBalanceByEmployeeYearParams{
+					EmployeeID: current.EmployeeID,
+					Year:       year,
+				})
+				if err != nil {
+					if errors.Is(err, pgx.ErrNoRows) {
+						return ErrLeaveBalanceInsufficient
+					}
+					return fmt.Errorf("failed to lock leave balance: %w", err)
+				}
+
+				extraRemaining := balance.ExtraTotalDays - balance.ExtraUsedDays
+				legalRemaining := balance.LegalTotalDays - balance.LegalUsedDays
+				totalRemaining := extraRemaining + legalRemaining
+				if totalRemaining < requestedDays {
+					return ErrLeaveBalanceInsufficient
+				}
+
+				extraToUse := minInt32(extraRemaining, requestedDays)
+				legalToUse := requestedDays - extraToUse
+
+				if _, err := q.ApplyLeaveBalanceDeduction(ctx, db.ApplyLeaveBalanceDeductionParams{
+					ID:        balance.ID,
+					ExtraDays: extraToUse,
+					LegalDays: legalToUse,
+				}); err != nil {
+					return fmt.Errorf("failed to deduct leave balance: %w", err)
+				}
+			}
+		}
+
+		updated, err = q.UpdateLeaveRequestDecision(ctx, db.UpdateLeaveRequestDecisionParams{
+			ID:                  leaveRequestID,
+			Status:              nextStatus,
+			DecisionNote:        req.DecisionNote,
+			DecidedByEmployeeID: &adminEmployeeID,
+		})
+		if err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				return ErrLeaveRequestNotFound
+			}
+			return fmt.Errorf("failed to update leave request decision: %w", err)
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	res := mapLeaveRequestToResponse(updated)
+	return res, nil
+}
+
 func (s *leaveService) UpdateLeaveRequest(
 	ctx context.Context,
 	employeeID, leaveRequestID uuid.UUID,
@@ -155,18 +286,34 @@ func (s *leaveService) UpdateLeaveRequest(
 			return ErrLeaveRequestStateInvalid
 		}
 
-		updateArg, finalStartDate, finalEndDate, hasUpdates, err := buildLeaveRequestUpdateParams(current, req.LeaveType, req.StartDate, req.EndDate, req.Reason)
+		updateArg, parsedLeaveType, finalStartDate, finalEndDate, hasUpdates, err := buildLeaveRequestUpdateParams(current, req.LeaveType, req.StartDate, req.EndDate, req.Reason)
 		if err != nil {
 			return err
 		}
 		if !hasUpdates {
 			return ErrLeaveRequestInvalidRequest
 		}
+		if parsedLeaveType != nil {
+			if err := ensureLeaveTypePolicyActive(ctx, q, *parsedLeaveType); err != nil {
+				return err
+			}
+		}
 		if finalEndDate.Before(finalStartDate) {
 			return fmt.Errorf("%w: end date must be on or after start date", ErrLeaveRequestInvalidRequest)
 		}
 		if !finalStartDate.After(today) {
 			return ErrLeaveRequestStateInvalid
+		}
+		effectiveType := current.LeaveType
+		if parsedLeaveType != nil {
+			effectiveType = *parsedLeaveType
+		}
+		policy, err := getActiveLeavePolicy(ctx, q, effectiveType)
+		if err != nil {
+			return err
+		}
+		if err := validateDeductibleRange(policy, finalStartDate, finalEndDate); err != nil {
+			return err
 		}
 
 		updateArg.ID = leaveRequestID
@@ -214,20 +361,35 @@ func (s *leaveService) UpdateLeaveRequestByAdmin(
 		}
 
 		if current.Status != db.LeaveRequestStatusEnumPending &&
-			current.Status != db.LeaveRequestStatusEnumApproved &&
 			current.Status != db.LeaveRequestStatusEnumRejected {
 			return ErrLeaveRequestStateInvalid
 		}
 
-		updateArg, finalStartDate, finalEndDate, hasUpdates, err := buildLeaveRequestUpdateParams(current, req.LeaveType, req.StartDate, req.EndDate, req.Reason)
+		updateArg, parsedLeaveType, finalStartDate, finalEndDate, hasUpdates, err := buildLeaveRequestUpdateParams(current, req.LeaveType, req.StartDate, req.EndDate, req.Reason)
 		if err != nil {
 			return err
 		}
 		if !hasUpdates {
 			return ErrLeaveRequestInvalidRequest
 		}
+		if parsedLeaveType != nil {
+			if err := ensureLeaveTypePolicyActive(ctx, q, *parsedLeaveType); err != nil {
+				return err
+			}
+		}
 		if finalEndDate.Before(finalStartDate) {
 			return fmt.Errorf("%w: end date must be on or after start date", ErrLeaveRequestInvalidRequest)
+		}
+		effectiveType := current.LeaveType
+		if parsedLeaveType != nil {
+			effectiveType = *parsedLeaveType
+		}
+		policy, err := getActiveLeavePolicy(ctx, q, effectiveType)
+		if err != nil {
+			return err
+		}
+		if err := validateDeductibleRange(policy, finalStartDate, finalEndDate); err != nil {
+			return err
 		}
 
 		updateArg.ID = leaveRequestID
@@ -321,13 +483,14 @@ func buildLeaveRequestUpdateParams(
 	startDateValue *string,
 	endDateValue *string,
 	reasonValue *string,
-) (db.UpdateLeaveRequestEditableFieldsParams, time.Time, time.Time, bool, error) {
+) (db.UpdateLeaveRequestEditableFieldsParams, *db.LeaveRequestTypeEnum, time.Time, time.Time, bool, error) {
 	updateArg := db.UpdateLeaveRequestEditableFieldsParams{
 		LeaveType: db.NullLeaveRequestTypeEnum{Valid: false},
 		StartDate: pgtype.Date{Valid: false},
 		EndDate:   pgtype.Date{Valid: false},
 		Reason:    nil,
 	}
+	var parsedLeaveType *db.LeaveRequestTypeEnum
 	finalStartDate := current.StartDate.Time
 	finalEndDate := current.EndDate.Time
 	hasUpdates := false
@@ -335,18 +498,19 @@ func buildLeaveRequestUpdateParams(
 	if leaveTypeValue != nil {
 		parsedType, err := parseLeaveRequestType(strings.TrimSpace(*leaveTypeValue))
 		if err != nil {
-			return updateArg, finalStartDate, finalEndDate, false, fmt.Errorf("%w: %v", ErrLeaveRequestInvalidRequest, err)
+			return updateArg, nil, finalStartDate, finalEndDate, false, fmt.Errorf("%w: %v", ErrLeaveRequestInvalidRequest, err)
 		}
 		updateArg.LeaveType = db.NullLeaveRequestTypeEnum{
 			LeaveRequestTypeEnum: parsedType,
 			Valid:                true,
 		}
+		parsedLeaveType = &parsedType
 		hasUpdates = true
 	}
 
 	startDate, err := parseDateForUpdate("start_date", startDateValue)
 	if err != nil {
-		return updateArg, finalStartDate, finalEndDate, false, err
+		return updateArg, parsedLeaveType, finalStartDate, finalEndDate, false, err
 	}
 	if startDate != nil {
 		finalStartDate = *startDate
@@ -356,7 +520,7 @@ func buildLeaveRequestUpdateParams(
 
 	endDate, err := parseDateForUpdate("end_date", endDateValue)
 	if err != nil {
-		return updateArg, finalStartDate, finalEndDate, false, err
+		return updateArg, parsedLeaveType, finalStartDate, finalEndDate, false, err
 	}
 	if endDate != nil {
 		finalEndDate = *endDate
@@ -370,7 +534,37 @@ func buildLeaveRequestUpdateParams(
 		hasUpdates = true
 	}
 
-	return updateArg, finalStartDate, finalEndDate, hasUpdates, nil
+	return updateArg, parsedLeaveType, finalStartDate, finalEndDate, hasUpdates, nil
+}
+
+type leavePolicyReader interface {
+	GetActiveLeavePolicyByType(ctx context.Context, leaveType db.LeaveRequestTypeEnum) (db.LeavePolicy, error)
+}
+
+func ensureLeaveTypePolicyActive(ctx context.Context, reader leavePolicyReader, leaveType db.LeaveRequestTypeEnum) error {
+	_, err := getActiveLeavePolicy(ctx, reader, leaveType)
+	return err
+}
+
+func getActiveLeavePolicy(ctx context.Context, reader leavePolicyReader, leaveType db.LeaveRequestTypeEnum) (db.LeavePolicy, error) {
+	policy, err := reader.GetActiveLeavePolicyByType(ctx, leaveType)
+	if err == nil {
+		return policy, nil
+	}
+	if errors.Is(err, pgx.ErrNoRows) {
+		return db.LeavePolicy{}, fmt.Errorf("%w: leave type is not enabled", ErrLeaveRequestInvalidRequest)
+	}
+	return db.LeavePolicy{}, fmt.Errorf("failed to load leave policy: %w", err)
+}
+
+func validateDeductibleRange(policy db.LeavePolicy, startDate, endDate time.Time) error {
+	if !policy.DeductsBalance {
+		return nil
+	}
+	if startDate.Year() != endDate.Year() {
+		return fmt.Errorf("%w: leave date range must be within one year for deductible leave types", ErrLeaveRequestInvalidRequest)
+	}
+	return nil
 }
 
 func detectChangedLeaveFields(before, after db.LeaveRequest) []string {
@@ -404,6 +598,18 @@ func timestamptzPtr(value pgtype.Timestamptz) *time.Time {
 	}
 	t := value.Time
 	return &t
+}
+
+func dateOnlyUTC(t time.Time) time.Time {
+	u := t.UTC()
+	return time.Date(u.Year(), u.Month(), u.Day(), 0, 0, 0, 0, time.UTC)
+}
+
+func minInt32(a, b int32) int32 {
+	if a < b {
+		return a
+	}
+	return b
 }
 
 func (s *leaveService) ListMyLeaveRequests(

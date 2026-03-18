@@ -121,6 +121,44 @@ func (server *Server) UpdateLeaveRequestByAdminApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, SuccessResponse(res, "Leave request updated successfully"))
 }
 
+// DecideLeaveRequestByAdminApi approves or rejects a pending leave request.
+// @Summary Decide leave request
+// @Description Approves or rejects a pending leave request by admin/coordinator.
+// @Tags leave-requests
+// @Accept json
+// @Produce json
+// @Param id path string true "Leave request ID"
+// @Param request body leave.DecideLeaveRequestRequest true "Leave request decision payload"
+// @Success 200 {object} Response[leave.DecideLeaveRequestResponse]
+// @Router /leave-requests/{id}/decision [post]
+func (server *Server) DecideLeaveRequestByAdminApi(ctx *gin.Context) {
+	leaveRequestID, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	var req leave.DecideLeaveRequestRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	payload, err := GetAuthPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
+	res, err := server.businessService.LeaveService.DecideLeaveRequestByAdmin(ctx, payload.EmployeeID, leaveRequestID, &req)
+	if err != nil {
+		ctx.JSON(mapLeaveRequestErrorStatus(err), errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, SuccessResponse(res, "Leave request decided successfully"))
+}
+
 // ListMyLeaveRequestsApi lists leave requests for the authenticated employee.
 // @Summary List my leave requests
 // @Description Lists paginated leave requests for the authenticated employee.
@@ -166,6 +204,8 @@ func mapLeaveRequestErrorStatus(err error) int {
 	case errors.Is(err, leave.ErrLeaveRequestNotFound):
 		return http.StatusNotFound
 	case errors.Is(err, leave.ErrLeaveRequestStateInvalid):
+		return http.StatusConflict
+	case errors.Is(err, leave.ErrLeaveBalanceInsufficient):
 		return http.StatusConflict
 	default:
 		return http.StatusInternalServerError

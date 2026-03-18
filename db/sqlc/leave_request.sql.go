@@ -311,6 +311,53 @@ func (q *Queries) LockLeaveRequestByID(ctx context.Context, id uuid.UUID) (Leave
 	return i, err
 }
 
+const updateLeaveRequestDecision = `-- name: UpdateLeaveRequestDecision :one
+UPDATE leave_requests
+SET
+    status = $1::leave_request_status_enum,
+    decision_note = $2::text,
+    decided_by_employee_id = $3,
+    decided_at = NOW(),
+    updated_at = NOW()
+WHERE id = $4
+RETURNING id, employee_id, created_by_employee_id, leave_type, status, start_date, end_date, reason, decision_note, decided_by_employee_id, requested_at, decided_at, cancelled_at, created_at, updated_at
+`
+
+type UpdateLeaveRequestDecisionParams struct {
+	Status              LeaveRequestStatusEnum `json:"status"`
+	DecisionNote        *string                `json:"decision_note"`
+	DecidedByEmployeeID *uuid.UUID             `json:"decided_by_employee_id"`
+	ID                  uuid.UUID              `json:"id"`
+}
+
+func (q *Queries) UpdateLeaveRequestDecision(ctx context.Context, arg UpdateLeaveRequestDecisionParams) (LeaveRequest, error) {
+	row := q.db.QueryRow(ctx, updateLeaveRequestDecision,
+		arg.Status,
+		arg.DecisionNote,
+		arg.DecidedByEmployeeID,
+		arg.ID,
+	)
+	var i LeaveRequest
+	err := row.Scan(
+		&i.ID,
+		&i.EmployeeID,
+		&i.CreatedByEmployeeID,
+		&i.LeaveType,
+		&i.Status,
+		&i.StartDate,
+		&i.EndDate,
+		&i.Reason,
+		&i.DecisionNote,
+		&i.DecidedByEmployeeID,
+		&i.RequestedAt,
+		&i.DecidedAt,
+		&i.CancelledAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const updateLeaveRequestEditableFields = `-- name: UpdateLeaveRequestEditableFields :one
 UPDATE leave_requests
 SET

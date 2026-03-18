@@ -429,6 +429,9 @@ permissions:
     - name: LEAVE.REQUEST.UPDATE_ALL
       resource: /leave-requests/:id/admin
       method: [PUT]
+    - name: LEAVE.REQUEST.DECIDE
+      resource: /leave-requests/:id/decision
+      method: [POST]
     - name: LEAVE.REQUEST.VIEW
       resource: /leave-requests/my
       method: [GET]
@@ -609,6 +612,7 @@ roles:
           - LEAVE.REQUEST.CREATE
           - LEAVE.REQUEST.UPDATE
           - LEAVE.REQUEST.UPDATE_ALL
+          - LEAVE.REQUEST.DECIDE
           - LEAVE.REQUEST.VIEW
           - LEAVE.REQUEST.VIEW_ALL
           - SENDER.CREATE
@@ -693,6 +697,7 @@ roles:
           - LEAVE.REQUEST.CREATE
           - LEAVE.REQUEST.UPDATE
           - LEAVE.REQUEST.UPDATE_ALL
+          - LEAVE.REQUEST.DECIDE
           - LEAVE.REQUEST.VIEW
           - LEAVE.REQUEST.VIEW_ALL
           - SENDER.CREATE

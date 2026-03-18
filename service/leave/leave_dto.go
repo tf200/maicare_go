@@ -50,6 +50,13 @@ type UpdateLeaveRequestAdminRequest struct {
 
 type UpdateLeaveRequestResponse = CreateLeaveRequestResponse
 
+type DecideLeaveRequestRequest struct {
+	Decision     string  `json:"decision" binding:"required,oneof=approve reject"`
+	DecisionNote *string `json:"decision_note"`
+}
+
+type DecideLeaveRequestResponse = CreateLeaveRequestResponse
+
 type ListMyLeaveRequestsRequest struct {
 	pagination.Request
 	Status *string `form:"status" json:"status" binding:"omitempty,oneof=pending approved rejected cancelled expired"`

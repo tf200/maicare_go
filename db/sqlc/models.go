@@ -3895,6 +3895,27 @@ type InvoiceRunItem struct {
 	CreatedAt pgtype.Timestamptz       `json:"created_at"`
 }
 
+type LeaveBalance struct {
+	ID             uuid.UUID          `json:"id"`
+	EmployeeID     uuid.UUID          `json:"employee_id"`
+	Year           int32              `json:"year"`
+	LegalTotalDays int32              `json:"legal_total_days"`
+	ExtraTotalDays int32              `json:"extra_total_days"`
+	LegalUsedDays  int32              `json:"legal_used_days"`
+	ExtraUsedDays  int32              `json:"extra_used_days"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt      pgtype.Timestamptz `json:"updated_at"`
+}
+
+type LeavePolicy struct {
+	LeaveType        LeaveRequestTypeEnum `json:"leave_type"`
+	RequiresApproval bool                 `json:"requires_approval"`
+	DeductsBalance   bool                 `json:"deducts_balance"`
+	IsActive         bool                 `json:"is_active"`
+	CreatedAt        pgtype.Timestamptz   `json:"created_at"`
+	UpdatedAt        pgtype.Timestamptz   `json:"updated_at"`
+}
+
 type LeaveRequest struct {
 	ID                  uuid.UUID              `json:"id"`
 	EmployeeID          uuid.UUID              `json:"employee_id"`

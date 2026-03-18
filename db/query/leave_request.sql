@@ -97,3 +97,14 @@ SET
     updated_at = NOW()
 WHERE id = sqlc.arg('id')
 RETURNING *;
+
+-- name: UpdateLeaveRequestDecision :one
+UPDATE leave_requests
+SET
+    status = sqlc.arg('status')::leave_request_status_enum,
+    decision_note = sqlc.narg('decision_note')::text,
+    decided_by_employee_id = sqlc.arg(decided_by_employee_id),
+    decided_at = NOW(),
+    updated_at = NOW()
+WHERE id = sqlc.arg('id')
+RETURNING *;

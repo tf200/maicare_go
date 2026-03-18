@@ -2279,6 +2279,84 @@ CREATE TYPE leave_request_status_enum AS ENUM (
     'expired'
 );
 
+CREATE TABLE leave_policies (
+    leave_type leave_request_type_enum PRIMARY KEY,
+    requires_approval BOOLEAN NOT NULL DEFAULT TRUE,
+    deducts_balance BOOLEAN NOT NULL DEFAULT FALSE,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO leave_policies (leave_type, requires_approval, deducts_balance, is_active) VALUES
+    ('vacation', TRUE, TRUE, TRUE),
+    ('personal', TRUE, TRUE, TRUE),
+    ('sick', FALSE, FALSE, TRUE),
+    ('pregnancy', FALSE, FALSE, TRUE),
+    ('late', FALSE, FALSE, TRUE),
+    ('unpaid', TRUE, FALSE, TRUE),
+    ('other', TRUE, FALSE, TRUE);
+
+CREATE TABLE leave_balances (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    employee_id UUID NOT NULL REFERENCES employee_profile(id) ON DELETE CASCADE,
+    year INT NOT NULL,
+    legal_total_days INT NOT NULL DEFAULT 0,
+    extra_total_days INT NOT NULL DEFAULT 0,
+    legal_used_days INT NOT NULL DEFAULT 0,
+    extra_used_days INT NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT leave_balances_unique_employee_year UNIQUE (employee_id, year),
+    CONSTRAINT leave_balances_non_negative CHECK (
+        legal_total_days >= 0
+        AND extra_total_days >= 0
+        AND legal_used_days >= 0
+        AND extra_used_days >= 0
+    ),
+    CONSTRAINT leave_balances_usage_not_exceed_total CHECK (
+        legal_used_days <= legal_total_days
+        AND extra_used_days <= extra_total_days
+    )
+);
+
+CREATE INDEX idx_leave_balances_employee_year ON leave_balances(employee_id, year);
+
+CREATE OR REPLACE FUNCTION initialize_leave_balance_on_employee_insert()
+RETURNS TRIGGER AS $$
+DECLARE
+    computed_legal_days INT;
+    current_year INT;
+BEGIN
+    current_year := EXTRACT(YEAR FROM CURRENT_DATE)::INT;
+    computed_legal_days := GREATEST(0, ROUND(COALESCE(NEW.contract_hours, 0)::numeric / 2.0)::INT);
+
+    INSERT INTO leave_balances (
+        employee_id,
+        year,
+        legal_total_days,
+        extra_total_days,
+        legal_used_days,
+        extra_used_days
+    ) VALUES (
+        NEW.id,
+        current_year,
+        computed_legal_days,
+        0,
+        0,
+        0
+    )
+    ON CONFLICT (employee_id, year) DO NOTHING;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_initialize_leave_balance_on_employee_insert
+AFTER INSERT ON employee_profile
+FOR EACH ROW
+EXECUTE FUNCTION initialize_leave_balance_on_employee_insert();
+
 CREATE TABLE leave_requests (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     employee_id UUID NOT NULL REFERENCES employee_profile(id) ON DELETE CASCADE,
