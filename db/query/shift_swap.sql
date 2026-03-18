@@ -79,13 +79,15 @@ SELECT
     ssr.recipient_schedule_id,
     rec_s.start_datetime AS recipient_schedule_start_datetime,
     rec_s.end_datetime AS recipient_schedule_end_datetime,
-    CASE
+    (
+        CASE
         WHEN ssr.status IN ('pending_recipient', 'pending_admin')
          AND ssr.expires_at IS NOT NULL
          AND ssr.expires_at <= NOW()
         THEN 'expired'::shift_swap_status_enum
         ELSE ssr.status
-    END AS status,
+        END
+    )::shift_swap_status_enum AS status,
     ssr.requested_at,
     ssr.recipient_responded_at,
     ssr.admin_decided_at,
@@ -163,13 +165,15 @@ SELECT
     ssr.recipient_schedule_id,
     rec_s.start_datetime AS recipient_schedule_start_datetime,
     rec_s.end_datetime AS recipient_schedule_end_datetime,
-    CASE
+    (
+        CASE
         WHEN ssr.status IN ('pending_recipient', 'pending_admin')
          AND ssr.expires_at IS NOT NULL
          AND ssr.expires_at <= NOW()
         THEN 'expired'::shift_swap_status_enum
         ELSE ssr.status
-    END AS status,
+        END
+    )::shift_swap_status_enum AS status,
     ssr.requested_at,
     ssr.recipient_responded_at,
     ssr.admin_decided_at,
@@ -204,13 +208,15 @@ SELECT
     ssr.recipient_schedule_id,
     rec_s.start_datetime AS recipient_schedule_start_datetime,
     rec_s.end_datetime AS recipient_schedule_end_datetime,
-    CASE
+    (
+        CASE
         WHEN ssr.status IN ('pending_recipient', 'pending_admin')
          AND ssr.expires_at IS NOT NULL
          AND ssr.expires_at <= NOW()
         THEN 'expired'::shift_swap_status_enum
         ELSE ssr.status
-    END AS status,
+        END
+    )::shift_swap_status_enum AS status,
     ssr.requested_at,
     ssr.recipient_responded_at,
     ssr.admin_decided_at,
@@ -230,13 +236,15 @@ LEFT JOIN employee_profile admin_ep ON admin_ep.id = ssr.admin_employee_id
 WHERE (
     sqlc.narg('status')::shift_swap_status_enum IS NULL
     OR (
-        CASE
+        (
+            CASE
             WHEN ssr.status IN ('pending_recipient', 'pending_admin')
              AND ssr.expires_at IS NOT NULL
              AND ssr.expires_at <= NOW()
             THEN 'expired'::shift_swap_status_enum
             ELSE ssr.status
-        END
+            END
+        )::shift_swap_status_enum
     ) = sqlc.narg('status')::shift_swap_status_enum
 )
   AND (

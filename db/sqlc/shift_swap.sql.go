@@ -187,13 +187,15 @@ SELECT
     ssr.recipient_schedule_id,
     rec_s.start_datetime AS recipient_schedule_start_datetime,
     rec_s.end_datetime AS recipient_schedule_end_datetime,
-    CASE
+    (
+        CASE
         WHEN ssr.status IN ('pending_recipient', 'pending_admin')
          AND ssr.expires_at IS NOT NULL
          AND ssr.expires_at <= NOW()
         THEN 'expired'::shift_swap_status_enum
         ELSE ssr.status
-    END AS status,
+        END
+    )::shift_swap_status_enum AS status,
     ssr.requested_at,
     ssr.recipient_responded_at,
     ssr.admin_decided_at,
@@ -214,29 +216,29 @@ LIMIT 1
 `
 
 type GetShiftSwapRequestDetailsByIDRow struct {
-	ID                             uuid.UUID          `json:"id"`
-	RequesterEmployeeID            uuid.UUID          `json:"requester_employee_id"`
-	RequesterFirstName             string             `json:"requester_first_name"`
-	RequesterLastName              string             `json:"requester_last_name"`
-	RecipientEmployeeID            uuid.UUID          `json:"recipient_employee_id"`
-	RecipientFirstName             string             `json:"recipient_first_name"`
-	RecipientLastName              string             `json:"recipient_last_name"`
-	RequesterScheduleID            uuid.UUID          `json:"requester_schedule_id"`
-	RequesterScheduleStartDatetime pgtype.Timestamptz `json:"requester_schedule_start_datetime"`
-	RequesterScheduleEndDatetime   pgtype.Timestamptz `json:"requester_schedule_end_datetime"`
-	RecipientScheduleID            uuid.UUID          `json:"recipient_schedule_id"`
-	RecipientScheduleStartDatetime pgtype.Timestamptz `json:"recipient_schedule_start_datetime"`
-	RecipientScheduleEndDatetime   pgtype.Timestamptz `json:"recipient_schedule_end_datetime"`
-	Status                         interface{}        `json:"status"`
-	RequestedAt                    pgtype.Timestamptz `json:"requested_at"`
-	RecipientRespondedAt           pgtype.Timestamptz `json:"recipient_responded_at"`
-	AdminDecidedAt                 pgtype.Timestamptz `json:"admin_decided_at"`
-	RecipientResponseNote          *string            `json:"recipient_response_note"`
-	AdminDecisionNote              *string            `json:"admin_decision_note"`
-	AdminEmployeeID                *uuid.UUID         `json:"admin_employee_id"`
-	AdminFirstName                 *string            `json:"admin_first_name"`
-	AdminLastName                  *string            `json:"admin_last_name"`
-	ExpiresAt                      pgtype.Timestamptz `json:"expires_at"`
+	ID                             uuid.UUID           `json:"id"`
+	RequesterEmployeeID            uuid.UUID           `json:"requester_employee_id"`
+	RequesterFirstName             string              `json:"requester_first_name"`
+	RequesterLastName              string              `json:"requester_last_name"`
+	RecipientEmployeeID            uuid.UUID           `json:"recipient_employee_id"`
+	RecipientFirstName             string              `json:"recipient_first_name"`
+	RecipientLastName              string              `json:"recipient_last_name"`
+	RequesterScheduleID            uuid.UUID           `json:"requester_schedule_id"`
+	RequesterScheduleStartDatetime pgtype.Timestamptz  `json:"requester_schedule_start_datetime"`
+	RequesterScheduleEndDatetime   pgtype.Timestamptz  `json:"requester_schedule_end_datetime"`
+	RecipientScheduleID            uuid.UUID           `json:"recipient_schedule_id"`
+	RecipientScheduleStartDatetime pgtype.Timestamptz  `json:"recipient_schedule_start_datetime"`
+	RecipientScheduleEndDatetime   pgtype.Timestamptz  `json:"recipient_schedule_end_datetime"`
+	Status                         ShiftSwapStatusEnum `json:"status"`
+	RequestedAt                    pgtype.Timestamptz  `json:"requested_at"`
+	RecipientRespondedAt           pgtype.Timestamptz  `json:"recipient_responded_at"`
+	AdminDecidedAt                 pgtype.Timestamptz  `json:"admin_decided_at"`
+	RecipientResponseNote          *string             `json:"recipient_response_note"`
+	AdminDecisionNote              *string             `json:"admin_decision_note"`
+	AdminEmployeeID                *uuid.UUID          `json:"admin_employee_id"`
+	AdminFirstName                 *string             `json:"admin_first_name"`
+	AdminLastName                  *string             `json:"admin_last_name"`
+	ExpiresAt                      pgtype.Timestamptz  `json:"expires_at"`
 }
 
 func (q *Queries) GetShiftSwapRequestDetailsByID(ctx context.Context, id uuid.UUID) (GetShiftSwapRequestDetailsByIDRow, error) {
@@ -285,13 +287,15 @@ SELECT
     ssr.recipient_schedule_id,
     rec_s.start_datetime AS recipient_schedule_start_datetime,
     rec_s.end_datetime AS recipient_schedule_end_datetime,
-    CASE
+    (
+        CASE
         WHEN ssr.status IN ('pending_recipient', 'pending_admin')
          AND ssr.expires_at IS NOT NULL
          AND ssr.expires_at <= NOW()
         THEN 'expired'::shift_swap_status_enum
         ELSE ssr.status
-    END AS status,
+        END
+    )::shift_swap_status_enum AS status,
     ssr.requested_at,
     ssr.recipient_responded_at,
     ssr.admin_decided_at,
@@ -313,29 +317,29 @@ ORDER BY ssr.requested_at DESC
 `
 
 type ListMyShiftSwapRequestsRow struct {
-	ID                             uuid.UUID          `json:"id"`
-	RequesterEmployeeID            uuid.UUID          `json:"requester_employee_id"`
-	RequesterFirstName             string             `json:"requester_first_name"`
-	RequesterLastName              string             `json:"requester_last_name"`
-	RecipientEmployeeID            uuid.UUID          `json:"recipient_employee_id"`
-	RecipientFirstName             string             `json:"recipient_first_name"`
-	RecipientLastName              string             `json:"recipient_last_name"`
-	RequesterScheduleID            uuid.UUID          `json:"requester_schedule_id"`
-	RequesterScheduleStartDatetime pgtype.Timestamptz `json:"requester_schedule_start_datetime"`
-	RequesterScheduleEndDatetime   pgtype.Timestamptz `json:"requester_schedule_end_datetime"`
-	RecipientScheduleID            uuid.UUID          `json:"recipient_schedule_id"`
-	RecipientScheduleStartDatetime pgtype.Timestamptz `json:"recipient_schedule_start_datetime"`
-	RecipientScheduleEndDatetime   pgtype.Timestamptz `json:"recipient_schedule_end_datetime"`
-	Status                         interface{}        `json:"status"`
-	RequestedAt                    pgtype.Timestamptz `json:"requested_at"`
-	RecipientRespondedAt           pgtype.Timestamptz `json:"recipient_responded_at"`
-	AdminDecidedAt                 pgtype.Timestamptz `json:"admin_decided_at"`
-	RecipientResponseNote          *string            `json:"recipient_response_note"`
-	AdminDecisionNote              *string            `json:"admin_decision_note"`
-	AdminEmployeeID                *uuid.UUID         `json:"admin_employee_id"`
-	AdminFirstName                 *string            `json:"admin_first_name"`
-	AdminLastName                  *string            `json:"admin_last_name"`
-	ExpiresAt                      pgtype.Timestamptz `json:"expires_at"`
+	ID                             uuid.UUID           `json:"id"`
+	RequesterEmployeeID            uuid.UUID           `json:"requester_employee_id"`
+	RequesterFirstName             string              `json:"requester_first_name"`
+	RequesterLastName              string              `json:"requester_last_name"`
+	RecipientEmployeeID            uuid.UUID           `json:"recipient_employee_id"`
+	RecipientFirstName             string              `json:"recipient_first_name"`
+	RecipientLastName              string              `json:"recipient_last_name"`
+	RequesterScheduleID            uuid.UUID           `json:"requester_schedule_id"`
+	RequesterScheduleStartDatetime pgtype.Timestamptz  `json:"requester_schedule_start_datetime"`
+	RequesterScheduleEndDatetime   pgtype.Timestamptz  `json:"requester_schedule_end_datetime"`
+	RecipientScheduleID            uuid.UUID           `json:"recipient_schedule_id"`
+	RecipientScheduleStartDatetime pgtype.Timestamptz  `json:"recipient_schedule_start_datetime"`
+	RecipientScheduleEndDatetime   pgtype.Timestamptz  `json:"recipient_schedule_end_datetime"`
+	Status                         ShiftSwapStatusEnum `json:"status"`
+	RequestedAt                    pgtype.Timestamptz  `json:"requested_at"`
+	RecipientRespondedAt           pgtype.Timestamptz  `json:"recipient_responded_at"`
+	AdminDecidedAt                 pgtype.Timestamptz  `json:"admin_decided_at"`
+	RecipientResponseNote          *string             `json:"recipient_response_note"`
+	AdminDecisionNote              *string             `json:"admin_decision_note"`
+	AdminEmployeeID                *uuid.UUID          `json:"admin_employee_id"`
+	AdminFirstName                 *string             `json:"admin_first_name"`
+	AdminLastName                  *string             `json:"admin_last_name"`
+	ExpiresAt                      pgtype.Timestamptz  `json:"expires_at"`
 }
 
 func (q *Queries) ListMyShiftSwapRequests(ctx context.Context, requesterEmployeeID uuid.UUID) ([]ListMyShiftSwapRequestsRow, error) {
@@ -397,13 +401,15 @@ SELECT
     ssr.recipient_schedule_id,
     rec_s.start_datetime AS recipient_schedule_start_datetime,
     rec_s.end_datetime AS recipient_schedule_end_datetime,
-    CASE
+    (
+        CASE
         WHEN ssr.status IN ('pending_recipient', 'pending_admin')
          AND ssr.expires_at IS NOT NULL
          AND ssr.expires_at <= NOW()
         THEN 'expired'::shift_swap_status_enum
         ELSE ssr.status
-    END AS status,
+        END
+    )::shift_swap_status_enum AS status,
     ssr.requested_at,
     ssr.recipient_responded_at,
     ssr.admin_decided_at,
@@ -423,13 +429,15 @@ LEFT JOIN employee_profile admin_ep ON admin_ep.id = ssr.admin_employee_id
 WHERE (
     $1::shift_swap_status_enum IS NULL
     OR (
-        CASE
+        (
+            CASE
             WHEN ssr.status IN ('pending_recipient', 'pending_admin')
              AND ssr.expires_at IS NOT NULL
              AND ssr.expires_at <= NOW()
             THEN 'expired'::shift_swap_status_enum
             ELSE ssr.status
-        END
+            END
+        )::shift_swap_status_enum
     ) = $1::shift_swap_status_enum
 )
   AND (
@@ -449,30 +457,30 @@ type ListShiftSwapRequestsPaginatedParams struct {
 }
 
 type ListShiftSwapRequestsPaginatedRow struct {
-	ID                             uuid.UUID          `json:"id"`
-	RequesterEmployeeID            uuid.UUID          `json:"requester_employee_id"`
-	RequesterFirstName             string             `json:"requester_first_name"`
-	RequesterLastName              string             `json:"requester_last_name"`
-	RecipientEmployeeID            uuid.UUID          `json:"recipient_employee_id"`
-	RecipientFirstName             string             `json:"recipient_first_name"`
-	RecipientLastName              string             `json:"recipient_last_name"`
-	RequesterScheduleID            uuid.UUID          `json:"requester_schedule_id"`
-	RequesterScheduleStartDatetime pgtype.Timestamptz `json:"requester_schedule_start_datetime"`
-	RequesterScheduleEndDatetime   pgtype.Timestamptz `json:"requester_schedule_end_datetime"`
-	RecipientScheduleID            uuid.UUID          `json:"recipient_schedule_id"`
-	RecipientScheduleStartDatetime pgtype.Timestamptz `json:"recipient_schedule_start_datetime"`
-	RecipientScheduleEndDatetime   pgtype.Timestamptz `json:"recipient_schedule_end_datetime"`
-	Status                         interface{}        `json:"status"`
-	RequestedAt                    pgtype.Timestamptz `json:"requested_at"`
-	RecipientRespondedAt           pgtype.Timestamptz `json:"recipient_responded_at"`
-	AdminDecidedAt                 pgtype.Timestamptz `json:"admin_decided_at"`
-	RecipientResponseNote          *string            `json:"recipient_response_note"`
-	AdminDecisionNote              *string            `json:"admin_decision_note"`
-	AdminEmployeeID                *uuid.UUID         `json:"admin_employee_id"`
-	AdminFirstName                 *string            `json:"admin_first_name"`
-	AdminLastName                  *string            `json:"admin_last_name"`
-	ExpiresAt                      pgtype.Timestamptz `json:"expires_at"`
-	TotalCount                     int64              `json:"total_count"`
+	ID                             uuid.UUID           `json:"id"`
+	RequesterEmployeeID            uuid.UUID           `json:"requester_employee_id"`
+	RequesterFirstName             string              `json:"requester_first_name"`
+	RequesterLastName              string              `json:"requester_last_name"`
+	RecipientEmployeeID            uuid.UUID           `json:"recipient_employee_id"`
+	RecipientFirstName             string              `json:"recipient_first_name"`
+	RecipientLastName              string              `json:"recipient_last_name"`
+	RequesterScheduleID            uuid.UUID           `json:"requester_schedule_id"`
+	RequesterScheduleStartDatetime pgtype.Timestamptz  `json:"requester_schedule_start_datetime"`
+	RequesterScheduleEndDatetime   pgtype.Timestamptz  `json:"requester_schedule_end_datetime"`
+	RecipientScheduleID            uuid.UUID           `json:"recipient_schedule_id"`
+	RecipientScheduleStartDatetime pgtype.Timestamptz  `json:"recipient_schedule_start_datetime"`
+	RecipientScheduleEndDatetime   pgtype.Timestamptz  `json:"recipient_schedule_end_datetime"`
+	Status                         ShiftSwapStatusEnum `json:"status"`
+	RequestedAt                    pgtype.Timestamptz  `json:"requested_at"`
+	RecipientRespondedAt           pgtype.Timestamptz  `json:"recipient_responded_at"`
+	AdminDecidedAt                 pgtype.Timestamptz  `json:"admin_decided_at"`
+	RecipientResponseNote          *string             `json:"recipient_response_note"`
+	AdminDecisionNote              *string             `json:"admin_decision_note"`
+	AdminEmployeeID                *uuid.UUID          `json:"admin_employee_id"`
+	AdminFirstName                 *string             `json:"admin_first_name"`
+	AdminLastName                  *string             `json:"admin_last_name"`
+	ExpiresAt                      pgtype.Timestamptz  `json:"expires_at"`
+	TotalCount                     int64               `json:"total_count"`
 }
 
 func (q *Queries) ListShiftSwapRequestsPaginated(ctx context.Context, arg ListShiftSwapRequestsPaginatedParams) ([]ListShiftSwapRequestsPaginatedRow, error) {

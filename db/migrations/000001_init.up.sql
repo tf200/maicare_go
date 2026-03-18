@@ -2257,6 +2257,53 @@ ON shift_swap_requests
 FOR EACH ROW
 EXECUTE FUNCTION enforce_shift_swap_active_schedule_uniqueness();
 
+-- ==========================================
+-- LEAVE REQUESTS
+-- ==========================================
+
+CREATE TYPE leave_request_type_enum AS ENUM (
+    'vacation',
+    'personal',
+    'sick',
+    'pregnancy',
+    'late',
+    'unpaid',
+    'other'
+);
+
+CREATE TYPE leave_request_status_enum AS ENUM (
+    'pending',
+    'approved',
+    'rejected',
+    'cancelled',
+    'expired'
+);
+
+CREATE TABLE leave_requests (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    employee_id UUID NOT NULL REFERENCES employee_profile(id) ON DELETE CASCADE,
+    created_by_employee_id UUID NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
+    leave_type leave_request_type_enum NOT NULL,
+    status leave_request_status_enum NOT NULL DEFAULT 'pending',
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    reason TEXT NULL,
+    decision_note TEXT NULL,
+    decided_by_employee_id UUID NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
+    requested_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    decided_at TIMESTAMPTZ NULL,
+    cancelled_at TIMESTAMPTZ NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT leave_requests_date_order CHECK (end_date >= start_date)
+);
+
+CREATE INDEX idx_leave_requests_employee_id ON leave_requests(employee_id);
+CREATE INDEX idx_leave_requests_status ON leave_requests(status);
+CREATE INDEX idx_leave_requests_leave_type ON leave_requests(leave_type);
+CREATE INDEX idx_leave_requests_requested_at_desc ON leave_requests(requested_at DESC);
+CREATE INDEX idx_leave_requests_employee_status ON leave_requests(employee_id, status);
+
 CREATE TYPE calendar_event_kind_enum AS ENUM ('appointment', 'reminder');
 CREATE TYPE calendar_event_status_enum AS ENUM ('confirmed', 'cancelled');
 -- Work approval status for appointments (hours are counted/billed only after admin approval)

@@ -2177,6 +2177,98 @@ func (ns NullInvoiceTypeEnum) Value() (driver.Value, error) {
 	return string(ns.InvoiceTypeEnum), nil
 }
 
+type LeaveRequestStatusEnum string
+
+const (
+	LeaveRequestStatusEnumPending   LeaveRequestStatusEnum = "pending"
+	LeaveRequestStatusEnumApproved  LeaveRequestStatusEnum = "approved"
+	LeaveRequestStatusEnumRejected  LeaveRequestStatusEnum = "rejected"
+	LeaveRequestStatusEnumCancelled LeaveRequestStatusEnum = "cancelled"
+	LeaveRequestStatusEnumExpired   LeaveRequestStatusEnum = "expired"
+)
+
+func (e *LeaveRequestStatusEnum) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = LeaveRequestStatusEnum(s)
+	case string:
+		*e = LeaveRequestStatusEnum(s)
+	default:
+		return fmt.Errorf("unsupported scan type for LeaveRequestStatusEnum: %T", src)
+	}
+	return nil
+}
+
+type NullLeaveRequestStatusEnum struct {
+	LeaveRequestStatusEnum LeaveRequestStatusEnum `json:"leave_request_status_enum"`
+	Valid                  bool                   `json:"valid"` // Valid is true if LeaveRequestStatusEnum is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullLeaveRequestStatusEnum) Scan(value interface{}) error {
+	if value == nil {
+		ns.LeaveRequestStatusEnum, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.LeaveRequestStatusEnum.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullLeaveRequestStatusEnum) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.LeaveRequestStatusEnum), nil
+}
+
+type LeaveRequestTypeEnum string
+
+const (
+	LeaveRequestTypeEnumVacation  LeaveRequestTypeEnum = "vacation"
+	LeaveRequestTypeEnumPersonal  LeaveRequestTypeEnum = "personal"
+	LeaveRequestTypeEnumSick      LeaveRequestTypeEnum = "sick"
+	LeaveRequestTypeEnumPregnancy LeaveRequestTypeEnum = "pregnancy"
+	LeaveRequestTypeEnumLate      LeaveRequestTypeEnum = "late"
+	LeaveRequestTypeEnumUnpaid    LeaveRequestTypeEnum = "unpaid"
+	LeaveRequestTypeEnumOther     LeaveRequestTypeEnum = "other"
+)
+
+func (e *LeaveRequestTypeEnum) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = LeaveRequestTypeEnum(s)
+	case string:
+		*e = LeaveRequestTypeEnum(s)
+	default:
+		return fmt.Errorf("unsupported scan type for LeaveRequestTypeEnum: %T", src)
+	}
+	return nil
+}
+
+type NullLeaveRequestTypeEnum struct {
+	LeaveRequestTypeEnum LeaveRequestTypeEnum `json:"leave_request_type_enum"`
+	Valid                bool                 `json:"valid"` // Valid is true if LeaveRequestTypeEnum is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullLeaveRequestTypeEnum) Scan(value interface{}) error {
+	if value == nil {
+		ns.LeaveRequestTypeEnum, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.LeaveRequestTypeEnum.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullLeaveRequestTypeEnum) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.LeaveRequestTypeEnum), nil
+}
+
 type LocationTypeEnum string
 
 const (
@@ -3801,6 +3893,24 @@ type InvoiceRunItem struct {
 	Error     *string                  `json:"error"`
 	Warnings  []byte                   `json:"warnings"`
 	CreatedAt pgtype.Timestamptz       `json:"created_at"`
+}
+
+type LeaveRequest struct {
+	ID                  uuid.UUID              `json:"id"`
+	EmployeeID          uuid.UUID              `json:"employee_id"`
+	CreatedByEmployeeID *uuid.UUID             `json:"created_by_employee_id"`
+	LeaveType           LeaveRequestTypeEnum   `json:"leave_type"`
+	Status              LeaveRequestStatusEnum `json:"status"`
+	StartDate           pgtype.Date            `json:"start_date"`
+	EndDate             pgtype.Date            `json:"end_date"`
+	Reason              *string                `json:"reason"`
+	DecisionNote        *string                `json:"decision_note"`
+	DecidedByEmployeeID *uuid.UUID             `json:"decided_by_employee_id"`
+	RequestedAt         pgtype.Timestamptz     `json:"requested_at"`
+	DecidedAt           pgtype.Timestamptz     `json:"decided_at"`
+	CancelledAt         pgtype.Timestamptz     `json:"cancelled_at"`
+	CreatedAt           pgtype.Timestamptz     `json:"created_at"`
+	UpdatedAt           pgtype.Timestamptz     `json:"updated_at"`
 }
 
 type Location struct {

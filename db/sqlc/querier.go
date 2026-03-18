@@ -93,6 +93,7 @@ type Querier interface {
 	// ////////////////////// Batch Runs //////////////////////
 	CreateInvoiceRun(ctx context.Context, arg CreateInvoiceRunParams) (InvoiceRun, error)
 	CreateInvoiceRunItem(ctx context.Context, arg CreateInvoiceRunItemParams) (InvoiceRunItem, error)
+	CreateLeaveRequest(ctx context.Context, arg CreateLeaveRequestParams) (LeaveRequest, error)
 	CreateLocation(ctx context.Context, arg CreateLocationParams) (Location, error)
 	CreateNotification(ctx context.Context, arg CreateNotificationParams) (Notification, error)
 	CreateOrganisation(ctx context.Context, arg CreateOrganisationParams) (Organisation, error)
