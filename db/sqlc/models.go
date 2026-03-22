@@ -2229,7 +2229,6 @@ const (
 	LeaveRequestTypeEnumPersonal  LeaveRequestTypeEnum = "personal"
 	LeaveRequestTypeEnumSick      LeaveRequestTypeEnum = "sick"
 	LeaveRequestTypeEnumPregnancy LeaveRequestTypeEnum = "pregnancy"
-	LeaveRequestTypeEnumLate      LeaveRequestTypeEnum = "late"
 	LeaveRequestTypeEnumUnpaid    LeaveRequestTypeEnum = "unpaid"
 	LeaveRequestTypeEnumOther     LeaveRequestTypeEnum = "other"
 )

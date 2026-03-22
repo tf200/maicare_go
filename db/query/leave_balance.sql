@@ -41,8 +41,12 @@ SELECT
 FROM leave_balances lb
 JOIN employee_profile ep ON ep.id = lb.employee_id
 WHERE (
-    sqlc.narg('employee_id')::uuid IS NULL
-    OR lb.employee_id = sqlc.narg('employee_id')::uuid
+    sqlc.narg('employee_search')::text IS NULL
+    OR sqlc.narg('employee_search')::text = ''
+    OR ep.first_name ILIKE '%' || sqlc.narg('employee_search')::text || '%'
+    OR ep.last_name ILIKE '%' || sqlc.narg('employee_search')::text || '%'
+    OR (ep.first_name || ' ' || ep.last_name) ILIKE '%' || sqlc.narg('employee_search')::text || '%'
+    OR (ep.last_name || ' ' || ep.first_name) ILIKE '%' || sqlc.narg('employee_search')::text || '%'
 )
   AND (
     sqlc.narg('year')::int IS NULL

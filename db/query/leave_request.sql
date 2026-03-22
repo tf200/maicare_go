@@ -75,8 +75,12 @@ WHERE (
     OR lr.status = sqlc.narg('status')::leave_request_status_enum
 )
   AND (
-    sqlc.narg('employee_id')::uuid IS NULL
-    OR lr.employee_id = sqlc.narg('employee_id')::uuid
+    sqlc.narg('employee_search')::text IS NULL
+    OR sqlc.narg('employee_search')::text = ''
+    OR ep.first_name ILIKE '%' || sqlc.narg('employee_search')::text || '%'
+    OR ep.last_name ILIKE '%' || sqlc.narg('employee_search')::text || '%'
+    OR (ep.first_name || ' ' || ep.last_name) ILIKE '%' || sqlc.narg('employee_search')::text || '%'
+    OR (ep.last_name || ' ' || ep.first_name) ILIKE '%' || sqlc.narg('employee_search')::text || '%'
   )
 ORDER BY lr.requested_at DESC
 LIMIT sqlc.arg('limit') OFFSET sqlc.arg('offset');

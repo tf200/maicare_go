@@ -7,6 +7,7 @@ func (server *Server) setupLeaveRoutes(baseRouter *gin.RouterGroup) {
 	leaveRequestsRouter.Use(server.AuthMiddleware())
 	{
 		leaveRequestsRouter.POST("", server.RBACMiddleware("LEAVE.REQUEST.CREATE"), server.CreateLeaveRequestApi)
+		leaveRequestsRouter.POST("/admin", server.RBACMiddleware("LEAVE.REQUEST.UPDATE_ALL"), server.CreateLeaveRequestByAdminApi)
 		leaveRequestsRouter.POST("/:id/decision", server.RBACMiddleware("LEAVE.REQUEST.DECIDE"), server.DecideLeaveRequestByAdminApi)
 		leaveRequestsRouter.PUT("/:id", server.RBACMiddleware("LEAVE.REQUEST.UPDATE"), server.UpdateLeaveRequestApi)
 		leaveRequestsRouter.PUT("/:id/admin", server.RBACMiddleware("LEAVE.REQUEST.UPDATE_ALL"), server.UpdateLeaveRequestByAdminApi)

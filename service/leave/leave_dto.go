@@ -9,10 +9,18 @@ import (
 )
 
 type CreateLeaveRequestRequest struct {
-	LeaveType string  `json:"leave_type" binding:"required,oneof=vacation personal sick pregnancy late unpaid other"`
+	LeaveType string  `json:"leave_type" binding:"required,oneof=vacation personal sick pregnancy unpaid other"`
 	StartDate string  `json:"start_date" binding:"required,datetime=2006-01-02"`
 	EndDate   string  `json:"end_date" binding:"required,datetime=2006-01-02"`
 	Reason    *string `json:"reason"`
+}
+
+type CreateLeaveRequestByAdminRequest struct {
+	EmployeeID uuid.UUID `json:"employee_id" binding:"required"`
+	LeaveType  string    `json:"leave_type" binding:"required,oneof=vacation personal sick pregnancy unpaid other"`
+	StartDate  string    `json:"start_date" binding:"required,datetime=2006-01-02"`
+	EndDate    string    `json:"end_date" binding:"required,datetime=2006-01-02"`
+	Reason     *string   `json:"reason"`
 }
 
 type CreateLeaveRequestResponse struct {
@@ -34,14 +42,14 @@ type CreateLeaveRequestResponse struct {
 }
 
 type UpdateLeaveRequestRequest struct {
-	LeaveType *string `json:"leave_type" binding:"omitempty,oneof=vacation personal sick pregnancy late unpaid other"`
+	LeaveType *string `json:"leave_type" binding:"omitempty,oneof=vacation personal sick pregnancy unpaid other"`
 	StartDate *string `json:"start_date" binding:"omitempty,datetime=2006-01-02"`
 	EndDate   *string `json:"end_date" binding:"omitempty,datetime=2006-01-02"`
 	Reason    *string `json:"reason"`
 }
 
 type UpdateLeaveRequestAdminRequest struct {
-	LeaveType       *string `json:"leave_type" binding:"omitempty,oneof=vacation personal sick pregnancy late unpaid other"`
+	LeaveType       *string `json:"leave_type" binding:"omitempty,oneof=vacation personal sick pregnancy unpaid other"`
 	StartDate       *string `json:"start_date" binding:"omitempty,datetime=2006-01-02"`
 	EndDate         *string `json:"end_date" binding:"omitempty,datetime=2006-01-02"`
 	Reason          *string `json:"reason"`
@@ -64,8 +72,8 @@ type ListMyLeaveRequestsRequest struct {
 
 type ListLeaveRequestsRequest struct {
 	pagination.Request
-	Status     *string    `form:"status" json:"status" binding:"omitempty,oneof=pending approved rejected cancelled expired"`
-	EmployeeID *uuid.UUID `form:"employee_id" json:"employee_id"`
+	Status         *string `form:"status" json:"status" binding:"omitempty,oneof=pending approved rejected cancelled expired"`
+	EmployeeSearch *string `form:"employee_search" json:"employee_search" binding:"omitempty,max=120"`
 }
 
 type LeaveRequestListItem struct {
@@ -89,8 +97,8 @@ type LeaveRequestListItem struct {
 
 type ListLeaveBalancesRequest struct {
 	pagination.Request
-	EmployeeID *uuid.UUID `form:"employee_id" json:"employee_id"`
-	Year       *int32     `form:"year" json:"year" binding:"omitempty,min=2000,max=2100"`
+	EmployeeSearch *string `form:"employee_search" json:"employee_search" binding:"omitempty,max=120"`
+	Year           *int32  `form:"year" json:"year" binding:"omitempty,min=2000,max=2100"`
 }
 
 type ListMyLeaveBalancesRequest struct {

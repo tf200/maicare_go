@@ -91,29 +91,29 @@ DROP TABLE IF EXISTS employee_handbook_assignment_history CASCADE;
 -- ==========================================
 -- FUNCTIONS
 -- ==========================================
-DROP FUNCTION IF EXISTS get_client_id_from_intake_form(UUID);
-DROP FUNCTION IF EXISTS apply_client_rls(TEXT, TEXT);
-DROP FUNCTION IF EXISTS get_client_id_from_registration_form(UUID);
-DROP FUNCTION IF EXISTS get_client_id_from_invoice(UUID);
-DROP FUNCTION IF EXISTS get_client_id_from_contract(UUID);
-DROP FUNCTION IF EXISTS set_updated_at();
-DROP FUNCTION IF EXISTS enforce_shift_swap_active_schedule_uniqueness();
-DROP FUNCTION IF EXISTS initialize_leave_balance_on_employee_insert();
-DROP FUNCTION IF EXISTS get_client_id_from_goal_evaluation(UUID);
-DROP FUNCTION IF EXISTS get_client_id_from_goal(UUID);
-DROP FUNCTION IF EXISTS update_client_evaluation_cadence();
-DROP FUNCTION IF EXISTS enforce_evaluation_submission_window();
-DROP FUNCTION IF EXISTS initialize_client_evaluation_dates();
-DROP FUNCTION IF EXISTS ensure_client_has_active_goals_before_care_status();
-DROP FUNCTION IF EXISTS is_assigned_coordinator(UUID);
-DROP FUNCTION IF EXISTS is_coordinator();
-DROP FUNCTION IF EXISTS is_admin();
-DROP FUNCTION IF EXISTS get_current_employee_id();
-DROP FUNCTION IF EXISTS invoice_audit_trigger_func();
-DROP FUNCTION IF EXISTS contract_audit_trigger_func();
-DROP FUNCTION IF EXISTS calendar_event_reset_work_approval_on_time_change();
-DROP FUNCTION IF EXISTS generate_client_filenumber();
-DROP FUNCTION IF EXISTS insert_default_shifts();
+DROP FUNCTION IF EXISTS get_client_id_from_intake_form(UUID) CASCADE;
+DROP FUNCTION IF EXISTS apply_client_rls(TEXT, TEXT) CASCADE;
+DROP FUNCTION IF EXISTS get_client_id_from_registration_form(UUID) CASCADE;
+DROP FUNCTION IF EXISTS get_client_id_from_invoice(UUID) CASCADE;
+DROP FUNCTION IF EXISTS get_client_id_from_contract(UUID) CASCADE;
+DROP FUNCTION IF EXISTS set_updated_at() CASCADE;
+DROP FUNCTION IF EXISTS enforce_shift_swap_active_schedule_uniqueness() CASCADE;
+DROP FUNCTION IF EXISTS initialize_leave_balance_on_employee_insert() CASCADE;
+DROP FUNCTION IF EXISTS get_client_id_from_goal_evaluation(UUID) CASCADE;
+DROP FUNCTION IF EXISTS get_client_id_from_goal(UUID) CASCADE;
+DROP FUNCTION IF EXISTS update_client_evaluation_cadence() CASCADE;
+DROP FUNCTION IF EXISTS enforce_evaluation_submission_window() CASCADE;
+DROP FUNCTION IF EXISTS initialize_client_evaluation_dates() CASCADE;
+DROP FUNCTION IF EXISTS ensure_client_has_active_goals_before_care_status() CASCADE;
+DROP FUNCTION IF EXISTS is_assigned_coordinator(UUID) CASCADE;
+DROP FUNCTION IF EXISTS is_coordinator() CASCADE;
+DROP FUNCTION IF EXISTS is_admin() CASCADE;
+DROP FUNCTION IF EXISTS get_current_employee_id() CASCADE;
+DROP FUNCTION IF EXISTS invoice_audit_trigger_func() CASCADE;
+DROP FUNCTION IF EXISTS contract_audit_trigger_func() CASCADE;
+DROP FUNCTION IF EXISTS calendar_event_reset_work_approval_on_time_change() CASCADE;
+DROP FUNCTION IF EXISTS generate_client_filenumber() CASCADE;
+DROP FUNCTION IF EXISTS insert_default_shifts() CASCADE;
 DROP SEQUENCE IF EXISTS client_filenumber_seq;
 
 -- ==========================================

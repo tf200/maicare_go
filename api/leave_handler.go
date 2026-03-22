@@ -45,6 +45,41 @@ func (server *Server) CreateLeaveRequestApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusCreated, SuccessResponse(res, "Leave request created successfully"))
 }
 
+// CreateLeaveRequestByAdminApi creates a new leave request for a selected employee.
+// @Summary Admin create leave request
+// @Description Creates a new leave request for the selected employee.
+// @Tags leave-requests
+// @Accept json
+// @Produce json
+// @Param request body leave.CreateLeaveRequestByAdminRequest true "Admin leave request payload"
+// @Success 201 {object} Response[leave.CreateLeaveRequestResponse]
+// @Router /leave-requests/admin [post]
+func (server *Server) CreateLeaveRequestByAdminApi(ctx *gin.Context) {
+	var req leave.CreateLeaveRequestByAdminRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	payload, err := GetAuthPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
+	res, err := server.businessService.LeaveService.CreateLeaveRequestByAdmin(ctx, payload.EmployeeID, &req)
+	if err != nil {
+		if errors.Is(err, leave.ErrLeaveRequestInvalidRequest) {
+			ctx.JSON(http.StatusBadRequest, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusCreated, SuccessResponse(res, "Leave request created successfully"))
+}
+
 // UpdateLeaveRequestApi updates a leave request for the authenticated employee.
 // @Summary Update leave request
 // @Description Updates a pending future leave request owned by the authenticated employee.
@@ -222,7 +257,7 @@ func mapLeaveRequestErrorStatus(err error) int {
 // @Param page query int true "Page number"
 // @Param page_size query int true "Page size"
 // @Param status query string false "Leave request status filter"
-// @Param employee_id query string false "Employee ID filter"
+// @Param employee_search query string false "Employee name search (first/last name)"
 // @Success 200 {object} Response[pagination.Response[leave.LeaveRequestListItem]]
 // @Router /leave-requests [get]
 func (server *Server) ListLeaveRequestsApi(ctx *gin.Context) {
@@ -252,7 +287,7 @@ func (server *Server) ListLeaveRequestsApi(ctx *gin.Context) {
 // @Produce json
 // @Param page query int true "Page number"
 // @Param page_size query int true "Page size"
-// @Param employee_id query string false "Employee ID filter"
+// @Param employee_search query string false "Employee name search (first/last name)"
 // @Param year query int false "Year filter"
 // @Success 200 {object} Response[pagination.Response[leave.LeaveBalanceListItem]]
 // @Router /leave-balances [get]

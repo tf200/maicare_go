@@ -12,6 +12,7 @@ import (
 
 type LeaveService interface {
 	CreateLeaveRequest(ctx context.Context, employeeID uuid.UUID, req *CreateLeaveRequestRequest) (*CreateLeaveRequestResponse, error)
+	CreateLeaveRequestByAdmin(ctx context.Context, adminEmployeeID uuid.UUID, req *CreateLeaveRequestByAdminRequest) (*CreateLeaveRequestResponse, error)
 	DecideLeaveRequestByAdmin(ctx context.Context, adminEmployeeID, leaveRequestID uuid.UUID, req *DecideLeaveRequestRequest) (*DecideLeaveRequestResponse, error)
 	UpdateLeaveRequest(ctx context.Context, employeeID, leaveRequestID uuid.UUID, req *UpdateLeaveRequestRequest) (*UpdateLeaveRequestResponse, error)
 	UpdateLeaveRequestByAdmin(ctx context.Context, adminEmployeeID, leaveRequestID uuid.UUID, req *UpdateLeaveRequestAdminRequest) (*UpdateLeaveRequestResponse, error)

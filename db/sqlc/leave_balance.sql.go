@@ -192,8 +192,12 @@ SELECT
 FROM leave_balances lb
 JOIN employee_profile ep ON ep.id = lb.employee_id
 WHERE (
-    $1::uuid IS NULL
-    OR lb.employee_id = $1::uuid
+    $1::text IS NULL
+    OR $1::text = ''
+    OR ep.first_name ILIKE '%' || $1::text || '%'
+    OR ep.last_name ILIKE '%' || $1::text || '%'
+    OR (ep.first_name || ' ' || ep.last_name) ILIKE '%' || $1::text || '%'
+    OR (ep.last_name || ' ' || ep.first_name) ILIKE '%' || $1::text || '%'
 )
   AND (
     $2::int IS NULL
@@ -204,10 +208,10 @@ LIMIT $4 OFFSET $3
 `
 
 type ListLeaveBalancesPaginatedParams struct {
-	EmployeeID *uuid.UUID `json:"employee_id"`
-	Year       *int32     `json:"year"`
-	Offset     int32      `json:"offset"`
-	Limit      int32      `json:"limit"`
+	EmployeeSearch *string `json:"employee_search"`
+	Year           *int32  `json:"year"`
+	Offset         int32   `json:"offset"`
+	Limit          int32   `json:"limit"`
 }
 
 type ListLeaveBalancesPaginatedRow struct {
@@ -227,7 +231,7 @@ type ListLeaveBalancesPaginatedRow struct {
 
 func (q *Queries) ListLeaveBalancesPaginated(ctx context.Context, arg ListLeaveBalancesPaginatedParams) ([]ListLeaveBalancesPaginatedRow, error) {
 	rows, err := q.db.Query(ctx, listLeaveBalancesPaginated,
-		arg.EmployeeID,
+		arg.EmployeeSearch,
 		arg.Year,
 		arg.Offset,
 		arg.Limit,

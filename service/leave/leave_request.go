@@ -25,6 +25,33 @@ func (s *leaveService) CreateLeaveRequest(
 	employeeID uuid.UUID,
 	req *CreateLeaveRequestRequest,
 ) (*CreateLeaveRequestResponse, error) {
+	return s.createLeaveRequest(ctx, employeeID, employeeID, req)
+}
+
+func (s *leaveService) CreateLeaveRequestByAdmin(
+	ctx context.Context,
+	adminEmployeeID uuid.UUID,
+	req *CreateLeaveRequestByAdminRequest,
+) (*CreateLeaveRequestResponse, error) {
+	if req == nil || req.EmployeeID == uuid.Nil || adminEmployeeID == uuid.Nil {
+		return nil, fmt.Errorf("%w: leave request payload is required", ErrLeaveRequestInvalidRequest)
+	}
+
+	payload := &CreateLeaveRequestRequest{
+		LeaveType: req.LeaveType,
+		StartDate: req.StartDate,
+		EndDate:   req.EndDate,
+		Reason:    req.Reason,
+	}
+	return s.createLeaveRequest(ctx, req.EmployeeID, adminEmployeeID, payload)
+}
+
+func (s *leaveService) createLeaveRequest(
+	ctx context.Context,
+	employeeID uuid.UUID,
+	createdByEmployeeID uuid.UUID,
+	req *CreateLeaveRequestRequest,
+) (*CreateLeaveRequestResponse, error) {
 	if req == nil {
 		return nil, fmt.Errorf("%w: leave request payload is required", ErrLeaveRequestInvalidRequest)
 	}
@@ -108,7 +135,6 @@ func (s *leaveService) CreateLeaveRequest(
 		return nil, err
 	}
 
-	createdByEmployeeID := employeeID
 	created, err := s.Store.CreateLeaveRequest(ctx, db.CreateLeaveRequestParams{
 		EmployeeID:          employeeID,
 		CreatedByEmployeeID: &createdByEmployeeID,
@@ -430,7 +456,6 @@ func parseLeaveRequestType(value string) (db.LeaveRequestTypeEnum, error) {
 		db.LeaveRequestTypeEnumPersonal,
 		db.LeaveRequestTypeEnumSick,
 		db.LeaveRequestTypeEnumPregnancy,
-		db.LeaveRequestTypeEnumLate,
 		db.LeaveRequestTypeEnumUnpaid,
 		db.LeaveRequestTypeEnumOther:
 		return db.LeaveRequestTypeEnum(value), nil
@@ -685,11 +710,19 @@ func (s *leaveService) ListLeaveRequests(
 	}
 
 	params := req.Request.GetParams()
+	var employeeSearch *string
+	if req.EmployeeSearch != nil {
+		trimmed := strings.TrimSpace(*req.EmployeeSearch)
+		if trimmed != "" {
+			employeeSearch = &trimmed
+		}
+	}
+
 	queryArg := db.ListLeaveRequestsPaginatedParams{
-		Status:     db.NullLeaveRequestStatusEnum{Valid: false},
-		EmployeeID: req.EmployeeID,
-		Limit:      params.Limit,
-		Offset:     params.Offset,
+		Status:         db.NullLeaveRequestStatusEnum{Valid: false},
+		EmployeeSearch: employeeSearch,
+		Limit:          params.Limit,
+		Offset:         params.Offset,
 	}
 
 	if req.Status != nil && strings.TrimSpace(*req.Status) != "" {
@@ -798,11 +831,19 @@ func (s *leaveService) ListLeaveBalances(
 	}
 
 	params := req.Request.GetParams()
+	var employeeSearch *string
+	if req.EmployeeSearch != nil {
+		trimmed := strings.TrimSpace(*req.EmployeeSearch)
+		if trimmed != "" {
+			employeeSearch = &trimmed
+		}
+	}
+
 	queryArg := db.ListLeaveBalancesPaginatedParams{
-		EmployeeID: req.EmployeeID,
-		Year:       nil,
-		Limit:      params.Limit,
-		Offset:     params.Offset,
+		EmployeeSearch: employeeSearch,
+		Year:           nil,
+		Limit:          params.Limit,
+		Offset:         params.Offset,
 	}
 	if req.Year != nil {
 		queryArg.Year = req.Year

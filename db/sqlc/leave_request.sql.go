@@ -99,18 +99,22 @@ WHERE (
     OR lr.status = $1::leave_request_status_enum
 )
   AND (
-    $2::uuid IS NULL
-    OR lr.employee_id = $2::uuid
+    $2::text IS NULL
+    OR $2::text = ''
+    OR ep.first_name ILIKE '%' || $2::text || '%'
+    OR ep.last_name ILIKE '%' || $2::text || '%'
+    OR (ep.first_name || ' ' || ep.last_name) ILIKE '%' || $2::text || '%'
+    OR (ep.last_name || ' ' || ep.first_name) ILIKE '%' || $2::text || '%'
   )
 ORDER BY lr.requested_at DESC
 LIMIT $4 OFFSET $3
 `
 
 type ListLeaveRequestsPaginatedParams struct {
-	Status     NullLeaveRequestStatusEnum `json:"status"`
-	EmployeeID *uuid.UUID                 `json:"employee_id"`
-	Offset     int32                      `json:"offset"`
-	Limit      int32                      `json:"limit"`
+	Status         NullLeaveRequestStatusEnum `json:"status"`
+	EmployeeSearch *string                    `json:"employee_search"`
+	Offset         int32                      `json:"offset"`
+	Limit          int32                      `json:"limit"`
 }
 
 type ListLeaveRequestsPaginatedRow struct {
@@ -137,7 +141,7 @@ type ListLeaveRequestsPaginatedRow struct {
 func (q *Queries) ListLeaveRequestsPaginated(ctx context.Context, arg ListLeaveRequestsPaginatedParams) ([]ListLeaveRequestsPaginatedRow, error) {
 	rows, err := q.db.Query(ctx, listLeaveRequestsPaginated,
 		arg.Status,
-		arg.EmployeeID,
+		arg.EmployeeSearch,
 		arg.Offset,
 		arg.Limit,
 	)

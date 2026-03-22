@@ -2266,7 +2266,6 @@ CREATE TYPE leave_request_type_enum AS ENUM (
     'personal',
     'sick',
     'pregnancy',
-    'late',
     'unpaid',
     'other'
 );
@@ -2293,7 +2292,6 @@ INSERT INTO leave_policies (leave_type, requires_approval, deducts_balance, is_a
     ('personal', TRUE, TRUE, TRUE),
     ('sick', FALSE, FALSE, TRUE),
     ('pregnancy', FALSE, FALSE, TRUE),
-    ('late', FALSE, FALSE, TRUE),
     ('unpaid', TRUE, FALSE, TRUE),
     ('other', TRUE, FALSE, TRUE);
 
