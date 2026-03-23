@@ -6,6 +6,7 @@ import (
 
 	"maicare_go/async/aclient"
 	"maicare_go/pagination"
+	"maicare_go/service/appointment"
 	"maicare_go/service/deps"
 
 	"github.com/gin-gonic/gin"
@@ -61,16 +62,19 @@ type EmployeeService interface {
 
 	// Working hours methods
 	ListWorkingHours(ctx context.Context, employeeID uuid.UUID, req *ListWorkingHoursRequest) (*ListWorkingHoursResponse, error)
+	GetMyScheduleTimeline(ctx context.Context, employeeID uuid.UUID, req *GetMyScheduleTimelineRequest) ([]GetMyScheduleTimelineDayResponse, error)
 }
 
 type employeeService struct {
 	*deps.ServiceDependencies
-	asynqClient aclient.AsynqClientInterface
+	asynqClient        aclient.AsynqClientInterface
+	appointmentService appointment.AppointmentService
 }
 
-func NewEmployeeService(deps *deps.ServiceDependencies, asynqClient aclient.AsynqClientInterface) EmployeeService {
+func NewEmployeeService(deps *deps.ServiceDependencies, asynqClient aclient.AsynqClientInterface, appointmentService appointment.AppointmentService) EmployeeService {
 	return &employeeService{
 		ServiceDependencies: deps,
 		asynqClient:         asynqClient,
+		appointmentService:  appointmentService,
 	}
 }

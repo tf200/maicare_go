@@ -69,6 +69,38 @@ func (server *Server) GetEmployeeProfileDetailsApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
+// @Summary Get my schedules timeline
+// @Description Get logged-in employee schedules and calendar events (excluding reminders) in a date range
+// @Tags employees
+// @Produce json
+// @Param start_date query string true "Start date (YYYY-MM-DD)"
+// @Param end_date query string true "End date (YYYY-MM-DD)"
+// @Success 200 {object} Response[[]employees.GetMyScheduleTimelineDayResponse]
+// @Failure 400,401,500 {object} Response[any]
+// @Router /employees/profile/schedules [get]
+func (server *Server) GetMyScheduleTimelineApi(ctx *gin.Context) {
+	payload, err := GetAuthPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
+	var req employees.GetMyScheduleTimelineRequest
+	if err := ctx.ShouldBindQuery(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	response, err := server.businessService.EmployeeService.GetMyScheduleTimeline(ctx.Request.Context(), payload.EmployeeID, &req)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(response, "Schedules timeline retrieved successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
 // @Summary Create employee profile
 // @Description Create a new employee profile with associated user account
 // @Tags employees

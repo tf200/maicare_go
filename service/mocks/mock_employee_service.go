@@ -299,6 +299,21 @@ func (mr *MockEmployeeServiceMockRecorder) ListWorkingHours(ctx, employeeID, req
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListWorkingHours", reflect.TypeOf((*MockEmployeeService)(nil).ListWorkingHours), ctx, employeeID, req)
 }
 
+// GetMyScheduleTimeline mocks base method.
+func (m *MockEmployeeService) GetMyScheduleTimeline(ctx context.Context, employeeID uuid.UUID, req *employees.GetMyScheduleTimelineRequest) ([]employees.GetMyScheduleTimelineDayResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetMyScheduleTimeline", ctx, employeeID, req)
+	ret0, _ := ret[0].([]employees.GetMyScheduleTimelineDayResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetMyScheduleTimeline indicates an expected call of GetMyScheduleTimeline.
+func (mr *MockEmployeeServiceMockRecorder) GetMyScheduleTimeline(ctx, employeeID, req any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetMyScheduleTimeline", reflect.TypeOf((*MockEmployeeService)(nil).GetMyScheduleTimeline), ctx, employeeID, req)
+}
+
 // SearchEmployeesByNameOrEmail mocks base method.
 func (m *MockEmployeeService) SearchEmployeesByNameOrEmail(req employees.SearchEmployeesByNameOrEmailRequest, ctx context.Context) ([]employees.SearchEmployeesByNameOrEmailResponse, error) {
 	m.ctrl.T.Helper()
