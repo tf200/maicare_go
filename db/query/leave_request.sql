@@ -48,6 +48,45 @@ WHERE lr.employee_id = sqlc.arg(employee_id)
 ORDER BY lr.requested_at DESC
 LIMIT sqlc.arg('limit') OFFSET sqlc.arg('offset');
 
+-- name: GetMyLeaveRequestStats :one
+SELECT
+    COUNT(*) FILTER (
+        WHERE lr.status = 'pending'::leave_request_status_enum
+    )::BIGINT AS open_requests,
+    COUNT(*) FILTER (
+        WHERE lr.status = 'approved'::leave_request_status_enum
+    )::BIGINT AS approved_requests,
+    COUNT(*) FILTER (
+        WHERE lr.status = 'rejected'::leave_request_status_enum
+    )::BIGINT AS rejected_requests,
+    COUNT(*) FILTER (
+        WHERE lr.leave_type = 'sick'::leave_request_type_enum
+          AND lr.status = 'approved'::leave_request_status_enum
+    )::BIGINT AS sickness_absence
+FROM leave_requests lr
+WHERE lr.employee_id = sqlc.arg(employee_id)
+  AND lr.start_date < (DATE_TRUNC('year', NOW()) + INTERVAL '1 year')::date
+  AND lr.end_date >= DATE_TRUNC('year', NOW())::date;
+
+-- name: GetLeaveRequestStats :one
+SELECT
+    COUNT(*) FILTER (
+        WHERE lr.status = 'pending'::leave_request_status_enum
+    )::BIGINT AS open_requests,
+    COUNT(*) FILTER (
+        WHERE lr.status = 'approved'::leave_request_status_enum
+    )::BIGINT AS approved_requests,
+    COUNT(*) FILTER (
+        WHERE lr.status = 'rejected'::leave_request_status_enum
+    )::BIGINT AS rejected_requests,
+    COUNT(*) FILTER (
+        WHERE lr.leave_type = 'sick'::leave_request_type_enum
+          AND lr.status = 'approved'::leave_request_status_enum
+    )::BIGINT AS sickness_absence
+FROM leave_requests lr
+WHERE lr.start_date < (DATE_TRUNC('year', NOW()) + INTERVAL '1 year')::date
+  AND lr.end_date >= DATE_TRUNC('year', NOW())::date;
+
 -- name: ListLeaveRequestsPaginated :many
 SELECT
     lr.id,

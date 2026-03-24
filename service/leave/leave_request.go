@@ -701,6 +701,34 @@ func (s *leaveService) ListMyLeaveRequests(
 	return &resp, nil
 }
 
+func (s *leaveService) GetMyLeaveRequestStats(ctx context.Context, employeeID uuid.UUID) (*MyLeaveRequestStatsResponse, error) {
+	stats, err := s.Store.GetMyLeaveRequestStats(ctx, employeeID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch leave request stats: %w", err)
+	}
+
+	return &LeaveRequestStatsResponse{
+		OpenRequests:     stats.OpenRequests,
+		ApprovedRequests: stats.ApprovedRequests,
+		RejectedRequests: stats.RejectedRequests,
+		SicknessAbsence:  stats.SicknessAbsence,
+	}, nil
+}
+
+func (s *leaveService) GetLeaveRequestStats(ctx context.Context) (*LeaveRequestStatsResponse, error) {
+	stats, err := s.Store.GetLeaveRequestStats(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch leave request stats: %w", err)
+	}
+
+	return &LeaveRequestStatsResponse{
+		OpenRequests:     stats.OpenRequests,
+		ApprovedRequests: stats.ApprovedRequests,
+		RejectedRequests: stats.RejectedRequests,
+		SicknessAbsence:  stats.SicknessAbsence,
+	}, nil
+}
+
 func (s *leaveService) ListLeaveRequests(
 	ctx *gin.Context,
 	req *ListLeaveRequestsRequest,

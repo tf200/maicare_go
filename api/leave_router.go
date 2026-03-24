@@ -13,6 +13,8 @@ func (server *Server) setupLeaveRoutes(baseRouter *gin.RouterGroup) {
 		leaveRequestsRouter.PUT("/:id/admin", server.RBACMiddleware("LEAVE.REQUEST.UPDATE_ALL"), server.UpdateLeaveRequestByAdminApi)
 		leaveRequestsRouter.GET("", server.RBACMiddleware("LEAVE.REQUEST.VIEW_ALL"), server.ListLeaveRequestsApi)
 		leaveRequestsRouter.GET("/my", server.RBACMiddleware("LEAVE.REQUEST.VIEW"), server.ListMyLeaveRequestsApi)
+		leaveRequestsRouter.GET("/my/stats", server.RBACMiddleware("LEAVE.REQUEST.VIEW"), server.GetMyLeaveRequestStatsApi)
+		leaveRequestsRouter.GET("/stats", server.RBACMiddleware("LEAVE.REQUEST.VIEW_ALL"), server.GetLeaveRequestStatsApi)
 	}
 
 	leaveBalancesRouter := baseRouter.Group("/leave-balances")

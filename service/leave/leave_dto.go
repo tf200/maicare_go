@@ -70,6 +70,15 @@ type ListMyLeaveRequestsRequest struct {
 	Status *string `form:"status" json:"status" binding:"omitempty,oneof=pending approved rejected cancelled expired"`
 }
 
+type LeaveRequestStatsResponse struct {
+	OpenRequests     int64 `json:"open_requests"`
+	ApprovedRequests int64 `json:"approved_requests"`
+	RejectedRequests int64 `json:"rejected_requests"`
+	SicknessAbsence  int64 `json:"sickness_absence"`
+}
+
+type MyLeaveRequestStatsResponse = LeaveRequestStatsResponse
+
 type ListLeaveRequestsRequest struct {
 	pagination.Request
 	Status         *string `form:"status" json:"status" binding:"omitempty,oneof=pending approved rejected cancelled expired"`

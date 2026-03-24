@@ -218,6 +218,8 @@ type Querier interface {
 	GetLocation(ctx context.Context, id uuid.UUID) (Location, error)
 	GetMaxInvoiceSequenceForDate(ctx context.Context, date interface{}) (int64, error)
 	GetMissingClientDocuments(ctx context.Context, clientID uuid.UUID) ([]string, error)
+	GetMyLeaveRequestStats(ctx context.Context, employeeID uuid.UUID) (GetMyLeaveRequestStatsRow, error)
+	GetLeaveRequestStats(ctx context.Context) (GetLeaveRequestStatsRow, error)
 	GetOrganisation(ctx context.Context, id uuid.UUID) (GetOrganisationRow, error)
 	GetOrganisationCounts(ctx context.Context, id uuid.UUID) (GetOrganisationCountsRow, error)
 	GetPayment(ctx context.Context, id uuid.UUID) (GetPaymentRow, error)

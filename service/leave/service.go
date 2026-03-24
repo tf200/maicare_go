@@ -17,6 +17,8 @@ type LeaveService interface {
 	UpdateLeaveRequest(ctx context.Context, employeeID, leaveRequestID uuid.UUID, req *UpdateLeaveRequestRequest) (*UpdateLeaveRequestResponse, error)
 	UpdateLeaveRequestByAdmin(ctx context.Context, adminEmployeeID, leaveRequestID uuid.UUID, req *UpdateLeaveRequestAdminRequest) (*UpdateLeaveRequestResponse, error)
 	ListMyLeaveRequests(ctx *gin.Context, employeeID uuid.UUID, req *ListMyLeaveRequestsRequest) (*pagination.Response[LeaveRequestListItem], error)
+	GetMyLeaveRequestStats(ctx context.Context, employeeID uuid.UUID) (*MyLeaveRequestStatsResponse, error)
+	GetLeaveRequestStats(ctx context.Context) (*LeaveRequestStatsResponse, error)
 	ListLeaveRequests(ctx *gin.Context, req *ListLeaveRequestsRequest) (*pagination.Response[LeaveRequestListItem], error)
 	ListLeaveBalances(ctx *gin.Context, req *ListLeaveBalancesRequest) (*pagination.Response[LeaveBalanceListItem], error)
 	ListMyLeaveBalances(ctx *gin.Context, employeeID uuid.UUID, req *ListMyLeaveBalancesRequest) (*pagination.Response[LeaveBalanceListItem], error)

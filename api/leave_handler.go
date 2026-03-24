@@ -230,6 +230,54 @@ func (server *Server) ListMyLeaveRequestsApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, SuccessResponse(res, "Leave requests retrieved successfully"))
 }
 
+// GetMyLeaveRequestStatsApi returns current-year leave request stats for the authenticated employee.
+// @Summary Get my leave request stats
+// @Description Returns current-year counts for open, approved, rejected leave requests, and approved sickness absence.
+// @Tags leave-requests
+// @Produce json
+// @Success 200 {object} Response[leave.MyLeaveRequestStatsResponse]
+// @Failure 401,403,500 {object} Response[any]
+// @Router /leave-requests/my/stats [get]
+func (server *Server) GetMyLeaveRequestStatsApi(ctx *gin.Context) {
+	payload, err := GetAuthPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
+	res, err := server.businessService.LeaveService.GetMyLeaveRequestStats(ctx, payload.EmployeeID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, SuccessResponse(res, "Leave request stats retrieved successfully"))
+}
+
+// GetLeaveRequestStatsApi returns current-year leave request stats across all employees.
+// @Summary Get leave request stats
+// @Description Returns current-year counts for open, approved, rejected leave requests, and approved sickness absence across all employees.
+// @Tags leave-requests
+// @Produce json
+// @Success 200 {object} Response[leave.LeaveRequestStatsResponse]
+// @Failure 401,500 {object} Response[any]
+// @Router /leave-requests/stats [get]
+func (server *Server) GetLeaveRequestStatsApi(ctx *gin.Context) {
+	_, err := GetAuthPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
+	res, err := server.businessService.LeaveService.GetLeaveRequestStats(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, SuccessResponse(res, "Leave request stats retrieved successfully"))
+}
+
 func mapLeaveRequestErrorStatus(err error) int {
 	switch {
 	case errors.Is(err, leave.ErrLeaveRequestInvalidRequest):
