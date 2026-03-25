@@ -72,6 +72,45 @@ func (q *Queries) CreateLeaveRequest(ctx context.Context, arg CreateLeaveRequest
 	return i, err
 }
 
+const getLeaveRequestStats = `-- name: GetLeaveRequestStats :one
+SELECT
+    COUNT(*) FILTER (
+        WHERE lr.status = 'pending'::leave_request_status_enum
+    )::BIGINT AS open_requests,
+    COUNT(*) FILTER (
+        WHERE lr.status = 'approved'::leave_request_status_enum
+    )::BIGINT AS approved_requests,
+    COUNT(*) FILTER (
+        WHERE lr.status = 'rejected'::leave_request_status_enum
+    )::BIGINT AS rejected_requests,
+    COUNT(*) FILTER (
+        WHERE lr.leave_type = 'sick'::leave_request_type_enum
+          AND lr.status = 'approved'::leave_request_status_enum
+    )::BIGINT AS sickness_absence
+FROM leave_requests lr
+WHERE lr.start_date < (DATE_TRUNC('year', NOW()) + INTERVAL '1 year')::date
+  AND lr.end_date >= DATE_TRUNC('year', NOW())::date
+`
+
+type GetLeaveRequestStatsRow struct {
+	OpenRequests     int64 `json:"open_requests"`
+	ApprovedRequests int64 `json:"approved_requests"`
+	RejectedRequests int64 `json:"rejected_requests"`
+	SicknessAbsence  int64 `json:"sickness_absence"`
+}
+
+func (q *Queries) GetLeaveRequestStats(ctx context.Context) (GetLeaveRequestStatsRow, error) {
+	row := q.db.QueryRow(ctx, getLeaveRequestStats)
+	var i GetLeaveRequestStatsRow
+	err := row.Scan(
+		&i.OpenRequests,
+		&i.ApprovedRequests,
+		&i.RejectedRequests,
+		&i.SicknessAbsence,
+	)
+	return i, err
+}
+
 const getMyLeaveRequestStats = `-- name: GetMyLeaveRequestStats :one
 SELECT
     COUNT(*) FILTER (
@@ -103,45 +142,6 @@ type GetMyLeaveRequestStatsRow struct {
 func (q *Queries) GetMyLeaveRequestStats(ctx context.Context, employeeID uuid.UUID) (GetMyLeaveRequestStatsRow, error) {
 	row := q.db.QueryRow(ctx, getMyLeaveRequestStats, employeeID)
 	var i GetMyLeaveRequestStatsRow
-	err := row.Scan(
-		&i.OpenRequests,
-		&i.ApprovedRequests,
-		&i.RejectedRequests,
-		&i.SicknessAbsence,
-	)
-	return i, err
-}
-
-const getLeaveRequestStats = `-- name: GetLeaveRequestStats :one
-SELECT
-    COUNT(*) FILTER (
-        WHERE lr.status = 'pending'::leave_request_status_enum
-    )::BIGINT AS open_requests,
-    COUNT(*) FILTER (
-        WHERE lr.status = 'approved'::leave_request_status_enum
-    )::BIGINT AS approved_requests,
-    COUNT(*) FILTER (
-        WHERE lr.status = 'rejected'::leave_request_status_enum
-    )::BIGINT AS rejected_requests,
-    COUNT(*) FILTER (
-        WHERE lr.leave_type = 'sick'::leave_request_type_enum
-          AND lr.status = 'approved'::leave_request_status_enum
-    )::BIGINT AS sickness_absence
-FROM leave_requests lr
-WHERE lr.start_date < (DATE_TRUNC('year', NOW()) + INTERVAL '1 year')::date
-  AND lr.end_date >= DATE_TRUNC('year', NOW())::date
-`
-
-type GetLeaveRequestStatsRow struct {
-	OpenRequests     int64 `json:"open_requests"`
-	ApprovedRequests int64 `json:"approved_requests"`
-	RejectedRequests int64 `json:"rejected_requests"`
-	SicknessAbsence  int64 `json:"sickness_absence"`
-}
-
-func (q *Queries) GetLeaveRequestStats(ctx context.Context) (GetLeaveRequestStatsRow, error) {
-	row := q.db.QueryRow(ctx, getLeaveRequestStats)
-	var i GetLeaveRequestStatsRow
 	err := row.Scan(
 		&i.OpenRequests,
 		&i.ApprovedRequests,

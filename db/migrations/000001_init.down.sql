@@ -18,6 +18,7 @@ DROP TABLE IF EXISTS calendar_event_reminders CASCADE;
 DROP TABLE IF EXISTS calendar_event_attendees CASCADE;
 DROP TABLE IF EXISTS calendar_events CASCADE;
 DROP TABLE IF EXISTS shift_swap_requests CASCADE;
+DROP TABLE IF EXISTS late_arrivals CASCADE;
 DROP TABLE IF EXISTS leave_requests CASCADE;
 DROP TABLE IF EXISTS leave_balance_adjustments CASCADE;
 DROP TABLE IF EXISTS leave_balances CASCADE;

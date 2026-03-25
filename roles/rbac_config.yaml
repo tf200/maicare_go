@@ -447,6 +447,18 @@ permissions:
     - name: LEAVE.BALANCE.ADJUST
       resource: /leave-balances/adjust
       method: [POST]
+    - name: LATE_ARRIVAL.CREATE
+      resource: /late-arrivals
+      method: [POST]
+    - name: LATE_ARRIVAL.CREATE_ALL
+      resource: /late-arrivals/admin
+      method: [POST]
+    - name: LATE_ARRIVAL.VIEW
+      resource: /late-arrivals/my
+      method: [GET]
+    - name: LATE_ARRIVAL.VIEW_ALL
+      resource: /late-arrivals
+      method: [GET]
 
     - name: SHIFT.CREATE
       resource: /shifts
@@ -627,6 +639,10 @@ roles:
           - LEAVE.BALANCE.VIEW
           - LEAVE.BALANCE.VIEW_ALL
           - LEAVE.BALANCE.ADJUST
+          - LATE_ARRIVAL.CREATE
+          - LATE_ARRIVAL.CREATE_ALL
+          - LATE_ARRIVAL.VIEW
+          - LATE_ARRIVAL.VIEW_ALL
           - SENDER.CREATE
           - SENDER.UPDATE
           - SENDER.VIEW
@@ -715,5 +731,9 @@ roles:
           - LEAVE.BALANCE.VIEW
           - LEAVE.BALANCE.VIEW_ALL
           - LEAVE.BALANCE.ADJUST
+          - LATE_ARRIVAL.CREATE
+          - LATE_ARRIVAL.CREATE_ALL
+          - LATE_ARRIVAL.VIEW
+          - LATE_ARRIVAL.VIEW_ALL
           - SENDER.CREATE
           - SHIFT.VIEW

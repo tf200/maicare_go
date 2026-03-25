@@ -2184,6 +2184,27 @@ CREATE TABLE schedules (
     )
 );
 
+-- ==========================================
+-- LATE ARRIVALS
+-- ==========================================
+
+CREATE TABLE late_arrivals (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    schedule_id UUID NOT NULL REFERENCES schedules(id) ON DELETE CASCADE,
+    employee_id UUID NOT NULL REFERENCES employee_profile(id) ON DELETE CASCADE,
+    created_by_employee_id UUID NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
+    arrival_date DATE NOT NULL,
+    arrival_time TIME NOT NULL,
+    reason TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT late_arrivals_unique_schedule UNIQUE (schedule_id)
+);
+
+CREATE INDEX idx_late_arrivals_employee_id ON late_arrivals(employee_id);
+CREATE INDEX idx_late_arrivals_arrival_date_desc ON late_arrivals(arrival_date DESC);
+CREATE INDEX idx_late_arrivals_employee_date ON late_arrivals(employee_id, arrival_date DESC);
+
 CREATE TYPE shift_swap_status_enum AS ENUM (
     'pending_recipient',
     'recipient_rejected',

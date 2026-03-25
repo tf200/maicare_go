@@ -20,6 +20,7 @@ import (
 	"maicare_go/service/employees"
 	"maicare_go/service/handbook"
 	"maicare_go/service/invoice"
+	latearrival "maicare_go/service/late_arrival"
 	"maicare_go/service/leave"
 	"maicare_go/service/notification"
 	"maicare_go/service/organization"
@@ -38,6 +39,7 @@ type BusinessService struct {
 	HandbookService     handbook.HandbookService
 	InvoiceService      invoice.InvoiceService
 	LeaveService        leave.LeaveService
+	LateArrivalService  latearrival.LateArrivalService
 	AppointmentService  appointment.AppointmentService
 	AttachmentService   attachment.AttachmentService
 	ContractService     contractp.ContractService
@@ -60,6 +62,7 @@ func NewBusinessService(store *db.Store, tokenMaker token.Maker, logger logger.L
 	handbookService := handbook.NewHandbookService(deps)
 	invoiceService := invoice.NewInvoiceService(deps)
 	leaveService := leave.NewLeaveService(deps)
+	lateArrivalService := latearrival.NewLateArrivalService(deps)
 	attachmentService := attachment.NewAttachmentService(deps)
 	contractService := contractp.NewContractService(deps)
 	ecrService := ecr.NewECRService(deps)
@@ -78,6 +81,7 @@ func NewBusinessService(store *db.Store, tokenMaker token.Maker, logger logger.L
 		HandbookService:     handbookService,
 		InvoiceService:      invoiceService,
 		LeaveService:        leaveService,
+		LateArrivalService:  lateArrivalService,
 		AppointmentService:  appointmentService,
 		AttachmentService:   attachmentService,
 		ContractService:     contractService,

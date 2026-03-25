@@ -3894,6 +3894,18 @@ type InvoiceRunItem struct {
 	CreatedAt pgtype.Timestamptz       `json:"created_at"`
 }
 
+type LateArrival struct {
+	ID                  uuid.UUID          `json:"id"`
+	ScheduleID          uuid.UUID          `json:"schedule_id"`
+	EmployeeID          uuid.UUID          `json:"employee_id"`
+	CreatedByEmployeeID *uuid.UUID         `json:"created_by_employee_id"`
+	ArrivalDate         pgtype.Date        `json:"arrival_date"`
+	ArrivalTime         pgtype.Time        `json:"arrival_time"`
+	Reason              string             `json:"reason"`
+	CreatedAt           pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt           pgtype.Timestamptz `json:"updated_at"`
+}
+
 type LeaveBalance struct {
 	ID             uuid.UUID          `json:"id"`
 	EmployeeID     uuid.UUID          `json:"employee_id"`
