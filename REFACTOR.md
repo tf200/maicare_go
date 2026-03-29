@@ -139,6 +139,7 @@ func toDomainUserDetail(row db.GetUserByIDRow) *domain.UserDetail { ... }
 - Handled by private functions in the handler file (`toGetUserResponse`, `toListUserResponse`)
 - Each endpoint has its **own response DTO** defined in the handler package
 - Response DTOs **never enter** the service or repository
+- When a handler file starts to grow, move DTOs and mapper helpers into a dedicated `*_dto.go` file in the same handler package
 
 ```go
 func toGetUserResponse(u *domain.UserDetail) getUserResponse { ... }
@@ -157,6 +158,7 @@ Additional rules:
 - Boundary-specific mapping stays private in the repository or handler file that owns it
 - Service code should not keep ad hoc SQLC or `pgtype` conversion helpers
 - Do not copy old helpers into the new stack when they can be centralized or removed
+- Keep type names aligned with actual scope; do not leave narrow names on types that now serve a broader feature
 
 ---
 
@@ -199,6 +201,14 @@ golang-jwt         →   pkg/jwt         →   domain.TokenClient →   middlewa
 twilio-go          →   pkg/sms         →   domain.SMSSender   →   service
 ```
 
+The same pattern applies to shared infrastructure such as logging:
+
+```
+internal/domain/logger.go  → logger interface
+pkg/logger/                → logger implementation
+internal/service/...       → depends on domain.Logger
+```
+
 ### Legacy `util/` package
 
 The current `util/` package is treated as a legacy package during migration.
@@ -234,13 +244,14 @@ Reasons:
 
 ## Refactoring Strategy
 
-### Approach — Flow by Flow, Not Layer by Layer
+### Approach — Endpoint by Endpoint, Not Layer by Layer
 
-Refactor one complete endpoint flow at a time, from domain to handler.
-Do not refactor all repositories first, then all services — this creates a broken
-intermediate state that cannot be tested or verified.
+Refactor one complete endpoint at a time, from domain to handler.
+Do not refactor all repositories first, then all services, or batch multiple
+endpoints together — that creates broken intermediate states that cannot be
+tested or verified.
 
-Each flow must be fully working before moving to the next.
+Each endpoint must be fully covered before moving to the next endpoint.
 
 ### Migration Constraints
 
@@ -248,6 +259,7 @@ Each flow must be fully working before moving to the next.
 - Do not make the old `api/` and `service/` packages depend on `internal/`
 - Do not make the new `internal/` packages depend on the old `api/` or `service/` packages
 - Avoid temporary duplication unless it is strictly needed to keep the migration moving
+- Carry forward existing query filters, sorting inputs, and pagination behavior unless there is an explicit decision to change the endpoint contract
 
 ### Order Within Each Flow
 
@@ -260,8 +272,9 @@ For every endpoint, always work in this order:
 
 ### Grouping — By Domain Entity
 
-Group flows by entity and complete one entity fully before moving to the next.
-This keeps domain files stable before new ones are introduced.
+Group endpoint work by entity for planning, but still finish one endpoint before
+starting another. This keeps domain files stable without turning the migration
+into a batch refactor.
 
 ```
 Round 1 — users:    GET /users/:id,  GET /users,  POST /users
@@ -323,14 +336,35 @@ this list before considering it done.
 - No knowledge of HTTP — no status codes, no gin, no request/response structs
 - Depends only on domain interfaces, never on concrete repository or pkg/ types
 - All business logic and validation lives here, nowhere else
+- For logging in new `internal/` flows, use `domain.Logger` with `LogError`, `LogWarn`, and `LogInfo`
+- Do not introduce new `LogBusinessEvent` usage in refactored flows
 
 ### Handler Rules
 
 - No business logic — if it feels like a rule or a decision, it belongs in the service
-- Each endpoint defines its own request and response DTO in the handler file
+- Each endpoint defines its own request and response DTO in the handler layer
+- Prefer splitting large handler files into `<feature>_handler.go` and `<feature>_dto.go`
+- Route registration belongs to the handler layer and may live in the handler file by default
+- If route registration becomes noisy, split it into a dedicated `<feature>_routes.go` file
+- Route registration code should only map paths to handler methods; it must not construct dependencies
+- Swagger/OpenAPI annotations belong in the handler layer only and should stay attached to the handler method for the endpoint
+- Service, repository, and domain files must not contain Swagger/OpenAPI annotations
+- During parallel migration, temporary duplicate Swagger comments are acceptable only until the old route is replaced
+- After wiring a new route, remove or update the old Swagger comments so the endpoint has a single source of truth
 - All domain→response mapping done via private `toXResponse` functions, never inline
 - Domain errors are mapped to HTTP status codes here and only here
 - Response DTOs never leave the handler layer
+
+### Middleware Rules
+
+- New middleware belongs in `internal/middleware/`; keep the old `api/` middleware unchanged until the new stack is wired
+- Middleware must not depend on the old `Server` type; inject only the small dependencies it actually needs
+- Build middleware as separate concerns: auth, RBAC, request context, request logging, and audit
+- New middleware should prefer plain `context.Context` values over Gin-only access patterns so services can consume the same request metadata
+- Auth middleware may reuse the current token maker abstraction during migration
+- New middleware logging must use the new logger interface and `LogError`, `LogWarn`, `LogInfo`
+- Do not introduce new `LogBusinessEvent` usage in middleware for refactored flows
+- Audit middleware must not use the live `*gin.Context` in background goroutines
 
 ### pkg/ Rules
 
@@ -375,7 +409,15 @@ Use this before starting and after completing every flow.
 **handler/**
 - [ ] Define a request DTO if the endpoint accepts a body or query params
 - [ ] Define a response DTO specific to this endpoint
+- [ ] Add or extend the feature route registration function in the handler layer
 - [ ] Write a private `toXResponse` mapper function — do not map inline
+
+**middleware/**
+- [ ] Keep auth, RBAC, request context, request logging, and audit as separate middleware units
+- [ ] Inject only required interfaces or infrastructure into middleware; do not depend on the old `Server`
+- [ ] Store request-scoped values in a form that plain `context.Context` can carry forward
+- [ ] Use the new logger interface in refactored middleware
+- [ ] Avoid background work that retains the live `*gin.Context`
 - [ ] Map domain errors to HTTP status codes here
 - [ ] No business logic — if unsure, it belongs in the service
 

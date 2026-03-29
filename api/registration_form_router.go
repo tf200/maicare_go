@@ -14,13 +14,6 @@ func (server *Server) setupRegistrationFormRoutes(baseRouter *gin.RouterGroup) {
 		rfRoutes.POST("/:id/status", server.AuthMiddleware(), server.RBACMiddleware("REGISTRATION_FORM.UPDATE"), server.UpdateRegistrationFormStatusApi)
 		rfRoutes.POST("/:id/process", server.AuthMiddleware(), server.RBACMiddleware("REGISTRATION_FORM.UPDATE"), server.ProcessRegistrationFormApi)
 	}
-
-	intakeMaturityRoutes := baseRouter.Group("/intake_maturity")
-	intakeMaturityRoutes.Use(server.AuthMiddleware())
-	{
-		intakeMaturityRoutes.POST("/:assessment_id/generate_goals", server.RBACMiddleware("REGISTRATION_FORM.UPDATE"), server.GenerateIntakeGoalsApi)
-	}
-
 	// intakeFormRoutes := baseRouter.Group("/intake_forms")
 	// intakeFormRoutes.Use(server.AuthMiddleware())
 	// {

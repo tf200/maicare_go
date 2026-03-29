@@ -14,6 +14,7 @@ func (server *Server) setupIntakeFormRoutes(baseRouter *gin.RouterGroup) {
 		intakeFormGroup.GET("/totals", server.RBACMiddleware("REGISTRATION_FORM.VIEW"), server.GetIntakeFormTotalsApi)
 		intakeFormGroup.GET("/:id", server.RBACMiddleware("REGISTRATION_FORM.VIEW"), server.GetIntakeFormApi)
 		intakeFormGroup.PATCH("/:id", server.RBACMiddleware("REGISTRATION_FORM.UPDATE"), server.UpdateIntakeFormApi)
+		intakeFormGroup.POST("/:id/generate_goals", server.RBACMiddleware("REGISTRATION_FORM.UPDATE"), server.GenerateIntakeGoalsForIntakeFormApi)
 		intakeFormGroup.PUT("/:id/goals", server.RBACMiddleware("REGISTRATION_FORM.UPDATE"), server.CreateIntakeFormGoalsApi)
 		intakeFormGroup.PATCH("/:id/conclusion", server.RBACMiddleware("REGISTRATION_FORM.UPDATE"), server.UpdateIntakeConclusionApi)
 		intakeFormGroup.POST("/:id/promote", server.RBACMiddleware("REGISTRATION_FORM.UPDATE"), server.PromoteIntakeToClientApi)

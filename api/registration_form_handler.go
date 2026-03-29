@@ -312,41 +312,6 @@ func (server *Server) UpdateRegistrationFormStatusApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
-// @Summary Generate Intake Goals
-// @Description Generate Care Plan goals for an intake maturity assessment using AI
-// @Tags Registration Form
-// @Accept json
-// @Produce json
-// @Param assessment_id path uuid true "Intake Assessment ID"
-// @Param request body clientp.GenerateIntakeGoalsRequest true "Request body"
-// @Success 200 {object} Response[clientp.GenerateIntakeGoalsResponse]
-// @Failure 400 {object} Response[any]
-// @Failure 500 {object} Response[any]
-// @Router /intake_maturity/{assessment_id}/generate_goals [post]
-func (server *Server) GenerateIntakeGoalsApi(ctx *gin.Context) {
-	assessmentID, err := uuid.Parse(ctx.Param("assessment_id"))
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-
-	var req clientp.GenerateIntakeGoalsRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-	req.IntakeAssessmentID = assessmentID
-
-	response, err := server.businessService.ClientService.GenerateIntakeGoals(ctx, &req)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	res := SuccessResponse(response, "Goals generated successfully")
-	ctx.JSON(http.StatusOK, res)
-}
-
 // @Summary Promote Intake to Client
 // @Description Promote an intake form and all its assessments to a full client record with a care plan
 // @Tags Registration Form

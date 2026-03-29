@@ -15,9 +15,10 @@ type IntakeAssessmentGoal struct {
 	Priority    string `json:"priority"`              // "high", "medium", "low"
 }
 
-// GenerateIntakeGoalsRequest represents a request to generate goals for an intake assessment
+// GenerateIntakeGoalsRequest represents a request to generate goals for an intake topic.
 type GenerateIntakeGoalsRequest struct {
 	IntakeAssessmentID uuid.UUID `json:"assessment_id"`
+	IntakeFormID       uuid.UUID `json:"intake_form_id"`
 	RegistrationFormID uuid.UUID `json:"registration_form_id"`
 	TopicID            uuid.UUID `json:"topic_id"`
 	CurrentLevel       int       `json:"current_level"`

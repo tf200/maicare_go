@@ -208,6 +208,43 @@ func (s *Server) CreateIntakeFormGoalsApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
+// @Summary Generate Intake Goals
+// @Description Generate Care Plan goals for a topic within an intake form using AI before saving the assessment.
+// @Tags Intake Forms
+// @Accept json
+// @Produce json
+// @Param id path uuid true "Intake Form ID"
+// @Param request body clientp.GenerateIntakeGoalsRequest true "Request body"
+// @Success 200 {object} Response[clientp.GenerateIntakeGoalsResponse]
+// @Failure 400 {object} Response[any]
+// @Failure 500 {object} Response[any]
+// @Router /intake_forms/{id}/generate_goals [post]
+func (s *Server) GenerateIntakeGoalsForIntakeFormApi(ctx *gin.Context) {
+	intakeFormID, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	var req clientp.GenerateIntakeGoalsRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid request body")))
+		return
+	}
+	req.IntakeFormID = intakeFormID
+	req.IntakeAssessmentID = uuid.Nil
+	req.RegistrationFormID = uuid.Nil
+
+	response, err := s.businessService.ClientService.GenerateIntakeGoals(ctx, &req)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(response, "Goals generated successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
 // @Summary Update Intake Conclusion
 // @Description Accept or refuse an intake by updating intake conclusion.
 // @Tags Intake Forms

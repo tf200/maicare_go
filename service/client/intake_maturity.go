@@ -49,6 +49,15 @@ func (s *clientService) GenerateIntakeGoals(ctx context.Context, req *GenerateIn
 		req.RegistrationFormID = intakeForm.RegistrationFormID
 	}
 
+	if req.IntakeFormID != uuid.Nil {
+		intakeForm, err := s.Store.GetIntakeForm(ctx, req.IntakeFormID)
+		if err != nil {
+			s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GenerateIntakeGoals", "Failed to get intake form", zap.Error(err))
+			return nil, err
+		}
+		req.RegistrationFormID = intakeForm.RegistrationFormID
+	}
+
 	registrationForm, err := s.Store.GetRegistrationForm(ctx, req.RegistrationFormID)
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "GenerateIntakeGoals", "Failed to get registration form", zap.Error(err))
