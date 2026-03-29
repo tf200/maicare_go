@@ -163,3 +163,46 @@ func (q *Queries) SetAttachmentAsUsedorUnused(ctx context.Context, arg SetAttach
 	)
 	return i, err
 }
+
+const setAttachmentsAsUsedorUnusedByUUIDs = `-- name: SetAttachmentsAsUsedorUnusedByUUIDs :many
+UPDATE attachment_file
+SET
+    is_used = $2
+WHERE
+    uuid = ANY($1::uuid[])
+RETURNING uuid, name, file, size, is_used, tag, updated, created
+`
+
+type SetAttachmentsAsUsedorUnusedByUUIDsParams struct {
+	Column1 []uuid.UUID `json:"column_1"`
+	IsUsed  bool        `json:"is_used"`
+}
+
+func (q *Queries) SetAttachmentsAsUsedorUnusedByUUIDs(ctx context.Context, arg SetAttachmentsAsUsedorUnusedByUUIDsParams) ([]AttachmentFile, error) {
+	rows, err := q.db.Query(ctx, setAttachmentsAsUsedorUnusedByUUIDs, arg.Column1, arg.IsUsed)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []AttachmentFile{}
+	for rows.Next() {
+		var i AttachmentFile
+		if err := rows.Scan(
+			&i.Uuid,
+			&i.Name,
+			&i.File,
+			&i.Size,
+			&i.IsUsed,
+			&i.Tag,
+			&i.Updated,
+			&i.Created,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

@@ -127,6 +127,8 @@ type ClientService interface {
 	PromoteIntakeToClient(ctx context.Context, req *PromoteIntakeToClientRequest) (*PromoteIntakeToClientResponse, error)
 
 	// Goal Evaluations
+	CreateClientGoal(ctx context.Context, clientID uuid.UUID, req CreateClientGoalRequest) (*CreateClientGoalResponse, error)
+	UpdateClientGoal(ctx context.Context, clientID uuid.UUID, goalID uuid.UUID, req UpdateClientGoalRequest) (*UpdateClientGoalResponse, error)
 	CreateGoalEvaluation(ctx context.Context, clientID uuid.UUID, employeeID uuid.UUID, req CreateGoalEvaluationRequest) (*GoalEvaluationResponse, error)
 	GetGoalEvaluation(ctx context.Context, evaluationID uuid.UUID) (*GoalEvaluationResponse, error)
 	GetGoalEvaluationBootstrap(ctx context.Context, clientID uuid.UUID) (*GoalEvaluationBootstrapResponse, error)

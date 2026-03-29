@@ -517,12 +517,15 @@ type SetClientProfilePictureResponse struct {
 
 // AddClientDocumentApiRequest represents a request to add a document to a client
 type AddClientDocumentApiRequest struct {
+	Documents []AddClientDocumentItem `json:"documents" binding:"required"`
+}
+
+type AddClientDocumentItem struct {
 	AttachmentID uuid.UUID `json:"attachment_id" binding:"required"`
 	Label        string    `json:"label" binding:"required"`
 }
 
-// AddClientDocumentApiResponse represents a response to an add client document request
-type AddClientDocumentApiResponse struct {
+type AddClientDocumentResult struct {
 	ID           uuid.UUID  `json:"id"`
 	AttachmentID *uuid.UUID `json:"attachment_id"`
 	ClientID     uuid.UUID  `json:"client_id"`
@@ -534,6 +537,11 @@ type AddClientDocumentApiResponse struct {
 	Tag          *string    `json:"tag"`
 	UpdatedAt    time.Time  `json:"updated"`
 	CreatedAt    time.Time  `json:"created"`
+}
+
+// AddClientDocumentApiResponse represents a response to an add client document request
+type AddClientDocumentApiResponse struct {
+	Documents []AddClientDocumentResult `json:"documents"`
 }
 
 // ListClientDocumentsApiRequest represents a request to list client documents
@@ -555,11 +563,6 @@ type ListClientDocumentsApiResponse struct {
 	Tag            *string    `json:"tag"`
 	UpdatedAt      time.Time  `json:"updated_at"`
 	CreatedAt      time.Time  `json:"created_at"`
-}
-
-// DeleteClientDocumentApiRequest represents a request to delete a client document
-type DeleteClientDocumentApiRequest struct {
-	AttachmentID uuid.UUID `json:"attachement_id" binding:"required"`
 }
 
 // DeleteClientDocumentApiResponse represents a response to a delete client document request

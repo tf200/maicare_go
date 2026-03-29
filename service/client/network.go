@@ -2,8 +2,9 @@ package clientp
 
 import (
 	"context"
-	"github.com/goccy/go-json"
 	"time"
+
+	"github.com/goccy/go-json"
 
 	db "maicare_go/db/sqlc"
 	"maicare_go/logger"
@@ -148,7 +149,6 @@ func (s *clientService) GetClientEmergencyContact(ctx context.Context, contactID
 		Relationship:     contact.Relationship,
 		RelationStatus:   db.RelationStatusPtrFromEnum(contact.RelationStatus),
 		CreatedAt:        contact.CreatedAt.Time,
-		IsVerified:       contact.IsVerified,
 		MedicalReports:   contact.MedicalReports,
 		IncidentsReports: contact.IncidentsReports,
 		GoalsReports:     contact.GoalsReports,

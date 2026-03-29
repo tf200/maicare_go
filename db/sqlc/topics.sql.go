@@ -11,6 +11,23 @@ import (
 	"github.com/google/uuid"
 )
 
+const getTopicByID = `-- name: GetTopicByID :one
+SELECT
+    id,
+    topic_name,
+    level_description
+FROM topics
+WHERE id = $1
+LIMIT 1
+`
+
+func (q *Queries) GetTopicByID(ctx context.Context, id uuid.UUID) (Topic, error) {
+	row := q.db.QueryRow(ctx, getTopicByID, id)
+	var i Topic
+	err := row.Scan(&i.ID, &i.TopicName, &i.LevelDescription)
+	return i, err
+}
+
 const getTopicLevel = `-- name: GetTopicLevel :one
 SELECT
     t.topic_name,

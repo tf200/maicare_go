@@ -76,3 +76,95 @@ FROM client_goals
 WHERE client_id = $1
   AND status = 'active'
 ORDER BY sort_order;
+
+-- name: GetNextActiveClientGoalSortOrder :one
+SELECT COALESCE(MAX(sort_order), -1)::int + 1
+FROM client_goals
+WHERE client_id = $1
+  AND status = 'active';
+
+-- name: CreateManualClientGoal :one
+INSERT INTO client_goals (
+    client_id,
+    title,
+    description,
+    priority,
+    status,
+    topic_id,
+    topic_name_snapshot,
+    source,
+    sort_order
+) VALUES (
+    $1,
+    $2,
+    $3,
+    $4,
+    'active',
+    $5,
+    $6,
+    'manual',
+    $7
+)
+RETURNING *;
+
+-- name: GetClientGoalByIDAndClientID :one
+SELECT *
+FROM client_goals
+WHERE id = $1
+  AND client_id = $2
+LIMIT 1;
+
+-- name: GoalHasEvaluationItems :one
+SELECT EXISTS (
+    SELECT 1
+    FROM client_goal_evaluation_items
+    WHERE goal_id = $1
+);
+
+-- name: UpdateClientGoalByID :one
+UPDATE client_goals
+SET
+    title = $3,
+    description = $4,
+    priority = $5,
+    topic_id = $6,
+    topic_name_snapshot = $7,
+    sort_order = $8,
+    updated_at = CURRENT_TIMESTAMP
+WHERE id = $1
+  AND client_id = $2
+RETURNING *;
+
+-- name: CancelClientGoalByID :one
+UPDATE client_goals
+SET
+    status = 'cancelled',
+    archived_at = CURRENT_TIMESTAMP,
+    updated_at = CURRENT_TIMESTAMP
+WHERE id = $1
+  AND client_id = $2
+RETURNING *;
+
+-- name: CreateReviewUpdatedClientGoal :one
+INSERT INTO client_goals (
+    client_id,
+    title,
+    description,
+    priority,
+    status,
+    topic_id,
+    topic_name_snapshot,
+    source,
+    sort_order
+) VALUES (
+    $1,
+    $2,
+    $3,
+    $4,
+    'active',
+    $5,
+    $6,
+    'review_update',
+    $7
+)
+RETURNING *;

@@ -10,6 +10,7 @@ import (
 	db "maicare_go/db/sqlc"
 	"maicare_go/logger"
 	"maicare_go/pagination"
+	"maicare_go/service/attachment"
 	"maicare_go/util"
 
 	"github.com/gin-gonic/gin"
@@ -1029,13 +1030,74 @@ func (s *clientService) handleNormalStatusUpdates(ctx context.Context, req Updat
 }
 
 func (s *clientService) AddClientDocument(ctx context.Context, req AddClientDocumentApiRequest, clientID uuid.UUID) (*AddClientDocumentApiResponse, error) {
-	arg := db.AddClientDocumentTxParams{
-		ClientID:     clientID,
-		AttachmentID: req.AttachmentID,
-		Label:        req.Label,
+	if len(req.Documents) == 0 {
+		return nil, fmt.Errorf("at least one document is required")
 	}
 
-	clientDoc, err := s.Store.AddClientDocumentTx(ctx, arg)
+	txDocs := make([]db.AddClientDocumentTxParams, 0, len(req.Documents))
+	seen := make(map[uuid.UUID]struct{}, len(req.Documents))
+	attachmentIDs := make([]uuid.UUID, 0, len(req.Documents))
+	for _, document := range req.Documents {
+		if _, ok := seen[document.AttachmentID]; ok {
+			return nil, fmt.Errorf("duplicate attachment_id %s in request", document.AttachmentID)
+		}
+		seen[document.AttachmentID] = struct{}{}
+		attachmentIDs = append(attachmentIDs, document.AttachmentID)
+	}
+
+	attachments, err := s.Store.GetAttachmentsByUUIDs(ctx, attachmentIDs)
+	if err != nil {
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "AddClientDocument",
+			"Failed to fetch attachments for client documents", zap.Error(err), zap.String("ClientID", clientID.String()))
+		return nil, fmt.Errorf("failed to add client document")
+	}
+
+	if len(attachments) != len(req.Documents) {
+		return nil, fmt.Errorf("one or more attachments were not found")
+	}
+
+	attachmentsByID := make(map[uuid.UUID]db.AttachmentFile, len(attachments))
+	objectKeys := make([]string, 0, len(attachments))
+	for _, attachmentRecord := range attachments {
+		attachmentsByID[attachmentRecord.Uuid] = attachmentRecord
+		objectKeys = append(objectKeys, attachmentRecord.File)
+	}
+
+	fileSizes, err := s.B2Client.GetFileInfos(ctx, objectKeys)
+	if err != nil {
+		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "AddClientDocument",
+			"Uploaded file verification failed for client documents", zap.Error(err), zap.String("ClientID", clientID.String()))
+		return nil, fmt.Errorf("failed to verify uploaded file")
+	}
+
+	for _, document := range req.Documents {
+		attachmentRecord, ok := attachmentsByID[document.AttachmentID]
+		if !ok {
+			return nil, fmt.Errorf("attachment %s was not found", document.AttachmentID)
+		}
+
+		size, ok := fileSizes[attachmentRecord.File]
+		if !ok {
+			return nil, fmt.Errorf("uploaded file is missing")
+		}
+		if size <= 0 {
+			return nil, fmt.Errorf("uploaded file is empty")
+		}
+		if size > attachment.MaxFileSize {
+			return nil, fmt.Errorf("file size exceeds maximum limit of %dMB", attachment.MaxFileSize>>20)
+		}
+
+		txDocs = append(txDocs, db.AddClientDocumentTxParams{
+			ClientID:     clientID,
+			AttachmentID: document.AttachmentID,
+			Label:        document.Label,
+		})
+	}
+
+	clientDocs, err := s.Store.AddClientDocumentsTx(ctx, db.AddClientDocumentsTxParams{
+		ClientID:  clientID,
+		Documents: txDocs,
+	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "AddClientDocument",
 			"Failed to add client document", zap.Error(err), zap.String("ClientID", clientID.String()))
@@ -1043,20 +1105,26 @@ func (s *clientService) AddClientDocument(ctx context.Context, req AddClientDocu
 	}
 
 	s.Logger.LogBusinessEvent(ctx, logger.LogLevelInfo, "AddClientDocument",
-		"Successfully added client document", zap.String("ClientID", clientID.String()),
-		zap.String("DocumentID", clientDoc.ClientDocument.ID.String()))
+		"Successfully added client documents", zap.String("ClientID", clientID.String()),
+		zap.Int("Count", len(clientDocs.Documents)))
+	responseDocs := make([]AddClientDocumentResult, 0, len(clientDocs.Documents))
+	for _, clientDoc := range clientDocs.Documents {
+		responseDocs = append(responseDocs, AddClientDocumentResult{
+			ID:           clientDoc.ClientDocument.ID,
+			AttachmentID: clientDoc.ClientDocument.AttachmentUuid,
+			ClientID:     clientDoc.ClientDocument.ClientID,
+			Label:        string(clientDoc.ClientDocument.Label),
+			Name:         clientDoc.Attachment.Name,
+			File:         clientDoc.Attachment.File,
+			Size:         clientDoc.Attachment.Size,
+			IsUsed:       clientDoc.Attachment.IsUsed,
+			Tag:          clientDoc.Attachment.Tag,
+			UpdatedAt:    clientDoc.Attachment.Updated.Time,
+			CreatedAt:    clientDoc.Attachment.Created.Time,
+		})
+	}
 	return &AddClientDocumentApiResponse{
-		ID:           clientDoc.ClientDocument.ID,
-		AttachmentID: clientDoc.ClientDocument.AttachmentUuid,
-		ClientID:     clientDoc.ClientDocument.ClientID,
-		Label:        string(clientDoc.ClientDocument.Label),
-		Name:         clientDoc.Attachment.Name,
-		File:         clientDoc.Attachment.File,
-		Size:         clientDoc.Attachment.Size,
-		IsUsed:       clientDoc.Attachment.IsUsed,
-		Tag:          clientDoc.Attachment.Tag,
-		UpdatedAt:    clientDoc.Attachment.Updated.Time,
-		CreatedAt:    clientDoc.Attachment.Created.Time,
+		Documents: responseDocs,
 	}, nil
 }
 
@@ -1107,8 +1175,9 @@ func (s *clientService) ListClientDocuments(ctx *gin.Context, req ListClientDocu
 }
 
 func (s *clientService) DeleteClientDocument(ctx context.Context, clientID uuid.UUID, documentID uuid.UUID) (*DeleteClientDocumentApiResponse, error) {
-	clientDoc, err := s.Store.DeleteClientDocumentTx(ctx, db.DeleteClientDocumentParams{
-		AttachmentID: documentID,
+	clientDoc, err := s.Store.DeleteClientDocumentTx(ctx, db.DeleteClientDocumentTxParams{
+		ClientID:   clientID,
+		DocumentID: documentID,
 	})
 	if err != nil {
 		s.Logger.LogBusinessEvent(ctx, logger.LogLevelError, "DeleteClientDocument",

@@ -12,6 +12,44 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const cancelClientGoalByID = `-- name: CancelClientGoalByID :one
+UPDATE client_goals
+SET
+    status = 'cancelled',
+    archived_at = CURRENT_TIMESTAMP,
+    updated_at = CURRENT_TIMESTAMP
+WHERE id = $1
+  AND client_id = $2
+RETURNING id, client_id, title, description, priority, status, topic_id, topic_name_snapshot, source, origin_intake_assessment_id, sort_order, created_at, updated_at, archived_at
+`
+
+type CancelClientGoalByIDParams struct {
+	ID       uuid.UUID `json:"id"`
+	ClientID uuid.UUID `json:"client_id"`
+}
+
+func (q *Queries) CancelClientGoalByID(ctx context.Context, arg CancelClientGoalByIDParams) (ClientGoal, error) {
+	row := q.db.QueryRow(ctx, cancelClientGoalByID, arg.ID, arg.ClientID)
+	var i ClientGoal
+	err := row.Scan(
+		&i.ID,
+		&i.ClientID,
+		&i.Title,
+		&i.Description,
+		&i.Priority,
+		&i.Status,
+		&i.TopicID,
+		&i.TopicNameSnapshot,
+		&i.Source,
+		&i.OriginIntakeAssessmentID,
+		&i.SortOrder,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.ArchivedAt,
+	)
+	return i, err
+}
+
 const createClientGoalsFromIntakeAssessments = `-- name: CreateClientGoalsFromIntakeAssessments :many
 WITH intake_rows AS (
     SELECT
@@ -142,6 +180,200 @@ func (q *Queries) CreateClientGoalsFromIntakeAssessments(ctx context.Context, ar
 	return items, nil
 }
 
+const createManualClientGoal = `-- name: CreateManualClientGoal :one
+INSERT INTO client_goals (
+    client_id,
+    title,
+    description,
+    priority,
+    status,
+    topic_id,
+    topic_name_snapshot,
+    source,
+    sort_order
+) VALUES (
+    $1,
+    $2,
+    $3,
+    $4,
+    'active',
+    $5,
+    $6,
+    'manual',
+    $7
+)
+RETURNING id, client_id, title, description, priority, status, topic_id, topic_name_snapshot, source, origin_intake_assessment_id, sort_order, created_at, updated_at, archived_at
+`
+
+type CreateManualClientGoalParams struct {
+	ClientID          uuid.UUID              `json:"client_id"`
+	Title             string                 `json:"title"`
+	Description       *string                `json:"description"`
+	Priority          ClientGoalPriorityEnum `json:"priority"`
+	TopicID           *uuid.UUID             `json:"topic_id"`
+	TopicNameSnapshot *string                `json:"topic_name_snapshot"`
+	SortOrder         int32                  `json:"sort_order"`
+}
+
+func (q *Queries) CreateManualClientGoal(ctx context.Context, arg CreateManualClientGoalParams) (ClientGoal, error) {
+	row := q.db.QueryRow(ctx, createManualClientGoal,
+		arg.ClientID,
+		arg.Title,
+		arg.Description,
+		arg.Priority,
+		arg.TopicID,
+		arg.TopicNameSnapshot,
+		arg.SortOrder,
+	)
+	var i ClientGoal
+	err := row.Scan(
+		&i.ID,
+		&i.ClientID,
+		&i.Title,
+		&i.Description,
+		&i.Priority,
+		&i.Status,
+		&i.TopicID,
+		&i.TopicNameSnapshot,
+		&i.Source,
+		&i.OriginIntakeAssessmentID,
+		&i.SortOrder,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.ArchivedAt,
+	)
+	return i, err
+}
+
+const createReviewUpdatedClientGoal = `-- name: CreateReviewUpdatedClientGoal :one
+INSERT INTO client_goals (
+    client_id,
+    title,
+    description,
+    priority,
+    status,
+    topic_id,
+    topic_name_snapshot,
+    source,
+    sort_order
+) VALUES (
+    $1,
+    $2,
+    $3,
+    $4,
+    'active',
+    $5,
+    $6,
+    'review_update',
+    $7
+)
+RETURNING id, client_id, title, description, priority, status, topic_id, topic_name_snapshot, source, origin_intake_assessment_id, sort_order, created_at, updated_at, archived_at
+`
+
+type CreateReviewUpdatedClientGoalParams struct {
+	ClientID          uuid.UUID              `json:"client_id"`
+	Title             string                 `json:"title"`
+	Description       *string                `json:"description"`
+	Priority          ClientGoalPriorityEnum `json:"priority"`
+	TopicID           *uuid.UUID             `json:"topic_id"`
+	TopicNameSnapshot *string                `json:"topic_name_snapshot"`
+	SortOrder         int32                  `json:"sort_order"`
+}
+
+func (q *Queries) CreateReviewUpdatedClientGoal(ctx context.Context, arg CreateReviewUpdatedClientGoalParams) (ClientGoal, error) {
+	row := q.db.QueryRow(ctx, createReviewUpdatedClientGoal,
+		arg.ClientID,
+		arg.Title,
+		arg.Description,
+		arg.Priority,
+		arg.TopicID,
+		arg.TopicNameSnapshot,
+		arg.SortOrder,
+	)
+	var i ClientGoal
+	err := row.Scan(
+		&i.ID,
+		&i.ClientID,
+		&i.Title,
+		&i.Description,
+		&i.Priority,
+		&i.Status,
+		&i.TopicID,
+		&i.TopicNameSnapshot,
+		&i.Source,
+		&i.OriginIntakeAssessmentID,
+		&i.SortOrder,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.ArchivedAt,
+	)
+	return i, err
+}
+
+const getClientGoalByIDAndClientID = `-- name: GetClientGoalByIDAndClientID :one
+SELECT id, client_id, title, description, priority, status, topic_id, topic_name_snapshot, source, origin_intake_assessment_id, sort_order, created_at, updated_at, archived_at
+FROM client_goals
+WHERE id = $1
+  AND client_id = $2
+LIMIT 1
+`
+
+type GetClientGoalByIDAndClientIDParams struct {
+	ID       uuid.UUID `json:"id"`
+	ClientID uuid.UUID `json:"client_id"`
+}
+
+func (q *Queries) GetClientGoalByIDAndClientID(ctx context.Context, arg GetClientGoalByIDAndClientIDParams) (ClientGoal, error) {
+	row := q.db.QueryRow(ctx, getClientGoalByIDAndClientID, arg.ID, arg.ClientID)
+	var i ClientGoal
+	err := row.Scan(
+		&i.ID,
+		&i.ClientID,
+		&i.Title,
+		&i.Description,
+		&i.Priority,
+		&i.Status,
+		&i.TopicID,
+		&i.TopicNameSnapshot,
+		&i.Source,
+		&i.OriginIntakeAssessmentID,
+		&i.SortOrder,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.ArchivedAt,
+	)
+	return i, err
+}
+
+const getNextActiveClientGoalSortOrder = `-- name: GetNextActiveClientGoalSortOrder :one
+SELECT COALESCE(MAX(sort_order), -1)::int + 1
+FROM client_goals
+WHERE client_id = $1
+  AND status = 'active'
+`
+
+func (q *Queries) GetNextActiveClientGoalSortOrder(ctx context.Context, clientID uuid.UUID) (int32, error) {
+	row := q.db.QueryRow(ctx, getNextActiveClientGoalSortOrder, clientID)
+	var column_1 int32
+	err := row.Scan(&column_1)
+	return column_1, err
+}
+
+const goalHasEvaluationItems = `-- name: GoalHasEvaluationItems :one
+SELECT EXISTS (
+    SELECT 1
+    FROM client_goal_evaluation_items
+    WHERE goal_id = $1
+)
+`
+
+func (q *Queries) GoalHasEvaluationItems(ctx context.Context, goalID uuid.UUID) (bool, error) {
+	row := q.db.QueryRow(ctx, goalHasEvaluationItems, goalID)
+	var exists bool
+	err := row.Scan(&exists)
+	return exists, err
+}
+
 const listActiveGoalsByClientID = `-- name: ListActiveGoalsByClientID :many
 SELECT id, client_id, title, description, priority, status, topic_id, topic_name_snapshot, source, origin_intake_assessment_id, sort_order, created_at, updated_at, archived_at
 FROM client_goals
@@ -183,4 +415,61 @@ func (q *Queries) ListActiveGoalsByClientID(ctx context.Context, clientID uuid.U
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateClientGoalByID = `-- name: UpdateClientGoalByID :one
+UPDATE client_goals
+SET
+    title = $3,
+    description = $4,
+    priority = $5,
+    topic_id = $6,
+    topic_name_snapshot = $7,
+    sort_order = $8,
+    updated_at = CURRENT_TIMESTAMP
+WHERE id = $1
+  AND client_id = $2
+RETURNING id, client_id, title, description, priority, status, topic_id, topic_name_snapshot, source, origin_intake_assessment_id, sort_order, created_at, updated_at, archived_at
+`
+
+type UpdateClientGoalByIDParams struct {
+	ID                uuid.UUID              `json:"id"`
+	ClientID          uuid.UUID              `json:"client_id"`
+	Title             string                 `json:"title"`
+	Description       *string                `json:"description"`
+	Priority          ClientGoalPriorityEnum `json:"priority"`
+	TopicID           *uuid.UUID             `json:"topic_id"`
+	TopicNameSnapshot *string                `json:"topic_name_snapshot"`
+	SortOrder         int32                  `json:"sort_order"`
+}
+
+func (q *Queries) UpdateClientGoalByID(ctx context.Context, arg UpdateClientGoalByIDParams) (ClientGoal, error) {
+	row := q.db.QueryRow(ctx, updateClientGoalByID,
+		arg.ID,
+		arg.ClientID,
+		arg.Title,
+		arg.Description,
+		arg.Priority,
+		arg.TopicID,
+		arg.TopicNameSnapshot,
+		arg.SortOrder,
+	)
+	var i ClientGoal
+	err := row.Scan(
+		&i.ID,
+		&i.ClientID,
+		&i.Title,
+		&i.Description,
+		&i.Priority,
+		&i.Status,
+		&i.TopicID,
+		&i.TopicNameSnapshot,
+		&i.Source,
+		&i.OriginIntakeAssessmentID,
+		&i.SortOrder,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.ArchivedAt,
+	)
+	return i, err
 }

@@ -31,6 +31,14 @@ WHERE
     uuid = $1
 RETURNING *;
 
+-- name: SetAttachmentsAsUsedorUnusedByUUIDs :many
+UPDATE attachment_file
+SET
+    is_used = $2
+WHERE
+    uuid = ANY($1::uuid[])
+RETURNING *;
+
 -- name: GetAttachmentsByUUIDs :many
 SELECT * FROM attachment_file
 WHERE uuid = ANY($1::uuid[]);

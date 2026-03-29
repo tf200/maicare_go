@@ -34,6 +34,7 @@ type Querier interface {
 	AssignRoleToUser(ctx context.Context, arg AssignRoleToUserParams) error
 	AssignSender(ctx context.Context, arg AssignSenderParams) (ClientDetail, error)
 	CancelCalendarEvent(ctx context.Context, id uuid.UUID) error
+	CancelClientGoalByID(ctx context.Context, arg CancelClientGoalByIDParams) (ClientGoal, error)
 	CheckAllShiftsExist(ctx context.Context, arg CheckAllShiftsExistParams) (bool, error)
 	// ---------- 6. CHECK UTILITIES ----------
 	// Returns true/false whether the user has the named permission.
@@ -99,12 +100,14 @@ type Querier interface {
 	CreateLeaveBalanceAdjustmentAudit(ctx context.Context, arg CreateLeaveBalanceAdjustmentAuditParams) (LeaveBalanceAdjustment, error)
 	CreateLeaveRequest(ctx context.Context, arg CreateLeaveRequestParams) (LeaveRequest, error)
 	CreateLocation(ctx context.Context, arg CreateLocationParams) (Location, error)
+	CreateManualClientGoal(ctx context.Context, arg CreateManualClientGoalParams) (ClientGoal, error)
 	CreateNotification(ctx context.Context, arg CreateNotificationParams) (Notification, error)
 	CreateOrganisation(ctx context.Context, arg CreateOrganisationParams) (Organisation, error)
 	// ////////////////////// Payments //////////////////////
 	CreatePayment(ctx context.Context, arg CreatePaymentParams) (InvoicePaymentHistory, error)
 	CreateProgressReport(ctx context.Context, arg CreateProgressReportParams) (ProgressReport, error)
 	CreateRegistrationForm(ctx context.Context, arg CreateRegistrationFormParams) (RegistrationForm, error)
+	CreateReviewUpdatedClientGoal(ctx context.Context, arg CreateReviewUpdatedClientGoalParams) (ClientGoal, error)
 	// ---------- 1. ROLES ----------
 	// Insert a new role and return the created row.
 	CreateRole(ctx context.Context, arg CreateRoleParams) (Role, error)
@@ -121,7 +124,7 @@ type Querier interface {
 	DeleteAttachment(ctx context.Context, argUuid uuid.UUID) (AttachmentFile, error)
 	DeleteAttendeesByEventID(ctx context.Context, eventID uuid.UUID) error
 	DeleteClientDiagnosis(ctx context.Context, arg DeleteClientDiagnosisParams) (ClientDiagnosis, error)
-	DeleteClientDocument(ctx context.Context, attachmentUuid *uuid.UUID) (ClientDocument, error)
+	DeleteClientDocument(ctx context.Context, arg DeleteClientDocumentParams) (ClientDocument, error)
 	DeleteClientMedicationOrder(ctx context.Context, arg DeleteClientMedicationOrderParams) error
 	DeleteContractType(ctx context.Context, id uuid.UUID) error
 	DeleteDepartment(ctx context.Context, id uuid.UUID) error
@@ -177,6 +180,7 @@ type Querier interface {
 	GetClientCounts(ctx context.Context) (GetClientCountsRow, error)
 	GetClientDetails(ctx context.Context, id uuid.UUID) (GetClientDetailsRow, error)
 	GetClientDiagnosis(ctx context.Context, arg GetClientDiagnosisParams) (ClientDiagnosis, error)
+	GetClientGoalByIDAndClientID(ctx context.Context, arg GetClientGoalByIDAndClientIDParams) (ClientGoal, error)
 	GetClientLatestStatusHistory(ctx context.Context, clientID uuid.UUID) (GetClientLatestStatusHistoryRow, error)
 	GetClientMedicationOrder(ctx context.Context, arg GetClientMedicationOrderParams) (GetClientMedicationOrderRow, error)
 	GetClientPageCounts(ctx context.Context, clientID uuid.UUID) (GetClientPageCountsRow, error)
@@ -221,6 +225,7 @@ type Querier interface {
 	GetMaxInvoiceSequenceForDate(ctx context.Context, date interface{}) (int64, error)
 	GetMissingClientDocuments(ctx context.Context, clientID uuid.UUID) ([]string, error)
 	GetMyLeaveRequestStats(ctx context.Context, employeeID uuid.UUID) (GetMyLeaveRequestStatsRow, error)
+	GetNextActiveClientGoalSortOrder(ctx context.Context, clientID uuid.UUID) (int32, error)
 	GetOrganisation(ctx context.Context, id uuid.UUID) (GetOrganisationRow, error)
 	GetOrganisationCounts(ctx context.Context, id uuid.UUID) (GetOrganisationCountsRow, error)
 	GetPayment(ctx context.Context, id uuid.UUID) (GetPaymentRow, error)
@@ -243,6 +248,7 @@ type Querier interface {
 	GetTemp2FaSecret(ctx context.Context, id uuid.UUID) (*string, error)
 	GetTemplateItemsByIds(ctx context.Context, dollar_1 []uuid.UUID) ([]uuid.UUID, error)
 	GetTemplateItemsBySourceTable(ctx context.Context, dollar_1 []uuid.UUID) ([]TemplateItem, error)
+	GetTopicByID(ctx context.Context, id uuid.UUID) (Topic, error)
 	GetTopicLevel(ctx context.Context, arg GetTopicLevelParams) (GetTopicLevelRow, error)
 	GetTotalPaidAmountByInvoice(ctx context.Context, invoiceID uuid.UUID) (float64, error)
 	GetUserByEmail(ctx context.Context, email string) (GetUserByEmailRow, error)
@@ -252,6 +258,7 @@ type Querier interface {
 	// Returns every role granted to a user.
 	GetUserRoles(ctx context.Context, userID uuid.UUID) ([]GetUserRolesRow, error)
 	GetVisibleEventByID(ctx context.Context, arg GetVisibleEventByIDParams) (CalendarEvent, error)
+	GoalHasEvaluationItems(ctx context.Context, goalID uuid.UUID) (bool, error)
 	HasActiveClientByIntakeFormID(ctx context.Context, intakeFormID *uuid.UUID) (bool, error)
 	InsertBilledCalendarEvent(ctx context.Context, arg InsertBilledCalendarEventParams) (BilledCalendarEvent, error)
 	InsertIncoicePdfUrl(ctx context.Context, arg InsertIncoicePdfUrlParams) (*uuid.UUID, error)
@@ -390,6 +397,7 @@ type Querier interface {
 	RemovePermissionsFromRole(ctx context.Context, roleID uuid.UUID) error
 	SearchEmployeesByNameOrEmail(ctx context.Context, search *string) ([]SearchEmployeesByNameOrEmailRow, error)
 	SetAttachmentAsUsedorUnused(ctx context.Context, arg SetAttachmentAsUsedorUnusedParams) (AttachmentFile, error)
+	SetAttachmentsAsUsedorUnusedByUUIDs(ctx context.Context, arg SetAttachmentsAsUsedorUnusedByUUIDsParams) ([]AttachmentFile, error)
 	SetEmployeeProfilePicture(ctx context.Context, arg SetEmployeeProfilePictureParams) (CustomUser, error)
 	StatusChangeCount(ctx context.Context) (int64, error)
 	TotalDischargeCount(ctx context.Context) (int64, error)
@@ -400,6 +408,7 @@ type Querier interface {
 	UpdateCalendarEventRRule(ctx context.Context, arg UpdateCalendarEventRRuleParams) error
 	UpdateCalendarEventWorkApproval(ctx context.Context, arg UpdateCalendarEventWorkApprovalParams) error
 	UpdateClientDiagnosis(ctx context.Context, arg UpdateClientDiagnosisParams) (ClientDiagnosis, error)
+	UpdateClientGoalByID(ctx context.Context, arg UpdateClientGoalByIDParams) (ClientGoal, error)
 	UpdateClientMedicationOrder(ctx context.Context, arg UpdateClientMedicationOrderParams) (ClientMedicationOrder, error)
 	// -- name: UpdateClientDetails :one
 	// UPDATE client_details

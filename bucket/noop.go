@@ -31,6 +31,10 @@ func (n *NoopObjectStorageClient) GetFileInfo(ctx context.Context, objectKey str
 	return 0, errBucketDisabled
 }
 
+func (n *NoopObjectStorageClient) GetFileInfos(ctx context.Context, objectKeys []string) (map[string]int64, error) {
+	return nil, errBucketDisabled
+}
+
 func (n *NoopObjectStorageClient) Delete(ctx context.Context, objectKey string) error {
 	return errBucketDisabled
 }

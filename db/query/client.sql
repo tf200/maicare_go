@@ -532,7 +532,6 @@ INSERT INTO client_documents (
     $1, $2, $3
 ) RETURNING *;
 
-
 -- name: ListClientDocuments :many
 SELECT
     cd.*,
@@ -546,7 +545,8 @@ LIMIT $2 OFFSET $3;
 
 -- name: DeleteClientDocument :one
 DELETE FROM client_documents
-WHERE attachment_uuid = $1
+WHERE id = $1
+  AND client_id = $2
 RETURNING *;
 
 

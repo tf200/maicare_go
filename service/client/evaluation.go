@@ -573,7 +573,8 @@ func (s *clientService) GetClientGoalsForEvaluationPage(ctx context.Context, cli
 	}
 
 	response := &GetClientGoalsForEvaluationPageResponse{
-		Goals: []ClientGoalForEvaluationPageResponse{},
+		CanUpdateGoals: true,
+		Goals:          []ClientGoalForEvaluationPageResponse{},
 	}
 
 	if client.NextEvaluationDate.Valid {
@@ -617,6 +618,17 @@ func (s *clientService) GetClientGoalsForEvaluationPage(ctx context.Context, cli
 		}
 
 		response.Goals = append(response.Goals, goalResponse)
+	}
+
+	_, err = s.Store.GetLatestDraftEvaluationByClient(ctx, clientID)
+	if err != nil {
+		if !errors.Is(err, pgx.ErrNoRows) {
+			return nil, fmt.Errorf("failed to check for existing draft evaluation: %w", err)
+		}
+	} else {
+		response.CanUpdateGoals = false
+		blockReason := "draft_evaluation_exists"
+		response.GoalUpdateBlockReason = &blockReason
 	}
 
 	draftEval, err := s.Store.GetCurrentCycleDraftEvaluationByClientAndEmployee(ctx, db.GetCurrentCycleDraftEvaluationByClientAndEmployeeParams{

@@ -76,7 +76,7 @@ type ListClientEmergencyContactsRequest struct {
 }
 
 // ListClientEmergencyContactsResponse defines the response for listing client emergency contacts
-type ListClientEmergencyContactsResponse struct {
+	type ListClientEmergencyContactsResponse struct {
 	ID               uuid.UUID `json:"id"`
 	ClientID         uuid.UUID `json:"client_id"`
 	FirstName        *string   `json:"first_name"`
@@ -105,7 +105,6 @@ type GetClientEmergencyContactResponse struct {
 	Relationship     *string   `json:"relationship"`
 	RelationStatus   *string   `json:"relation_status"`
 	CreatedAt        time.Time `json:"created_at"`
-	IsVerified       bool      `json:"is_verified"`
 	MedicalReports   bool      `json:"medical_reports"`
 	IncidentsReports bool      `json:"incidents_reports"`
 	GoalsReports     bool      `json:"goals_reports"`

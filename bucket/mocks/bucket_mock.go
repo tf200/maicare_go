@@ -101,6 +101,21 @@ func (mr *MockObjectStorageInterfaceMockRecorder) GetFileInfo(ctx, objectKey any
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFileInfo", reflect.TypeOf((*MockObjectStorageInterface)(nil).GetFileInfo), ctx, objectKey)
 }
 
+// GetFileInfos mocks base method.
+func (m *MockObjectStorageInterface) GetFileInfos(ctx context.Context, objectKeys []string) (map[string]int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetFileInfos", ctx, objectKeys)
+	ret0, _ := ret[0].(map[string]int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetFileInfos indicates an expected call of GetFileInfos.
+func (mr *MockObjectStorageInterfaceMockRecorder) GetFileInfos(ctx, objectKeys any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFileInfos", reflect.TypeOf((*MockObjectStorageInterface)(nil).GetFileInfos), ctx, objectKeys)
+}
+
 // Upload mocks base method.
 func (m *MockObjectStorageInterface) Upload(ctx context.Context, file multipart.File, filename, contentType string) (string, int64, error) {
 	m.ctrl.T.Helper()

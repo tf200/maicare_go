@@ -4,12 +4,14 @@ import (
 	"context"
 	"fmt"
 	"mime/multipart"
+	"sync"
 	"time"
 
 	"maicare_go/util"
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
+	"golang.org/x/sync/errgroup"
 )
 
 //go:generate mockgen -package bucketmocks -destination=../bucket/mocks/bucket_mock.go maicare_go/bucket ObjectStorageInterface
@@ -18,6 +20,7 @@ type ObjectStorageInterface interface {
 	GeneratePresignedURL(ctx context.Context, objectKey string, expiry time.Duration) (string, error)
 	GeneratePresignedUploadURL(ctx context.Context, objectKey string, expiry time.Duration) (string, error)
 	GetFileInfo(ctx context.Context, objectKey string) (int64, error)
+	GetFileInfos(ctx context.Context, objectKeys []string) (map[string]int64, error)
 	Delete(ctx context.Context, objectKey string) error
 }
 
@@ -88,6 +91,38 @@ func (o *ObjectStorageClient) GetFileInfo(ctx context.Context, objectKey string)
 		return 0, fmt.Errorf("failed to get file info: %v", err)
 	}
 	return objInfo.Size, nil
+}
+
+func (o *ObjectStorageClient) GetFileInfos(ctx context.Context, objectKeys []string) (map[string]int64, error) {
+	results := make(map[string]int64, len(objectKeys))
+	if len(objectKeys) == 0 {
+		return results, nil
+	}
+
+	var mu sync.Mutex
+	grp, groupCtx := errgroup.WithContext(ctx)
+	grp.SetLimit(8)
+
+	for _, key := range objectKeys {
+		key := key
+		grp.Go(func() error {
+			size, err := o.GetFileInfo(groupCtx, key)
+			if err != nil {
+				return err
+			}
+
+			mu.Lock()
+			results[key] = size
+			mu.Unlock()
+			return nil
+		})
+	}
+
+	if err := grp.Wait(); err != nil {
+		return nil, err
+	}
+
+	return results, nil
 }
 
 func (o *ObjectStorageClient) Delete(ctx context.Context, objectKey string) error {

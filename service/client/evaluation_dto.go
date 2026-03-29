@@ -91,6 +91,8 @@ type GetClientGoalsForEvaluationPageResponse struct {
 	NextEvaluationDate    *time.Time                            `json:"next_evaluation_date"`
 	MyDraftEvaluationID   *uuid.UUID                            `json:"my_draft_evaluation_id"`
 	IsResponsibleEmployee bool                                  `json:"is_responsible_employee"`
+	CanUpdateGoals        bool                                  `json:"can_update_goals"`
+	GoalUpdateBlockReason *string                               `json:"goal_update_block_reason"`
 	Goals                 []ClientGoalForEvaluationPageResponse `json:"goals"`
 }
 

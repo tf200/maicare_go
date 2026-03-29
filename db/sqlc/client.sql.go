@@ -474,12 +474,18 @@ func (q *Queries) CreateClientStatusHistory(ctx context.Context, arg CreateClien
 
 const deleteClientDocument = `-- name: DeleteClientDocument :one
 DELETE FROM client_documents
-WHERE attachment_uuid = $1
+WHERE id = $1
+  AND client_id = $2
 RETURNING id, attachment_uuid, client_id, label
 `
 
-func (q *Queries) DeleteClientDocument(ctx context.Context, attachmentUuid *uuid.UUID) (ClientDocument, error) {
-	row := q.db.QueryRow(ctx, deleteClientDocument, attachmentUuid)
+type DeleteClientDocumentParams struct {
+	ID       uuid.UUID `json:"id"`
+	ClientID uuid.UUID `json:"client_id"`
+}
+
+func (q *Queries) DeleteClientDocument(ctx context.Context, arg DeleteClientDocumentParams) (ClientDocument, error) {
+	row := q.db.QueryRow(ctx, deleteClientDocument, arg.ID, arg.ClientID)
 	var i ClientDocument
 	err := row.Scan(
 		&i.ID,

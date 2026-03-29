@@ -19,3 +19,12 @@ FROM
 WHERE
     t.id = $1
     AND (element.value ->> 'level')::int = sqlc.arg('level')::int;
+
+-- name: GetTopicByID :one
+SELECT
+    id,
+    topic_name,
+    level_description
+FROM topics
+WHERE id = $1
+LIMIT 1;

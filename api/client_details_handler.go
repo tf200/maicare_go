@@ -1,6 +1,7 @@
 package api
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -374,13 +375,13 @@ func (server *Server) ListStatusHistoryApi(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
-// AddClientDocumentApi adds a document to a client
-// @Summary Add a document to a client
+// AddClientDocumentApi adds documents to a client
+// @Summary Add documents to a client
 // @Tags clients
 // @Accept json
 // @Produce json
 // @Param id path uuid true "Client ID"
-// @Param request body clientp.AddClientDocumentApiRequest true "Client document"
+// @Param request body clientp.AddClientDocumentApiRequest true "Client documents"
 // @Success 201 {object} Response[clientp.AddClientDocumentApiResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /clients/{id}/documents [post]
@@ -404,7 +405,7 @@ func (server *Server) AddClientDocumentApi(ctx *gin.Context) {
 		return
 	}
 
-	res := SuccessResponse(result, "Client document added successfully")
+	res := SuccessResponse(result, "Client documents added successfully")
 	ctx.JSON(http.StatusCreated, res)
 }
 
@@ -445,11 +446,9 @@ func (server *Server) ListClientDocumentsApi(ctx *gin.Context) {
 // DeleteClientDocumentApi deletes a client document
 // @Summary Delete a client document
 // @Tags clients
-// @Accept json
 // @Produce json
 // @Param id path uuid true "Client ID"
-// @Param document_id path int true "Document ID"
-// @Param request body clientp.DeleteClientDocumentApiRequest true "Client document"
+// @Param document_id path uuid true "Document ID"
 // @Success 200 {object} Response[clientp.DeleteClientDocumentApiResponse]
 // @Failure 400,404,500 {object} Response[any]
 // @Router /clients/{id}/documents/{document_id} [delete]
@@ -459,13 +458,13 @@ func (server *Server) DeleteClientDocumentApi(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
-	var req clientp.DeleteClientDocumentApiRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
+	documentID, err := uuid.Parse(ctx.Param("document_id"))
+	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
-	result, err := server.businessService.ClientService.DeleteClientDocument(ctx, clientID, req.AttachmentID)
+	result, err := server.businessService.ClientService.DeleteClientDocument(ctx, clientID, documentID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
@@ -678,6 +677,99 @@ func (server *Server) GetGoalEvaluationBootstrapApi(ctx *gin.Context) {
 	}
 
 	res := SuccessResponse(result, "Goal evaluation bootstrap fetched successfully")
+	ctx.JSON(http.StatusOK, res)
+}
+
+// CreateClientGoalApi creates a manual goal directly on a client record.
+// @Summary Create client goal
+// @Tags clients
+// @Accept json
+// @Produce json
+// @Param id path string true "Client ID"
+// @Param request body clientp.CreateClientGoalRequest true "Client goal payload"
+// @Success 201 {object} Response[clientp.CreateClientGoalResponse]
+// @Failure 400,404,500 {object} Response[any]
+// @Router /clients/{id}/goals [post]
+func (server *Server) CreateClientGoalApi(ctx *gin.Context) {
+	clientID, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid client ID")))
+		return
+	}
+
+	var req clientp.CreateClientGoalRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	result, err := server.businessService.ClientService.CreateClientGoal(ctx, clientID, req)
+	if err != nil {
+		if errors.Is(err, clientp.ErrClientGoalTitleRequired) {
+			ctx.JSON(http.StatusBadRequest, errorResponse(err))
+			return
+		}
+		if errors.Is(err, clientp.ErrClientGoalClientNotFound) || errors.Is(err, clientp.ErrClientGoalTopicNotFound) {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := SuccessResponse(result, "Client goal created successfully")
+	ctx.JSON(http.StatusCreated, res)
+}
+
+// UpdateClientGoalApi updates a client goal in place or versions it when history must be preserved.
+// @Summary Update client goal
+// @Tags clients
+// @Accept json
+// @Produce json
+// @Param id path string true "Client ID"
+// @Param goal_id path string true "Goal ID"
+// @Param request body clientp.UpdateClientGoalRequest true "Client goal update payload"
+// @Success 200 {object} Response[clientp.UpdateClientGoalResponse]
+// @Failure 400,404,409,500 {object} Response[any]
+// @Router /clients/{id}/goals/{goal_id} [patch]
+func (server *Server) UpdateClientGoalApi(ctx *gin.Context) {
+	clientID, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid client ID")))
+		return
+	}
+
+	goalID, err := uuid.Parse(ctx.Param("goal_id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid goal ID")))
+		return
+	}
+
+	var req clientp.UpdateClientGoalRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	result, err := server.businessService.ClientService.UpdateClientGoal(ctx, clientID, goalID, req)
+	if err != nil {
+		switch {
+		case errors.Is(err, clientp.ErrClientGoalEmptyPatch), errors.Is(err, clientp.ErrClientGoalTitleRequired):
+			ctx.JSON(http.StatusBadRequest, errorResponse(err))
+			return
+		case errors.Is(err, clientp.ErrClientGoalClientNotFound), errors.Is(err, clientp.ErrClientGoalGoalNotFound), errors.Is(err, clientp.ErrClientGoalTopicNotFound):
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		case errors.Is(err, clientp.ErrClientGoalDraftEvaluationExists):
+			ctx.JSON(http.StatusConflict, errorResponse(err))
+			return
+		default:
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+	}
+
+	res := SuccessResponse(result, "Client goal updated successfully")
 	ctx.JSON(http.StatusOK, res)
 }
 

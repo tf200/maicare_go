@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS client_documents_attachment_uuid_unique_idx;

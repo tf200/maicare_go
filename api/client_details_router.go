@@ -33,6 +33,8 @@ func (server *Server) setupClientRoutes(baseRouter *gin.RouterGroup) {
 		clientsGroup.GET("/:id/missing_documents", server.RBACMiddleware("CLIENT.CREATE"), server.GetMissingClientDocumentsApi)
 
 		clientsGroup.GET("/:id/evaluations/bootstrap", server.RBACMiddleware("CLIENT.VIEW"), server.GetGoalEvaluationBootstrapApi)
+		clientsGroup.POST("/:id/goals", server.RBACMiddleware("CLIENT.UPDATE"), server.CreateClientGoalApi)
+		clientsGroup.PATCH("/:id/goals/:goal_id", server.RBACMiddleware("CLIENT.UPDATE"), server.UpdateClientGoalApi)
 		clientsGroup.GET("/:id/goals", server.RBACMiddleware("CLIENT.VIEW"), server.GetClientGoalsForEvaluationPageApi)
 		clientsGroup.GET("/:id/goals/:goal_id/history", server.RBACMiddleware("CLIENT.VIEW"), server.ListGoalEvaluationHistoryApi)
 		clientsGroup.GET("/:id/evaluations/submitted", server.RBACMiddleware("CLIENT.VIEW"), server.ListClientSubmittedEvaluationsApi)
