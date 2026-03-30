@@ -19,6 +19,7 @@ correct layers with clear boundaries and consistent patterns.
 A flow is considered complete when:
 
 - Domain structs and interfaces are defined in `internal/domain/`
+- Domain errors are defined inline in the same domain file as the feature (not in a separate errors.go)
 - Repository implements the domain interface, all SQLC types are converted via `pkg/conv`, no pgtype leaks out
 - Service contains all business logic and depends only on domain interfaces
 - Handler defines its own request/response DTOs, maps to/from domain models via private functions
@@ -157,6 +158,7 @@ Additional rules:
 - Generic primitive or `pgtype` conversion helpers belong in `pkg/conv`
 - Boundary-specific mapping stays private in the repository or handler file that owns it
 - Service code should not keep ad hoc SQLC or `pgtype` conversion helpers
+- Small generic pointer or primitive helpers should live in a narrowly named `pkg/` package, not inside a feature service or handler
 - Do not copy old helpers into the new stack when they can be centralized or removed
 - Keep type names aligned with actual scope; do not leave narrow names on types that now serve a broader feature
 
@@ -213,11 +215,13 @@ internal/service/...       → depends on domain.Logger
 
 The current `util/` package is treated as a legacy package during migration.
 Do not carry it forward as-is and do not create new helpers inside it for refactored flows.
+Also do Not use it at all
 
 Rules:
 - `util/config.go` should move to `config/`
 - Reusable `pgtype` and primitive conversion helpers should move to `pkg/conv`
 - Third-party or infrastructure helpers should move to a narrowly named `pkg/` package
+- Small reusable pointer/value helpers should move to a narrowly named `pkg/` package such as `pkg/ptr`
 - Feature-specific helpers should move close to the owning feature
 - Test-only helpers should not stay in production utility packages
 - Pointer helper functions should not be copied into the new architecture unless clearly justified
@@ -320,7 +324,7 @@ this list before considering it done.
 - No JSON tags on domain structs
 - No pgtype on domain structs
 - No HTTP concerns (status codes, gin context) in domain
-- Domain errors are plain Go errors defined in `internal/domain/errors.go`
+- Domain errors are plain Go errors defined inline in the same domain file as the feature (e.g., `user.ErrUserNotFound` in `user.go`)
 - Lean vs rich structs (`User` vs `UserDetail`) are a data fetching decision, not a response shaping one
 
 ### Repository Rules
@@ -328,6 +332,7 @@ this list before considering it done.
 - SQLC output in `internal/repository/db/` is never manually edited
 - All pgtype conversions go through `pkg/conv` — no inline pgtype construction
 - Every db→domain mapping is done via a private `toDomainX` function, never inline
+- Repository code may reshape query results into domain models, but derived business calculations must stay out of the repository unless they are part of the SQL query itself
 - DB errors are mapped to domain errors (`sql.ErrNoRows` → `domain.ErrNotFound`)
 - SQLC types never leave this layer
 
@@ -336,6 +341,7 @@ this list before considering it done.
 - No knowledge of HTTP — no status codes, no gin, no request/response structs
 - Depends only on domain interfaces, never on concrete repository or pkg/ types
 - All business logic and validation lives here, nowhere else
+- Derived fields such as `available = capacity - occupied` belong in the service layer unless there is an explicit decision to compute them in SQL
 - For logging in new `internal/` flows, use `domain.Logger` with `LogError`, `LogWarn`, and `LogInfo`
 - Do not introduce new `LogBusinessEvent` usage in refactored flows
 
@@ -355,22 +361,42 @@ this list before considering it done.
 - Domain errors are mapped to HTTP status codes here and only here
 - Response DTOs never leave the handler layer
 
-### Middleware Rules
+## Important Notes
 
-- New middleware belongs in `internal/middleware/`; keep the old `api/` middleware unchanged until the new stack is wired
-- Middleware must not depend on the old `Server` type; inject only the small dependencies it actually needs
-- Build middleware as separate concerns: auth, RBAC, request context, request logging, and audit
-- New middleware should prefer plain `context.Context` values over Gin-only access patterns so services can consume the same request metadata
-- Auth middleware may reuse the current token maker abstraction during migration
-- New middleware logging must use the new logger interface and `LogError`, `LogWarn`, `LogInfo`
-- Do not introduce new `LogBusinessEvent` usage in middleware for refactored flows
-- Audit middleware must not use the live `*gin.Context` in background goroutines
+### Wiring Strategy
+
+**Do not wire the new `internal/` stack during individual endpoint refactoring.** The `main.go` file should remain unchanged throughout the migration process. Wiring happens only after all endpoints for a milestone are fully migrated and verified, as a separate consolidation step. This avoids broken intermediate states and allows parallel migration without affecting the running application.
+
+### SQLC Location Flexibility
+
+The location of SQLC-generated code (`db/sqlc/` vs `internal/repository/db/`) is a build configuration concern. During refactoring, treat the existing SQLC output location as acceptable. The clean architecture pattern is still followed by importing the generated db package and never modifying it manually.
+
+### Domain Errors Placement
+
+Define domain errors directly in the domain entity file they belong to (e.g., `User` errors in `user.go`, `Order` errors in `order.go`). This keeps related concerns together and avoids premature abstraction. A centralized `errors.go` is only needed if errors are shared across multiple domain entities.
 
 ### pkg/ Rules
 
 - Every third party library is wrapped in `pkg/` and never imported directly by app code
 - Domain defines the interface, `pkg/` implements it
 - All library config (keys, secrets, timeouts) stays inside the wrapper, never passed around
+- Small cross-feature helpers that are not tied to any layer may also live in `pkg/`, but they must use a narrow package name and must not import `internal/`
+
+---
+
+## Important Notes
+
+### Wiring Strategy
+
+**Do not wire the new `internal/` stack during individual endpoint refactoring.** The `main.go` file should remain unchanged throughout the migration process. Wiring happens only after all endpoints for a milestone are fully migrated and verified, as a separate consolidation step. This avoids broken intermediate states and allows parallel migration without affecting the running application.
+
+### SQLC Location Flexibility
+
+The location of SQLC-generated code (`db/sqlc/` vs `internal/repository/db/`) is a build configuration concern. During refactoring, treat the existing SQLC output location as acceptable. The clean architecture pattern is still followed by importing the generated db package and never modifying it manually.
+
+### Domain Errors Placement
+
+Define domain errors directly in the domain entity file they belong to (e.g., `User` errors in `user.go`, `Order` errors in `order.go`). This keeps related concerns together and avoids premature abstraction. A centralized `errors.go` is only needed if errors are shared across multiple domain entities.
 
 ---
 
@@ -393,7 +419,7 @@ Use this before starting and after completing every flow.
 - [ ] Define the entity struct — no JSON tags, no pgtype, no HTTP concerns
 - [ ] Define the repository interface method for this flow
 - [ ] Define the service interface method for this flow
-- [ ] Add any new domain errors to `errors.go`
+- [ ] Add any new domain errors to the same domain file (inline), not a separate errors.go
 
 **repository/**
 - [ ] Write the SQLC query in the `.sql` file and regenerate — do not manually edit `db/`

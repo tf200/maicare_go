@@ -124,7 +124,7 @@ func (server *Server) GetOrganisationCountApi(ctx *gin.Context) {
 // @Produce json
 // @Success 200 {object} Response[organization.GetGlobalOrganisationCountResponse]
 // @Failure 500 {object} Response[any]
-// @Router /organisations/count [get]
+// @Router /organizations/count [get]
 func (server *Server) GetGlobalOrganisationCountApi(ctx *gin.Context) {
 	counts, err := server.businessService.OrganizationService.GetGlobalOrganizationCounts(ctx)
 	if err != nil {

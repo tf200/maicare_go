@@ -3,7 +3,7 @@ package middleware
 import (
 	"context"
 
-	pkgjwt "maicare_go/pkg/jwt"
+	"maicare_go/internal/domain"
 
 	"github.com/google/uuid"
 )
@@ -29,12 +29,12 @@ func RequestIDFromContext(ctx context.Context) (string, bool) {
 	return value, ok
 }
 
-func WithAuthPayload(ctx context.Context, payload *pkgjwt.Payload) context.Context {
+func WithAuthPayload(ctx context.Context, payload *domain.TokenPayload) context.Context {
 	return context.WithValue(ctx, authPayloadKey, payload)
 }
 
-func AuthPayloadFromContext(ctx context.Context) (*pkgjwt.Payload, bool) {
-	value, ok := ctx.Value(authPayloadKey).(*pkgjwt.Payload)
+func AuthPayloadFromContext(ctx context.Context) (*domain.TokenPayload, bool) {
+	value, ok := ctx.Value(authPayloadKey).(*domain.TokenPayload)
 	return value, ok
 }
 

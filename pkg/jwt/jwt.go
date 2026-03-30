@@ -75,6 +75,34 @@ func New(accessTokenKey, refreshTokenKey, twoFATokenKey string) (*Maker, error) 
 	}, nil
 }
 
+func (m *Maker) CreateToken(userID, employeeID uuid.UUID, duration time.Duration, tokenType TokenType) (string, *Payload, error) {
+	return m.CreateTokenWithSessionID(userID, employeeID, duration, tokenType, uuid.Nil)
+}
+
+func (m *Maker) CreateTokenWithSessionID(userID, employeeID uuid.UUID, duration time.Duration, tokenType TokenType, sessionID uuid.UUID) (string, *Payload, error) {
+	payload, err := newPayload(userID, employeeID, duration, tokenType)
+	if err != nil {
+		return "", nil, err
+	}
+
+	if sessionID != uuid.Nil {
+		payload.SessionID = sessionID
+	}
+
+	secretKey, err := m.secretKeyForType(tokenType)
+	if err != nil {
+		return "", nil, err
+	}
+
+	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, payloadToClaims(payload))
+	token, err := jwtToken.SignedString([]byte(secretKey))
+	if err != nil {
+		return "", nil, fmt.Errorf("failed to create token: %w", err)
+	}
+
+	return token, payload, nil
+}
+
 func (m *Maker) VerifyToken(token string) (*Payload, error) {
 	keyFunc := func(token *jwt.Token) (interface{}, error) {
 		_, ok := token.Method.(*jwt.SigningMethodHMAC)
@@ -87,16 +115,11 @@ func (m *Maker) VerifyToken(token string) (*Payload, error) {
 			return nil, ErrInvalidToken
 		}
 
-		switch claims.TokenType {
-		case AccessToken:
-			return []byte(m.accessTokenKey), nil
-		case RefreshToken:
-			return []byte(m.refreshTokenKey), nil
-		case TwoFAToken:
-			return []byte(m.twoFATokenKey), nil
-		default:
-			return nil, fmt.Errorf("unknown token type: %v", claims.TokenType)
+		secretKey, err := m.secretKeyForType(claims.TokenType)
+		if err != nil {
+			return nil, err
 		}
+		return []byte(secretKey), nil
 	}
 
 	jwtToken, err := jwt.ParseWithClaims(token, &claims{}, keyFunc)
@@ -122,4 +145,47 @@ func (m *Maker) VerifyToken(token string) (*Payload, error) {
 		IssuedAt:   parsedClaims.IssuedAt,
 		ExpiresAt:  parsedClaims.ExpiresAt,
 	}, nil
+}
+
+func (m *Maker) secretKeyForType(tokenType TokenType) (string, error) {
+	switch tokenType {
+	case AccessToken:
+		return m.accessTokenKey, nil
+	case RefreshToken:
+		return m.refreshTokenKey, nil
+	case TwoFAToken:
+		return m.twoFATokenKey, nil
+	default:
+		return "", fmt.Errorf("unknown token type: %v", tokenType)
+	}
+}
+
+func newPayload(userID, employeeID uuid.UUID, duration time.Duration, tokenType TokenType) (*Payload, error) {
+	tokenID, err := uuid.NewRandom()
+	if err != nil {
+		return nil, err
+	}
+
+	now := time.Now()
+	return &Payload{
+		ID:         tokenID,
+		SessionID:  tokenID,
+		UserID:     userID,
+		EmployeeID: employeeID,
+		TokenType:  tokenType,
+		IssuedAt:   now,
+		ExpiresAt:  now.Add(duration),
+	}, nil
+}
+
+func payloadToClaims(payload *Payload) *claims {
+	return &claims{
+		ID:         payload.ID,
+		SessionID:  payload.SessionID,
+		UserID:     payload.UserID,
+		EmployeeID: payload.EmployeeID,
+		TokenType:  payload.TokenType,
+		IssuedAt:   payload.IssuedAt,
+		ExpiresAt:  payload.ExpiresAt,
+	}
 }

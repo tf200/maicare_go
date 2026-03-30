@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"maicare_go/internal/domain"
+	"maicare_go/internal/httpapi"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -35,7 +36,7 @@ func (m *RBACMiddleware) Require(permission string) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		payload, ok := AuthPayloadFromContext(ctx.Request.Context())
 		if !ok || payload == nil {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorResponse(errors.New("authorization payload not found")))
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, httpapi.Fail("authorization payload not found", ""))
 			return
 		}
 
@@ -47,7 +48,7 @@ func (m *RBACMiddleware) Require(permission string) gin.HandlerFunc {
 					zap.String("user_id", payload.UserID.String()),
 				)
 			}
-			ctx.AbortWithStatusJSON(http.StatusInternalServerError, errorResponse(errors.New("failed to check permissions")))
+			ctx.AbortWithStatusJSON(http.StatusInternalServerError, httpapi.Fail("failed to check permissions", ""))
 			return
 		}
 
@@ -58,7 +59,7 @@ func (m *RBACMiddleware) Require(permission string) gin.HandlerFunc {
 					zap.String("user_id", payload.UserID.String()),
 				)
 			}
-			ctx.AbortWithStatusJSON(http.StatusForbidden, errorResponse(ErrUnauthorizedRole))
+			ctx.AbortWithStatusJSON(http.StatusForbidden, httpapi.Fail(ErrUnauthorizedRole.Error(), ""))
 			return
 		}
 
@@ -69,7 +70,7 @@ func (m *RBACMiddleware) Require(permission string) gin.HandlerFunc {
 					zap.String("user_id", payload.UserID.String()),
 				)
 			}
-			ctx.AbortWithStatusJSON(http.StatusInternalServerError, errorResponse(errors.New("failed to load user roles")))
+			ctx.AbortWithStatusJSON(http.StatusInternalServerError, httpapi.Fail("failed to load user roles", ""))
 			return
 		}
 

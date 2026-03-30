@@ -8701,7 +8701,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/organisations/count": {
+        "/organizations/count": {
             "get": {
                 "description": "Get total location count and total capacity across all organizations",
                 "produces": [

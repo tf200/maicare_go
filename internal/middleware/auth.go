@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"maicare_go/internal/domain"
-	pkgjwt "maicare_go/pkg/jwt"
+	"maicare_go/internal/httpapi"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -34,19 +34,19 @@ func (m *AuthMiddleware) Handle() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		authHeader := ctx.GetHeader("Authorization")
 		if authHeader == "" {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorResponse(ErrMissingToken))
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, httpapi.Fail(ErrMissingToken.Error(), ""))
 			return
 		}
 
 		fields := strings.Fields(authHeader)
 		if len(fields) != 2 {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorResponse(ErrInvalidAuthFormat))
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, httpapi.Fail(ErrInvalidAuthFormat.Error(), ""))
 			return
 		}
 
 		if !strings.EqualFold(fields[0], "Bearer") {
 			err := fmt.Errorf("unsupported authorization type: %s", fields[0])
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorResponse(err))
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, httpapi.Fail(err.Error(), ""))
 			return
 		}
 
@@ -55,12 +55,12 @@ func (m *AuthMiddleware) Handle() gin.HandlerFunc {
 			if m.logger != nil {
 				m.logger.LogWarn(ctx.Request.Context(), "AuthMiddleware", "token verification failed", zap.Error(err))
 			}
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorResponse(err))
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, httpapi.Fail(err.Error(), ""))
 			return
 		}
 
-		if payload.TokenType != pkgjwt.AccessToken {
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorResponse(pkgjwt.ErrInvalidToken))
+		if payload.TokenType != domain.AccessTokenType {
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, httpapi.Fail(domain.ErrInvalidToken.Error(), ""))
 			return
 		}
 
