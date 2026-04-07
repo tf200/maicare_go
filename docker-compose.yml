@@ -1,0 +1,53 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: maicare-app
+    env_file:
+      - ./dev.env
+    depends_on:
+      maicaredb:
+        condition: service_healthy
+      maicaredis:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
+  maicaredb:
+    image: postgres:16-alpine
+    container_name: maicare-db
+    environment:
+      POSTGRES_DB: maicaredb
+      POSTGRES_USER: maicaredb_user
+      POSTGRES_PASSWORD: HxGiWC1fiFRIZZ8dxeTRpOGJUdyRIox4
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U maicaredb_user -d maicaredb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  maicaredis:
+    image: redis:7-alpine
+    container_name: maicare-redis
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "WlavGo8CirF32IpSxxtIJW7B0kDKrsyo"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "WlavGo8CirF32IpSxxtIJW7B0kDKrsyo", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
