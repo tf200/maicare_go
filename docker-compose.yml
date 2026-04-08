@@ -22,8 +22,6 @@ services:
       POSTGRES_DB: maicaredb
       POSTGRES_USER: maicaredb_user
       POSTGRES_PASSWORD: HxGiWC1fiFRIZZ8dxeTRpOGJUdyRIox4
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -37,8 +35,6 @@ services:
     image: redis:7-alpine
     container_name: maicare-redis
     command: ["redis-server", "--appendonly", "yes", "--requirepass", "WlavGo8CirF32IpSxxtIJW7B0kDKrsyo"]
-    ports:
-      - "6379:6379"
     volumes:
       - redis_data:/data
     healthcheck:
