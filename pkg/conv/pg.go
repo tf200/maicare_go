@@ -59,6 +59,14 @@ func TimePtrFromPgDate(value pgtype.Date) *time.Time {
 	return &t
 }
 
+func TimePtrFromPgTimestamptz(value pgtype.Timestamptz) *time.Time {
+	if !value.Valid {
+		return nil
+	}
+	t := value.Time
+	return &t
+}
+
 func PgTimeFromString(value string) (pgtype.Time, error) {
 	parsed, err := time.Parse("15:04:05", value)
 	if err != nil {

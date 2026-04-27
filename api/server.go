@@ -24,7 +24,7 @@ import (
 
 	"maicare_go/docs"
 	grpclient "maicare_go/grpclient/proto"
-	"maicare_go/hub"
+	"maicare_go/internal/ws"
 	applogger "maicare_go/logger"
 	"maicare_go/service"
 	"maicare_go/token"
@@ -45,14 +45,14 @@ type Server struct {
 	config          util.Config
 	tokenMaker      token.Maker
 	httpServer      *http.Server
-	hub             *hub.Hub
-	wsTicketManager *wsTicketManager
+	hub             *ws.Hub
+	wsTicketManager *ws.TicketManager
 	logger          *zap.Logger
 	grpClient       grpclient.GrpcClientInterface
 	businessService *service.BusinessService
 }
 
-func NewServer(hubInstance *hub.Hub,
+func NewServer(hubInstance *ws.Hub,
 	grpcClient grpclient.GrpcClientInterface,
 	tokenMaker token.Maker, config util.Config, service *service.BusinessService,
 ) (*Server, error) {
@@ -70,7 +70,7 @@ func NewServer(hubInstance *hub.Hub,
 		businessService: service,
 	}
 
-	wsTicketManager, err := newWSTicketManager(config)
+	wsTicketManager, err := ws.NewTicketManager(config)
 	if err != nil {
 		return nil, fmt.Errorf("cannot initialize websocket ticket manager: %w", err)
 	}

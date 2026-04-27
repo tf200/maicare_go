@@ -152,6 +152,84 @@ type ContractDetails struct {
 	IsSubcontractor   *bool
 }
 
+// EmployeeRole domain struct.
+type EmployeeRole struct {
+	ID   uuid.UUID
+	Name string
+}
+
+// BriefEducationDetail domain struct.
+type BriefEducationDetail struct {
+	InstitutionName string
+	Degree          string
+	FieldOfStudy    string
+	StartDate       *time.Time
+	EndDate         *time.Time
+}
+
+// BriefExperienceDetail domain struct.
+type BriefExperienceDetail struct {
+	JobTitle    string
+	CompanyName string
+	StartDate   *time.Time
+	EndDate     *time.Time
+}
+
+// ActiveSessionDetail domain struct.
+type ActiveSessionDetail struct {
+	ID        uuid.UUID
+	UserAgent string
+	ClientIP  string
+	ExpiresAt time.Time
+	CreatedAt time.Time
+}
+
+// EmployeeProfileDetails is the rich domain struct for the current user's full profile.
+type EmployeeProfileDetails struct {
+	UserID              uuid.UUID
+	EmployeeID          uuid.UUID
+	Email               string
+	FirstName           string
+	LastName            string
+	TwoFactorEnabled    bool
+	LastLogin           time.Time
+	Roles               []EmployeeRole
+	ActiveSessions      []ActiveSessionDetail
+	Education           []BriefEducationDetail
+	WorkExperience      []BriefExperienceDetail
+	Street              string
+	HouseNumber         string
+	HouseNumberAddition *string
+	PostalCode          string
+	City                string
+	Position            *string
+	DepartmentID        *uuid.UUID
+	DepartmentName      *string
+	ManagerEmployeeID   *uuid.UUID
+	ManagerFirstName    *string
+	ManagerLastName     *string
+	EmployeeNumber      *string
+	EmploymentNumber    *string
+	PrivateEmailAddress *string
+	WorkEmailAddress    *string
+	PrivatePhoneNumber  *string
+	WorkPhoneNumber     *string
+	HomeTelephoneNumber *string
+	DateOfBirth         *time.Time
+	Gender              string
+	LocationID          *uuid.UUID
+	LocationName        *string
+	OrganisationName    *string
+	HasBorrowed         bool
+	OutOfService        *bool
+	IsArchived          bool
+	ContractType        string
+	ContractHours       *float64
+	ContractStartDate   *time.Time
+	ContractEndDate     *time.Time
+	ContractRate        *float64
+}
+
 // --- Params ---
 
 type ListEmployeesParams struct {
@@ -282,6 +360,7 @@ type EmployeeRepository interface {
 	// Profile CRUD
 	GetEmployeeByID(ctx context.Context, id uuid.UUID) (*EmployeeDetail, error)
 	GetEmployeeByUserID(ctx context.Context, userID uuid.UUID) (*EmployeeProfile, error)
+	GetEmployeeProfileDetails(ctx context.Context, userID uuid.UUID) (*EmployeeProfileDetails, error)
 	ListEmployees(ctx context.Context, params ListEmployeesParams) (*EmployeePage, error)
 	CountEmployees(ctx context.Context, params ListEmployeesParams) (int64, error)
 	CreateEmployee(ctx context.Context, params CreateEmployeeParams) (*EmployeeDetail, error)
@@ -317,6 +396,7 @@ type EmployeeRepository interface {
 type EmployeeService interface {
 	GetEmployeeByID(ctx context.Context, id uuid.UUID, currentUserID uuid.UUID) (*EmployeeDetail, error)
 	GetEmployeeProfile(ctx context.Context, userID uuid.UUID) (*EmployeeProfile, error)
+	GetEmployeeProfileDetails(ctx context.Context, userID uuid.UUID) (*EmployeeProfileDetails, error)
 	ListEmployees(ctx context.Context, params ListEmployeesParams) (*EmployeePage, error)
 	CreateEmployee(ctx context.Context, params CreateEmployeeParams) (*EmployeeDetail, error)
 	UpdateEmployee(ctx context.Context, id uuid.UUID, params UpdateEmployeeParams) (*EmployeeDetail, error)

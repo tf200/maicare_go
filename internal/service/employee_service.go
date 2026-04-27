@@ -37,6 +37,15 @@ func (s *EmployeeService) GetEmployeeProfile(ctx context.Context, userID uuid.UU
 	return profile, nil
 }
 
+func (s *EmployeeService) GetEmployeeProfileDetails(ctx context.Context, userID uuid.UUID) (*domain.EmployeeProfileDetails, error) {
+	details, err := s.repo.GetEmployeeProfileDetails(ctx, userID)
+	if err != nil {
+		s.logError(ctx, "GetEmployeeProfileDetails", err, zap.String("user_id", userID.String()))
+		return nil, err
+	}
+	return details, nil
+}
+
 func (s *EmployeeService) ListEmployees(ctx context.Context, params domain.ListEmployeesParams) (*domain.EmployeePage, error) {
 	page, err := s.repo.ListEmployees(ctx, params)
 	if err != nil {

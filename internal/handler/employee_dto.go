@@ -199,6 +199,79 @@ type employeeProfileResponse struct {
 	Permissions      []permissionResponse `json:"permissions"`
 }
 
+type employeeProfileDetailsResponse struct {
+	UserID              uuid.UUID                       `json:"user_id"`
+	EmployeeID          uuid.UUID                       `json:"employee_id"`
+	Email               string                          `json:"email"`
+	FirstName           string                          `json:"first_name"`
+	LastName            string                          `json:"last_name"`
+	TwoFactorEnabled    bool                            `json:"two_factor_enabled"`
+	LastLogin           time.Time                       `json:"last_login"`
+	Roles               []employeeRoleResponse          `json:"roles"`
+	ActiveSessions      []activeSessionDetailResponse   `json:"active_sessions"`
+	Education           []briefEducationDetailResponse  `json:"education"`
+	WorkExperience      []briefExperienceDetailResponse `json:"work_experience"`
+	Street              string                          `json:"street"`
+	HouseNumber         string                          `json:"house_number"`
+	HouseNumberAddition *string                         `json:"house_number_addition"`
+	PostalCode          string                          `json:"postal_code"`
+	City                string                          `json:"city"`
+	Position            *string                         `json:"position"`
+	DepartmentID        *uuid.UUID                      `json:"department_id"`
+	DepartmentName      *string                         `json:"department_name"`
+	ManagerEmployeeID   *uuid.UUID                      `json:"manager_employee_id"`
+	ManagerFirstName    *string                         `json:"manager_first_name"`
+	ManagerLastName     *string                         `json:"manager_last_name"`
+	EmployeeNumber      *string                         `json:"employee_number"`
+	EmploymentNumber    *string                         `json:"employment_number"`
+	PrivateEmailAddress *string                         `json:"private_email_address"`
+	WorkEmailAddress    *string                         `json:"work_email_address"`
+	PrivatePhoneNumber  *string                         `json:"private_phone_number"`
+	WorkPhoneNumber     *string                         `json:"work_phone_number"`
+	HomeTelephoneNumber *string                         `json:"home_telephone_number"`
+	DateOfBirth         *time.Time                      `json:"date_of_birth"`
+	Gender              string                          `json:"gender"`
+	LocationID          *uuid.UUID                      `json:"location_id"`
+	LocationName        *string                         `json:"location_name"`
+	OrganisationName    *string                         `json:"organisation_name"`
+	HasBorrowed         bool                            `json:"has_borrowed"`
+	OutOfService        *bool                           `json:"out_of_service"`
+	IsArchived          bool                            `json:"is_archived"`
+	ContractType        string                          `json:"contract_type"`
+	ContractHours       *float64                        `json:"contract_hours"`
+	ContractStartDate   *time.Time                      `json:"contract_start_date"`
+	ContractEndDate     *time.Time                      `json:"contract_end_date"`
+	ContractRate        *float64                        `json:"contract_rate"`
+}
+
+type employeeRoleResponse struct {
+	ID   uuid.UUID `json:"id"`
+	Name string    `json:"name"`
+}
+
+type briefEducationDetailResponse struct {
+	InstitutionName string     `json:"institution_name"`
+	Degree          string     `json:"degree"`
+	FieldOfStudy    string     `json:"field_of_study"`
+	StartDate       *time.Time `json:"start_date"`
+	EndDate         *time.Time `json:"end_date"`
+}
+
+type briefExperienceDetailResponse struct {
+	JobTitle    string     `json:"job_title"`
+	CompanyName string     `json:"company_name"`
+	StartDate   *time.Time `json:"start_date"`
+	EndDate     *time.Time `json:"end_date"`
+}
+
+type activeSessionDetailResponse struct {
+	ID        uuid.UUID `json:"id"`
+	UserAgent string    `json:"user_agent"`
+	ClientIP  string    `json:"client_ip"`
+	ExpiresAt time.Time `json:"expires_at"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
 type employeeCountsResponse struct {
 	TotalEmployees      int64 `json:"total_employees"`
 	TotalSubcontractors int64 `json:"total_subcontractors"`
@@ -506,6 +579,93 @@ func toEmployeeProfileResponse(profile *domain.EmployeeProfile) employeeProfileR
 		FirstName:        profile.FirstName,
 		LastName:         profile.LastName,
 		Permissions:      permissions,
+	}
+}
+
+func toEmployeeProfileDetailsResponse(details *domain.EmployeeProfileDetails) employeeProfileDetailsResponse {
+	roles := make([]employeeRoleResponse, len(details.Roles))
+	for i, role := range details.Roles {
+		roles[i] = employeeRoleResponse{
+			ID:   role.ID,
+			Name: role.Name,
+		}
+	}
+
+	activeSessions := make([]activeSessionDetailResponse, len(details.ActiveSessions))
+	for i, session := range details.ActiveSessions {
+		activeSessions[i] = activeSessionDetailResponse{
+			ID:        session.ID,
+			UserAgent: session.UserAgent,
+			ClientIP:  session.ClientIP,
+			ExpiresAt: session.ExpiresAt,
+			CreatedAt: session.CreatedAt,
+		}
+	}
+
+	education := make([]briefEducationDetailResponse, len(details.Education))
+	for i, edu := range details.Education {
+		education[i] = briefEducationDetailResponse{
+			InstitutionName: edu.InstitutionName,
+			Degree:          edu.Degree,
+			FieldOfStudy:    edu.FieldOfStudy,
+			StartDate:       edu.StartDate,
+			EndDate:         edu.EndDate,
+		}
+	}
+
+	workExperience := make([]briefExperienceDetailResponse, len(details.WorkExperience))
+	for i, exp := range details.WorkExperience {
+		workExperience[i] = briefExperienceDetailResponse{
+			JobTitle:    exp.JobTitle,
+			CompanyName: exp.CompanyName,
+			StartDate:   exp.StartDate,
+			EndDate:     exp.EndDate,
+		}
+	}
+
+	return employeeProfileDetailsResponse{
+		UserID:              details.UserID,
+		EmployeeID:          details.EmployeeID,
+		Email:               details.Email,
+		FirstName:           details.FirstName,
+		LastName:            details.LastName,
+		TwoFactorEnabled:    details.TwoFactorEnabled,
+		LastLogin:           details.LastLogin,
+		Roles:               roles,
+		ActiveSessions:      activeSessions,
+		Education:           education,
+		WorkExperience:      workExperience,
+		Street:              details.Street,
+		HouseNumber:         details.HouseNumber,
+		HouseNumberAddition: details.HouseNumberAddition,
+		PostalCode:          details.PostalCode,
+		City:                details.City,
+		Position:            details.Position,
+		DepartmentID:        details.DepartmentID,
+		DepartmentName:      details.DepartmentName,
+		ManagerEmployeeID:   details.ManagerEmployeeID,
+		ManagerFirstName:    details.ManagerFirstName,
+		ManagerLastName:     details.ManagerLastName,
+		EmployeeNumber:      details.EmployeeNumber,
+		EmploymentNumber:    details.EmploymentNumber,
+		PrivateEmailAddress: details.PrivateEmailAddress,
+		WorkEmailAddress:    details.WorkEmailAddress,
+		PrivatePhoneNumber:  details.PrivatePhoneNumber,
+		WorkPhoneNumber:     details.WorkPhoneNumber,
+		HomeTelephoneNumber: details.HomeTelephoneNumber,
+		DateOfBirth:         details.DateOfBirth,
+		Gender:              details.Gender,
+		LocationID:          details.LocationID,
+		LocationName:        details.LocationName,
+		OrganisationName:    details.OrganisationName,
+		HasBorrowed:         details.HasBorrowed,
+		OutOfService:        details.OutOfService,
+		IsArchived:          details.IsArchived,
+		ContractType:        details.ContractType,
+		ContractHours:       details.ContractHours,
+		ContractStartDate:   details.ContractStartDate,
+		ContractEndDate:     details.ContractEndDate,
+		ContractRate:        details.ContractRate,
 	}
 }
 

@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	"maicare_go/hub"
+	"maicare_go/internal/ws"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -23,7 +23,7 @@ func (server *Server) handleWebSocket(ctx *gin.Context) {
 	localUpgrader.CheckOrigin = server.checkWebSocketOrigin
 
 	// --- 1. Authenticate via one-time WebSocket ticket ---
-	ticketValue := strings.TrimSpace(ctx.Query(wsTicketQueryKey))
+	ticketValue := strings.TrimSpace(ctx.Query(ws.WsTicketQueryKey))
 	authPayload, err := server.wsTicketManager.Consume(ctx, ticketValue)
 	if err != nil {
 		ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorResponse(fmt.Errorf("invalid websocket ticket")))
@@ -45,7 +45,7 @@ func (server *Server) handleWebSocket(ctx *gin.Context) {
 
 	// --- 3. Create and Register Client ---
 	// Create a new client instance associated with the hub and user ID
-	client := hub.NewClient(server.hub, userID, conn)
+	client := ws.NewClient(server.hub, userID, conn)
 
 	// Register the client with the hub's register channel
 	// This is done safely within the hub's Run() loop

@@ -49,6 +49,145 @@ func (r *EmployeeRepository) GetEmployeeByUserID(ctx context.Context, userID uui
 	return toDomainEmployeeProfile(row)
 }
 
+func (r *EmployeeRepository) GetEmployeeProfileDetails(ctx context.Context, userID uuid.UUID) (*domain.EmployeeProfileDetails, error) {
+	accountProfile, err := r.queries.GetEmployeeProfileByUserID(ctx, userID)
+	if err != nil {
+		if isDBNotFound(err) {
+			return nil, domain.ErrEmployeeNotFound
+		}
+		return nil, err
+	}
+
+	employee, err := r.queries.GetEmployeeProfileByID(ctx, accountProfile.EmployeeID)
+	if err != nil {
+		if isDBNotFound(err) {
+			return nil, domain.ErrEmployeeNotFound
+		}
+		return nil, err
+	}
+
+	roles, err := r.queries.GetUserRoles(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	activeSessions, err := r.queries.ListActiveSessionsByUserID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	educations, err := r.queries.ListEducations(ctx, employee.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	experiences, err := r.queries.ListEmployeeExperience(ctx, employee.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	roleResponse := make([]domain.EmployeeRole, 0, len(roles))
+	for _, role := range roles {
+		roleResponse = append(roleResponse, domain.EmployeeRole{
+			ID:   role.ID,
+			Name: role.Name,
+		})
+	}
+
+	educationResponse := make([]domain.BriefEducationDetail, 0, len(educations))
+	for _, education := range educations {
+		educationResponse = append(educationResponse, domain.BriefEducationDetail{
+			InstitutionName: education.InstitutionName,
+			Degree:          education.Degree,
+			FieldOfStudy:    education.FieldOfStudy,
+			StartDate:       conv.TimePtrFromPgDate(education.StartDate),
+			EndDate:         conv.TimePtrFromPgDate(education.EndDate),
+		})
+	}
+
+	experienceResponse := make([]domain.BriefExperienceDetail, 0, len(experiences))
+	for _, experience := range experiences {
+		experienceResponse = append(experienceResponse, domain.BriefExperienceDetail{
+			JobTitle:    experience.JobTitle,
+			CompanyName: experience.CompanyName,
+			StartDate:   conv.TimePtrFromPgDate(experience.StartDate),
+			EndDate:     conv.TimePtrFromPgDate(experience.EndDate),
+		})
+	}
+
+	sessionResponse := make([]domain.ActiveSessionDetail, 0, len(activeSessions))
+	for _, session := range activeSessions {
+		sessionResponse = append(sessionResponse, domain.ActiveSessionDetail{
+			ID:        session.ID,
+			UserAgent: session.UserAgent,
+			ClientIP:  session.ClientIp,
+			ExpiresAt: conv.TimeFromPgTimestamptz(session.ExpiresAt),
+			CreatedAt: conv.TimeFromPgTimestamptz(session.CreatedAt),
+		})
+	}
+
+	var locationName *string
+	var organisationName *string
+	if employee.LocationID != nil {
+		location, err := r.queries.GetLocation(ctx, *employee.LocationID)
+		if err != nil {
+			return nil, err
+		}
+		locationName = &location.Name
+
+		organisation, err := r.queries.GetOrganisation(ctx, location.OrganisationID)
+		if err != nil {
+			return nil, err
+		}
+		organisationName = &organisation.Name
+	}
+
+	return &domain.EmployeeProfileDetails{
+		UserID:              accountProfile.UserID,
+		EmployeeID:          accountProfile.EmployeeID,
+		Email:               accountProfile.Email,
+		FirstName:           employee.FirstName,
+		LastName:            employee.LastName,
+		TwoFactorEnabled:    accountProfile.TwoFactorEnabled,
+		LastLogin:           conv.TimeFromPgTimestamptz(accountProfile.LastLogin),
+		Roles:               roleResponse,
+		ActiveSessions:      sessionResponse,
+		Education:           educationResponse,
+		WorkExperience:      experienceResponse,
+		Street:              employee.Street,
+		HouseNumber:         employee.HouseNumber,
+		HouseNumberAddition: employee.HouseNumberAddition,
+		PostalCode:          employee.PostalCode,
+		City:                employee.City,
+		Position:            employee.Position,
+		DepartmentID:        employee.DepartmentID,
+		DepartmentName:      employee.DepartmentName,
+		ManagerEmployeeID:   employee.ManagerEmployeeID,
+		ManagerFirstName:    employee.ManagerFirstName,
+		ManagerLastName:     employee.ManagerLastName,
+		EmployeeNumber:      employee.EmployeeNumber,
+		EmploymentNumber:    employee.EmploymentNumber,
+		PrivateEmailAddress: employee.PrivateEmailAddress,
+		WorkEmailAddress:    employee.WorkEmailAddress,
+		PrivatePhoneNumber:  employee.PrivatePhoneNumber,
+		WorkPhoneNumber:     employee.WorkPhoneNumber,
+		HomeTelephoneNumber: employee.HomeTelephoneNumber,
+		DateOfBirth:         conv.TimePtrFromPgDate(employee.DateOfBirth),
+		Gender:              string(employee.Gender),
+		LocationID:          employee.LocationID,
+		LocationName:        locationName,
+		OrganisationName:    organisationName,
+		HasBorrowed:         employee.HasBorrowed,
+		OutOfService:        employee.OutOfService,
+		IsArchived:          employee.IsArchived,
+		ContractType:        string(employee.ContractType),
+		ContractHours:       employee.ContractHours,
+		ContractStartDate:   conv.TimePtrFromPgDate(employee.ContractStartDate),
+		ContractEndDate:     conv.TimePtrFromPgDate(employee.ContractEndDate),
+		ContractRate:        employee.ContractRate,
+	}, nil
+}
+
 func (r *EmployeeRepository) ListEmployees(ctx context.Context, params domain.ListEmployeesParams) (*domain.EmployeePage, error) {
 	rows, err := r.queries.ListEmployeeProfile(ctx, db.ListEmployeeProfileParams{
 		Limit:               params.Limit,

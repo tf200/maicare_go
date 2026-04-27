@@ -17,8 +17,8 @@ import (
 	"maicare_go/bucket"
 	db "maicare_go/db/sqlc"
 	"maicare_go/email"
-	grpclient "maicare_go/grpclient/proto"
-	"maicare_go/hub"
+	grpclient 	"maicare_go/grpclient/proto"
+	"maicare_go/internal/ws"
 	"maicare_go/logger"
 	"maicare_go/service"
 	"maicare_go/service/ai"
@@ -124,7 +124,7 @@ func main() {
 	brevoConf := email.NewBrevoConf(config.BrevoSenderName, config.BrevoSenderEmail, config.BrevoApiKey)
 
 	// Initialize the ws Hub
-	hubInstance := hub.NewHub()
+	hubInstance := ws.NewHub()
 
 	// Initialize Asynq server
 	var asynqServer *processor.AsynqServer

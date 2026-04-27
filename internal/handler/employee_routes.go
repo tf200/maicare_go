@@ -14,6 +14,7 @@ func RegisterEmployeeRoutes(
 	rg.GET("/employees/:id", auth, requirePermission("EMPLOYEE.VIEW"), handler.GetEmployeeByID)
 	rg.PUT("/employees/:id", auth, requirePermission("EMPLOYEE.UPDATE"), handler.UpdateEmployee)
 	rg.GET("/employees/profile", auth, handler.GetEmployeeProfile)
+	rg.GET("/employees/profile/details", auth, handler.GetEmployeeProfileDetails)
 	rg.PUT("/employees/:id/profile_picture", auth, requirePermission("EMPLOYEE.UPDATE"), handler.SetProfilePicture)
 	rg.PUT("/employees/:id/is_subcontractor", auth, requirePermission("EMPLOYEE.UPDATE"), handler.UpdateIsSubcontractor)
 	rg.PUT("/employees/:id/contract_details", auth, requirePermission("EMPLOYEE.UPDATE"), handler.AddContractDetails)

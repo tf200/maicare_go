@@ -1,29 +1,28 @@
-package api
+package ws
 
 import (
 	"context"
 	"crypto/rand"
 	"encoding/base64"
-	"github.com/goccy/go-json"
-	"errors"
 	"fmt"
 	"time"
 
-	"maicare_go/token"
-	"maicare_go/util"
-
+	"github.com/goccy/go-json"
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
+
+	"maicare_go/token"
+	"maicare_go/util"
 )
 
-const wsTicketQueryKey = "ticket"
+const WsTicketQueryKey = "ticket"
 
 var (
-	errInvalidWSTicket = errors.New("invalid websocket ticket")
-	errExpiredWSTicket = errors.New("expired websocket ticket")
+	errInvalidWSTicket = fmt.Errorf("invalid websocket ticket")
+	errExpiredWSTicket = fmt.Errorf("expired websocket ticket")
 )
 
-type wsTicketManager struct {
+type TicketManager struct {
 	redisClient *redis.Client
 	ttl         time.Duration
 	keyPrefix   string
@@ -37,7 +36,7 @@ type wsTicketRecord struct {
 	ExpiresAt  time.Time `json:"expires_at"`
 }
 
-func newWSTicketManager(config util.Config) (*wsTicketManager, error) {
+func NewTicketManager(config util.Config) (*TicketManager, error) {
 	client := redis.NewClient(&redis.Options{
 		Addr:      config.RedisHost,
 		Password:  config.RedisPassword,
@@ -45,21 +44,21 @@ func newWSTicketManager(config util.Config) (*wsTicketManager, error) {
 		TLSConfig: nil,
 	})
 
-	return &wsTicketManager{
+	return &TicketManager{
 		redisClient: client,
 		ttl:         config.WsTicketTTL,
 		keyPrefix:   "ws_ticket:",
 	}, nil
 }
 
-func (m *wsTicketManager) Close() error {
+func (m *TicketManager) Close() error {
 	if m == nil || m.redisClient == nil {
 		return nil
 	}
 	return m.redisClient.Close()
 }
 
-func (m *wsTicketManager) Issue(ctx context.Context, payload *token.Payload) (string, time.Time, error) {
+func (m *TicketManager) Issue(ctx context.Context, payload *token.Payload) (string, time.Time, error) {
 	if m == nil || m.redisClient == nil {
 		return "", time.Time{}, fmt.Errorf("websocket ticket manager unavailable")
 	}
@@ -111,7 +110,7 @@ func (m *wsTicketManager) Issue(ctx context.Context, payload *token.Payload) (st
 	return ticket, expiresAt, nil
 }
 
-func (m *wsTicketManager) Consume(ctx context.Context, ticketValue string) (*token.Payload, error) {
+func (m *TicketManager) Consume(ctx context.Context, ticketValue string) (*token.Payload, error) {
 	if m == nil || m.redisClient == nil {
 		return nil, fmt.Errorf("websocket ticket manager unavailable")
 	}
@@ -122,7 +121,7 @@ func (m *wsTicketManager) Consume(ctx context.Context, ticketValue string) (*tok
 	key := m.keyPrefix + ticketValue
 	recordRaw, err := m.redisClient.GetDel(ctx, key).Bytes()
 	if err != nil {
-		if errors.Is(err, redis.Nil) {
+		if err == redis.Nil {
 			return nil, errInvalidWSTicket
 		}
 		return nil, fmt.Errorf("consume websocket ticket: %w", err)
