@@ -11,8 +11,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 
-	"maicare_go/token"
-	"maicare_go/util"
+	"maicare_go/config"
+	"maicare_go/internal/domain"
 )
 
 const WsTicketQueryKey = "ticket"
@@ -36,7 +36,7 @@ type wsTicketRecord struct {
 	ExpiresAt  time.Time `json:"expires_at"`
 }
 
-func NewTicketManager(config util.Config) (*TicketManager, error) {
+func NewTicketManager(config config.Config) (*TicketManager, error) {
 	client := redis.NewClient(&redis.Options{
 		Addr:      config.RedisHost,
 		Password:  config.RedisPassword,
@@ -58,7 +58,7 @@ func (m *TicketManager) Close() error {
 	return m.redisClient.Close()
 }
 
-func (m *TicketManager) Issue(ctx context.Context, payload *token.Payload) (string, time.Time, error) {
+func (m *TicketManager) Issue(ctx context.Context, payload *domain.TokenPayload) (string, time.Time, error) {
 	if m == nil || m.redisClient == nil {
 		return "", time.Time{}, fmt.Errorf("websocket ticket manager unavailable")
 	}
@@ -77,7 +77,7 @@ func (m *TicketManager) Issue(ctx context.Context, payload *token.Payload) (stri
 
 	record := wsTicketRecord{
 		PayloadID:  payload.ID.String(),
-		UserID:     payload.UserId.String(),
+		UserID:     payload.UserID.String(),
 		EmployeeID: payload.EmployeeID.String(),
 		IssuedAt:   now,
 		ExpiresAt:  expiresAt,
@@ -110,7 +110,7 @@ func (m *TicketManager) Issue(ctx context.Context, payload *token.Payload) (stri
 	return ticket, expiresAt, nil
 }
 
-func (m *TicketManager) Consume(ctx context.Context, ticketValue string) (*token.Payload, error) {
+func (m *TicketManager) Consume(ctx context.Context, ticketValue string) (*domain.TokenPayload, error) {
 	if m == nil || m.redisClient == nil {
 		return nil, fmt.Errorf("websocket ticket manager unavailable")
 	}
@@ -151,11 +151,11 @@ func (m *TicketManager) Consume(ctx context.Context, ticketValue string) (*token
 		return nil, errInvalidWSTicket
 	}
 
-	return &token.Payload{
+	return &domain.TokenPayload{
 		ID:         payloadID,
-		UserId:     userID,
+		UserID:     userID,
 		EmployeeID: employeeID,
-		TokenType:  token.AccessToken,
+		TokenType:  domain.AccessTokenType,
 		IssuedAt:   record.IssuedAt,
 		ExpiresAt:  record.ExpiresAt,
 	}, nil

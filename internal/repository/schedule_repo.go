@@ -16,20 +16,15 @@ import (
 )
 
 type ScheduleRepository struct {
-	queries db.Querier
-	store   *db.Store
+	store *db.Store
 }
 
-func NewScheduleRepository(queries db.Querier, store ...*db.Store) domain.ScheduleRepository {
-	repo := &ScheduleRepository{queries: queries}
-	if len(store) > 0 {
-		repo.store = store[0]
-	}
-	return repo
+func NewScheduleRepository(store *db.Store) domain.ScheduleRepository {
+	return &ScheduleRepository{store: store}
 }
 
 func (r *ScheduleRepository) CreateSchedule(ctx context.Context, params domain.CreateScheduleParams) (*domain.CreateScheduleResponse, error) {
-	row, err := r.queries.CreateSchedule(ctx, db.CreateScheduleParams{
+	row, err := r.store.CreateSchedule(ctx, db.CreateScheduleParams{
 		EmployeeID:             params.EmployeeID,
 		LocationID:             params.LocationID,
 		LocationShiftID:        params.LocationShiftID,
@@ -60,7 +55,7 @@ func (r *ScheduleRepository) CreateSchedule(ctx context.Context, params domain.C
 }
 
 func (r *ScheduleRepository) GetSchedulesByLocationInRange(ctx context.Context, locationID uuid.UUID, startDate, endDate time.Time) ([]domain.GetSchedulesByLocationInRangeResponse, error) {
-	rows, err := r.queries.GetSchedulesByLocationInRange(ctx, db.GetSchedulesByLocationInRangeParams{
+	rows, err := r.store.GetSchedulesByLocationInRange(ctx, db.GetSchedulesByLocationInRangeParams{
 		LocationID: locationID,
 		StartDate:  conv.PgDateFromTime(startDate),
 		EndDate:    conv.PgDateFromTime(endDate),
@@ -98,7 +93,7 @@ func (r *ScheduleRepository) GetSchedulesByLocationInRange(ctx context.Context, 
 }
 
 func (r *ScheduleRepository) GetScheduleByID(ctx context.Context, scheduleID uuid.UUID) (*domain.GetScheduleByIdResponse, error) {
-	row, err := r.queries.GetScheduleById(ctx, scheduleID)
+	row, err := r.store.GetScheduleById(ctx, scheduleID)
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +116,7 @@ func (r *ScheduleRepository) GetScheduleByID(ctx context.Context, scheduleID uui
 }
 
 func (r *ScheduleRepository) UpdateSchedule(ctx context.Context, scheduleID uuid.UUID, params domain.UpdateScheduleParams) (*domain.UpdateScheduleResponse, error) {
-	row, err := r.queries.UpdateSchedule(ctx, db.UpdateScheduleParams{
+	row, err := r.store.UpdateSchedule(ctx, db.UpdateScheduleParams{
 		ID:                     scheduleID,
 		EmployeeID:             params.EmployeeID,
 		LocationID:             params.LocationID,
@@ -152,11 +147,11 @@ func (r *ScheduleRepository) UpdateSchedule(ctx context.Context, scheduleID uuid
 }
 
 func (r *ScheduleRepository) DeleteSchedule(ctx context.Context, scheduleID uuid.UUID) error {
-	return r.queries.DeleteSchedule(ctx, scheduleID)
+	return r.store.DeleteSchedule(ctx, scheduleID)
 }
 
 func (r *ScheduleRepository) GetLocationByID(ctx context.Context, locationID uuid.UUID) (*domain.ScheduleLocation, error) {
-	location, err := r.queries.GetLocation(ctx, locationID)
+	location, err := r.store.GetLocation(ctx, locationID)
 	if err != nil {
 		return nil, err
 	}
@@ -168,7 +163,7 @@ func (r *ScheduleRepository) GetLocationByID(ctx context.Context, locationID uui
 }
 
 func (r *ScheduleRepository) GetShiftByID(ctx context.Context, shiftID uuid.UUID) (*domain.ScheduleLocationShift, error) {
-	shift, err := r.queries.GetShiftByID(ctx, shiftID)
+	shift, err := r.store.GetShiftByID(ctx, shiftID)
 	if err != nil {
 		return nil, err
 	}
@@ -177,7 +172,7 @@ func (r *ScheduleRepository) GetShiftByID(ctx context.Context, shiftID uuid.UUID
 }
 
 func (r *ScheduleRepository) GetShiftsByLocationID(ctx context.Context, locationID uuid.UUID) ([]domain.ScheduleLocationShift, error) {
-	shifts, err := r.queries.GetShiftsByLocationID(ctx, locationID)
+	shifts, err := r.store.GetShiftsByLocationID(ctx, locationID)
 	if err != nil {
 		return nil, err
 	}
@@ -190,7 +185,7 @@ func (r *ScheduleRepository) GetShiftsByLocationID(ctx context.Context, location
 }
 
 func (r *ScheduleRepository) ListEmployeesWithContractHours(ctx context.Context, employeeIDs []uuid.UUID) ([]domain.ScheduleEmployeeContractHours, error) {
-	rows, err := r.queries.ListEmployeesWithContractHours(ctx, employeeIDs)
+	rows, err := r.store.ListEmployeesWithContractHours(ctx, employeeIDs)
 	if err != nil {
 		return nil, err
 	}
@@ -234,19 +229,21 @@ func (r *ScheduleRepository) WithTx(ctx context.Context, fn func(tx domain.Sched
 
 	return r.store.ExecTx(ctx, func(q *db.Queries) error {
 		txRepo := &ScheduleRepository{
-			queries: q,
-			store:   r.store,
+			store: &db.Store{
+				Queries:  q,
+				ConnPool: r.store.ConnPool,
+			},
 		}
 		return fn(txRepo)
 	})
 }
 
 func (r *ScheduleRepository) ExpirePendingShiftSwapRequests(ctx context.Context) error {
-	return r.queries.ExpirePendingShiftSwapRequests(ctx)
+	return r.store.ExpirePendingShiftSwapRequests(ctx)
 }
 
 func (r *ScheduleRepository) GetScheduleForSwapValidation(ctx context.Context, scheduleID uuid.UUID) (*domain.ScheduleSwapValidation, error) {
-	row, err := r.queries.GetScheduleForSwapValidation(ctx, scheduleID)
+	row, err := r.store.GetScheduleForSwapValidation(ctx, scheduleID)
 	if err != nil {
 		return nil, err
 	}
@@ -273,7 +270,7 @@ func (r *ScheduleRepository) CreateShiftSwapRequest(ctx context.Context, params 
 		createParams.ExpiresAt = conv.PgTimestamptzFromTime(params.ExpiresAt.UTC())
 	}
 
-	row, err := r.queries.CreateShiftSwapRequest(ctx, createParams)
+	row, err := r.store.CreateShiftSwapRequest(ctx, createParams)
 	if err != nil {
 		if isShiftSwapUniqueViolation(err) {
 			return nil, domain.ErrShiftSwapDuplicateActiveRequest
@@ -290,7 +287,7 @@ func (r *ScheduleRepository) UpdateShiftSwapStatusAfterRecipientResponse(ctx con
 	if !ok {
 		return nil, domain.ErrShiftSwapInvalidRequest
 	}
-	row, err := r.queries.UpdateShiftSwapStatusAfterRecipientResponse(ctx, db.UpdateShiftSwapStatusAfterRecipientResponseParams{
+	row, err := r.store.UpdateShiftSwapStatusAfterRecipientResponse(ctx, db.UpdateShiftSwapStatusAfterRecipientResponseParams{
 		Status:                dbStatus,
 		RecipientResponseNote: note,
 		ID:                    swapID,
@@ -308,7 +305,7 @@ func (r *ScheduleRepository) UpdateShiftSwapAdminDecision(ctx context.Context, s
 	if !ok {
 		return nil, domain.ErrShiftSwapInvalidRequest
 	}
-	row, err := r.queries.UpdateShiftSwapAdminDecision(ctx, db.UpdateShiftSwapAdminDecisionParams{
+	row, err := r.store.UpdateShiftSwapAdminDecision(ctx, db.UpdateShiftSwapAdminDecisionParams{
 		Status:            dbStatus,
 		AdminDecisionNote: note,
 		AdminEmployeeID:   &adminEmployeeID,
@@ -322,7 +319,7 @@ func (r *ScheduleRepository) UpdateShiftSwapAdminDecision(ctx context.Context, s
 }
 
 func (r *ScheduleRepository) MarkShiftSwapConfirmed(ctx context.Context, swapID uuid.UUID, note *string, adminEmployeeID uuid.UUID) (*domain.ShiftSwapRequestRecord, error) {
-	row, err := r.queries.MarkShiftSwapConfirmed(ctx, db.MarkShiftSwapConfirmedParams{
+	row, err := r.store.MarkShiftSwapConfirmed(ctx, db.MarkShiftSwapConfirmedParams{
 		ID:                swapID,
 		AdminDecisionNote: note,
 		AdminEmployeeID:   &adminEmployeeID,
@@ -335,7 +332,7 @@ func (r *ScheduleRepository) MarkShiftSwapConfirmed(ctx context.Context, swapID 
 }
 
 func (r *ScheduleRepository) GetShiftSwapRequestByID(ctx context.Context, swapID uuid.UUID) (*domain.ShiftSwapRequestRecord, error) {
-	row, err := r.queries.GetShiftSwapRequestByID(ctx, swapID)
+	row, err := r.store.GetShiftSwapRequestByID(ctx, swapID)
 	if err != nil {
 		return nil, err
 	}
@@ -344,7 +341,7 @@ func (r *ScheduleRepository) GetShiftSwapRequestByID(ctx context.Context, swapID
 }
 
 func (r *ScheduleRepository) GetShiftSwapRequestDetailsByID(ctx context.Context, swapID uuid.UUID) (*domain.ShiftSwapResponse, error) {
-	row, err := r.queries.GetShiftSwapRequestDetailsByID(ctx, swapID)
+	row, err := r.store.GetShiftSwapRequestDetailsByID(ctx, swapID)
 	if err != nil {
 		return nil, err
 	}
@@ -353,7 +350,7 @@ func (r *ScheduleRepository) GetShiftSwapRequestDetailsByID(ctx context.Context,
 }
 
 func (r *ScheduleRepository) ListMyShiftSwapRequests(ctx context.Context, employeeID uuid.UUID) ([]domain.ShiftSwapResponse, error) {
-	rows, err := r.queries.ListMyShiftSwapRequests(ctx, employeeID)
+	rows, err := r.store.ListMyShiftSwapRequests(ctx, employeeID)
 	if err != nil {
 		return nil, err
 	}
@@ -380,7 +377,7 @@ func (r *ScheduleRepository) ListShiftSwapRequests(ctx context.Context, params d
 		}
 	}
 
-	rows, err := r.queries.ListShiftSwapRequestsPaginated(ctx, queryArg)
+	rows, err := r.store.ListShiftSwapRequestsPaginated(ctx, queryArg)
 	if err != nil {
 		return nil, err
 	}
@@ -399,7 +396,7 @@ func (r *ScheduleRepository) ListShiftSwapRequests(ctx context.Context, params d
 }
 
 func (r *ScheduleRepository) LockSchedulesByIDsForSwap(ctx context.Context, ids []uuid.UUID) ([]domain.ScheduleSwapValidation, error) {
-	rows, err := r.queries.LockSchedulesByIDsForSwap(ctx, ids)
+	rows, err := r.store.LockSchedulesByIDsForSwap(ctx, ids)
 	if err != nil {
 		return nil, err
 	}
@@ -417,7 +414,7 @@ func (r *ScheduleRepository) LockSchedulesByIDsForSwap(ctx context.Context, ids 
 }
 
 func (r *ScheduleRepository) LockShiftSwapRequestForAdminDecision(ctx context.Context, swapID uuid.UUID) (*domain.ShiftSwapRequestRecord, error) {
-	row, err := r.queries.LockShiftSwapRequestForAdminDecision(ctx, swapID)
+	row, err := r.store.LockShiftSwapRequestForAdminDecision(ctx, swapID)
 	if err != nil {
 		return nil, err
 	}
@@ -426,7 +423,7 @@ func (r *ScheduleRepository) LockShiftSwapRequestForAdminDecision(ctx context.Co
 }
 
 func (r *ScheduleRepository) CountScheduleOverlapsForEmployee(ctx context.Context, employeeID uuid.UUID, excludedScheduleIDs []uuid.UUID, conflictStart, conflictEnd time.Time) (int64, error) {
-	return r.queries.CountScheduleOverlapsForEmployee(ctx, db.CountScheduleOverlapsForEmployeeParams{
+	return r.store.CountScheduleOverlapsForEmployee(ctx, db.CountScheduleOverlapsForEmployeeParams{
 		EmployeeID:          employeeID,
 		ExcludedScheduleIds: excludedScheduleIDs,
 		ConflictStart:       conv.PgTimestamptzFromTime(conflictStart),
@@ -435,7 +432,7 @@ func (r *ScheduleRepository) CountScheduleOverlapsForEmployee(ctx context.Contex
 }
 
 func (r *ScheduleRepository) UpdateScheduleEmployeeAssignment(ctx context.Context, scheduleID, employeeID uuid.UUID) error {
-	return r.queries.UpdateScheduleEmployeeAssignment(ctx, db.UpdateScheduleEmployeeAssignmentParams{
+	return r.store.UpdateScheduleEmployeeAssignment(ctx, db.UpdateScheduleEmployeeAssignmentParams{
 		ID:         scheduleID,
 		EmployeeID: employeeID,
 	})

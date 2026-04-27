@@ -5,8 +5,9 @@ import (
 	"errors"
 	"time"
 
-	"github.com/google/uuid"
 	db "maicare_go/db/sqlc"
+
+	"github.com/google/uuid"
 )
 
 var ErrClientNotFound = errors.New("client not found")

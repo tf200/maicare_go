@@ -2,6 +2,7 @@ package domain
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -74,13 +75,68 @@ type Notification struct {
 	CreatedAt time.Time        `json:"created_at"`
 }
 
-// NotificationService defines the interface for notification operations exposed via HTTP
+// Notification type constants
+const (
+	TypeNewAppointment          = "new_appointment"
+	TypeAppointmentUpdate       = "appointment_update"
+	TypeNewClientAssignment     = "new_client_assigned"
+	TypeClientContractReminder  = "client_contract_reminder"
+	TypeIncidentReport          = "incident_report"
+	TypeNewScheduleNotification = "new_schedule_notification"
+	TypeSystemReminder          = "system_reminder"
+)
+
+// NotificationPayload is the payload for creating and delivering notifications
+type NotificationPayload struct {
+	RecipientUserIDs []uuid.UUID      `json:"recipient_user_ids"`
+	Type             string           `json:"type"`
+	Data             NotificationData `json:"data"`
+	CreatedAt        time.Time        `json:"created_at"`
+	Message          string           `json:"message"`
+}
+
+// WebSocketMessage is the notification message sent over WebSocket
+type WebSocketMessage struct {
+	NotificationID   uuid.UUID        `json:"notification_id"`
+	NotificationType string           `json:"type"`
+	Message          string           `json:"message"`
+	IsRead           bool             `json:"is_read"`
+	Data             NotificationData `json:"data"`
+	CreatedAt        time.Time        `json:"created_at"`
+}
+
+// WebSocketEnvelope is the envelope wrapper for WebSocket messages
+type WebSocketEnvelope[T any] struct {
+	Version string    `json:"v"`
+	ID      string    `json:"id"`
+	Type    string    `json:"type"`
+	TS      time.Time `json:"ts"`
+	Data    T         `json:"data"`
+}
+
+func (n *NewScheduleNotificationNotificationData) NewScheduleMessage() string {
+	return fmt.Sprintf(
+		"New schedule created from %s to %s at %s",
+		n.StartTime.Format(time.RFC3339), n.EndTime.Format(time.RFC3339), n.Location,
+	)
+}
+
+func (n *NewScheduleNotificationNotificationData) UpdatedScheduleMessage() string {
+	return fmt.Sprintf(
+		"Schedule updated from %s to %s at %s",
+		n.StartTime.Format(time.RFC3339), n.EndTime.Format(time.RFC3339), n.Location,
+	)
+}
+
+// NotificationService defines the interface for notification operations
 type NotificationService interface {
 	ListNotifications(ctx context.Context, userID uuid.UUID, limit, offset int32) ([]Notification, error)
 	MarkNotificationAsRead(ctx context.Context, notificationID, userID uuid.UUID) (*Notification, error)
+	CreateAndDeliver(ctx context.Context, payload NotificationPayload) error
 }
 
 type NotificationRepository interface {
 	ListNotifications(ctx context.Context, userID uuid.UUID, limit, offset int32) ([]Notification, error)
 	MarkNotificationAsRead(ctx context.Context, notificationID uuid.UUID) (*Notification, error)
+	CreateNotification(ctx context.Context, userID uuid.UUID, notifType string, data []byte, message string) (*Notification, error)
 }

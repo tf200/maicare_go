@@ -12,21 +12,20 @@ import (
 
 	db "maicare_go/db/sqlc"
 	"maicare_go/internal/domain"
-	"maicare_go/util"
 )
 
 // ==================== Department Repository ====================
 
 type DepartmentRepository struct {
-	queries *db.Queries
+	store *db.Store
 }
 
-func NewDepartmentRepository(queries *db.Queries) *DepartmentRepository {
-	return &DepartmentRepository{queries: queries}
+func NewDepartmentRepository(store *db.Store) *DepartmentRepository {
+	return &DepartmentRepository{store: store}
 }
 
 func (r *DepartmentRepository) List(ctx context.Context) ([]domain.Department, error) {
-	rows, err := r.queries.ListDepartments(ctx)
+	rows, err := r.store.ListDepartments(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list departments: %w", err)
 	}
@@ -48,9 +47,9 @@ func (r *DepartmentRepository) List(ctx context.Context) ([]domain.Department, e
 }
 
 func (r *DepartmentRepository) Create(ctx context.Context, params domain.CreateDepartmentParams) (*domain.Department, error) {
-	dept, err := r.queries.CreateDepartment(ctx, db.CreateDepartmentParams{
+	dept, err := r.store.CreateDepartment(ctx, db.CreateDepartmentParams{
 		Name:                     params.Name,
-		Description:              util.OtpString(params.Description),
+		Description:              optString(params.Description),
 		DepartmentHeadEmployeeID: params.DepartmentHeadEmployeeID,
 	})
 	if err != nil {
@@ -68,7 +67,7 @@ func (r *DepartmentRepository) Create(ctx context.Context, params domain.CreateD
 }
 
 func (r *DepartmentRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.Department, error) {
-	dept, err := r.queries.GetDepartment(ctx, id)
+	dept, err := r.store.GetDepartment(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get department: %w", err)
 	}
@@ -84,15 +83,15 @@ func (r *DepartmentRepository) GetByID(ctx context.Context, id uuid.UUID) (*doma
 }
 
 func (r *DepartmentRepository) Update(ctx context.Context, params domain.UpdateDepartmentParams) (*domain.Department, error) {
-	name := util.OtpString(params.Name)
+	name := optString(params.Name)
 	if params.Name != nil && name == nil {
 		return nil, fmt.Errorf("name cannot be empty")
 	}
 
-	dept, err := r.queries.UpdateDepartment(ctx, db.UpdateDepartmentParams{
+	dept, err := r.store.UpdateDepartment(ctx, db.UpdateDepartmentParams{
 		ID:                       params.ID,
 		Name:                     name,
-		Description:              util.OtpString(params.Description),
+		Description:              optString(params.Description),
 		DepartmentHeadEmployeeID: params.DepartmentHeadEmployeeID,
 	})
 	if err != nil {
@@ -112,15 +111,15 @@ func (r *DepartmentRepository) Update(ctx context.Context, params domain.UpdateD
 // ==================== Organization Profile Repository ====================
 
 type OrganizationProfileRepository struct {
-	queries *db.Queries
+	store *db.Store
 }
 
-func NewOrganizationProfileRepository(queries *db.Queries) *OrganizationProfileRepository {
-	return &OrganizationProfileRepository{queries: queries}
+func NewOrganizationProfileRepository(store *db.Store) *OrganizationProfileRepository {
+	return &OrganizationProfileRepository{store: store}
 }
 
 func (r *OrganizationProfileRepository) Get(ctx context.Context) (*domain.OrganizationProfile, error) {
-	profile, err := r.queries.GetAppOrganizationProfile(ctx)
+	profile, err := r.store.GetAppOrganizationProfile(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get organization profile: %w", err)
 	}
@@ -143,14 +142,14 @@ func (r *OrganizationProfileRepository) Update(ctx context.Context, params domai
 		return nil, fmt.Errorf("invalid default_timezone: %w", err)
 	}
 
-	email := util.OtpString(params.Email)
+	email := optString(params.Email)
 	if email != nil {
 		if _, err := mail.ParseAddress(*email); err != nil {
 			return nil, fmt.Errorf("invalid email")
 		}
 	}
 
-	website := util.OtpString(params.Website)
+	website := optString(params.Website)
 	if website != nil {
 		parsed, err := url.ParseRequestURI(*website)
 		if err != nil || parsed.Scheme == "" || parsed.Host == "" {
@@ -158,17 +157,17 @@ func (r *OrganizationProfileRepository) Update(ctx context.Context, params domai
 		}
 	}
 
-	profile, err := r.queries.UpdateAppOrganizationProfile(ctx, db.UpdateAppOrganizationProfileParams{
+	profile, err := r.store.UpdateAppOrganizationProfile(ctx, db.UpdateAppOrganizationProfileParams{
 		Name:                  name,
 		DefaultTimezone:       defaultTimezone,
 		Email:                 email,
-		PhoneNumber:           util.OtpString(params.PhoneNumber),
+		PhoneNumber:           optString(params.PhoneNumber),
 		Website:               website,
-		HqStreet:              util.OtpString(params.HqStreet),
-		HqHouseNumber:         util.OtpString(params.HqHouseNumber),
-		HqHouseNumberAddition: util.OtpString(params.HqHouseNumberAddition),
-		HqPostalCode:          util.OtpString(params.HqPostalCode),
-		HqCity:                util.OtpString(params.HqCity),
+		HqStreet:              optString(params.HqStreet),
+		HqHouseNumber:         optString(params.HqHouseNumber),
+		HqHouseNumberAddition: optString(params.HqHouseNumberAddition),
+		HqPostalCode:          optString(params.HqPostalCode),
+		HqCity:                optString(params.HqCity),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to update organization profile: %w", err)
@@ -194,4 +193,15 @@ func mapOrganizationProfileDBToDomain(p db.AppOrganizationProfile) *domain.Organ
 		CreatedAt:             p.CreatedAt.Time,
 		UpdatedAt:             p.UpdatedAt.Time,
 	}
+}
+
+func optString(value *string) *string {
+	if value == nil {
+		return nil
+	}
+	trimmed := strings.TrimSpace(*value)
+	if trimmed == "" {
+		return nil
+	}
+	return &trimmed
 }

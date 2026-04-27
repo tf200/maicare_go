@@ -1,24 +1,34 @@
 package worker
 
 import (
+	"context"
 	"crypto/tls"
 	"time"
 
-	"maicare_go/bucket"
 	db "maicare_go/db/sqlc"
+	"maicare_go/internal/domain"
 	pkgasynq "maicare_go/pkg/asynq"
+	"maicare_go/pkg/bucket"
 	pkgemail "maicare_go/pkg/email"
-	"maicare_go/service"
+	pkgpdf "maicare_go/pkg/pdf"
 
 	hibikenasynq "github.com/hibiken/asynq"
 )
 
+// IncidentPDFService covers the incident PDF methods the worker needs.
+// Implemented by *pkgpdf.pdfService (returned by pkgpdf.NewPdfService).
+type IncidentPDFService interface {
+	GenerateIncidentPDF(ctx context.Context, incidentData pkgpdf.IncidentReportData) ([]byte, error)
+	GenerateAndUploadIncidentPDF(ctx context.Context, incidentData pkgpdf.IncidentReportData) (string, error)
+}
+
 type AsynqServer struct {
-	service   *service.BusinessService
+	notifSvc  domain.NotificationService
+	pdfSvc    IncidentPDFService
 	server    *hibikenasynq.Server
 	store     *db.Store
 	brevoConf *pkgemail.BrevoConf
-	b2Bucket  bucket.ObjectStorageInterface
+	b2Bucket  bucket.ObjectStorageClient
 }
 
 func NewAsynqServer(
@@ -28,8 +38,9 @@ func NewAsynqServer(
 	store *db.Store,
 	tlsConfig *tls.Config,
 	brevoConf *pkgemail.BrevoConf,
-	b2Bucket bucket.ObjectStorageInterface,
-	service *service.BusinessService,
+	b2Bucket bucket.ObjectStorageClient,
+	notifSvc domain.NotificationService,
+	pdfSvc IncidentPDFService,
 ) *AsynqServer {
 	srv := hibikenasynq.NewServer(
 		hibikenasynq.RedisClientOpt{
@@ -59,7 +70,8 @@ func NewAsynqServer(
 		store:     store,
 		brevoConf: brevoConf,
 		b2Bucket:  b2Bucket,
-		service:   service,
+		notifSvc:  notifSvc,
+		pdfSvc:    pdfSvc,
 	}
 }
 

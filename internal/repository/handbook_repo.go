@@ -20,14 +20,12 @@ import (
 )
 
 type HandbookRepository struct {
-	queries db.Querier
-	store   *db.Store
+	store *db.Store
 }
 
-func NewHandbookRepository(queries db.Querier, store *db.Store) domain.HandbookRepository {
+func NewHandbookRepository(store *db.Store) domain.HandbookRepository {
 	return &HandbookRepository{
-		queries: queries,
-		store:   store,
+		store: store,
 	}
 }
 
@@ -38,14 +36,13 @@ func (r *HandbookRepository) WithTx(ctx context.Context, fn func(tx domain.Handb
 
 	return r.store.ExecTx(ctx, func(q *db.Queries) error {
 		return fn(&HandbookRepository{
-			queries: q,
-			store:   r.store,
+			store: &db.Store{Queries: q, ConnPool: r.store.ConnPool},
 		})
 	})
 }
 
 func (r *HandbookRepository) GetActiveEmployeeHandbookByEmployeeID(ctx context.Context, employeeID uuid.UUID) (*domain.MyActiveHandbook, error) {
-	row, err := r.queries.GetActiveEmployeeHandbookByEmployeeID(ctx, employeeID)
+	row, err := r.store.GetActiveEmployeeHandbookByEmployeeID(ctx, employeeID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, domain.ErrActiveHandbookNotFound
@@ -56,7 +53,7 @@ func (r *HandbookRepository) GetActiveEmployeeHandbookByEmployeeID(ctx context.C
 }
 
 func (r *HandbookRepository) ListEmployeeHandbookStepsByHandbookID(ctx context.Context, handbookID uuid.UUID) ([]domain.MyHandbookStep, error) {
-	rows, err := r.queries.ListEmployeeHandbookStepsByHandbookID(ctx, handbookID)
+	rows, err := r.store.ListEmployeeHandbookStepsByHandbookID(ctx, handbookID)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +66,7 @@ func (r *HandbookRepository) ListEmployeeHandbookStepsByHandbookID(ctx context.C
 }
 
 func (r *HandbookRepository) MarkEmployeeHandbookStarted(ctx context.Context, handbookID uuid.UUID) (*domain.EmployeeHandbookAssignment, error) {
-	row, err := r.queries.MarkEmployeeHandbookStarted(ctx, handbookID)
+	row, err := r.store.MarkEmployeeHandbookStarted(ctx, handbookID)
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +75,7 @@ func (r *HandbookRepository) MarkEmployeeHandbookStarted(ctx context.Context, ha
 }
 
 func (r *HandbookRepository) CompleteEmployeeHandbookStep(ctx context.Context, params domain.CompleteHandbookStepParams) (*domain.CompletedHandbookStep, error) {
-	row, err := r.queries.CompleteEmployeeHandbookStep(ctx, db.CompleteEmployeeHandbookStepParams{
+	row, err := r.store.CompleteEmployeeHandbookStep(ctx, db.CompleteEmployeeHandbookStepParams{
 		Response:           params.Response,
 		EmployeeHandbookID: params.EmployeeHandbookID,
 		StepID:             params.StepID,
@@ -95,11 +92,11 @@ func (r *HandbookRepository) CompleteEmployeeHandbookStep(ctx context.Context, p
 }
 
 func (r *HandbookRepository) CountRemainingRequiredHandbookSteps(ctx context.Context, handbookID uuid.UUID) (int32, error) {
-	return r.queries.CountRemainingRequiredHandbookSteps(ctx, handbookID)
+	return r.store.CountRemainingRequiredHandbookSteps(ctx, handbookID)
 }
 
 func (r *HandbookRepository) MarkEmployeeHandbookCompleted(ctx context.Context, handbookID uuid.UUID) (*domain.EmployeeHandbookAssignment, error) {
-	row, err := r.queries.MarkEmployeeHandbookCompleted(ctx, handbookID)
+	row, err := r.store.MarkEmployeeHandbookCompleted(ctx, handbookID)
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +105,7 @@ func (r *HandbookRepository) MarkEmployeeHandbookCompleted(ctx context.Context, 
 }
 
 func (r *HandbookRepository) CreateEmployeeHandbookAssignmentHistory(ctx context.Context, params domain.CreateAssignmentHistoryParams) error {
-	_, err := r.queries.CreateEmployeeHandbookAssignmentHistory(ctx, db.CreateEmployeeHandbookAssignmentHistoryParams{
+	_, err := r.store.CreateEmployeeHandbookAssignmentHistory(ctx, db.CreateEmployeeHandbookAssignmentHistoryParams{
 		EmployeeHandbookID: params.EmployeeHandbookID,
 		EmployeeID:         params.EmployeeID,
 		TemplateID:         params.TemplateID,
@@ -121,7 +118,7 @@ func (r *HandbookRepository) CreateEmployeeHandbookAssignmentHistory(ctx context
 }
 
 func (r *HandbookRepository) CreateHandbookTemplateForDepartment(ctx context.Context, actorEmployeeID uuid.UUID, params domain.CreateTemplateForDepartmentParams) (*domain.HandbookTemplate, error) {
-	row, err := r.queries.CreateHandbookTemplateForDepartment(ctx, db.CreateHandbookTemplateForDepartmentParams{
+	row, err := r.store.CreateHandbookTemplateForDepartment(ctx, db.CreateHandbookTemplateForDepartmentParams{
 		DepartmentID:        params.DepartmentID,
 		Title:               params.Title,
 		Description:         params.Description,
@@ -138,7 +135,7 @@ func (r *HandbookRepository) CreateHandbookTemplateForDepartment(ctx context.Con
 }
 
 func (r *HandbookRepository) CloneHandbookTemplateToDraft(ctx context.Context, actorEmployeeID uuid.UUID, params domain.CloneTemplateToDraftParams) (*domain.HandbookTemplate, error) {
-	row, err := r.queries.CloneHandbookTemplateToDraft(ctx, db.CloneHandbookTemplateToDraftParams{
+	row, err := r.store.CloneHandbookTemplateToDraft(ctx, db.CloneHandbookTemplateToDraftParams{
 		SourceTemplateID:    params.SourceTemplateID,
 		CreatedByEmployeeID: uuidPtrOrNil(actorEmployeeID),
 	})
@@ -156,7 +153,7 @@ func (r *HandbookRepository) CloneHandbookTemplateToDraft(ctx context.Context, a
 }
 
 func (r *HandbookRepository) GetHandbookTemplateByID(ctx context.Context, templateID uuid.UUID) (*domain.HandbookTemplate, error) {
-	row, err := r.queries.GetHandbookTemplateByID(ctx, templateID)
+	row, err := r.store.GetHandbookTemplateByID(ctx, templateID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, domain.ErrTemplateNotFound
@@ -168,7 +165,7 @@ func (r *HandbookRepository) GetHandbookTemplateByID(ctx context.Context, templa
 }
 
 func (r *HandbookRepository) UpdateHandbookTemplateMetadata(ctx context.Context, params domain.UpdateTemplateParams) (*domain.HandbookTemplate, error) {
-	row, err := r.queries.UpdateHandbookTemplateMetadata(ctx, db.UpdateHandbookTemplateMetadataParams{
+	row, err := r.store.UpdateHandbookTemplateMetadata(ctx, db.UpdateHandbookTemplateMetadataParams{
 		TemplateID:     params.TemplateID,
 		Title:          params.Title,
 		SetTitle:       params.SetTitle,
@@ -186,11 +183,11 @@ func (r *HandbookRepository) UpdateHandbookTemplateMetadata(ctx context.Context,
 }
 
 func (r *HandbookRepository) CountHandbookStepsByTemplateID(ctx context.Context, templateID uuid.UUID) (int32, error) {
-	return r.queries.CountHandbookStepsByTemplateID(ctx, templateID)
+	return r.store.CountHandbookStepsByTemplateID(ctx, templateID)
 }
 
 func (r *HandbookRepository) PublishHandbookTemplate(ctx context.Context, actorEmployeeID uuid.UUID, params domain.PublishTemplateParams) (*domain.HandbookTemplate, error) {
-	row, err := r.queries.PublishHandbookTemplate(ctx, db.PublishHandbookTemplateParams{
+	row, err := r.store.PublishHandbookTemplate(ctx, db.PublishHandbookTemplateParams{
 		TemplateID:            params.TemplateID,
 		PublishedByEmployeeID: uuidPtrOrNil(actorEmployeeID),
 	})
@@ -205,7 +202,7 @@ func (r *HandbookRepository) PublishHandbookTemplate(ctx context.Context, actorE
 }
 
 func (r *HandbookRepository) ListHandbookTemplatesByDepartment(ctx context.Context, departmentID uuid.UUID) ([]domain.HandbookTemplate, error) {
-	rows, err := r.queries.ListHandbookTemplatesByDepartment(ctx, departmentID)
+	rows, err := r.store.ListHandbookTemplatesByDepartment(ctx, departmentID)
 	if err != nil {
 		return nil, err
 	}
@@ -218,7 +215,7 @@ func (r *HandbookRepository) ListHandbookTemplatesByDepartment(ctx context.Conte
 }
 
 func (r *HandbookRepository) CreateHandbookStep(ctx context.Context, params domain.CreateStepParams) (*domain.HandbookStep, error) {
-	row, err := r.queries.CreateHandbookStep(ctx, db.CreateHandbookStepParams{
+	row, err := r.store.CreateHandbookStep(ctx, db.CreateHandbookStepParams{
 		TemplateID: params.TemplateID,
 		SortOrder:  params.SortOrder,
 		Kind:       db.HandbookStepKindEnum(params.Kind),
@@ -235,7 +232,7 @@ func (r *HandbookRepository) CreateHandbookStep(ctx context.Context, params doma
 }
 
 func (r *HandbookRepository) ListHandbookStepsByTemplate(ctx context.Context, templateID uuid.UUID) ([]domain.HandbookStep, error) {
-	rows, err := r.queries.ListHandbookStepsByTemplate(ctx, templateID)
+	rows, err := r.store.ListHandbookStepsByTemplate(ctx, templateID)
 	if err != nil {
 		return nil, err
 	}
@@ -248,7 +245,7 @@ func (r *HandbookRepository) ListHandbookStepsByTemplate(ctx context.Context, te
 }
 
 func (r *HandbookRepository) GetHandbookStepByID(ctx context.Context, stepID uuid.UUID) (*domain.HandbookStep, error) {
-	row, err := r.queries.GetHandbookStepByID(ctx, stepID)
+	row, err := r.store.GetHandbookStepByID(ctx, stepID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, domain.ErrStepNotFound
@@ -260,7 +257,7 @@ func (r *HandbookRepository) GetHandbookStepByID(ctx context.Context, stepID uui
 }
 
 func (r *HandbookRepository) UpdateHandbookStepByID(ctx context.Context, params domain.UpdateStepParams) (*domain.HandbookStep, error) {
-	row, err := r.queries.UpdateHandbookStepByID(ctx, db.UpdateHandbookStepByIDParams{
+	row, err := r.store.UpdateHandbookStepByID(ctx, db.UpdateHandbookStepByIDParams{
 		StepID:        params.StepID,
 		Title:         params.Title,
 		SetTitle:      params.SetTitle,
@@ -282,22 +279,22 @@ func (r *HandbookRepository) UpdateHandbookStepByID(ctx context.Context, params 
 }
 
 func (r *HandbookRepository) DeleteHandbookStepByID(ctx context.Context, stepID uuid.UUID) error {
-	return r.queries.DeleteHandbookStepByID(ctx, stepID)
+	return r.store.DeleteHandbookStepByID(ctx, stepID)
 }
 
 func (r *HandbookRepository) UpdateHandbookStepSortOrder(ctx context.Context, stepID uuid.UUID, sortOrder int32) error {
-	return r.queries.UpdateHandbookStepSortOrder(ctx, db.UpdateHandbookStepSortOrderParams{
+	return r.store.UpdateHandbookStepSortOrder(ctx, db.UpdateHandbookStepSortOrderParams{
 		StepID:    stepID,
 		SortOrder: sortOrder,
 	})
 }
 
 func (r *HandbookRepository) WaiveActiveEmployeeHandbooksByEmployeeID(ctx context.Context, employeeID uuid.UUID) error {
-	return r.queries.WaiveActiveEmployeeHandbooksByEmployeeID(ctx, employeeID)
+	return r.store.WaiveActiveEmployeeHandbooksByEmployeeID(ctx, employeeID)
 }
 
 func (r *HandbookRepository) CreateEmployeeHandbookFromTemplate(ctx context.Context, actorEmployeeID uuid.UUID, params domain.AssignTemplateToEmployeeParams) (*domain.EmployeeHandbookAssignment, error) {
-	row, err := r.queries.CreateEmployeeHandbookFromTemplate(ctx, db.CreateEmployeeHandbookFromTemplateParams{
+	row, err := r.store.CreateEmployeeHandbookFromTemplate(ctx, db.CreateEmployeeHandbookFromTemplateParams{
 		EmployeeID:           params.EmployeeID,
 		TemplateID:           params.TemplateID,
 		AssignedByEmployeeID: uuidPtrOrNil(actorEmployeeID),
@@ -310,7 +307,7 @@ func (r *HandbookRepository) CreateEmployeeHandbookFromTemplate(ctx context.Cont
 }
 
 func (r *HandbookRepository) GetEmployeeHandbookByID(ctx context.Context, handbookID uuid.UUID) (*domain.EmployeeHandbookAssignment, error) {
-	row, err := r.queries.GetEmployeeHandbookByID(ctx, handbookID)
+	row, err := r.store.GetEmployeeHandbookByID(ctx, handbookID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, domain.ErrEmployeeHandbookNotFound
@@ -322,7 +319,7 @@ func (r *HandbookRepository) GetEmployeeHandbookByID(ctx context.Context, handbo
 }
 
 func (r *HandbookRepository) WaiveEmployeeHandbookByID(ctx context.Context, handbookID uuid.UUID) (*domain.WaivedEmployeeHandbook, error) {
-	row, err := r.queries.WaiveEmployeeHandbookByID(ctx, handbookID)
+	row, err := r.store.WaiveEmployeeHandbookByID(ctx, handbookID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, domain.ErrEmployeeHandbookNotFound
@@ -338,7 +335,7 @@ func (r *HandbookRepository) WaiveEmployeeHandbookByID(ctx context.Context, hand
 }
 
 func (r *HandbookRepository) ListEmployeeHandbookAssignmentHistoryByEmployeeID(ctx context.Context, employeeID uuid.UUID, limit, offset int32) ([]domain.HandbookAssignmentHistoryEntry, error) {
-	rows, err := r.queries.ListEmployeeHandbookAssignmentHistoryByEmployeeID(ctx, db.ListEmployeeHandbookAssignmentHistoryByEmployeeIDParams{
+	rows, err := r.store.ListEmployeeHandbookAssignmentHistoryByEmployeeID(ctx, db.ListEmployeeHandbookAssignmentHistoryByEmployeeIDParams{
 		EmployeeID: employeeID,
 		Limit:      limit,
 		Offset:     offset,
@@ -365,7 +362,7 @@ func (r *HandbookRepository) ListEmployeeHandbookAssignmentHistoryByEmployeeID(c
 }
 
 func (r *HandbookRepository) ListEmployeeHandbookAssignments(ctx context.Context, params domain.ListEmployeeHandbookAssignmentsParams) (*domain.EmployeeHandbookAssignmentPage, error) {
-	rows, err := r.queries.ListEmployeeHandbookAssignments(ctx, db.ListEmployeeHandbookAssignmentsParams{
+	rows, err := r.store.ListEmployeeHandbookAssignments(ctx, db.ListEmployeeHandbookAssignmentsParams{
 		Limit:        params.Limit,
 		Offset:       params.Offset,
 		DepartmentID: params.DepartmentID,
@@ -376,7 +373,7 @@ func (r *HandbookRepository) ListEmployeeHandbookAssignments(ctx context.Context
 		return nil, err
 	}
 
-	totalCount, err := r.queries.CountEmployeeHandbookAssignments(ctx, db.CountEmployeeHandbookAssignmentsParams{
+	totalCount, err := r.store.CountEmployeeHandbookAssignments(ctx, db.CountEmployeeHandbookAssignmentsParams{
 		DepartmentID: params.DepartmentID,
 		StatusFilter: normalizeAssignmentStatus(params.Status),
 		Search:       handbookTrimStringPtr(params.Search),
@@ -414,7 +411,7 @@ func (r *HandbookRepository) ListEmployeeHandbookAssignments(ctx context.Context
 }
 
 func (r *HandbookRepository) GetEmployeeHandbookDetailsByID(ctx context.Context, handbookID uuid.UUID) (*domain.EmployeeHandbookDetails, error) {
-	hb, err := r.queries.GetEmployeeHandbookDetailsByID(ctx, handbookID)
+	hb, err := r.store.GetEmployeeHandbookDetailsByID(ctx, handbookID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, domain.ErrEmployeeHandbookNotFound
@@ -448,18 +445,18 @@ func (r *HandbookRepository) GetEmployeeHandbookDetailsByID(ctx context.Context,
 }
 
 func (r *HandbookRepository) GetUserIDByEmployeeID(ctx context.Context, employeeID uuid.UUID) (uuid.UUID, error) {
-	return r.queries.GetUserIDByEmployeeID(ctx, employeeID)
+	return r.store.GetUserIDByEmployeeID(ctx, employeeID)
 }
 
 func (r *HandbookRepository) CheckUserPermission(ctx context.Context, userID uuid.UUID, permission string) (bool, error) {
-	return r.queries.CheckUserPermission(ctx, db.CheckUserPermissionParams{
+	return r.store.CheckUserPermission(ctx, db.CheckUserPermissionParams{
 		UserID: userID,
 		Name:   permission,
 	})
 }
 
 func (r *HandbookRepository) GetEmployeeProfileByID(ctx context.Context, employeeID uuid.UUID) (*domain.HandbookEmployeeProfile, error) {
-	row, err := r.queries.GetEmployeeProfileByID(ctx, employeeID)
+	row, err := r.store.GetEmployeeProfileByID(ctx, employeeID)
 	if err != nil {
 		return nil, err
 	}
@@ -471,7 +468,7 @@ func (r *HandbookRepository) GetEmployeeProfileByID(ctx context.Context, employe
 
 func (r *HandbookRepository) ListEligibleEmployeesForHandbookAssignment(ctx context.Context, params domain.ListEligibleEmployeesParams) (*domain.EligibleEmployeePage, error) {
 	search := handbookTrimStringPtr(params.Search)
-	rows, err := r.queries.ListEligibleEmployeesForHandbookAssignment(ctx, db.ListEligibleEmployeesForHandbookAssignmentParams{
+	rows, err := r.store.ListEligibleEmployeesForHandbookAssignment(ctx, db.ListEligibleEmployeesForHandbookAssignmentParams{
 		Limit:        params.Limit,
 		Offset:       params.Offset,
 		DepartmentID: params.DepartmentID,
@@ -481,7 +478,7 @@ func (r *HandbookRepository) ListEligibleEmployeesForHandbookAssignment(ctx cont
 		return nil, err
 	}
 
-	totalCount, err := r.queries.CountEligibleEmployeesForHandbookAssignment(ctx, db.CountEligibleEmployeesForHandbookAssignmentParams{
+	totalCount, err := r.store.CountEligibleEmployeesForHandbookAssignment(ctx, db.CountEligibleEmployeesForHandbookAssignmentParams{
 		DepartmentID: params.DepartmentID,
 		Search:       search,
 	})

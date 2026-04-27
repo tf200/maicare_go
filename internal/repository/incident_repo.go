@@ -3,21 +3,19 @@ package repository
 import (
 	"context"
 
-	"maicare_go/db/sqlc"
+	db "maicare_go/db/sqlc"
 	"maicare_go/internal/domain"
 	"maicare_go/pkg/conv"
-	"maicare_go/util"
 
 	"github.com/google/uuid"
 )
 
 type incidentRepository struct {
-	queries db.Querier
-	store   *db.Store
+	store *db.Store
 }
 
-func NewIncidentRepository(queries db.Querier, store *db.Store) domain.IncidentRepository {
-	return &incidentRepository{queries: queries, store: store}
+func NewIncidentRepository(store *db.Store) domain.IncidentRepository {
+	return &incidentRepository{store: store}
 }
 
 func (r *incidentRepository) CreateIncident(ctx context.Context, params domain.CreateIncidentParams) (*domain.Incident, error) {
@@ -61,7 +59,7 @@ func (r *incidentRepository) CreateIncident(ctx context.Context, params domain.C
 }
 
 func (r *incidentRepository) ListIncidents(ctx context.Context, params domain.ListIncidentsParams) (*domain.ListIncidentsResult, error) {
-	rows, err := r.queries.ListIncidents(ctx, db.ListIncidentsParams{
+	rows, err := r.store.ListIncidents(ctx, db.ListIncidentsParams{
 		ClientID: params.ClientID,
 		Limit:    params.Limit,
 		Offset:   params.Offset,
@@ -99,7 +97,7 @@ func (r *incidentRepository) ListIncidents(ctx context.Context, params domain.Li
 }
 
 func (r *incidentRepository) GetIncident(ctx context.Context, id uuid.UUID) (*domain.Incident, error) {
-	row, err := r.queries.GetIncident(ctx, id)
+	row, err := r.store.GetIncident(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -148,11 +146,11 @@ func (r *incidentRepository) UpdateIncident(ctx context.Context, params domain.U
 }
 
 func (r *incidentRepository) DeleteIncident(ctx context.Context, id uuid.UUID) error {
-	return r.queries.DeleteIncident(ctx, id)
+	return r.store.DeleteIncident(ctx, id)
 }
 
 func (r *incidentRepository) ConfirmIncident(ctx context.Context, id uuid.UUID, confirmedBy *uuid.UUID) (int64, error) {
-	return r.queries.ConfirmIncident(ctx, db.ConfirmIncidentParams{
+	return r.store.ConfirmIncident(ctx, db.ConfirmIncidentParams{
 		ID:          id,
 		ConfirmedBy: confirmedBy,
 	})
@@ -215,7 +213,7 @@ func (r *incidentRepository) ListAllIncidents(ctx context.Context, params domain
 }
 
 func (r *incidentRepository) GetIncidentCounts(ctx context.Context) (*domain.IncidentCounts, error) {
-	row, err := r.queries.GetIncidentCounts(ctx)
+	row, err := r.store.GetIncidentCounts(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -228,7 +226,7 @@ func (r *incidentRepository) GetIncidentCounts(ctx context.Context) (*domain.Inc
 }
 
 func (r *incidentRepository) GetAllAdminUsers(ctx context.Context) ([]uuid.UUID, error) {
-	rows, err := r.queries.GetAllAdminUsers(ctx)
+	rows, err := r.store.GetAllAdminUsers(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -238,6 +236,13 @@ func (r *incidentRepository) GetAllAdminUsers(ctx context.Context) ([]uuid.UUID,
 		ids[i] = row.ID
 	}
 	return ids, nil
+}
+
+func derefString(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
 }
 
 // Helper functions
@@ -312,13 +317,13 @@ func toDomainIncident(row *db.CreateIncidentRow) *domain.Incident {
 	return &domain.Incident{
 		ID:                      row.ID,
 		EmployeeID:              row.EmployeeID,
-		EmployeeFirstName:       util.DerefString(row.EmployeeFirstName),
-		EmployeeLastName:        util.DerefString(row.EmployeeLastName),
+		EmployeeFirstName:       derefString(row.EmployeeFirstName),
+		EmployeeLastName:        derefString(row.EmployeeLastName),
 		LocationID:              row.LocationID,
-		LocationName:            util.DerefString(row.LocationName),
+		LocationName:            derefString(row.LocationName),
 		ClientID:                row.ClientID,
-		ClientFirstName:         util.DerefString(row.ClientFirstName),
-		ClientLastName:          util.DerefString(row.ClientLastName),
+		ClientFirstName:         derefString(row.ClientFirstName),
+		ClientLastName:          derefString(row.ClientLastName),
 		ReporterInvolvement:     string(row.ReporterInvolvement),
 		InformedParties:         informedPartiesToStrings(row.InformedParties),
 		OccurredAt:              conv.TimeFromPgTimestamptz(row.OccurredAt),

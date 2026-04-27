@@ -37,12 +37,14 @@ New: `internal/domain/registration_form.go`, `internal/repository/registration_f
 Status: scaffolded, unwired
 Notes: migrated all 9 registration form endpoints into the internal stack. Endpoints covered: POST /registration_forms (public, no auth), GET/GET by ID/PUT/DELETE /registration_forms, POST /registration_forms/:id/status, POST /registration_forms/:id/process, GET/POST /public/intake-options/:token. `CreateRegistrationForm` accepts optional empty body. `ListRegistrationForms` supports pagination + status filter + 9 risk boolean filters. `GetRegistrationForm` fetches document attachments via `GetAttachmentsByUUIDs` and maps to `domain.Document`. `UpdateRegistrationForm` supports partial updates with all optional fields. `ProcessRegistrationForm` generates random token, marshals proposed dates to JSON, updates status to "processed", and enqueues process registration form email task. `GetPublicIntakeOptions` and `SelectIntakeDate` are public token-based endpoints. Added `domain.ErrRegistrationFormNotFound` to `internal/domain/registration_form.go`.
 
-## 2026-04-27 - Notification routes (Fragment 16)
+## 2026-04-27 - Notification routes + business logic (Fragment 16)
 
-Old: `api/notification_handler.go`, `api/notification_router.go`, `service/notification/notification.go`, `service/notification/notification_dto.go`
+Old: `api/notification_handler.go`, `api/notification_router.go`, `service/notification/notification.go`, `service/notification/notification_dto.go`, `service/notification/service.go`, `service/notification/template.go`
 New: `internal/domain/notification.go`, `internal/repository/notification_repo.go`, `internal/service/notification_service.go`, `internal/handler/notification_handler.go`, `internal/handler/notification_dto.go`, `internal/handler/notification_routes.go`
-Status: scaffolded, unwired
-Notes: migrated `GET /notifications` and `POST /notifications/:id/read` into the internal stack. Domain types: `Notification`, `NotificationData`, and nested data structs (appointment, client assignment, contract reminder, incident report, schedule notification). `ListNotifications` supports pagination via `httpapi.PageRequest`. `MarkNotificationAsRead` uses a transaction with ownership check (returns 403 if notification does not belong to user). The old `service/notification` package with `CreateAndDeliver` is left untouched since the Asynq worker (`internal/worker`) depends on it.
+Updated: `internal/worker/server.go`, `internal/worker/tasks.go`, `internal/service/schedule_service.go`
+Removed: `service/notification/`
+Status: migrated, unwired
+Notes: migrated `GET /notifications`, `POST /notifications/:id/read`, and `CreateAndDeliver` into the internal stack. Added `NotificationPayload`, `WebSocketMessage`, `WebSocketEnvelope[T]`, type constants, and `CreateAndDeliver` to `domain.NotificationService` interface. Added `*ws.Hub` dependency to `NotificationService`. Added `CreateNotification` to `NotificationRepository`. Updated `schedule_service.go` to use domain types instead of old `service/notification`. Updated worker to use `domain.NotificationService` instead of deleted `*service.BusinessService`. Also wired incident PDF generation using `pkg/pdf` directly via a worker-local `IncidentPDFService` interface.
 
 ## 2026-04-27 - Maturity matrix endpoint (Fragment 15)
 

@@ -16,11 +16,11 @@ import (
 )
 
 type LateArrivalRepository struct {
-	queries db.Querier
+	store *db.Store
 }
 
-func NewLateArrivalRepository(queries db.Querier) domain.LateArrivalRepository {
-	return &LateArrivalRepository{queries: queries}
+func NewLateArrivalRepository(store *db.Store) domain.LateArrivalRepository {
+	return &LateArrivalRepository{store: store}
 }
 
 func (r *LateArrivalRepository) ListAssignedSchedulesForEmployeeOnDate(
@@ -28,7 +28,7 @@ func (r *LateArrivalRepository) ListAssignedSchedulesForEmployeeOnDate(
 	employeeID uuid.UUID,
 	arrivalDate time.Time,
 ) ([]domain.AssignedScheduleForDate, error) {
-	rows, err := r.queries.ListAssignedSchedulesForEmployeeOnDate(ctx, db.ListAssignedSchedulesForEmployeeOnDateParams{
+	rows, err := r.store.ListAssignedSchedulesForEmployeeOnDate(ctx, db.ListAssignedSchedulesForEmployeeOnDateParams{
 		EmployeeID:  employeeID,
 		ArrivalDate: conv.PgDateFromTime(arrivalDate),
 	})
@@ -61,7 +61,7 @@ func (r *LateArrivalRepository) CreateLateArrival(
 		return nil, domain.ErrLateArrivalInvalidRequest
 	}
 
-	row, err := r.queries.CreateLateArrival(ctx, db.CreateLateArrivalParams{
+	row, err := r.store.CreateLateArrival(ctx, db.CreateLateArrivalParams{
 		ScheduleID:          scheduleID,
 		EmployeeID:          params.EmployeeID,
 		CreatedByEmployeeID: &params.CreatedByEmployeeID,
@@ -84,7 +84,7 @@ func (r *LateArrivalRepository) ListMyLateArrivals(
 	ctx context.Context,
 	params domain.ListMyLateArrivalsParams,
 ) (*domain.LateArrivalPage, error) {
-	rows, err := r.queries.ListMyLateArrivalsPaginated(ctx, db.ListMyLateArrivalsPaginatedParams{
+	rows, err := r.store.ListMyLateArrivalsPaginated(ctx, db.ListMyLateArrivalsPaginatedParams{
 		EmployeeID: params.EmployeeID,
 		DateFrom:   pgDateFromPtr(params.DateFrom),
 		DateTo:     pgDateFromPtr(params.DateTo),
@@ -136,7 +136,7 @@ func (r *LateArrivalRepository) ListLateArrivals(
 		}
 	}
 
-	rows, err := r.queries.ListLateArrivalsPaginated(ctx, db.ListLateArrivalsPaginatedParams{
+	rows, err := r.store.ListLateArrivalsPaginated(ctx, db.ListLateArrivalsPaginatedParams{
 		EmployeeSearch: employeeSearch,
 		DateFrom:       pgDateFromPtr(params.DateFrom),
 		DateTo:         pgDateFromPtr(params.DateTo),

@@ -3,6 +3,7 @@ package middleware
 import (
 	"context"
 
+	"maicare_go/internal/ctxkeys"
 	"maicare_go/internal/domain"
 
 	"github.com/google/uuid"
@@ -48,10 +49,5 @@ func ActorRolesFromContext(ctx context.Context) ([]string, bool) {
 }
 
 func EmployeeIDFromContext(ctx context.Context) uuid.UUID {
-	payload, ok := AuthPayloadFromContext(ctx)
-	if !ok || payload == nil {
-		return uuid.Nil
-	}
-
-	return payload.EmployeeID
+	return ctxkeys.EmployeeIDFromContext(ctx)
 }

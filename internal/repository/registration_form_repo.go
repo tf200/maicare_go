@@ -2,11 +2,12 @@ package repository
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/base64"
 
 	db "maicare_go/db/sqlc"
 	"maicare_go/internal/domain"
 	"maicare_go/pkg/conv"
-	"maicare_go/util"
 
 	"github.com/goccy/go-json"
 	"github.com/google/uuid"
@@ -14,14 +15,12 @@ import (
 )
 
 type RegistrationFormRepository struct {
-	queries *db.Queries
-	store   *db.Store
+	store *db.Store
 }
 
-func NewRegistrationFormRepository(queries *db.Queries, store *db.Store) domain.RegistrationFormRepository {
+func NewRegistrationFormRepository(store *db.Store) domain.RegistrationFormRepository {
 	return &RegistrationFormRepository{
-		queries: queries,
-		store:   store,
+		store: store,
 	}
 }
 
@@ -40,7 +39,7 @@ func (r *RegistrationFormRepository) CreateRegistrationForm(ctx context.Context,
 		ClientHouseNumberAddition:     params.ClientHouseNumberAddition,
 		ClientPostalCode:              params.ClientPostalCode,
 		ClientCity:                    params.ClientCity,
-		ReferrerFirstName:              params.ReferrerFirstName,
+		ReferrerFirstName:             params.ReferrerFirstName,
 		ReferrerLastName:              params.ReferrerLastName,
 		ReferrerOrganization:          params.ReferrerOrganization,
 		ReferrerJobTitle:              params.ReferrerJobTitle,
@@ -64,41 +63,41 @@ func (r *RegistrationFormRepository) CreateRegistrationForm(ctx context.Context,
 		EducationAdditionalNotes:      params.EducationAdditionalNotes,
 		EducationLevel:                db.EducationLevelEnum(params.EducationLevel),
 		WorkCurrentEmployer:           params.WorkCurrentEmployer,
-		WorkEmployerPhone:            params.WorkEmployerPhone,
-		WorkEmployerEmail:            params.WorkEmployerEmail,
+		WorkEmployerPhone:             params.WorkEmployerPhone,
+		WorkEmployerEmail:             params.WorkEmployerEmail,
 		WorkCurrentPosition:           params.WorkCurrentPosition,
-		WorkCurrentlyEmployed:        params.WorkCurrentlyEmployed,
-		WorkStartDate:                pgDateFromPtr(params.WorkStartDate),
-		WorkAdditionalNotes:          params.WorkAdditionalNotes,
-		CareProtectedLiving:          params.CareProtectedLiving,
+		WorkCurrentlyEmployed:         params.WorkCurrentlyEmployed,
+		WorkStartDate:                 pgDateFromPtr(params.WorkStartDate),
+		WorkAdditionalNotes:           params.WorkAdditionalNotes,
+		CareProtectedLiving:           params.CareProtectedLiving,
 		CareAssistedIndependentLiving: params.CareAssistedIndependentLiving,
-		CareRoomTrainingCenter:       params.CareRoomTrainingCenter,
+		CareRoomTrainingCenter:        params.CareRoomTrainingCenter,
 		CareAmbulatoryGuidance:        params.CareAmbulatoryGuidance,
 		ApplicationReason:             params.ApplicationReason,
 		ClientGoals:                   params.ClientGoals,
 		RiskAggressiveBehavior:        params.RiskAggressiveBehavior,
-		RiskSuicidalSelfharm:         params.RiskSuicidalSelfharm,
+		RiskSuicidalSelfharm:          params.RiskSuicidalSelfharm,
 		RiskSubstanceAbuse:            params.RiskSubstanceAbuse,
-		RiskPsychiatricIssues:        params.RiskPsychiatricIssues,
-		RiskCriminalHistory:          params.RiskCriminalHistory,
-		RiskFlightBehavior:           params.RiskFlightBehavior,
+		RiskPsychiatricIssues:         params.RiskPsychiatricIssues,
+		RiskCriminalHistory:           params.RiskCriminalHistory,
+		RiskFlightBehavior:            params.RiskFlightBehavior,
 		RiskWeaponPossession:          params.RiskWeaponPossession,
-		RiskSexualBehavior:           params.RiskSexualBehavior,
-		RiskDayNightRhythm:           params.RiskDayNightRhythm,
-		RiskOther:                    params.RiskOther,
-		RiskOtherDescription:         params.RiskOtherDescription,
-		RiskAdditionalNotes:          params.RiskAdditionalNotes,
+		RiskSexualBehavior:            params.RiskSexualBehavior,
+		RiskDayNightRhythm:            params.RiskDayNightRhythm,
+		RiskOther:                     params.RiskOther,
+		RiskOtherDescription:          params.RiskOtherDescription,
+		RiskAdditionalNotes:           params.RiskAdditionalNotes,
 		DocumentReferral:              params.DocumentReferral,
-		DocumentEducationReport:      params.DocumentEducationReport,
+		DocumentEducationReport:       params.DocumentEducationReport,
 		DocumentPsychiatricReport:     params.DocumentPsychiatricReport,
-		DocumentDiagnosis:            params.DocumentDiagnosis,
+		DocumentDiagnosis:             params.DocumentDiagnosis,
 		DocumentSafetyPlan:            params.DocumentSafetyPlan,
 		DocumentIDCopy:                params.DocumentIDCopy,
 		ApplicationDate:               conv.PgDateFromTime(params.ApplicationDate),
-		ReferrerSignature:            params.ReferrerSignature,
+		ReferrerSignature:             params.ReferrerSignature,
 	}
 
-	form, err := r.queries.CreateRegistrationForm(ctx, arg)
+	form, err := r.store.CreateRegistrationForm(ctx, arg)
 	if err != nil {
 		return nil, err
 	}
@@ -107,12 +106,12 @@ func (r *RegistrationFormRepository) CreateRegistrationForm(ctx context.Context,
 }
 
 func (r *RegistrationFormRepository) ListRegistrationForms(ctx context.Context, params domain.ListRegistrationFormsParams) (*domain.ListResult[domain.RegistrationFormListItem], error) {
-	rows, err := r.queries.ListRegistrationForms(ctx, db.ListRegistrationFormsParams{
+	rows, err := r.store.ListRegistrationForms(ctx, db.ListRegistrationFormsParams{
 		Limit:                  params.Limit,
 		Offset:                 params.Offset,
 		Status:                 db.NullFormStatusFromPtr(params.Status),
 		RiskAggressiveBehavior: params.RiskAggressiveBehavior,
-		RiskSuicidalSelfharm:    params.RiskSuicidalSelfharm,
+		RiskSuicidalSelfharm:   params.RiskSuicidalSelfharm,
 		RiskSubstanceAbuse:     params.RiskSubstanceAbuse,
 		RiskPsychiatricIssues:  params.RiskPsychiatricIssues,
 		RiskCriminalHistory:    params.RiskCriminalHistory,
@@ -126,10 +125,10 @@ func (r *RegistrationFormRepository) ListRegistrationForms(ctx context.Context, 
 		return nil, err
 	}
 
-	totalCount, err := r.queries.CountRegistrationForms(ctx, db.CountRegistrationFormsParams{
+	totalCount, err := r.store.CountRegistrationForms(ctx, db.CountRegistrationFormsParams{
 		Status:                 db.NullFormStatusFromPtr(params.Status),
 		RiskAggressiveBehavior: params.RiskAggressiveBehavior,
-		RiskSuicidalSelfharm:    params.RiskSuicidalSelfharm,
+		RiskSuicidalSelfharm:   params.RiskSuicidalSelfharm,
 		RiskSubstanceAbuse:     params.RiskSubstanceAbuse,
 		RiskPsychiatricIssues:  params.RiskPsychiatricIssues,
 		RiskCriminalHistory:    params.RiskCriminalHistory,
@@ -154,7 +153,7 @@ func (r *RegistrationFormRepository) ListRegistrationForms(ctx context.Context, 
 }
 
 func (r *RegistrationFormRepository) GetRegistrationForm(ctx context.Context, id uuid.UUID) (*domain.RegistrationForm, error) {
-	row, err := r.queries.GetRegistrationForm(ctx, id)
+	row, err := r.store.GetRegistrationForm(ctx, id)
 	if err != nil {
 		if isDBNotFound(err) {
 			return nil, domain.ErrRegistrationFormNotFound
@@ -189,7 +188,7 @@ func (r *RegistrationFormRepository) GetRegistrationForm(ctx context.Context, id
 	// Fetch documents if any
 	documentMap := make(map[uuid.UUID]domain.Document)
 	if len(documentIDs) > 0 {
-		attachments, err := r.queries.GetAttachmentsByUUIDs(ctx, documentIDs)
+		attachments, err := r.store.GetAttachmentsByUUIDs(ctx, documentIDs)
 		if err != nil {
 			return nil, err
 		}
@@ -212,69 +211,69 @@ func (r *RegistrationFormRepository) UpdateRegistrationForm(ctx context.Context,
 		ClientFirstName:               params.ClientFirstName,
 		ClientLastName:                params.ClientLastName,
 		ClientDateOfBirth:             pgDateFromPtr(params.ClientDateOfBirth),
-		ClientBsnNumber:              params.ClientBsnNumber,
+		ClientBsnNumber:               params.ClientBsnNumber,
 		ClientGender:                  db.NullGenderFromPtr(params.ClientGender),
-		ClientNationality:            params.ClientNationality,
-		ClientPhoneNumber:            params.ClientPhoneNumber,
-		ClientEmail:                  params.ClientEmail,
-		ClientStreet:                 params.ClientStreet,
-		ClientHouseNumber:            params.ClientHouseNumber,
-		ClientHouseNumberAddition:    params.ClientHouseNumberAddition,
-		ClientPostalCode:             params.ClientPostalCode,
-		ClientCity:                   params.ClientCity,
-		ReferrerFirstName:            params.ReferrerFirstName,
-		ReferrerLastName:             params.ReferrerLastName,
-		ReferrerOrganization:         params.ReferrerOrganization,
-		ReferrerJobTitle:             params.ReferrerJobTitle,
-		ReferrerPhoneNumber:          params.ReferrerPhoneNumber,
-		ReferrerEmail:                params.ReferrerEmail,
-		Guardian1FirstName:           params.Guardian1FirstName,
-		Guardian1LastName:            params.Guardian1LastName,
-		Guardian1Relationship:       params.Guardian1Relationship,
-		Guardian1PhoneNumber:        params.Guardian1PhoneNumber,
-		Guardian1Email:               params.Guardian1Email,
-		Guardian2FirstName:          params.Guardian2FirstName,
-		Guardian2LastName:            params.Guardian2LastName,
-		Guardian2Relationship:       params.Guardian2Relationship,
-		Guardian2PhoneNumber:         params.Guardian2PhoneNumber,
-		Guardian2Email:              params.Guardian2Email,
-		EducationInstitution:        params.EducationInstitution,
-		EducationMentorName:         params.EducationMentorName,
-		EducationMentorPhone:         params.EducationMentorPhone,
-		EducationMentorEmail:         params.EducationMentorEmail,
-		EducationCurrentlyEnrolled:  params.EducationCurrentlyEnrolled,
-		EducationAdditionalNotes:     params.EducationAdditionalNotes,
-		EducationLevel:               db.NullClientEducationLevelFromPtr(params.EducationLevel),
-		WorkCurrentEmployer:         params.WorkCurrentEmployer,
-		WorkEmployerPhone:           params.WorkEmployerPhone,
-		WorkEmployerEmail:           params.WorkEmployerEmail,
-		WorkCurrentPosition:         params.WorkCurrentPosition,
-		WorkCurrentlyEmployed:        params.WorkCurrentlyEmployed,
-		WorkStartDate:               pgDateFromPtr(params.WorkStartDate),
-		WorkAdditionalNotes:         params.WorkAdditionalNotes,
-		CareProtectedLiving:          params.CareProtectedLiving,
+		ClientNationality:             params.ClientNationality,
+		ClientPhoneNumber:             params.ClientPhoneNumber,
+		ClientEmail:                   params.ClientEmail,
+		ClientStreet:                  params.ClientStreet,
+		ClientHouseNumber:             params.ClientHouseNumber,
+		ClientHouseNumberAddition:     params.ClientHouseNumberAddition,
+		ClientPostalCode:              params.ClientPostalCode,
+		ClientCity:                    params.ClientCity,
+		ReferrerFirstName:             params.ReferrerFirstName,
+		ReferrerLastName:              params.ReferrerLastName,
+		ReferrerOrganization:          params.ReferrerOrganization,
+		ReferrerJobTitle:              params.ReferrerJobTitle,
+		ReferrerPhoneNumber:           params.ReferrerPhoneNumber,
+		ReferrerEmail:                 params.ReferrerEmail,
+		Guardian1FirstName:            params.Guardian1FirstName,
+		Guardian1LastName:             params.Guardian1LastName,
+		Guardian1Relationship:         params.Guardian1Relationship,
+		Guardian1PhoneNumber:          params.Guardian1PhoneNumber,
+		Guardian1Email:                params.Guardian1Email,
+		Guardian2FirstName:            params.Guardian2FirstName,
+		Guardian2LastName:             params.Guardian2LastName,
+		Guardian2Relationship:         params.Guardian2Relationship,
+		Guardian2PhoneNumber:          params.Guardian2PhoneNumber,
+		Guardian2Email:                params.Guardian2Email,
+		EducationInstitution:          params.EducationInstitution,
+		EducationMentorName:           params.EducationMentorName,
+		EducationMentorPhone:          params.EducationMentorPhone,
+		EducationMentorEmail:          params.EducationMentorEmail,
+		EducationCurrentlyEnrolled:    params.EducationCurrentlyEnrolled,
+		EducationAdditionalNotes:      params.EducationAdditionalNotes,
+		EducationLevel:                db.NullClientEducationLevelFromPtr(params.EducationLevel),
+		WorkCurrentEmployer:           params.WorkCurrentEmployer,
+		WorkEmployerPhone:             params.WorkEmployerPhone,
+		WorkEmployerEmail:             params.WorkEmployerEmail,
+		WorkCurrentPosition:           params.WorkCurrentPosition,
+		WorkCurrentlyEmployed:         params.WorkCurrentlyEmployed,
+		WorkStartDate:                 pgDateFromPtr(params.WorkStartDate),
+		WorkAdditionalNotes:           params.WorkAdditionalNotes,
+		CareProtectedLiving:           params.CareProtectedLiving,
 		CareAssistedIndependentLiving: params.CareAssistedIndependentLiving,
-		CareRoomTrainingCenter:       params.CareRoomTrainingCenter,
+		CareRoomTrainingCenter:        params.CareRoomTrainingCenter,
 		CareAmbulatoryGuidance:        params.CareAmbulatoryGuidance,
-		ApplicationReason:            params.ApplicationReason,
-		ClientGoals:                  params.ClientGoals,
-		RiskAggressiveBehavior:       params.RiskAggressiveBehavior,
-		RiskSuicidalSelfharm:         params.RiskSuicidalSelfharm,
-		RiskSubstanceAbuse:           params.RiskSubstanceAbuse,
-		RiskPsychiatricIssues:        params.RiskPsychiatricIssues,
-		RiskCriminalHistory:         params.RiskCriminalHistory,
-		RiskFlightBehavior:          params.RiskFlightBehavior,
-		RiskWeaponPossession:         params.RiskWeaponPossession,
-		RiskSexualBehavior:          params.RiskSexualBehavior,
-		RiskDayNightRhythm:           params.RiskDayNightRhythm,
-		RiskOther:                    params.RiskOther,
-		RiskOtherDescription:         params.RiskOtherDescription,
-		RiskAdditionalNotes:         params.RiskAdditionalNotes,
-		ApplicationDate:              pgDateFromPtr(params.ApplicationDate),
-		ReferrerSignature:           params.ReferrerSignature,
+		ApplicationReason:             params.ApplicationReason,
+		ClientGoals:                   params.ClientGoals,
+		RiskAggressiveBehavior:        params.RiskAggressiveBehavior,
+		RiskSuicidalSelfharm:          params.RiskSuicidalSelfharm,
+		RiskSubstanceAbuse:            params.RiskSubstanceAbuse,
+		RiskPsychiatricIssues:         params.RiskPsychiatricIssues,
+		RiskCriminalHistory:           params.RiskCriminalHistory,
+		RiskFlightBehavior:            params.RiskFlightBehavior,
+		RiskWeaponPossession:          params.RiskWeaponPossession,
+		RiskSexualBehavior:            params.RiskSexualBehavior,
+		RiskDayNightRhythm:            params.RiskDayNightRhythm,
+		RiskOther:                     params.RiskOther,
+		RiskOtherDescription:          params.RiskOtherDescription,
+		RiskAdditionalNotes:           params.RiskAdditionalNotes,
+		ApplicationDate:               pgDateFromPtr(params.ApplicationDate),
+		ReferrerSignature:             params.ReferrerSignature,
 	}
 
-	form, err := r.queries.UpdateRegistrationForm(ctx, arg)
+	form, err := r.store.UpdateRegistrationForm(ctx, arg)
 	if err != nil {
 		if isDBNotFound(err) {
 			return nil, domain.ErrRegistrationFormNotFound
@@ -286,7 +285,7 @@ func (r *RegistrationFormRepository) UpdateRegistrationForm(ctx context.Context,
 }
 
 func (r *RegistrationFormRepository) DeleteRegistrationForm(ctx context.Context, id uuid.UUID) error {
-	err := r.queries.DeleteRegistrationForm(ctx, id)
+	err := r.store.DeleteRegistrationForm(ctx, id)
 	if err != nil {
 		if isDBNotFound(err) {
 			return domain.ErrRegistrationFormNotFound
@@ -306,7 +305,7 @@ func (r *RegistrationFormRepository) UpdateRegistrationFormStatus(ctx context.Co
 		RejectionReason:           params.RejectionReason,
 	}
 
-	_, err := r.queries.UpdateRegistrationFormStatus(ctx, arg)
+	_, err := r.store.UpdateRegistrationFormStatus(ctx, arg)
 	if err != nil {
 		if isDBNotFound(err) {
 			return domain.ErrRegistrationFormNotFound
@@ -323,7 +322,7 @@ func (r *RegistrationFormRepository) ProcessRegistrationForm(ctx context.Context
 		return nil, "", err
 	}
 
-	token := util.RandomString(32)
+	token := randomString(32)
 
 	arg := db.UpdateRegistrationFormStatusParams{
 		ID:                        params.ID,
@@ -335,7 +334,7 @@ func (r *RegistrationFormRepository) ProcessRegistrationForm(ctx context.Context
 		IntakeToken:               &token,
 	}
 
-	form, err := r.queries.UpdateRegistrationFormStatus(ctx, arg)
+	form, err := r.store.UpdateRegistrationFormStatus(ctx, arg)
 	if err != nil {
 		if isDBNotFound(err) {
 			return nil, "", domain.ErrRegistrationFormNotFound
@@ -347,7 +346,7 @@ func (r *RegistrationFormRepository) ProcessRegistrationForm(ctx context.Context
 }
 
 func (r *RegistrationFormRepository) GetPublicIntakeOptions(ctx context.Context, token string) (*domain.PublicIntakeOptions, error) {
-	form, err := r.queries.GetRegistrationFormByToken(ctx, &token)
+	form, err := r.store.GetRegistrationFormByToken(ctx, &token)
 	if err != nil {
 		if isDBNotFound(err) {
 			return nil, domain.ErrRegistrationFormNotFound
@@ -370,7 +369,7 @@ func (r *RegistrationFormRepository) GetPublicIntakeOptions(ctx context.Context,
 }
 
 func (r *RegistrationFormRepository) SelectIntakeDate(ctx context.Context, params domain.SelectIntakeDateParams) error {
-	form, err := r.queries.GetRegistrationFormByToken(ctx, &params.Token)
+	form, err := r.store.GetRegistrationFormByToken(ctx, &params.Token)
 	if err != nil {
 		if isDBNotFound(err) {
 			return domain.ErrRegistrationFormNotFound
@@ -394,7 +393,7 @@ func (r *RegistrationFormRepository) SelectIntakeDate(ctx context.Context, param
 		IntakeAppointmentDatetime: pgtype.Timestamptz{Time: params.SelectedDate, Valid: true},
 	}
 
-	_, err = r.queries.UpdateRegistrationFormIntakeDate(ctx, arg)
+	_, err = r.store.UpdateRegistrationFormIntakeDate(ctx, arg)
 	if err != nil {
 		return err
 	}
@@ -406,130 +405,41 @@ func (r *RegistrationFormRepository) SelectIntakeDate(ctx context.Context, param
 
 func toDomainRegistrationForm(row db.RegistrationForm) *domain.RegistrationForm {
 	return &domain.RegistrationForm{
-		ID:                             row.ID,
-		ClientFirstName:                row.ClientFirstName,
-		ClientLastName:                 row.ClientLastName,
-		ClientDateOfBirth:              conv.TimePtrFromPgDate(row.ClientDateOfBirth),
-		ClientBsnNumber:                row.ClientBsnNumber,
-		ClientGender:                   string(row.ClientGender),
-		ClientNationality:              row.ClientNationality,
-		ClientPhoneNumber:              row.ClientPhoneNumber,
-		ClientEmail:                    row.ClientEmail,
-		ClientStreet:                   row.ClientStreet,
-		ClientHouseNumber:              row.ClientHouseNumber,
+		ID:                            row.ID,
+		ClientFirstName:               row.ClientFirstName,
+		ClientLastName:                row.ClientLastName,
+		ClientDateOfBirth:             conv.TimePtrFromPgDate(row.ClientDateOfBirth),
+		ClientBsnNumber:               row.ClientBsnNumber,
+		ClientGender:                  string(row.ClientGender),
+		ClientNationality:             row.ClientNationality,
+		ClientPhoneNumber:             row.ClientPhoneNumber,
+		ClientEmail:                   row.ClientEmail,
+		ClientStreet:                  row.ClientStreet,
+		ClientHouseNumber:             row.ClientHouseNumber,
 		ClientHouseNumberAddition:     row.ClientHouseNumberAddition,
-		ClientPostalCode:               row.ClientPostalCode,
-		ClientCity:                     row.ClientCity,
-		ReferrerFirstName:              row.ReferrerFirstName,
-		ReferrerLastName:               row.ReferrerLastName,
-		ReferrerOrganization:           row.ReferrerOrganization,
-		ReferrerJobTitle:               row.ReferrerJobTitle,
-		ReferrerPhoneNumber:            row.ReferrerPhoneNumber,
-		ReferrerEmail:                  row.ReferrerEmail,
-		Guardian1FirstName:             row.Guardian1FirstName,
-		Guardian1LastName:              row.Guardian1LastName,
+		ClientPostalCode:              row.ClientPostalCode,
+		ClientCity:                    row.ClientCity,
+		ReferrerFirstName:             row.ReferrerFirstName,
+		ReferrerLastName:              row.ReferrerLastName,
+		ReferrerOrganization:          row.ReferrerOrganization,
+		ReferrerJobTitle:              row.ReferrerJobTitle,
+		ReferrerPhoneNumber:           row.ReferrerPhoneNumber,
+		ReferrerEmail:                 row.ReferrerEmail,
+		Guardian1FirstName:            row.Guardian1FirstName,
+		Guardian1LastName:             row.Guardian1LastName,
 		Guardian1Relationship:         row.Guardian1Relationship,
-		Guardian1PhoneNumber:           row.Guardian1PhoneNumber,
-		Guardian1Email:                 row.Guardian1Email,
-		Guardian2FirstName:             row.Guardian2FirstName,
-		Guardian2LastName:              row.Guardian2LastName,
-		Guardian2Relationship:         row.Guardian2Relationship,
-		Guardian2PhoneNumber:          row.Guardian2PhoneNumber,
-		Guardian2Email:                row.Guardian2Email,
-		EducationInstitution:           row.EducationInstitution,
-		EducationMentorName:            row.EducationMentorName,
-		EducationMentorPhone:           row.EducationMentorPhone,
-		EducationMentorEmail:           row.EducationMentorEmail,
-		EducationCurrentlyEnrolled:     row.EducationCurrentlyEnrolled,
-		EducationAdditionalNotes:       row.EducationAdditionalNotes,
-		EducationLevel:                 string(row.EducationLevel),
-		WorkCurrentEmployer:            row.WorkCurrentEmployer,
-		WorkEmployerPhone:              row.WorkEmployerPhone,
-		WorkEmployerEmail:              row.WorkEmployerEmail,
-		WorkCurrentPosition:            row.WorkCurrentPosition,
-		WorkCurrentlyEmployed:          row.WorkCurrentlyEmployed,
-		WorkStartDate:                  conv.TimePtrFromPgDate(row.WorkStartDate),
-		WorkAdditionalNotes:           row.WorkAdditionalNotes,
-		CareProtectedLiving:            row.CareProtectedLiving,
-		CareAssistedIndependentLiving:  row.CareAssistedIndependentLiving,
-		CareRoomTrainingCenter:         row.CareRoomTrainingCenter,
-		CareAmbulatoryGuidance:         row.CareAmbulatoryGuidance,
-		ApplicationReason:              row.ApplicationReason,
-		ClientGoals:                    row.ClientGoals,
-		RiskAggressiveBehavior:         row.RiskAggressiveBehavior,
-		RiskSuicidalSelfharm:           row.RiskSuicidalSelfharm,
-		RiskSubstanceAbuse:             row.RiskSubstanceAbuse,
-		RiskPsychiatricIssues:          row.RiskPsychiatricIssues,
-		RiskCriminalHistory:           row.RiskCriminalHistory,
-		RiskFlightBehavior:             row.RiskFlightBehavior,
-		RiskWeaponPossession:           row.RiskWeaponPossession,
-		RiskSexualBehavior:             row.RiskSexualBehavior,
-		RiskDayNightRhythm:             row.RiskDayNightRhythm,
-		RiskOther:                      row.RiskOther,
-		RiskOtherDescription:           row.RiskOtherDescription,
-		RiskAdditionalNotes:           row.RiskAdditionalNotes,
-		DocumentReferral:               nil,
-		DocumentEducationReport:       nil,
-		DocumentActionPlan:             nil,
-		DocumentPsychiatricReport:     nil,
-		DocumentDiagnosis:              nil,
-		DocumentSafetyPlan:             nil,
-		DocumentIDCopy:                nil,
-		ApplicationDate:                conv.TimeFromPgDate(row.ApplicationDate),
-		ReferrerSignature:             row.ReferrerSignature,
-		FormStatus:                     string(row.FormStatus),
-		CreatedAt:                      conv.TimeFromPgTimestamptz(row.CreatedAt),
-		UpdatedAt:                      conv.TimeFromPgTimestamptz(row.UpdatedAt),
-		SubmittedAt:                    conv.TimeFromPgTimestamptz(row.SubmittedAt),
-		ProcessedAt:                    conv.TimeFromPgTimestamptz(row.ProcessedAt),
-		ProcessedByEmployeeID:          row.ProcessedByEmployeeID,
-		ProcessedByEmployeeName:        nil,
-		IntakeAppointmentDate:          conv.TimeFromPgTimestamptz(row.IntakeAppointmentDatetime),
-		IntakeAppointmentLocation:      row.IntakeAppointmentLocation,
-		AddmissionType:                 string(row.AddmissionType),
-		IntakeOptions:                  nil,
-		IntakeFormID:                   nil,
-		RejectionReason:                row.RejectionReason,
-	}
-}
-
-func toDomainRegistrationFormFromGetRow(row db.GetRegistrationFormRow, documentMap map[uuid.UUID]domain.Document) *domain.RegistrationForm {
-	form := &domain.RegistrationForm{
-		ID:                             row.ID,
-		ClientFirstName:                row.ClientFirstName,
-		ClientLastName:                 row.ClientLastName,
-		ClientDateOfBirth:              conv.TimePtrFromPgDate(row.ClientDateOfBirth),
-		ClientBsnNumber:                row.ClientBsnNumber,
-		ClientGender:                   string(row.ClientGender),
-		ClientNationality:              row.ClientNationality,
-		ClientPhoneNumber:              row.ClientPhoneNumber,
-		ClientEmail:                    row.ClientEmail,
-		ClientStreet:                   row.ClientStreet,
-		ClientHouseNumber:              row.ClientHouseNumber,
-		ClientHouseNumberAddition:      row.ClientHouseNumberAddition,
-		ClientPostalCode:               row.ClientPostalCode,
-		ClientCity:                     row.ClientCity,
-		ReferrerFirstName:              row.ReferrerFirstName,
-		ReferrerLastName:               row.ReferrerLastName,
-		ReferrerOrganization:           row.ReferrerOrganization,
-		ReferrerJobTitle:               row.ReferrerJobTitle,
-		ReferrerPhoneNumber:            row.ReferrerPhoneNumber,
-		ReferrerEmail:                  row.ReferrerEmail,
-		Guardian1FirstName:             row.Guardian1FirstName,
-		Guardian1LastName:              row.Guardian1LastName,
-		Guardian1Relationship:         row.Guardian1Relationship,
-		Guardian1PhoneNumber:           row.Guardian1PhoneNumber,
-		Guardian1Email:                 row.Guardian1Email,
-		Guardian2FirstName:             row.Guardian2FirstName,
+		Guardian1PhoneNumber:          row.Guardian1PhoneNumber,
+		Guardian1Email:                row.Guardian1Email,
+		Guardian2FirstName:            row.Guardian2FirstName,
 		Guardian2LastName:             row.Guardian2LastName,
 		Guardian2Relationship:         row.Guardian2Relationship,
 		Guardian2PhoneNumber:          row.Guardian2PhoneNumber,
 		Guardian2Email:                row.Guardian2Email,
-		EducationInstitution:           row.EducationInstitution,
+		EducationInstitution:          row.EducationInstitution,
 		EducationMentorName:           row.EducationMentorName,
 		EducationMentorPhone:          row.EducationMentorPhone,
 		EducationMentorEmail:          row.EducationMentorEmail,
-		EducationCurrentlyEnrolled:     row.EducationCurrentlyEnrolled,
+		EducationCurrentlyEnrolled:    row.EducationCurrentlyEnrolled,
 		EducationAdditionalNotes:      row.EducationAdditionalNotes,
 		EducationLevel:                string(row.EducationLevel),
 		WorkCurrentEmployer:           row.WorkCurrentEmployer,
@@ -550,7 +460,96 @@ func toDomainRegistrationFormFromGetRow(row db.GetRegistrationFormRow, documentM
 		RiskSubstanceAbuse:            row.RiskSubstanceAbuse,
 		RiskPsychiatricIssues:         row.RiskPsychiatricIssues,
 		RiskCriminalHistory:           row.RiskCriminalHistory,
-		RiskFlightBehavior:           row.RiskFlightBehavior,
+		RiskFlightBehavior:            row.RiskFlightBehavior,
+		RiskWeaponPossession:          row.RiskWeaponPossession,
+		RiskSexualBehavior:            row.RiskSexualBehavior,
+		RiskDayNightRhythm:            row.RiskDayNightRhythm,
+		RiskOther:                     row.RiskOther,
+		RiskOtherDescription:          row.RiskOtherDescription,
+		RiskAdditionalNotes:           row.RiskAdditionalNotes,
+		DocumentReferral:              nil,
+		DocumentEducationReport:       nil,
+		DocumentActionPlan:            nil,
+		DocumentPsychiatricReport:     nil,
+		DocumentDiagnosis:             nil,
+		DocumentSafetyPlan:            nil,
+		DocumentIDCopy:                nil,
+		ApplicationDate:               conv.TimeFromPgDate(row.ApplicationDate),
+		ReferrerSignature:             row.ReferrerSignature,
+		FormStatus:                    string(row.FormStatus),
+		CreatedAt:                     conv.TimeFromPgTimestamptz(row.CreatedAt),
+		UpdatedAt:                     conv.TimeFromPgTimestamptz(row.UpdatedAt),
+		SubmittedAt:                   conv.TimeFromPgTimestamptz(row.SubmittedAt),
+		ProcessedAt:                   conv.TimeFromPgTimestamptz(row.ProcessedAt),
+		ProcessedByEmployeeID:         row.ProcessedByEmployeeID,
+		ProcessedByEmployeeName:       nil,
+		IntakeAppointmentDate:         conv.TimeFromPgTimestamptz(row.IntakeAppointmentDatetime),
+		IntakeAppointmentLocation:     row.IntakeAppointmentLocation,
+		AddmissionType:                string(row.AddmissionType),
+		IntakeOptions:                 nil,
+		IntakeFormID:                  nil,
+		RejectionReason:               row.RejectionReason,
+	}
+}
+
+func toDomainRegistrationFormFromGetRow(row db.GetRegistrationFormRow, documentMap map[uuid.UUID]domain.Document) *domain.RegistrationForm {
+	form := &domain.RegistrationForm{
+		ID:                            row.ID,
+		ClientFirstName:               row.ClientFirstName,
+		ClientLastName:                row.ClientLastName,
+		ClientDateOfBirth:             conv.TimePtrFromPgDate(row.ClientDateOfBirth),
+		ClientBsnNumber:               row.ClientBsnNumber,
+		ClientGender:                  string(row.ClientGender),
+		ClientNationality:             row.ClientNationality,
+		ClientPhoneNumber:             row.ClientPhoneNumber,
+		ClientEmail:                   row.ClientEmail,
+		ClientStreet:                  row.ClientStreet,
+		ClientHouseNumber:             row.ClientHouseNumber,
+		ClientHouseNumberAddition:     row.ClientHouseNumberAddition,
+		ClientPostalCode:              row.ClientPostalCode,
+		ClientCity:                    row.ClientCity,
+		ReferrerFirstName:             row.ReferrerFirstName,
+		ReferrerLastName:              row.ReferrerLastName,
+		ReferrerOrganization:          row.ReferrerOrganization,
+		ReferrerJobTitle:              row.ReferrerJobTitle,
+		ReferrerPhoneNumber:           row.ReferrerPhoneNumber,
+		ReferrerEmail:                 row.ReferrerEmail,
+		Guardian1FirstName:            row.Guardian1FirstName,
+		Guardian1LastName:             row.Guardian1LastName,
+		Guardian1Relationship:         row.Guardian1Relationship,
+		Guardian1PhoneNumber:          row.Guardian1PhoneNumber,
+		Guardian1Email:                row.Guardian1Email,
+		Guardian2FirstName:            row.Guardian2FirstName,
+		Guardian2LastName:             row.Guardian2LastName,
+		Guardian2Relationship:         row.Guardian2Relationship,
+		Guardian2PhoneNumber:          row.Guardian2PhoneNumber,
+		Guardian2Email:                row.Guardian2Email,
+		EducationInstitution:          row.EducationInstitution,
+		EducationMentorName:           row.EducationMentorName,
+		EducationMentorPhone:          row.EducationMentorPhone,
+		EducationMentorEmail:          row.EducationMentorEmail,
+		EducationCurrentlyEnrolled:    row.EducationCurrentlyEnrolled,
+		EducationAdditionalNotes:      row.EducationAdditionalNotes,
+		EducationLevel:                string(row.EducationLevel),
+		WorkCurrentEmployer:           row.WorkCurrentEmployer,
+		WorkEmployerPhone:             row.WorkEmployerPhone,
+		WorkEmployerEmail:             row.WorkEmployerEmail,
+		WorkCurrentPosition:           row.WorkCurrentPosition,
+		WorkCurrentlyEmployed:         row.WorkCurrentlyEmployed,
+		WorkStartDate:                 conv.TimePtrFromPgDate(row.WorkStartDate),
+		WorkAdditionalNotes:           row.WorkAdditionalNotes,
+		CareProtectedLiving:           row.CareProtectedLiving,
+		CareAssistedIndependentLiving: row.CareAssistedIndependentLiving,
+		CareRoomTrainingCenter:        row.CareRoomTrainingCenter,
+		CareAmbulatoryGuidance:        row.CareAmbulatoryGuidance,
+		ApplicationReason:             row.ApplicationReason,
+		ClientGoals:                   row.ClientGoals,
+		RiskAggressiveBehavior:        row.RiskAggressiveBehavior,
+		RiskSuicidalSelfharm:          row.RiskSuicidalSelfharm,
+		RiskSubstanceAbuse:            row.RiskSubstanceAbuse,
+		RiskPsychiatricIssues:         row.RiskPsychiatricIssues,
+		RiskCriminalHistory:           row.RiskCriminalHistory,
+		RiskFlightBehavior:            row.RiskFlightBehavior,
 		RiskWeaponPossession:          row.RiskWeaponPossession,
 		RiskSexualBehavior:            row.RiskSexualBehavior,
 		RiskDayNightRhythm:            row.RiskDayNightRhythm,
@@ -562,10 +561,10 @@ func toDomainRegistrationFormFromGetRow(row db.GetRegistrationFormRow, documentM
 		FormStatus:                    string(row.FormStatus),
 		CreatedAt:                     conv.TimeFromPgTimestamptz(row.CreatedAt),
 		UpdatedAt:                     conv.TimeFromPgTimestamptz(row.UpdatedAt),
-		SubmittedAt:                    conv.TimeFromPgTimestamptz(row.SubmittedAt),
-		ProcessedAt:                    conv.TimeFromPgTimestamptz(row.ProcessedAt),
+		SubmittedAt:                   conv.TimeFromPgTimestamptz(row.SubmittedAt),
+		ProcessedAt:                   conv.TimeFromPgTimestamptz(row.ProcessedAt),
 		ProcessedByEmployeeID:         row.ProcessedByEmployeeID,
-		IntakeAppointmentDate:          conv.TimeFromPgTimestamptz(row.IntakeAppointmentDatetime),
+		IntakeAppointmentDate:         conv.TimeFromPgTimestamptz(row.IntakeAppointmentDatetime),
 		IntakeAppointmentLocation:     row.IntakeAppointmentLocation,
 		AddmissionType:                string(row.AddmissionType),
 		IntakeFormID:                  row.IntakeFormID,
@@ -610,20 +609,20 @@ func toDomainRegistrationFormFromGetRow(row db.GetRegistrationFormRow, documentM
 
 func toDomainRegistrationFormListItem(row db.ListRegistrationFormsRow) domain.RegistrationFormListItem {
 	return domain.RegistrationFormListItem{
-		ID:                             row.ID,
-		ClientFirstName:                row.ClientFirstName,
-		ClientLastName:                 row.ClientLastName,
-		ClientBsnNumber:                row.ClientBsnNumber,
-		ReferrerFirstName:              row.ReferrerFirstName,
-		ReferrerLastName:               row.ReferrerLastName,
-		CareProtectedLiving:            row.CareProtectedLiving,
-		CareAssistedIndependentLiving:   row.CareAssistedIndependentLiving,
-		CareRoomTrainingCenter:         row.CareRoomTrainingCenter,
-		CareAmbulatoryGuidance:         row.CareAmbulatoryGuidance,
-		RiskCount:                      calculateRiskCount(row.RiskAggressiveBehavior, row.RiskSuicidalSelfharm, row.RiskSubstanceAbuse, row.RiskPsychiatricIssues, row.RiskCriminalHistory, row.RiskFlightBehavior, row.RiskWeaponPossession, row.RiskSexualBehavior, row.RiskDayNightRhythm, row.RiskOther),
-		FormStatus:                     string(row.FormStatus),
-		SubmittedAt:                    conv.TimeFromPgTimestamptz(row.SubmittedAt),
-		IntakeFormID:                   row.IntakeFormID,
+		ID:                            row.ID,
+		ClientFirstName:               row.ClientFirstName,
+		ClientLastName:                row.ClientLastName,
+		ClientBsnNumber:               row.ClientBsnNumber,
+		ReferrerFirstName:             row.ReferrerFirstName,
+		ReferrerLastName:              row.ReferrerLastName,
+		CareProtectedLiving:           row.CareProtectedLiving,
+		CareAssistedIndependentLiving: row.CareAssistedIndependentLiving,
+		CareRoomTrainingCenter:        row.CareRoomTrainingCenter,
+		CareAmbulatoryGuidance:        row.CareAmbulatoryGuidance,
+		RiskCount:                     calculateRiskCount(row.RiskAggressiveBehavior, row.RiskSuicidalSelfharm, row.RiskSubstanceAbuse, row.RiskPsychiatricIssues, row.RiskCriminalHistory, row.RiskFlightBehavior, row.RiskWeaponPossession, row.RiskSexualBehavior, row.RiskDayNightRhythm, row.RiskOther),
+		FormStatus:                    string(row.FormStatus),
+		SubmittedAt:                   conv.TimeFromPgTimestamptz(row.SubmittedAt),
+		IntakeFormID:                  row.IntakeFormID,
 	}
 }
 
@@ -683,6 +682,12 @@ func nullAdmissionTypeEnumFromPtr(value *string) db.NullAdmissionTypeEnum {
 		return db.NullAdmissionTypeEnum{}
 	}
 	return db.NullAdmissionTypeEnum{AdmissionTypeEnum: db.AdmissionTypeEnum(*value), Valid: true}
+}
+
+func randomString(n int) string {
+	b := make([]byte, n)
+	_, _ = rand.Read(b)
+	return base64.RawURLEncoding.EncodeToString(b)[:n]
 }
 
 var _ domain.RegistrationFormRepository = (*RegistrationFormRepository)(nil)

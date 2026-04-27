@@ -19,16 +19,15 @@ import (
 )
 
 type ClientRepository struct {
-	queries db.Querier
-	store   *db.Store
+	store *db.Store
 }
 
-func NewClientRepository(queries db.Querier, store *db.Store) domain.ClientRepository {
-	return &ClientRepository{queries: queries, store: store}
+func NewClientRepository(store *db.Store) domain.ClientRepository {
+	return &ClientRepository{store: store}
 }
 
 func (r *ClientRepository) CreateClient(ctx context.Context, params domain.CreateClientParams) (*domain.Client, error) {
-	client, err := r.queries.CreateClientDetails(ctx, db.CreateClientDetailsParams{
+	client, err := r.store.CreateClientDetails(ctx, db.CreateClientDetailsParams{
 		FirstName:                  params.FirstName,
 		LastName:                   params.LastName,
 		DateOfBirth:                conv.PgDateFromTime(params.DateOfBirth),
@@ -62,7 +61,7 @@ func (r *ClientRepository) CreateClient(ctx context.Context, params domain.Creat
 }
 
 func (r *ClientRepository) ListClients(ctx context.Context, params domain.ListClientsParams) (*domain.ClientPage, error) {
-	rows, err := r.queries.ListClientDetails(ctx, db.ListClientDetailsParams{
+	rows, err := r.store.ListClientDetails(ctx, db.ListClientDetailsParams{
 		Status:     db.NullClientStatusFromPtr(params.Status),
 		LocationID: params.LocationID,
 		Search:     params.Search,
@@ -89,7 +88,7 @@ func (r *ClientRepository) ListClients(ctx context.Context, params domain.ListCl
 }
 
 func (r *ClientRepository) ListWaitingListClients(ctx context.Context, params domain.ListWaitingListClientsParams) (*domain.WaitingListClientPage, error) {
-	rows, err := r.queries.ListWaitingListClients(ctx, db.ListWaitingListClientsParams{
+	rows, err := r.store.ListWaitingListClients(ctx, db.ListWaitingListClientsParams{
 		Search:    params.Search,
 		Placement: db.NullIntakeCareTypeFromPtr(params.Placement),
 		SortDays:  params.SortDays,
@@ -121,7 +120,7 @@ func (r *ClientRepository) ListInCareClients(ctx context.Context, params domain.
 		statusFilters[i] = db.ClientStatusEnum(status)
 	}
 
-	rows, err := r.queries.ListInCareClients(ctx, db.ListInCareClientsParams{
+	rows, err := r.store.ListInCareClients(ctx, db.ListInCareClientsParams{
 		Search:         params.Search,
 		Status:         statusFilters,
 		SortDaysInCare: params.SortDaysInCare,
@@ -148,7 +147,7 @@ func (r *ClientRepository) ListInCareClients(ctx context.Context, params domain.
 }
 
 func (r *ClientRepository) GetClientCounts(ctx context.Context) (*domain.ClientCounts, error) {
-	counts, err := r.queries.GetClientCounts(ctx)
+	counts, err := r.store.GetClientCounts(ctx)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return &domain.ClientCounts{}, nil
@@ -165,7 +164,7 @@ func (r *ClientRepository) GetClientCounts(ctx context.Context) (*domain.ClientC
 }
 
 func (r *ClientRepository) GetClientStatusCounts(ctx context.Context) (*domain.ClientStatusCounts, error) {
-	counts, err := r.queries.GetClientStatusCounts(ctx)
+	counts, err := r.store.GetClientStatusCounts(ctx)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return &domain.ClientStatusCounts{}, nil
@@ -181,7 +180,7 @@ func (r *ClientRepository) GetClientStatusCounts(ctx context.Context) (*domain.C
 }
 
 func (r *ClientRepository) GetClientByID(ctx context.Context, id uuid.UUID) (*domain.ClientPageDetail, error) {
-	client, err := r.queries.GetClientDetails(ctx, id)
+	client, err := r.store.GetClientDetails(ctx, id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, domain.ErrClientNotFound
@@ -189,47 +188,47 @@ func (r *ClientRepository) GetClientByID(ctx context.Context, id uuid.UUID) (*do
 		return nil, err
 	}
 
-	goals, err := r.queries.ListActiveGoalSummariesByClientID(ctx, id)
+	goals, err := r.store.ListActiveGoalSummariesByClientID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	emergencyContacts, err := r.queries.ListTopEmergencyContactsByClientID(ctx, id)
+	emergencyContacts, err := r.store.ListTopEmergencyContactsByClientID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	existingDocumentLabels, err := r.queries.ListExistingClientDocumentLabels(ctx, id)
+	existingDocumentLabels, err := r.store.ListExistingClientDocumentLabels(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	missingDocumentLabels, err := r.queries.GetMissingClientDocuments(ctx, id)
+	missingDocumentLabels, err := r.store.GetMissingClientDocuments(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	counts, err := r.queries.GetClientPageCounts(ctx, id)
+	counts, err := r.store.GetClientPageCounts(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	coordinatorRows, err := r.queries.GetClientCoordinator(ctx, id)
+	coordinatorRows, err := r.store.GetClientCoordinator(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	latestStatusHistory, err := r.queries.GetClientLatestStatusHistory(ctx, id)
+	latestStatusHistory, err := r.store.GetClientLatestStatusHistory(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	activeContracts, err := r.queries.ListClientActiveApprovedContracts(ctx, id)
+	activeContracts, err := r.store.ListClientActiveApprovedContracts(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	latestDraft, err := r.queries.GetLatestDraftEvaluationByClient(ctx, id)
+	latestDraft, err := r.store.GetLatestDraftEvaluationByClient(ctx, id)
 	hasLatestDraft := false
 	if err != nil {
 		if !errors.Is(err, pgx.ErrNoRows) {
@@ -239,7 +238,7 @@ func (r *ClientRepository) GetClientByID(ctx context.Context, id uuid.UUID) (*do
 		hasLatestDraft = true
 	}
 
-	latestCompleted, err := r.queries.GetLatestCompletedEvaluationByClient(ctx, id)
+	latestCompleted, err := r.store.GetLatestCompletedEvaluationByClient(ctx, id)
 	hasLatestCompleted := false
 	if err != nil {
 		if !errors.Is(err, pgx.ErrNoRows) {
@@ -700,13 +699,6 @@ func calculateAge(dateOfBirth pgtype.Date) *int32 {
 	return &age
 }
 
-func derefString(s *string) string {
-	if s == nil {
-		return ""
-	}
-	return *s
-}
-
 func (r *ClientRepository) UpdateClient(ctx context.Context, id uuid.UUID, params domain.UpdateClientParams) (*domain.Client, error) {
 	return nil, errors.New("UpdateClient is not yet implemented")
 }
@@ -739,7 +731,7 @@ func (r *ClientRepository) CreateProgressReport(ctx context.Context, params doma
 
 // ListProgressReports lists progress reports for a client.
 func (r *ClientRepository) ListProgressReports(ctx context.Context, params domain.ListProgressReportsParams) (*domain.ListProgressReportsResult, error) {
-	rows, err := r.queries.ListProgressReports(ctx, db.ListProgressReportsParams{
+	rows, err := r.store.ListProgressReports(ctx, db.ListProgressReportsParams{
 		ClientID: params.ClientID,
 		Type:     db.NullProgressReportTypeFromPtr(params.Type),
 		Offset:   params.Offset,
@@ -769,7 +761,7 @@ func (r *ClientRepository) ListProgressReports(ctx context.Context, params domai
 
 // GetProgressReport retrieves a single progress report by ID.
 func (r *ClientRepository) GetProgressReport(ctx context.Context, reportID uuid.UUID) (*domain.ProgressReport, error) {
-	row, err := r.queries.GetProgressReport(ctx, reportID)
+	row, err := r.store.GetProgressReport(ctx, reportID)
 	if err != nil {
 		return nil, err
 	}
@@ -807,7 +799,7 @@ func (r *ClientRepository) DeleteProgressReport(ctx context.Context, reportID uu
 
 // GetProgressReportsByDateRange retrieves progress reports within a date range.
 func (r *ClientRepository) GetProgressReportsByDateRange(ctx context.Context, params domain.GetProgressReportsByDateRangeParams) ([]domain.ProgressReport, error) {
-	rows, err := r.queries.GetProgressReportsByDateRange(ctx, db.GetProgressReportsByDateRangeParams{
+	rows, err := r.store.GetProgressReportsByDateRange(ctx, db.GetProgressReportsByDateRangeParams{
 		ClientID:  params.ClientID,
 		StartDate: conv.PgTimestamptzFromTime(params.StartDate),
 		EndDate:   conv.PgTimestamptzFromTime(params.EndDate),
@@ -849,7 +841,7 @@ func (r *ClientRepository) CreateAiGeneratedReport(ctx context.Context, params d
 
 // ListAiGeneratedReports lists AI-generated reports for a client.
 func (r *ClientRepository) ListAiGeneratedReports(ctx context.Context, params domain.ListAiGeneratedReportsParams) (*domain.ListAiGeneratedReportsResult, error) {
-	rows, err := r.queries.ListAiGeneratedReports(ctx, db.ListAiGeneratedReportsParams{
+	rows, err := r.store.ListAiGeneratedReports(ctx, db.ListAiGeneratedReportsParams{
 		ClientID: params.ClientID,
 		Limit:    params.Limit,
 		Offset:   params.Offset,
@@ -1015,7 +1007,7 @@ func (r *ClientRepository) AddClientDocuments(ctx context.Context, clientID uuid
 }
 
 func (r *ClientRepository) ListClientDocuments(ctx context.Context, params domain.ListClientDocumentsParams) (*domain.ListClientDocumentsResult, error) {
-	rows, err := r.queries.ListClientDocuments(ctx, db.ListClientDocumentsParams{
+	rows, err := r.store.ListClientDocuments(ctx, db.ListClientDocumentsParams{
 		ClientID: params.ClientID,
 		Limit:    params.Limit,
 		Offset:   params.Offset,
@@ -1072,7 +1064,7 @@ func (r *ClientRepository) DeleteClientDocument(ctx context.Context, clientID uu
 }
 
 func (r *ClientRepository) GetMissingClientDocuments(ctx context.Context, clientID uuid.UUID) ([]string, error) {
-	missingDocs, err := r.queries.GetMissingClientDocuments(ctx, clientID)
+	missingDocs, err := r.store.GetMissingClientDocuments(ctx, clientID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get missing client documents: %w", err)
 	}
@@ -1080,7 +1072,7 @@ func (r *ClientRepository) GetMissingClientDocuments(ctx context.Context, client
 }
 
 func (r *ClientRepository) GetAttachmentsByUUIDs(ctx context.Context, ids []uuid.UUID) ([]domain.AttachmentFile, error) {
-	attachments, err := r.queries.GetAttachmentsByUUIDs(ctx, ids)
+	attachments, err := r.store.GetAttachmentsByUUIDs(ctx, ids)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get attachments: %w", err)
 	}
@@ -1300,7 +1292,7 @@ func (r *ClientRepository) UpdateClientGoal(ctx context.Context, clientID uuid.U
 
 // GetClientGoalsForEvaluationPage returns goals for the evaluation page.
 func (r *ClientRepository) GetClientGoalsForEvaluationPage(ctx context.Context, clientID uuid.UUID, employeeID uuid.UUID) (*domain.ClientGoalsForEvaluationPage, error) {
-	client, err := r.queries.GetClientDetails(ctx, clientID)
+	client, err := r.store.GetClientDetails(ctx, clientID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get client details: %w", err)
 	}
@@ -1315,18 +1307,18 @@ func (r *ClientRepository) GetClientGoalsForEvaluationPage(ctx context.Context, 
 		response.NextEvaluationDate = &nextDate
 	}
 
-	coordinatorRows, err := r.queries.GetClientCoordinator(ctx, clientID)
+	coordinatorRows, err := r.store.GetClientCoordinator(ctx, clientID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get client coordinator: %w", err)
 	}
 	response.IsResponsibleEmployee = len(coordinatorRows) > 0 && coordinatorRows[0].EmployeeID == employeeID
 
-	activeGoals, err := r.queries.ListActiveGoalsByClientID(ctx, clientID)
+	activeGoals, err := r.store.ListActiveGoalsByClientID(ctx, clientID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list active goals: %w", err)
 	}
 
-	latestProgressRows, err := r.queries.ListLatestCompletedGoalProgressByClient(ctx, clientID)
+	latestProgressRows, err := r.store.ListLatestCompletedGoalProgressByClient(ctx, clientID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list latest completed goal progress: %w", err)
 	}
@@ -1353,7 +1345,7 @@ func (r *ClientRepository) GetClientGoalsForEvaluationPage(ctx context.Context, 
 		response.Goals = append(response.Goals, goalResponse)
 	}
 
-	_, err = r.queries.GetLatestDraftEvaluationByClient(ctx, clientID)
+	_, err = r.store.GetLatestDraftEvaluationByClient(ctx, clientID)
 	if err != nil {
 		if !errors.Is(err, pgx.ErrNoRows) {
 			return nil, fmt.Errorf("failed to check for existing draft evaluation: %w", err)
@@ -1364,7 +1356,7 @@ func (r *ClientRepository) GetClientGoalsForEvaluationPage(ctx context.Context, 
 		response.GoalUpdateBlockReason = &blockReason
 	}
 
-	draftEval, err := r.queries.GetCurrentCycleDraftEvaluationByClientAndEmployee(ctx, db.GetCurrentCycleDraftEvaluationByClientAndEmployeeParams{
+	draftEval, err := r.store.GetCurrentCycleDraftEvaluationByClientAndEmployee(ctx, db.GetCurrentCycleDraftEvaluationByClientAndEmployeeParams{
 		ClientID:            clientID,
 		CreatedByEmployeeID: &employeeID,
 	})
@@ -1652,7 +1644,7 @@ func parseProgress(value string) (db.ClientGoalProgressEnum, error) {
 
 // GetGoalEvaluationBootstrap returns bootstrap data for the goal evaluation page.
 func (r *ClientRepository) GetGoalEvaluationBootstrap(ctx context.Context, clientID uuid.UUID) (*domain.GoalEvaluationBootstrap, error) {
-	client, err := r.queries.GetClientDetails(ctx, clientID)
+	client, err := r.store.GetClientDetails(ctx, clientID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get client details: %w", err)
 	}
@@ -1678,7 +1670,7 @@ func (r *ClientRepository) GetGoalEvaluationBootstrap(ctx context.Context, clien
 		response.Priority = &priority
 	}
 
-	latestDraft, err := r.queries.GetLatestDraftEvaluationByClient(ctx, clientID)
+	latestDraft, err := r.store.GetLatestDraftEvaluationByClient(ctx, clientID)
 	if err == nil {
 		response.ExistingDraft = &domain.GoalEvaluationBootstrapDraft{
 			ID:             latestDraft.ID,
@@ -1689,7 +1681,7 @@ func (r *ClientRepository) GetGoalEvaluationBootstrap(ctx context.Context, clien
 		return nil, fmt.Errorf("failed to get latest draft evaluation: %w", err)
 	}
 
-	latestCompleted, err := r.queries.GetLatestCompletedEvaluationByClient(ctx, clientID)
+	latestCompleted, err := r.store.GetLatestCompletedEvaluationByClient(ctx, clientID)
 	if err == nil {
 		response.LastCompletedEvaluation = &domain.GoalEvaluationBootstrapCompleted{
 			ID:                  latestCompleted.ID,
@@ -1703,12 +1695,12 @@ func (r *ClientRepository) GetGoalEvaluationBootstrap(ctx context.Context, clien
 		return nil, fmt.Errorf("failed to get latest completed evaluation: %w", err)
 	}
 
-	activeGoals, err := r.queries.ListActiveGoalsByClientID(ctx, clientID)
+	activeGoals, err := r.store.ListActiveGoalsByClientID(ctx, clientID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list active goals: %w", err)
 	}
 
-	latestProgressRows, err := r.queries.ListLatestCompletedGoalProgressByClient(ctx, clientID)
+	latestProgressRows, err := r.store.ListLatestCompletedGoalProgressByClient(ctx, clientID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list latest completed goal progress: %w", err)
 	}
@@ -1742,7 +1734,7 @@ func (r *ClientRepository) GetGoalEvaluationBootstrap(ctx context.Context, clien
 
 // ListClientSubmittedEvaluations returns list of submitted evaluations for a client.
 func (r *ClientRepository) ListClientSubmittedEvaluations(ctx context.Context, params domain.ListClientSubmittedEvaluationsParams) (*domain.ListClientSubmittedEvaluationsResult, error) {
-	rows, err := r.queries.ListSubmittedEvaluationsByClient(ctx, db.ListSubmittedEvaluationsByClientParams{
+	rows, err := r.store.ListSubmittedEvaluationsByClient(ctx, db.ListSubmittedEvaluationsByClientParams{
 		ClientID: params.ClientID,
 		Limit:    params.Limit,
 		Offset:   params.Offset,
@@ -1779,7 +1771,7 @@ func (r *ClientRepository) ListClientSubmittedEvaluations(ctx context.Context, p
 
 // ListGoalEvaluationHistory returns history of goal evaluations.
 func (r *ClientRepository) ListGoalEvaluationHistory(ctx context.Context, params domain.ListGoalEvaluationHistoryParams) (*domain.ListGoalEvaluationHistoryResult, error) {
-	rows, err := r.queries.ListGoalEvaluationHistoryByClientAndGoal(ctx, db.ListGoalEvaluationHistoryByClientAndGoalParams{
+	rows, err := r.store.ListGoalEvaluationHistoryByClientAndGoal(ctx, db.ListGoalEvaluationHistoryByClientAndGoalParams{
 		ClientID: params.ClientID,
 		GoalID:   params.GoalID,
 		Limit:    params.Limit,
@@ -1937,7 +1929,7 @@ func equalOptionalUUID(a *uuid.UUID, b *uuid.UUID) bool {
 }
 
 func (r *ClientRepository) CreateLocationTransfer(ctx context.Context, clientID uuid.UUID, params domain.CreateLocationTransferParams) error {
-	err := r.queries.CreateClientLocationTransfer(ctx, db.CreateClientLocationTransferParams{
+	err := r.store.CreateClientLocationTransfer(ctx, db.CreateClientLocationTransferParams{
 		ClientID:       clientID,
 		FromLocationID: &params.FromLocationID,
 		ToLocationID:   &params.ToLocationID,
@@ -1952,7 +1944,7 @@ func (r *ClientRepository) CreateLocationTransfer(ctx context.Context, clientID 
 }
 
 func (r *ClientRepository) ApproveLocationTransfer(ctx context.Context, employeeID uuid.UUID, params domain.ApproveLocationTransferParams) error {
-	err := r.queries.ApproveOrRejectClientLocationTransfer(ctx, db.ApproveOrRejectClientLocationTransferParams{
+	err := r.store.ApproveOrRejectClientLocationTransfer(ctx, db.ApproveOrRejectClientLocationTransferParams{
 		ID:                 params.TransferID,
 		Status:             db.ClientLocationTransferStatusEnum(params.Status),
 		ApprovedRejectedBy: &employeeID,
@@ -1964,7 +1956,7 @@ func (r *ClientRepository) ApproveLocationTransfer(ctx context.Context, employee
 }
 
 func (r *ClientRepository) ListLocationTransferRequests(ctx context.Context, params domain.ListLocationTransferParams) (*domain.ListLocationTransferResult, error) {
-	rows, err := r.queries.ListClientLocationTransfer(ctx, db.ListClientLocationTransferParams{
+	rows, err := r.store.ListClientLocationTransfer(ctx, db.ListClientLocationTransferParams{
 		Limit:  params.Limit,
 		Offset: params.Offset,
 	})
@@ -2008,7 +2000,7 @@ func (r *ClientRepository) ListLocationTransferRequests(ctx context.Context, par
 }
 
 func (r *ClientRepository) GetGoalEvaluation(ctx context.Context, evaluationID uuid.UUID) (*domain.GoalEvaluation, error) {
-	row, err := r.queries.GetGoalEvaluationByID(ctx, evaluationID)
+	row, err := r.store.GetGoalEvaluationByID(ctx, evaluationID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, fmt.Errorf("goal evaluation not found")
@@ -2016,7 +2008,7 @@ func (r *ClientRepository) GetGoalEvaluation(ctx context.Context, evaluationID u
 		return nil, fmt.Errorf("failed to get goal evaluation: %w", err)
 	}
 
-	items, err := r.queries.GetGoalEvaluationItems(ctx, evaluationID)
+	items, err := r.store.GetGoalEvaluationItems(ctx, evaluationID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load evaluation items: %w", err)
 	}
@@ -2040,7 +2032,7 @@ func (r *ClientRepository) GetGoalEvaluation(ctx context.Context, evaluationID u
 }
 
 func (r *ClientRepository) ListUpcomingEvaluations(ctx context.Context, params domain.ListUpcomingEvaluationsParams) (*domain.ListUpcomingEvaluationsResult, error) {
-	rows, err := r.queries.ListUpcomingEvaluationsForCoordinator(ctx, db.ListUpcomingEvaluationsForCoordinatorParams{
+	rows, err := r.store.ListUpcomingEvaluationsForCoordinator(ctx, db.ListUpcomingEvaluationsForCoordinatorParams{
 		EmployeeID: params.EmployeeID,
 		Limit:      params.Limit,
 		Offset:     params.Offset,
@@ -2078,7 +2070,7 @@ func (r *ClientRepository) ListUpcomingEvaluations(ctx context.Context, params d
 }
 
 func (r *ClientRepository) ListRecentSubmittedEvaluations(ctx context.Context, params domain.ListRecentSubmittedEvaluationsParams) (*domain.ListRecentSubmittedEvaluationsResult, error) {
-	rows, err := r.queries.ListRecentSubmittedEvaluationsByEmployee(ctx, db.ListRecentSubmittedEvaluationsByEmployeeParams{
+	rows, err := r.store.ListRecentSubmittedEvaluationsByEmployee(ctx, db.ListRecentSubmittedEvaluationsByEmployeeParams{
 		CreatedByEmployeeID: &params.EmployeeID,
 		Limit:               params.Limit,
 		Offset:              params.Offset,
@@ -2120,7 +2112,7 @@ func (r *ClientRepository) ListRecentSubmittedEvaluations(ctx context.Context, p
 }
 
 func (r *ClientRepository) ListRecentDraftEvaluations(ctx context.Context, params domain.ListRecentDraftEvaluationsParams) (*domain.ListRecentDraftEvaluationsResult, error) {
-	rows, err := r.queries.ListRecentDraftEvaluationsByEmployee(ctx, db.ListRecentDraftEvaluationsByEmployeeParams{
+	rows, err := r.store.ListRecentDraftEvaluationsByEmployee(ctx, db.ListRecentDraftEvaluationsByEmployeeParams{
 		CreatedByEmployeeID: &params.EmployeeID,
 		Limit:               params.Limit,
 		Offset:              params.Offset,
@@ -2216,7 +2208,7 @@ func (r *ClientRepository) CreateClientDiagnosis(ctx context.Context, params dom
 }
 
 func (r *ClientRepository) ListClientDiagnoses(ctx context.Context, params domain.ListClientDiagnosesParams) (*domain.ListClientDiagnosesResult, error) {
-	rows, err := r.queries.ListClientDiagnoses(ctx, db.ListClientDiagnosesParams{
+	rows, err := r.store.ListClientDiagnoses(ctx, db.ListClientDiagnosesParams{
 		ClientID: params.ClientID,
 		Limit:    params.Limit,
 		Offset:   params.Offset,
@@ -2244,7 +2236,7 @@ func (r *ClientRepository) ListClientDiagnoses(ctx context.Context, params domai
 }
 
 func (r *ClientRepository) GetClientDiagnosis(ctx context.Context, clientID, diagnosisID uuid.UUID) (*domain.ClientDiagnosis, error) {
-	diagnosis, err := r.queries.GetClientDiagnosis(ctx, db.GetClientDiagnosisParams{
+	diagnosis, err := r.store.GetClientDiagnosis(ctx, db.GetClientDiagnosisParams{
 		ClientID: clientID,
 		ID:       diagnosisID,
 	})
@@ -2386,7 +2378,7 @@ func (r *ClientRepository) CreateClientMedicationOrder(ctx context.Context, para
 }
 
 func (r *ClientRepository) ListClientMedicationOrders(ctx context.Context, params domain.ListClientMedicationOrdersParams) (*domain.ListClientMedicationOrdersResult, error) {
-	rows, err := r.queries.ListClientMedicationOrders(ctx, db.ListClientMedicationOrdersParams{
+	rows, err := r.store.ListClientMedicationOrders(ctx, db.ListClientMedicationOrdersParams{
 		ClientID:    params.ClientID,
 		Status:      db.NullMedicationOrderStatusEnum{Valid: params.Status != nil, MedicationOrderStatusEnum: db.MedicationOrderStatusEnum(*params.Status)},
 		AdminMode:   db.NullMedicationAdminModeEnum{Valid: params.AdminMode != nil, MedicationAdminModeEnum: db.MedicationAdminModeEnum(*params.AdminMode)},
@@ -2418,7 +2410,7 @@ func (r *ClientRepository) ListClientMedicationOrders(ctx context.Context, param
 }
 
 func (r *ClientRepository) GetClientMedicationOrder(ctx context.Context, clientID, orderID uuid.UUID) (*domain.ClientMedicationOrder, error) {
-	row, err := r.queries.GetClientMedicationOrder(ctx, db.GetClientMedicationOrderParams{
+	row, err := r.store.GetClientMedicationOrder(ctx, db.GetClientMedicationOrderParams{
 		ClientID: clientID,
 		ID:       orderID,
 	})
@@ -2553,7 +2545,7 @@ func (r *ClientRepository) GetClientMedicalOverview(ctx context.Context, clientI
 // =====================
 
 func (r *ClientRepository) GetClientSender(ctx context.Context, clientID uuid.UUID) (*domain.Sender, error) {
-	sender, err := r.queries.GetClientSender(ctx, clientID)
+	sender, err := r.store.GetClientSender(ctx, clientID)
 	if err != nil {
 		return nil, err
 	}
@@ -2597,7 +2589,7 @@ func (r *ClientRepository) ListClientEmergencyContacts(ctx context.Context, para
 		search = ""
 	}
 
-	rows, err := r.queries.ListEmergencyContacts(ctx, db.ListEmergencyContactsParams{
+	rows, err := r.store.ListEmergencyContacts(ctx, db.ListEmergencyContactsParams{
 		ClientID: params.ClientID,
 		Search:   search,
 		Offset:   params.Offset,
@@ -2626,7 +2618,7 @@ func (r *ClientRepository) ListClientEmergencyContacts(ctx context.Context, para
 }
 
 func (r *ClientRepository) GetClientEmergencyContact(ctx context.Context, contactID uuid.UUID) (*domain.ClientEmergencyContact, error) {
-	contact, err := r.queries.GetEmergencyContact(ctx, contactID)
+	contact, err := r.store.GetEmergencyContact(ctx, contactID)
 	if err != nil {
 		return nil, err
 	}
@@ -2700,7 +2692,7 @@ func (r *ClientRepository) CreateAssignedEmployee(ctx context.Context, params do
 }
 
 func (r *ClientRepository) ListAssignedEmployees(ctx context.Context, params domain.ListAssignedEmployeesParams) (*domain.ListAssignedEmployeesResult, error) {
-	rows, err := r.queries.ListAssignedEmployees(ctx, db.ListAssignedEmployeesParams{
+	rows, err := r.store.ListAssignedEmployees(ctx, db.ListAssignedEmployeesParams{
 		ClientID: params.ClientID,
 		Offset:   params.Offset,
 		Limit:    params.Limit,
@@ -2728,7 +2720,7 @@ func (r *ClientRepository) ListAssignedEmployees(ctx context.Context, params dom
 }
 
 func (r *ClientRepository) GetAssignedEmployee(ctx context.Context, assignmentID uuid.UUID) (*domain.AssignedEmployee, error) {
-	row, err := r.queries.GetAssignedEmployee(ctx, assignmentID)
+	row, err := r.store.GetAssignedEmployee(ctx, assignmentID)
 	if err != nil {
 		return nil, err
 	}
@@ -2775,7 +2767,7 @@ func (r *ClientRepository) DeleteAssignedEmployee(ctx context.Context, assignmen
 // =====================
 
 func (r *ClientRepository) GetClientRelatedEmails(ctx context.Context, clientID uuid.UUID) (*domain.ClientRelatedEmails, error) {
-	emails, err := r.queries.GetClientRelatedEmails(ctx, clientID)
+	emails, err := r.store.GetClientRelatedEmails(ctx, clientID)
 	if err != nil {
 		return nil, err
 	}
@@ -2784,7 +2776,7 @@ func (r *ClientRepository) GetClientRelatedEmails(ctx context.Context, clientID 
 
 // ListStatusHistory lists client status history records.
 func (r *ClientRepository) ListStatusHistory(ctx context.Context, params domain.ListStatusHistoryParams) ([]domain.ClientStatusHistory, error) {
-	rows, err := r.queries.ListClientStatusHistory(ctx, db.ListClientStatusHistoryParams{
+	rows, err := r.store.ListClientStatusHistory(ctx, db.ListClientStatusHistoryParams{
 		ClientID: params.ClientID,
 		Limit:    params.Limit,
 		Offset:   params.Offset,
@@ -2814,7 +2806,7 @@ func (r *ClientRepository) ListStatusHistory(ctx context.Context, params domain.
 }
 
 func (r *ClientRepository) UpdateClientStatus(ctx context.Context, clientID uuid.UUID, params domain.UpdateClientStatusParams) (*domain.UpdateClientStatusResult, error) {
-	updated, err := r.queries.UpdateClientStatus(ctx, db.UpdateClientStatusParams{
+	updated, err := r.store.UpdateClientStatus(ctx, db.UpdateClientStatusParams{
 		ID:     clientID,
 		Status: db.ClientStatusEnum(params.Status),
 	})

@@ -7,14 +7,15 @@ import (
 	"strings"
 	"time"
 
+	"maicare_go/config"
+	"maicare_go/internal/domain"
 	"maicare_go/internal/httpapi"
 	"maicare_go/internal/ws"
-	"maicare_go/token"
-	"maicare_go/util"
+	"maicare_go/pkg/jwt"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
 	"github.com/google/uuid"
+	"github.com/gorilla/websocket"
 )
 
 // Configure the WebSocket upgrader
@@ -26,10 +27,10 @@ var wsUpgrader = websocket.Upgrader{
 type WebSocketHandler struct {
 	hub           *ws.Hub
 	ticketManager *ws.TicketManager
-	config        *util.Config
+	config        *config.Config
 }
 
-func NewWebSocketHandler(hub *ws.Hub, ticketManager *ws.TicketManager, config *util.Config) *WebSocketHandler {
+func NewWebSocketHandler(hub *ws.Hub, ticketManager *ws.TicketManager, config *config.Config) *WebSocketHandler {
 	return &WebSocketHandler{
 		hub:           hub,
 		ticketManager: ticketManager,
@@ -58,7 +59,7 @@ func (h *WebSocketHandler) HandleWebSocket(ctx *gin.Context) {
 		return
 	}
 
-	userID := authPayload.UserId
+	userID := authPayload.UserID
 	log.Printf("Attempting WebSocket upgrade for authenticated user ID: %s", userID)
 
 	// --- 2. Upgrade Connection ---
@@ -87,10 +88,20 @@ func (h *WebSocketHandler) HandleWebSocket(ctx *gin.Context) {
 // @Failure 401,500 {object} httpapi.Envelope[struct{}]
 // @Router /auth/ws-ticket [post]
 func (h *WebSocketHandler) CreateWebSocketTicket(ctx *gin.Context) {
-	payload, err := GetAuthPayload(ctx)
+	jwtPayload, err := GetAuthPayload(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, httpapi.Fail("unauthorized", err.Error()))
 		return
+	}
+
+	payload := &domain.TokenPayload{
+		ID:         jwtPayload.ID,
+		SessionID:  jwtPayload.SessionID,
+		UserID:     jwtPayload.UserID,
+		EmployeeID: jwtPayload.EmployeeID,
+		TokenType:  domain.TokenType(jwtPayload.TokenType),
+		IssuedAt:   jwtPayload.IssuedAt,
+		ExpiresAt:  jwtPayload.ExpiresAt,
 	}
 
 	ticketValue, expiresAt, err := h.ticketManager.Issue(ctx, payload)
@@ -149,18 +160,18 @@ type createWebSocketTicketResponse struct {
 
 // ==================== Helpers ====================
 
-func GetAuthPayload(ctx *gin.Context) (*token.Payload, error) {
+func GetAuthPayload(ctx *gin.Context) (*jwt.Payload, error) {
 	payload, exists := ctx.Get("authorization_payload")
 	if !exists {
 		return nil, fmt.Errorf("authorization payload not found")
 	}
 
-	authPayload, ok := payload.(*token.Payload)
+	authPayload, ok := payload.(*jwt.Payload)
 	if !ok {
 		return nil, fmt.Errorf("invalid authorization payload type")
 	}
 
-	if authPayload.UserId == uuid.Nil {
+	if authPayload.UserID == uuid.Nil {
 		return nil, fmt.Errorf("invalid user ID in authorization payload")
 	}
 

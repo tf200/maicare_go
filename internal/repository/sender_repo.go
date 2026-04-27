@@ -12,11 +12,11 @@ import (
 )
 
 type SenderRepository struct {
-	queries *db.Queries
+	store *db.Store
 }
 
-func NewSenderRepository(queries *db.Queries) *SenderRepository {
-	return &SenderRepository{queries: queries}
+func NewSenderRepository(store *db.Store) *SenderRepository {
+	return &SenderRepository{store: store}
 }
 
 func (r *SenderRepository) Create(ctx context.Context, params domain.CreateSenderParams) (*domain.SenderEntity, error) {
@@ -25,7 +25,7 @@ func (r *SenderRepository) Create(ctx context.Context, params domain.CreateSende
 		return nil, fmt.Errorf("failed to marshal contacts: %w", err)
 	}
 
-	sender, err := r.queries.CreateSender(ctx, db.CreateSenderParams{
+	sender, err := r.store.CreateSender(ctx, db.CreateSenderParams{
 		Types:               db.SenderTypesEnum(params.Types),
 		Name:                params.Name,
 		Street:              params.Street,
@@ -48,7 +48,7 @@ func (r *SenderRepository) Create(ctx context.Context, params domain.CreateSende
 }
 
 func (r *SenderRepository) List(ctx context.Context, params domain.ListSendersParams) ([]domain.SenderEntity, int64, error) {
-	senders, err := r.queries.ListSenders(ctx, db.ListSendersParams{
+	senders, err := r.store.ListSenders(ctx, db.ListSendersParams{
 		Limit:           params.Limit,
 		Offset:          params.Offset,
 		IncludeArchived: params.IncludeArchived,
@@ -58,7 +58,7 @@ func (r *SenderRepository) List(ctx context.Context, params domain.ListSendersPa
 		return nil, 0, err
 	}
 
-	totalCount, err := r.queries.CountSenders(ctx, params.IncludeArchived)
+	totalCount, err := r.store.CountSenders(ctx, params.IncludeArchived)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -72,7 +72,7 @@ func (r *SenderRepository) List(ctx context.Context, params domain.ListSendersPa
 }
 
 func (r *SenderRepository) GetByID(ctx context.Context, id uuid.UUID) (*domain.SenderEntity, error) {
-	sender, err := r.queries.GetSenderById(ctx, id)
+	sender, err := r.store.GetSenderById(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -107,7 +107,7 @@ func (r *SenderRepository) Update(ctx context.Context, params domain.UpdateSende
 		arg.Contacts = contactsJSON
 	}
 
-	sender, err := r.queries.UpdateSender(ctx, arg)
+	sender, err := r.store.UpdateSender(ctx, arg)
 	if err != nil {
 		return nil, err
 	}
@@ -116,11 +116,11 @@ func (r *SenderRepository) Update(ctx context.Context, params domain.UpdateSende
 }
 
 func (r *SenderRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	return r.queries.DeleteSender(ctx, id)
+	return r.store.DeleteSender(ctx, id)
 }
 
 func (r *SenderRepository) CreateInvoiceTemplate(ctx context.Context, senderID uuid.UUID, templateIDs []uuid.UUID) error {
-	_, err := r.queries.CreateSenderInvoiceTemplate(ctx, db.CreateSenderInvoiceTemplateParams{
+	_, err := r.store.CreateSenderInvoiceTemplate(ctx, db.CreateSenderInvoiceTemplateParams{
 		ID:              senderID,
 		InvoiceTemplate: templateIDs,
 	})
@@ -128,7 +128,7 @@ func (r *SenderRepository) CreateInvoiceTemplate(ctx context.Context, senderID u
 }
 
 func (r *SenderRepository) GetTemplateItemsBySourceTable(ctx context.Context, ids []uuid.UUID) ([]domain.InvoiceTemplateItem, error) {
-	items, err := r.queries.GetTemplateItemsBySourceTable(ctx, ids)
+	items, err := r.store.GetTemplateItemsBySourceTable(ctx, ids)
 	if err != nil {
 		return nil, err
 	}
@@ -148,7 +148,7 @@ func (r *SenderRepository) GetTemplateItemsBySourceTable(ctx context.Context, id
 }
 
 func (r *SenderRepository) GetTemplateItemsByIDs(ctx context.Context, ids []uuid.UUID) ([]uuid.UUID, error) {
-	return r.queries.GetTemplateItemsByIds(ctx, ids)
+	return r.store.GetTemplateItemsByIds(ctx, ids)
 }
 
 // ==================== Helpers ====================

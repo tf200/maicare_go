@@ -11,15 +11,15 @@ import (
 )
 
 type RoleRepository struct {
-	queries *db.Queries
+	store *db.Store
 }
 
-func NewRoleRepository(queries *db.Queries) *RoleRepository {
-	return &RoleRepository{queries: queries}
+func NewRoleRepository(store *db.Store) *RoleRepository {
+	return &RoleRepository{store: store}
 }
 
 func (r *RoleRepository) ListRoles(ctx context.Context) ([]domain.Role, error) {
-	rows, err := r.queries.ListRoles(ctx)
+	rows, err := r.store.ListRoles(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list roles: %w", err)
 	}
@@ -38,7 +38,7 @@ func (r *RoleRepository) ListRoles(ctx context.Context) ([]domain.Role, error) {
 }
 
 func (r *RoleRepository) ListAllPermissions(ctx context.Context) ([]domain.SystemPermission, error) {
-	rows, err := r.queries.ListAllPermissions(ctx)
+	rows, err := r.store.ListAllPermissions(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list permissions: %w", err)
 	}
@@ -60,7 +60,7 @@ func (r *RoleRepository) ListAllPermissions(ctx context.Context) ([]domain.Syste
 }
 
 func (r *RoleRepository) ListAllRolePermissions(ctx context.Context, roleID uuid.UUID) ([]domain.RolePermission, error) {
-	rows, err := r.queries.ListAllRolePermissions(ctx, roleID)
+	rows, err := r.store.ListAllRolePermissions(ctx, roleID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list role permissions: %w", err)
 	}
@@ -78,7 +78,7 @@ func (r *RoleRepository) ListAllRolePermissions(ctx context.Context, roleID uuid
 }
 
 func (r *RoleRepository) GetUserIDByEmployeeID(ctx context.Context, employeeID uuid.UUID) (uuid.UUID, error) {
-	userID, err := r.queries.GetUserIDByEmployeeID(ctx, employeeID)
+	userID, err := r.store.GetUserIDByEmployeeID(ctx, employeeID)
 	if err != nil {
 		return uuid.Nil, fmt.Errorf("failed to get user id by employee id: %w", err)
 	}
@@ -86,14 +86,14 @@ func (r *RoleRepository) GetUserIDByEmployeeID(ctx context.Context, employeeID u
 }
 
 func (r *RoleRepository) AssignRoleToUser(ctx context.Context, userID uuid.UUID, roleID uuid.UUID) error {
-	return r.queries.AssignRoleToUser(ctx, db.AssignRoleToUserParams{
+	return r.store.AssignRoleToUser(ctx, db.AssignRoleToUserParams{
 		UserID: userID,
 		RoleID: roleID,
 	})
 }
 
 func (r *RoleRepository) GetUserRoles(ctx context.Context, userID uuid.UUID) ([]domain.UserRole, error) {
-	rows, err := r.queries.GetUserRoles(ctx, userID)
+	rows, err := r.store.GetUserRoles(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user roles: %w", err)
 	}
@@ -109,7 +109,7 @@ func (r *RoleRepository) GetUserRoles(ctx context.Context, userID uuid.UUID) ([]
 }
 
 func (r *RoleRepository) ListInheritedUserPermissions(ctx context.Context, userID uuid.UUID) ([]domain.UserPermission, error) {
-	rows, err := r.queries.ListInheritedUserPermissions(ctx, userID)
+	rows, err := r.store.ListInheritedUserPermissions(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list inherited user permissions: %w", err)
 	}
@@ -126,7 +126,7 @@ func (r *RoleRepository) ListInheritedUserPermissions(ctx context.Context, userI
 }
 
 func (r *RoleRepository) ListUserPermissionOverrides(ctx context.Context, userID uuid.UUID) ([]domain.UserPermissionOverride, error) {
-	rows, err := r.queries.ListUserPermissionOverrides(ctx, userID)
+	rows, err := r.store.ListUserPermissionOverrides(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list user permission overrides: %w", err)
 	}
@@ -144,7 +144,7 @@ func (r *RoleRepository) ListUserPermissionOverrides(ctx context.Context, userID
 }
 
 func (r *RoleRepository) ListEffectiveUserPermissions(ctx context.Context, userID uuid.UUID) ([]domain.UserPermission, error) {
-	rows, err := r.queries.ListEffectiveUserPermissions(ctx, userID)
+	rows, err := r.store.ListEffectiveUserPermissions(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list effective user permissions: %w", err)
 	}
@@ -161,7 +161,7 @@ func (r *RoleRepository) ListEffectiveUserPermissions(ctx context.Context, userI
 }
 
 func (r *RoleRepository) DeleteUserPermissionOverrides(ctx context.Context, userID uuid.UUID) error {
-	return r.queries.DeleteUserPermissionOverrides(ctx, userID)
+	return r.store.DeleteUserPermissionOverrides(ctx, userID)
 }
 
 func (r *RoleRepository) AddUserPermissionOverrides(ctx context.Context, userID uuid.UUID, permissionIDs []uuid.UUID, effect string) error {
@@ -175,7 +175,7 @@ func (r *RoleRepository) AddUserPermissionOverrides(ctx context.Context, userID 
 		return fmt.Errorf("invalid permission override effect: %s", effect)
 	}
 
-	return r.queries.AddUserPermissionOverrides(ctx, db.AddUserPermissionOverridesParams{
+	return r.store.AddUserPermissionOverrides(ctx, db.AddUserPermissionOverridesParams{
 		UserID:        userID,
 		PermissionIds: permissionIDs,
 		Effect:        eff,
@@ -183,18 +183,18 @@ func (r *RoleRepository) AddUserPermissionOverrides(ctx context.Context, userID 
 }
 
 func (r *RoleRepository) RemovePermissionsFromRole(ctx context.Context, roleID uuid.UUID) error {
-	return r.queries.RemovePermissionsFromRole(ctx, roleID)
+	return r.store.RemovePermissionsFromRole(ctx, roleID)
 }
 
 func (r *RoleRepository) AddPermissionsToRole(ctx context.Context, roleID uuid.UUID, permissionIDs []uuid.UUID) error {
-	return r.queries.AddPermissionsToRole(ctx, db.AddPermissionsToRoleParams{
+	return r.store.AddPermissionsToRole(ctx, db.AddPermissionsToRoleParams{
 		RoleID:        roleID,
 		PermissionIds: permissionIDs,
 	})
 }
 
 func (r *RoleRepository) CreateRole(ctx context.Context, params domain.CreateRoleParams) (*domain.Role, error) {
-	role, err := r.queries.CreateRole(ctx, db.CreateRoleParams{
+	role, err := r.store.CreateRole(ctx, db.CreateRoleParams{
 		Name:        params.Name,
 		Description: params.Description,
 	})

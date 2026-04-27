@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -16,20 +17,18 @@ import (
 )
 
 type LeaveRepository struct {
-	queries db.Querier
-	store   *db.Store
+	store *db.Store
 }
 
-func NewLeaveRepository(queries db.Querier, store *db.Store) domain.LeaveRepository {
+func NewLeaveRepository(store *db.Store) domain.LeaveRepository {
 	return &LeaveRepository{
-		queries: queries,
-		store:   store,
+		store: store,
 	}
 }
 
 func (r *LeaveRepository) WithTx(ctx context.Context, fn func(tx domain.LeaveTxRepository) error) error {
 	return r.store.ExecTx(ctx, func(q *db.Queries) error {
-		return fn(&leaveTxRepo{queries: q})
+		return fn(&leaveTxRepo{store: &db.Store{Queries: q, ConnPool: r.store.ConnPool}})
 	})
 }
 
@@ -39,7 +38,7 @@ func (r *LeaveRepository) CreateLeaveRequest(ctx context.Context, params domain.
 		return nil, domain.ErrLeaveRequestInvalidRequest
 	}
 
-	row, err := r.queries.CreateLeaveRequest(ctx, db.CreateLeaveRequestParams{
+	row, err := r.store.CreateLeaveRequest(ctx, db.CreateLeaveRequestParams{
 		EmployeeID:          params.EmployeeID,
 		CreatedByEmployeeID: &params.CreatedByEmployeeID,
 		LeaveType:           leaveType,
@@ -61,7 +60,7 @@ func (r *LeaveRepository) GetActiveLeavePolicyByType(ctx context.Context, leaveT
 		return nil, domain.ErrLeaveRequestInvalidRequest
 	}
 
-	row, err := r.queries.GetActiveLeavePolicyByType(ctx, dbType)
+	row, err := r.store.GetActiveLeavePolicyByType(ctx, dbType)
 	if err != nil {
 		if isDBNotFound(err) {
 			return nil, domain.ErrLeaveRequestInvalidRequest
@@ -77,7 +76,7 @@ func (r *LeaveRepository) GetActiveLeavePolicyByType(ctx context.Context, leaveT
 
 func (r *LeaveRepository) ListMyLeaveRequests(ctx context.Context, params domain.ListMyLeaveRequestsParams) (*domain.LeaveRequestPage, error) {
 	status := toDBNullLeaveStatus(params.Status)
-	rows, err := r.queries.ListMyLeaveRequestsPaginated(ctx, db.ListMyLeaveRequestsPaginatedParams{
+	rows, err := r.store.ListMyLeaveRequestsPaginated(ctx, db.ListMyLeaveRequestsPaginatedParams{
 		EmployeeID: params.EmployeeID,
 		Status:     status,
 		Limit:      params.Limit,
@@ -120,7 +119,7 @@ func (r *LeaveRepository) ListMyLeaveRequests(ctx context.Context, params domain
 
 func (r *LeaveRepository) ListLeaveRequests(ctx context.Context, params domain.ListLeaveRequestsParams) (*domain.LeaveRequestPage, error) {
 	status := toDBNullLeaveStatus(params.Status)
-	rows, err := r.queries.ListLeaveRequestsPaginated(ctx, db.ListLeaveRequestsPaginatedParams{
+	rows, err := r.store.ListLeaveRequestsPaginated(ctx, db.ListLeaveRequestsPaginatedParams{
 		Status:         status,
 		EmployeeSearch: trimStringPtr(params.EmployeeSearch),
 		Limit:          params.Limit,
@@ -162,7 +161,7 @@ func (r *LeaveRepository) ListLeaveRequests(ctx context.Context, params domain.L
 }
 
 func (r *LeaveRepository) GetMyLeaveRequestStats(ctx context.Context, employeeID uuid.UUID) (*domain.LeaveRequestStats, error) {
-	row, err := r.queries.GetMyLeaveRequestStats(ctx, employeeID)
+	row, err := r.store.GetMyLeaveRequestStats(ctx, employeeID)
 	if err != nil {
 		return nil, err
 	}
@@ -175,7 +174,7 @@ func (r *LeaveRepository) GetMyLeaveRequestStats(ctx context.Context, employeeID
 }
 
 func (r *LeaveRepository) GetLeaveRequestStats(ctx context.Context) (*domain.LeaveRequestStats, error) {
-	row, err := r.queries.GetLeaveRequestStats(ctx)
+	row, err := r.store.GetLeaveRequestStats(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -188,7 +187,7 @@ func (r *LeaveRepository) GetLeaveRequestStats(ctx context.Context) (*domain.Lea
 }
 
 func (r *LeaveRepository) ListLeaveBalances(ctx context.Context, params domain.ListLeaveBalancesParams) (*domain.LeaveBalancePage, error) {
-	rows, err := r.queries.ListLeaveBalancesPaginated(ctx, db.ListLeaveBalancesPaginatedParams{
+	rows, err := r.store.ListLeaveBalancesPaginated(ctx, db.ListLeaveBalancesPaginatedParams{
 		EmployeeSearch: trimStringPtr(params.EmployeeSearch),
 		Year:           params.Year,
 		Limit:          params.Limit,
@@ -224,7 +223,7 @@ func (r *LeaveRepository) ListLeaveBalances(ctx context.Context, params domain.L
 }
 
 func (r *LeaveRepository) ListMyLeaveBalances(ctx context.Context, params domain.ListMyLeaveBalancesParams) (*domain.LeaveBalancePage, error) {
-	rows, err := r.queries.ListMyLeaveBalancesPaginated(ctx, db.ListMyLeaveBalancesPaginatedParams{
+	rows, err := r.store.ListMyLeaveBalancesPaginated(ctx, db.ListMyLeaveBalancesPaginatedParams{
 		EmployeeID: params.EmployeeID,
 		Year:       params.Year,
 		Limit:      params.Limit,
@@ -260,23 +259,23 @@ func (r *LeaveRepository) ListMyLeaveBalances(ctx context.Context, params domain
 }
 
 type leaveTxRepo struct {
-	queries *db.Queries
+	store *db.Store
 }
 
 func (r *leaveTxRepo) GetLeaveRequestForUpdate(ctx context.Context, leaveRequestID uuid.UUID) (*domain.LeaveRequest, error) {
-	row, err := r.queries.LockLeaveRequestByID(ctx, leaveRequestID)
+	row, err := r.store.LockLeaveRequestByID(ctx, leaveRequestID)
 	if err != nil {
 		if isDBNotFound(err) {
 			return nil, domain.ErrLeaveRequestNotFound
 		}
-		return nil, err
+		return nil, fmt.Errorf("failed to lock leave request: %w", err)
 	}
 	model := toDomainLeaveRequest(row)
 	return &model, nil
 }
 
 func (r *leaveTxRepo) UpdateLeaveRequestEditableFields(ctx context.Context, leaveRequestID uuid.UUID, params domain.UpdateLeaveRequestParams) (*domain.LeaveRequest, error) {
-	row, err := r.queries.UpdateLeaveRequestEditableFields(ctx, db.UpdateLeaveRequestEditableFieldsParams{
+	row, err := r.store.UpdateLeaveRequestEditableFields(ctx, db.UpdateLeaveRequestEditableFieldsParams{
 		ID: leaveRequestID,
 		LeaveType: func() db.NullLeaveRequestTypeEnum {
 			if params.LeaveType == nil {
@@ -321,7 +320,7 @@ func (r *leaveTxRepo) UpdateLeaveRequestDecision(ctx context.Context, leaveReque
 		return nil, domain.ErrLeaveRequestInvalidRequest
 	}
 
-	row, err := r.queries.UpdateLeaveRequestDecision(ctx, db.UpdateLeaveRequestDecisionParams{
+	row, err := r.store.UpdateLeaveRequestDecision(ctx, db.UpdateLeaveRequestDecisionParams{
 		ID:                  leaveRequestID,
 		Status:              dbStatus,
 		DecisionNote:        decisionNote,
@@ -343,7 +342,7 @@ func (r *leaveTxRepo) GetActiveLeavePolicyByType(ctx context.Context, leaveType 
 		return nil, domain.ErrLeaveRequestInvalidRequest
 	}
 
-	row, err := r.queries.GetActiveLeavePolicyByType(ctx, dbType)
+	row, err := r.store.GetActiveLeavePolicyByType(ctx, dbType)
 	if err != nil {
 		if isDBNotFound(err) {
 			return nil, domain.ErrLeaveRequestInvalidRequest
@@ -357,7 +356,7 @@ func (r *leaveTxRepo) GetActiveLeavePolicyByType(ctx context.Context, leaveType 
 }
 
 func (r *leaveTxRepo) EnsureLeaveBalanceForYear(ctx context.Context, employeeID uuid.UUID, year int32) error {
-	err := r.queries.EnsureLeaveBalanceForYear(ctx, db.EnsureLeaveBalanceForYearParams{
+	err := r.store.EnsureLeaveBalanceForYear(ctx, db.EnsureLeaveBalanceForYearParams{
 		EmployeeID: employeeID,
 		Year:       year,
 	})
@@ -371,7 +370,7 @@ func (r *leaveTxRepo) EnsureLeaveBalanceForYear(ctx context.Context, employeeID 
 }
 
 func (r *leaveTxRepo) GetLeaveBalanceForUpdate(ctx context.Context, employeeID uuid.UUID, year int32) (*domain.LeaveBalance, error) {
-	row, err := r.queries.LockLeaveBalanceByEmployeeYear(ctx, db.LockLeaveBalanceByEmployeeYearParams{
+	row, err := r.store.LockLeaveBalanceByEmployeeYear(ctx, db.LockLeaveBalanceByEmployeeYearParams{
 		EmployeeID: employeeID,
 		Year:       year,
 	})
@@ -397,7 +396,7 @@ func (r *leaveTxRepo) GetLeaveBalanceForUpdate(ctx context.Context, employeeID u
 }
 
 func (r *leaveTxRepo) ApplyLeaveBalanceDeduction(ctx context.Context, balanceID uuid.UUID, extraDays, legalDays int32) (*domain.LeaveBalance, error) {
-	row, err := r.queries.ApplyLeaveBalanceDeduction(ctx, db.ApplyLeaveBalanceDeductionParams{
+	row, err := r.store.ApplyLeaveBalanceDeduction(ctx, db.ApplyLeaveBalanceDeductionParams{
 		ID:        balanceID,
 		ExtraDays: extraDays,
 		LegalDays: legalDays,
@@ -421,7 +420,7 @@ func (r *leaveTxRepo) ApplyLeaveBalanceDeduction(ctx context.Context, balanceID 
 }
 
 func (r *leaveTxRepo) ApplyLeaveBalanceTotalAdjustment(ctx context.Context, balanceID uuid.UUID, legalDaysDelta, extraDaysDelta int32) (*domain.LeaveBalance, error) {
-	row, err := r.queries.ApplyLeaveBalanceTotalAdjustment(ctx, db.ApplyLeaveBalanceTotalAdjustmentParams{
+	row, err := r.store.ApplyLeaveBalanceTotalAdjustment(ctx, db.ApplyLeaveBalanceTotalAdjustmentParams{
 		ID:             balanceID,
 		LegalDaysDelta: legalDaysDelta,
 		ExtraDaysDelta: extraDaysDelta,
@@ -445,7 +444,7 @@ func (r *leaveTxRepo) ApplyLeaveBalanceTotalAdjustment(ctx context.Context, bala
 }
 
 func (r *leaveTxRepo) CreateLeaveBalanceAdjustmentAudit(ctx context.Context, params domain.CreateLeaveBalanceAdjustmentAuditParams) error {
-	_, err := r.queries.CreateLeaveBalanceAdjustmentAudit(ctx, db.CreateLeaveBalanceAdjustmentAuditParams{
+	_, err := r.store.CreateLeaveBalanceAdjustmentAudit(ctx, db.CreateLeaveBalanceAdjustmentAuditParams{
 		LeaveBalanceID:       params.LeaveBalanceID,
 		EmployeeID:           params.EmployeeID,
 		Year:                 params.Year,

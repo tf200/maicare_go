@@ -7,10 +7,10 @@ import (
 	"time"
 
 	db "maicare_go/db/sqlc"
+	"maicare_go/internal/domain"
 	pkgasynq "maicare_go/pkg/asynq"
 	pkgemail "maicare_go/pkg/email"
 	pkgpdf "maicare_go/pkg/pdf"
-	"maicare_go/service/notification"
 
 	"github.com/goccy/go-json"
 	"github.com/google/uuid"
@@ -81,7 +81,7 @@ func (processor *AsynqServer) ProcessIncidentTask(ctx context.Context, t *hibike
 		LocationName:            p.LocationName,
 	}
 
-	pdfName, err := processor.service.PDFService.GenerateAndUploadIncidentPDF(ctx, incidentData)
+	pdfName, err := processor.pdfSvc.GenerateAndUploadIncidentPDF(ctx, incidentData)
 	if err != nil {
 		log.Printf("Failed to generate and upload incident PDF: %v", err)
 		return fmt.Errorf("failed to generate and upload incident PDF: %v: %w", err, hibikenasynq.SkipRetry)
@@ -192,7 +192,7 @@ func (processor *AsynqServer) ProcessIncidentConfirmedEmailTask(ctx context.Cont
 		LocationName:            incident.LocationName,
 	}
 
-	pdfBytes, err := processor.service.PDFService.GenerateIncidentPDF(ctx, incidentData)
+	pdfBytes, err := processor.pdfSvc.GenerateIncidentPDF(ctx, incidentData)
 	if err != nil {
 		log.Printf("Failed to generate incident PDF for %s: %v", incident.ID.String(), err)
 		return fmt.Errorf("failed to generate incident pdf: %w", err)
@@ -226,18 +226,18 @@ func (processor *AsynqServer) ProcessIncidentConfirmedEmailTask(ctx context.Cont
 }
 
 func (a *AsynqServer) ProcessNotificationTask(ctx context.Context, t *hibikenasynq.Task) error {
-	var payload notification.NotificationPayload
+	var payload domain.NotificationPayload
 	if err := json.Unmarshal(t.Payload(), &payload); err != nil {
 		return fmt.Errorf("failed to unmarshal notification payload: %w: %v", hibikenasynq.SkipRetry, err)
 	}
 
 	log.Printf("Received notification task: %+v", payload)
 
-	if a.service.NotificationService == nil {
+	if a.notifSvc == nil {
 		return fmt.Errorf("notification service not initialized on AsynqServer: %w", hibikenasynq.SkipRetry)
 	}
 
-	err := a.service.NotificationService.CreateAndDeliver(ctx, payload)
+	err := a.notifSvc.CreateAndDeliver(ctx, payload)
 	if err != nil {
 		log.Printf("Error processing notification task (ID: %s, Type: %s): %v", t.ResultWriter().TaskID(), payload.Type, err)
 		return fmt.Errorf("notification service failed to process task: %w", err)
@@ -320,7 +320,7 @@ func (c *AsynqServer) ProcessContractRemiderTask(ctx context.Context, t *hibiken
 
 		log.Printf("Created contract reminder with ID: %d for contract ID: %d", reminder.ID, contract.ID)
 
-		notificationData := notification.ClientContractReminderData{
+		notificationData := domain.ClientContractReminderNotificationData{
 			ClientID:           contract.ClientID,
 			ClientFirstName:    contract.ClientFirstName,
 			ClientLastName:     contract.ClientLastName,
@@ -343,10 +343,10 @@ func (c *AsynqServer) ProcessContractRemiderTask(ctx context.Context, t *hibiken
 			return nil
 		}
 
-		notificationPayload := notification.NotificationPayload{
+		notificationPayload := domain.NotificationPayload{
 			RecipientUserIDs: make([]uuid.UUID, len(adminUsers)),
-			Type:             notification.TypeClientContractReminder,
-			Data: notification.NotificationData{
+			Type:             domain.TypeClientContractReminder,
+			Data: domain.NotificationData{
 				ClientContractReminder: &notificationData,
 			},
 			CreatedAt: time.Now(),
@@ -355,7 +355,7 @@ func (c *AsynqServer) ProcessContractRemiderTask(ctx context.Context, t *hibiken
 			notificationPayload.RecipientUserIDs[i] = user.ID
 		}
 
-		err = c.service.NotificationService.CreateAndDeliver(ctx, notificationPayload)
+		err = c.notifSvc.CreateAndDeliver(ctx, notificationPayload)
 		if err != nil {
 			log.Printf("Failed to deliver notification for contract ID %d: %v", contract.ID, err)
 			return fmt.Errorf("failed to deliver notification for contract ID %d: %v: %w", contract.ID, err, hibikenasynq.SkipRetry)

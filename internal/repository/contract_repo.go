@@ -14,18 +14,17 @@ import (
 )
 
 type ContractRepository struct {
-	queries db.Querier
-	store   *db.Store
+	store *db.Store
 }
 
-func NewContractRepository(queries db.Querier, store *db.Store) domain.ContractRepository {
-	return &ContractRepository{queries: queries, store: store}
+func NewContractRepository(store *db.Store) domain.ContractRepository {
+	return &ContractRepository{store: store}
 }
 
 // ==================== ContractType ====================
 
 func (r *ContractRepository) CreateContractType(ctx context.Context, params domain.CreateContractTypeParams) (*domain.ContractType, error) {
-	ct, err := r.queries.CreateContractType(ctx, params.Name)
+	ct, err := r.store.CreateContractType(ctx, params.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -33,7 +32,7 @@ func (r *ContractRepository) CreateContractType(ctx context.Context, params doma
 }
 
 func (r *ContractRepository) ListContractTypes(ctx context.Context) ([]domain.ContractType, error) {
-	rows, err := r.queries.ListContractTypes(ctx)
+	rows, err := r.store.ListContractTypes(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +44,7 @@ func (r *ContractRepository) ListContractTypes(ctx context.Context) ([]domain.Co
 }
 
 func (r *ContractRepository) DeleteContractType(ctx context.Context, contractTypeID uuid.UUID) error {
-	return r.queries.DeleteContractType(ctx, contractTypeID)
+	return r.store.DeleteContractType(ctx, contractTypeID)
 }
 
 // ==================== Contract CRUD ====================
@@ -62,7 +61,7 @@ func (r *ContractRepository) CreateContract(ctx context.Context, params domain.C
 		vat = &defaultVAT
 	}
 
-	contract, err := r.queries.CreateContract(ctx, db.CreateContractParams{
+	contract, err := r.store.CreateContract(ctx, db.CreateContractParams{
 		TypeID:          params.TypeID,
 		Status:          db.ContractStatusEnumDraft,
 		StartDate:       conv.PgTimestamptzFromTime(params.StartDate),
@@ -88,7 +87,7 @@ func (r *ContractRepository) CreateContract(ctx context.Context, params domain.C
 }
 
 func (r *ContractRepository) GetContractByID(ctx context.Context, contractID uuid.UUID) (*domain.ContractDetail, error) {
-	row, err := r.queries.GetClientContract(ctx, contractID)
+	row, err := r.store.GetClientContract(ctx, contractID)
 	if err != nil {
 		return nil, err
 	}
@@ -242,7 +241,7 @@ func (r *ContractRepository) UpdateContractStatus(ctx context.Context, params do
 }
 
 func (r *ContractRepository) ListClientContracts(ctx context.Context, params domain.ListClientContractsParams) ([]domain.ClientContractListItem, int64, error) {
-	rows, err := r.queries.ListClientContracts(ctx, db.ListClientContractsParams{
+	rows, err := r.store.ListClientContracts(ctx, db.ListClientContractsParams{
 		ClientID: params.ClientID,
 		Limit:    params.Limit,
 		Offset:   params.Offset,
@@ -272,7 +271,7 @@ func (r *ContractRepository) ListClientContracts(ctx context.Context, params dom
 }
 
 func (r *ContractRepository) ListContracts(ctx context.Context, params domain.ListContractsParams) ([]domain.ContractListItem, int64, error) {
-	rows, err := r.queries.ListContracts(ctx, db.ListContractsParams{
+	rows, err := r.store.ListContracts(ctx, db.ListContractsParams{
 		Limit:  params.Limit,
 		Offset: params.Offset,
 		Search: params.Search,
@@ -371,7 +370,7 @@ func (r *ContractRepository) ListContracts(ctx context.Context, params domain.Li
 }
 
 func (r *ContractRepository) GetAttachmentFiles(ctx context.Context, ids []uuid.UUID) ([]domain.AttachmentFile, error) {
-	rows, err := r.queries.GetAttachmentsByUUIDs(ctx, ids)
+	rows, err := r.store.GetAttachmentsByUUIDs(ctx, ids)
 	if err != nil {
 		return nil, err
 	}
@@ -392,7 +391,7 @@ func (r *ContractRepository) GetAttachmentFiles(ctx context.Context, ids []uuid.
 }
 
 func (r *ContractRepository) GetContractAuditLog(ctx context.Context, contractID uuid.UUID) ([]domain.ContractAuditLog, error) {
-	rows, err := r.queries.GetContractAudit(ctx, contractID)
+	rows, err := r.store.GetContractAudit(ctx, contractID)
 	if err != nil {
 		return nil, err
 	}

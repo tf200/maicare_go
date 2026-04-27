@@ -12,16 +12,15 @@ import (
 )
 
 type NotificationRepository struct {
-	queries *db.Queries
-	store   *db.Store
+	store *db.Store
 }
 
-func NewNotificationRepository(queries *db.Queries, store *db.Store) domain.NotificationRepository {
-	return &NotificationRepository{queries: queries, store: store}
+func NewNotificationRepository(store *db.Store) domain.NotificationRepository {
+	return &NotificationRepository{store: store}
 }
 
 func (r *NotificationRepository) ListNotifications(ctx context.Context, userID uuid.UUID, limit, offset int32) ([]domain.Notification, error) {
-	rows, err := r.queries.ListNotifications(ctx, db.ListNotificationsParams{
+	rows, err := r.store.ListNotifications(ctx, db.ListNotificationsParams{
 		UserID: userID,
 		Limit:  limit,
 		Offset: offset,
@@ -81,6 +80,33 @@ func (r *NotificationRepository) MarkNotificationAsRead(ctx context.Context, not
 		Message:   row.Message,
 		IsRead:    row.IsRead,
 		Data:      data,
+		CreatedAt: row.CreatedAt.Time,
+	}, nil
+}
+
+func (r *NotificationRepository) CreateNotification(ctx context.Context, userID uuid.UUID, notifType string, data []byte, message string) (*domain.Notification, error) {
+	row, err := r.store.CreateNotification(ctx, db.CreateNotificationParams{
+		UserID:  userID,
+		Type:    db.NotificationTypeEnum(notifType),
+		Data:    data,
+		Message: message,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	var notifData domain.NotificationData
+	if len(row.Data) > 0 {
+		_ = json.Unmarshal(row.Data, &notifData)
+	}
+
+	return &domain.Notification{
+		ID:        row.ID,
+		UserID:    row.UserID,
+		Type:      string(row.Type),
+		Message:   row.Message,
+		IsRead:    row.IsRead,
+		Data:      notifData,
 		CreatedAt: row.CreatedAt.Time,
 	}, nil
 }

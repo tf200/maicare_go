@@ -2,10 +2,12 @@ package db
 
 import (
 	"context"
-	"github.com/goccy/go-json"
 	"errors"
 	"fmt"
-	"maicare_go/infra"
+
+	"maicare_go/internal/ctxkeys"
+
+	"github.com/goccy/go-json"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -33,7 +35,7 @@ func (store *Store) ExecTx(ctx context.Context, fn TxFn) error {
 		return err
 	}
 
-	employeeID := infra.GetEmployeeID(ctx)
+	employeeID := ctxkeys.EmployeeIDFromContext(ctx)
 	fmt.Printf("employeeID: %s\n", employeeID.String())
 
 	if employeeID != uuid.Nil {
@@ -93,7 +95,7 @@ func (store *Store) CreateEmployeeWithAccountTx(ctx context.Context, arg CreateE
 					return tmplErr
 				}
 			} else {
-				assignedBy := infra.GetEmployeeID(ctx)
+				assignedBy := ctxkeys.EmployeeIDFromContext(ctx)
 				var assignedByPtr *uuid.UUID
 				if assignedBy != uuid.Nil {
 					assignedByPtr = &assignedBy

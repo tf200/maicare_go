@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 
+	"maicare_go/internal/ctxkeys"
 	"maicare_go/internal/domain"
 	"maicare_go/internal/httpapi"
 
@@ -65,6 +66,7 @@ func (m *AuthMiddleware) Handle() gin.HandlerFunc {
 		}
 
 		requestCtx := WithAuthPayload(ctx.Request.Context(), payload)
+		requestCtx = ctxkeys.WithEmployeeID(requestCtx, payload.EmployeeID)
 		ctx.Request = ctx.Request.WithContext(requestCtx)
 		ctx.Set(string(authPayloadKey), payload)
 		ctx.Set("user_id", payload.UserID.String())

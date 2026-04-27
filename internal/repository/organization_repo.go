@@ -11,15 +11,15 @@ import (
 )
 
 type OrganizationRepository struct {
-	queries db.Querier
+	store *db.Store
 }
 
-func NewOrganizationRepository(queries db.Querier) domain.OrganizationRepository {
-	return &OrganizationRepository{queries: queries}
+func NewOrganizationRepository(store *db.Store) domain.OrganizationRepository {
+	return &OrganizationRepository{store: store}
 }
 
 func (r *OrganizationRepository) CreateOrganization(ctx context.Context, params domain.CreateOrganizationParams) (*domain.Organization, error) {
-	organization, err := r.queries.CreateOrganisation(ctx, db.CreateOrganisationParams{
+	organization, err := r.store.CreateOrganisation(ctx, db.CreateOrganisationParams{
 		Name:                params.Name,
 		Street:              params.Street,
 		HouseNumber:         params.HouseNumber,
@@ -39,7 +39,7 @@ func (r *OrganizationRepository) CreateOrganization(ctx context.Context, params 
 }
 
 func (r *OrganizationRepository) UpdateOrganization(ctx context.Context, organizationID uuid.UUID, params domain.UpdateOrganizationParams) (*domain.Organization, error) {
-	organization, err := r.queries.UpdateOrganisation(ctx, db.UpdateOrganisationParams{
+	organization, err := r.store.UpdateOrganisation(ctx, db.UpdateOrganisationParams{
 		ID:                  organizationID,
 		Name:                params.Name,
 		Street:              params.Street,
@@ -60,12 +60,12 @@ func (r *OrganizationRepository) UpdateOrganization(ctx context.Context, organiz
 }
 
 func (r *OrganizationRepository) DeleteOrganization(ctx context.Context, organizationID uuid.UUID) error {
-	_, err := r.queries.DeleteOrganisation(ctx, organizationID)
+	_, err := r.store.DeleteOrganisation(ctx, organizationID)
 	return err
 }
 
 func (r *OrganizationRepository) CreateOrganizationLocation(ctx context.Context, organizationID uuid.UUID, params domain.CreateOrganizationLocationParams) (*domain.OrganizationLocation, error) {
-	location, err := r.queries.CreateLocation(ctx, db.CreateLocationParams{
+	location, err := r.store.CreateLocation(ctx, db.CreateLocationParams{
 		OrganisationID:      organizationID,
 		Name:                params.Name,
 		Street:              params.Street,
@@ -84,7 +84,7 @@ func (r *OrganizationRepository) CreateOrganizationLocation(ctx context.Context,
 }
 
 func (r *OrganizationRepository) GetLocationByID(ctx context.Context, locationID uuid.UUID) (*domain.OrganizationLocation, error) {
-	location, err := r.queries.GetLocation(ctx, locationID)
+	location, err := r.store.GetLocation(ctx, locationID)
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +94,7 @@ func (r *OrganizationRepository) GetLocationByID(ctx context.Context, locationID
 }
 
 func (r *OrganizationRepository) UpdateLocation(ctx context.Context, locationID uuid.UUID, params domain.UpdateOrganizationLocationParams) (*domain.OrganizationLocation, error) {
-	location, err := r.queries.UpdateLocation(ctx, db.UpdateLocationParams{
+	location, err := r.store.UpdateLocation(ctx, db.UpdateLocationParams{
 		ID:                  locationID,
 		Name:                params.Name,
 		Street:              params.Street,
@@ -113,7 +113,7 @@ func (r *OrganizationRepository) UpdateLocation(ctx context.Context, locationID 
 }
 
 func (r *OrganizationRepository) DeleteLocation(ctx context.Context, locationID uuid.UUID) error {
-	_, err := r.queries.DeleteLocation(ctx, locationID)
+	_, err := r.store.DeleteLocation(ctx, locationID)
 	return err
 }
 
@@ -128,7 +128,7 @@ func (r *OrganizationRepository) CreateShift(ctx context.Context, params domain.
 		return nil, err
 	}
 
-	shift, err := r.queries.CreateShift(ctx, db.CreateShiftParams{
+	shift, err := r.store.CreateShift(ctx, db.CreateShiftParams{
 		LocationID: params.LocationID,
 		Slot:       params.Slot,
 		ShiftName:  params.ShiftName,
@@ -162,7 +162,7 @@ func (r *OrganizationRepository) UpdateShift(ctx context.Context, shiftID uuid.U
 		return nil, err
 	}
 
-	shift, err := r.queries.UpdateShift(ctx, db.UpdateShiftParams{
+	shift, err := r.store.UpdateShift(ctx, db.UpdateShiftParams{
 		ID:        shiftID,
 		ShiftName: params.ShiftName,
 		StartTime: startTime,
@@ -185,11 +185,11 @@ func (r *OrganizationRepository) UpdateShift(ctx context.Context, shiftID uuid.U
 }
 
 func (r *OrganizationRepository) DeleteShift(ctx context.Context, shiftID uuid.UUID) error {
-	return r.queries.DeleteShift(ctx, shiftID)
+	return r.store.DeleteShift(ctx, shiftID)
 }
 
 func (r *OrganizationRepository) GetShiftsByLocationID(ctx context.Context, locationID uuid.UUID) ([]domain.OrganizationLocationShift, error) {
-	shifts, err := r.queries.GetShiftsByLocationID(ctx, locationID)
+	shifts, err := r.store.GetShiftsByLocationID(ctx, locationID)
 	if err != nil {
 		return nil, err
 	}
@@ -210,7 +210,7 @@ func (r *OrganizationRepository) GetShiftsByLocationID(ctx context.Context, loca
 }
 
 func (r *OrganizationRepository) GetOrganizationCounts(ctx context.Context, organizationID uuid.UUID) (*domain.OrganizationCounts, error) {
-	counts, err := r.queries.GetOrganisationCounts(ctx, organizationID)
+	counts, err := r.store.GetOrganisationCounts(ctx, organizationID)
 	if err != nil {
 		return nil, err
 	}
@@ -225,7 +225,7 @@ func (r *OrganizationRepository) GetOrganizationCounts(ctx context.Context, orga
 }
 
 func (r *OrganizationRepository) GetGlobalOrganizationCounts(ctx context.Context) (*domain.GlobalOrganizationCounts, error) {
-	counts, err := r.queries.GetGlobalOrganisationCounts(ctx)
+	counts, err := r.store.GetGlobalOrganisationCounts(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -237,7 +237,7 @@ func (r *OrganizationRepository) GetGlobalOrganizationCounts(ctx context.Context
 }
 
 func (r *OrganizationRepository) GetOrganizationByID(ctx context.Context, organizationID uuid.UUID) (*domain.Organization, error) {
-	organization, err := r.queries.GetOrganisation(ctx, organizationID)
+	organization, err := r.store.GetOrganisation(ctx, organizationID)
 	if err != nil {
 		return nil, err
 	}
@@ -246,7 +246,7 @@ func (r *OrganizationRepository) GetOrganizationByID(ctx context.Context, organi
 }
 
 func (r *OrganizationRepository) ListOrganizations(ctx context.Context, params domain.ListOrganizationsParams) (*domain.OrganizationPage, error) {
-	rows, err := r.queries.ListOrganisationsPaginated(ctx, db.ListOrganisationsPaginatedParams{
+	rows, err := r.store.ListOrganisationsPaginated(ctx, db.ListOrganisationsPaginatedParams{
 		Limit:   params.Limit,
 		Offset:  params.Offset,
 		Column3: params.Search,
@@ -271,7 +271,7 @@ func (r *OrganizationRepository) ListOrganizations(ctx context.Context, params d
 }
 
 func (r *OrganizationRepository) ListOrganizationLocations(ctx context.Context, params domain.ListOrganizationLocationsParams) (*domain.OrganizationLocationPage, error) {
-	rows, err := r.queries.ListLocationsPaginated(ctx, db.ListLocationsPaginatedParams{
+	rows, err := r.store.ListLocationsPaginated(ctx, db.ListLocationsPaginatedParams{
 		OrganisationID: params.OrganizationID,
 		Limit:          params.Limit,
 		Offset:         params.Offset,
@@ -286,7 +286,7 @@ func (r *OrganizationRepository) ListOrganizationLocations(ctx context.Context, 
 	}
 
 	for _, row := range rows {
-		shifts, err := r.queries.GetShiftsByLocationID(ctx, row.ID)
+		shifts, err := r.store.GetShiftsByLocationID(ctx, row.ID)
 		if err != nil {
 			return nil, err
 		}
@@ -299,7 +299,7 @@ func (r *OrganizationRepository) ListOrganizationLocations(ctx context.Context, 
 }
 
 func (r *OrganizationRepository) ListAllLocations(ctx context.Context, params domain.ListAllLocationsParams) (*domain.OrganizationLocationPage, error) {
-	rows, err := r.queries.ListAllLocationsPaginated(ctx, db.ListAllLocationsPaginatedParams{
+	rows, err := r.store.ListAllLocationsPaginated(ctx, db.ListAllLocationsPaginatedParams{
 		Limit:   params.Limit,
 		Offset:  params.Offset,
 		Column3: params.Search,
@@ -313,7 +313,7 @@ func (r *OrganizationRepository) ListAllLocations(ctx context.Context, params do
 	}
 
 	for _, row := range rows {
-		shifts, err := r.queries.GetShiftsByLocationID(ctx, row.ID)
+		shifts, err := r.store.GetShiftsByLocationID(ctx, row.ID)
 		if err != nil {
 			return nil, err
 		}

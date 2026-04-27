@@ -79,49 +79,6 @@ func (s *RoleService) ListAllPermissions(ctx context.Context) ([]domain.Permissi
 	return result, nil
 }
 
-	groupOrder := make([]string, 0, 16)
-	grouped := make(map[string]*domain.SystemPermissionGroup, 16)
-
-	for _, perm := range permissions {
-		group, exists := grouped[perm.GroupKey]
-		if !exists {
-			groupOrder = append(groupOrder, perm.GroupKey)
-			group = &domain.SystemPermissionGroup{
-				GroupKey:   perm.GroupKey,
-				GroupLabel: humanizePermissionKey(perm.GroupKey),
-				Sections:   make([]domain.SystemPermissionSection, 0, 4),
-			}
-			grouped[perm.GroupKey] = group
-		}
-
-		sectionIndex := -1
-		for i := range group.Sections {
-			if group.Sections[i].SectionKey == perm.SectionKey {
-				sectionIndex = i
-				break
-			}
-		}
-
-		if sectionIndex == -1 {
-			group.Sections = append(group.Sections, domain.SystemPermissionSection{
-				SectionKey:   perm.SectionKey,
-				SectionLabel: humanizePermissionKey(perm.SectionKey),
-				Permissions:  make([]domain.SystemPermission, 0, 8),
-			})
-			sectionIndex = len(group.Sections) - 1
-		}
-
-		group.Sections[sectionIndex].Permissions = append(group.Sections[sectionIndex].Permissions, perm)
-	}
-
-	result := make([]domain.SystemPermissionGroup, 0, len(groupOrder))
-	for _, key := range groupOrder {
-		result = append(result, *grouped[key])
-	}
-
-	return result, nil
-}
-
 func (s *RoleService) ListAllRolePermissions(ctx context.Context, roleID uuid.UUID) ([]domain.RolePermission, error) {
 	perms, err := s.repo.ListAllRolePermissions(ctx, roleID)
 	if err != nil {
@@ -177,19 +134,19 @@ func (s *RoleService) ListUserRolesAndPermissions(ctx context.Context, employeeI
 		return nil, fmt.Errorf("failed to list effective user permissions: %w", err)
 	}
 
-	inheritedList := make([]domain.SystemPermissionInfo, 0, len(inherited))
+	inheritedList := make([]domain.PermissionInfo, 0, len(inherited))
 	for _, perm := range inherited {
-		inheritedList = append(inheritedList, domain.SystemPermissionInfo{
+		inheritedList = append(inheritedList, domain.PermissionInfo{
 			ID:       perm.PermissionID,
 			Name:     perm.PermissionName,
 			Resource: perm.Resource,
 		})
 	}
 
-	allowOverrides := make([]domain.SystemPermissionOverrideInfo, 0)
-	denyOverrides := make([]domain.SystemPermissionOverrideInfo, 0)
+	allowOverrides := make([]domain.PermissionOverrideInfo, 0)
+	denyOverrides := make([]domain.PermissionOverrideInfo, 0)
 	for _, override := range overrides {
-		item := domain.SystemPermissionOverrideInfo{
+		item := domain.PermissionOverrideInfo{
 			ID:       override.PermissionID,
 			Name:     override.PermissionName,
 			Resource: override.Resource,
@@ -201,9 +158,9 @@ func (s *RoleService) ListUserRolesAndPermissions(ctx context.Context, employeeI
 		}
 	}
 
-	effectiveList := make([]domain.SystemPermissionInfo, 0, len(effective))
+	effectiveList := make([]domain.PermissionInfo, 0, len(effective))
 	for _, perm := range effective {
-		effectiveList = append(effectiveList, domain.SystemPermissionInfo{
+		effectiveList = append(effectiveList, domain.PermissionInfo{
 			ID:       perm.PermissionID,
 			Name:     perm.PermissionName,
 			Resource: perm.Resource,

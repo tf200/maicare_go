@@ -13,15 +13,15 @@ import (
 )
 
 type AuthRepository struct {
-	queries db.Querier
+	store *db.Store
 }
 
-func NewAuthRepository(queries db.Querier) domain.AuthRepository {
-	return &AuthRepository{queries: queries}
+func NewAuthRepository(store *db.Store) domain.AuthRepository {
+	return &AuthRepository{store: store}
 }
 
 func (r *AuthRepository) GetUserByEmail(ctx context.Context, email string) (*domain.AuthUser, error) {
-	row, err := r.queries.GetUserByEmail(ctx, email)
+	row, err := r.store.GetUserByEmail(ctx, email)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, domain.ErrUserNotFound
@@ -33,7 +33,7 @@ func (r *AuthRepository) GetUserByEmail(ctx context.Context, email string) (*dom
 }
 
 func (r *AuthRepository) GetUserByID(ctx context.Context, id uuid.UUID) (*domain.AuthUser, error) {
-	row, err := r.queries.GetUserByID(ctx, id)
+	row, err := r.store.GetUserByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, domain.ErrUserNotFound
@@ -49,7 +49,7 @@ func (r *AuthRepository) CreateTemp2FaSecret(ctx context.Context, userID uuid.UU
 		ID:                  userID,
 		TwoFactorSecretTemp: secret,
 	}
-	return r.queries.CreateTemp2FaSecret(ctx, params)
+	return r.store.CreateTemp2FaSecret(ctx, params)
 }
 
 func (r *AuthRepository) Enable2Fa(ctx context.Context, userID uuid.UUID, secret *string, recoveryCodes []string) (int64, error) {
@@ -58,7 +58,7 @@ func (r *AuthRepository) Enable2Fa(ctx context.Context, userID uuid.UUID, secret
 		TwoFactorSecret: secret,
 		RecoveryCodes:   recoveryCodes,
 	}
-	return r.queries.Enable2Fa(ctx, params)
+	return r.store.Enable2Fa(ctx, params)
 }
 
 func (r *AuthRepository) UpdatePassword(ctx context.Context, userID uuid.UUID, password string) error {
@@ -66,11 +66,11 @@ func (r *AuthRepository) UpdatePassword(ctx context.Context, userID uuid.UUID, p
 		ID:       userID,
 		Password: password,
 	}
-	return r.queries.UpdatePassword(ctx, params)
+	return r.store.UpdatePassword(ctx, params)
 }
 
 func (r *AuthRepository) CreateSession(ctx context.Context, params domain.CreateSessionParams) (*domain.AuthSession, error) {
-	row, err := r.queries.CreateSession(ctx, db.CreateSessionParams{
+	row, err := r.store.CreateSession(ctx, db.CreateSessionParams{
 		ID:           params.ID,
 		RefreshToken: params.RefreshToken,
 		UserAgent:    params.UserAgent,
@@ -88,7 +88,7 @@ func (r *AuthRepository) CreateSession(ctx context.Context, params domain.Create
 }
 
 func (r *AuthRepository) GetSessionByID(ctx context.Context, id uuid.UUID) (*domain.AuthSession, error) {
-	row, err := r.queries.GetSessionByID(ctx, id)
+	row, err := r.store.GetSessionByID(ctx, id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, domain.ErrSessionNotFound
@@ -100,7 +100,7 @@ func (r *AuthRepository) GetSessionByID(ctx context.Context, id uuid.UUID) (*dom
 }
 
 func (r *AuthRepository) DeleteSession(ctx context.Context, id uuid.UUID) error {
-	return r.queries.DeleteSession(ctx, id)
+	return r.store.DeleteSession(ctx, id)
 }
 
 func toDomainAuthUserFromEmailRow(row db.GetUserByEmailRow) *domain.AuthUser {

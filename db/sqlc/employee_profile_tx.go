@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"maicare_go/util"
-
 	"github.com/google/uuid"
 )
 
@@ -32,7 +30,7 @@ func (store *Store) SetEmployeeProfilePictureTx(ctx context.Context, arg SetEmpl
 
 		result.User, err = q.SetEmployeeProfilePicture(ctx, SetEmployeeProfilePictureParams{
 			ID:             arg.EmployeeID,
-			ProfilePicture: util.StringPtr(attachement.File),
+			ProfilePicture: stringPtr(attachement.File),
 		})
 		if err != nil {
 			return fmt.Errorf("failed to create client details: %w", err)
@@ -42,4 +40,8 @@ func (store *Store) SetEmployeeProfilePictureTx(ctx context.Context, arg SetEmpl
 	})
 
 	return result, err
+}
+
+func stringPtr(s string) *string {
+	return &s
 }

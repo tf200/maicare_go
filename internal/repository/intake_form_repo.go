@@ -17,12 +17,11 @@ import (
 )
 
 type IntakeFormRepository struct {
-	queries *db.Queries
-	store   *db.Store
+	store *db.Store
 }
 
-func NewIntakeFormRepository(queries *db.Queries, store *db.Store) domain.IntakeFormRepository {
-	return &IntakeFormRepository{queries: queries, store: store}
+func NewIntakeFormRepository(store *db.Store) domain.IntakeFormRepository {
+	return &IntakeFormRepository{store: store}
 }
 
 func (r *IntakeFormRepository) ExecTx(ctx context.Context, fn func(*db.Queries) error) error {
@@ -31,7 +30,7 @@ func (r *IntakeFormRepository) ExecTx(ctx context.Context, fn func(*db.Queries) 
 
 func (r *IntakeFormRepository) CreateIntakeForm(ctx context.Context, params domain.CreateIntakeFormParams) (*domain.IntakeForm, error) {
 	// Validate registration form exists and status is processed
-	regForm, err := r.queries.GetRegistrationForm(ctx, params.RegistrationFormID)
+	regForm, err := r.store.GetRegistrationForm(ctx, params.RegistrationFormID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, fmt.Errorf("registration form not found: %w", err)
@@ -44,7 +43,7 @@ func (r *IntakeFormRepository) CreateIntakeForm(ctx context.Context, params doma
 	}
 
 	// Check if intake form already exists for this registration form
-	_, err = r.queries.GetIntakeFormByRegistrationFormID(ctx, params.RegistrationFormID)
+	_, err = r.store.GetIntakeFormByRegistrationFormID(ctx, params.RegistrationFormID)
 	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 		return nil, fmt.Errorf("failed to check existing intake form: %w", err)
 	}
@@ -69,7 +68,7 @@ func (r *IntakeFormRepository) CreateIntakeForm(ctx context.Context, params doma
 		Signature:                params.Signature,
 	}
 
-	intakeForm, err := r.queries.CreateIntakeForm(ctx, dbParams)
+	intakeForm, err := r.store.CreateIntakeForm(ctx, dbParams)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create intake form: %w", err)
 	}
@@ -111,7 +110,7 @@ func (r *IntakeFormRepository) ListIntakeForms(ctx context.Context, params domai
 		SortOrder: sortOrder,
 	}
 
-	rows, err := r.queries.ListIntakeForms(ctx, dbParams)
+	rows, err := r.store.ListIntakeForms(ctx, dbParams)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to list intake forms: %w", err)
 	}
@@ -130,7 +129,7 @@ func (r *IntakeFormRepository) ListIntakeForms(ctx context.Context, params domai
 }
 
 func (r *IntakeFormRepository) GetIntakeFormTotals(ctx context.Context) (*domain.IntakeFormTotals, error) {
-	row, err := r.queries.GetIntakeFormTotals(ctx)
+	row, err := r.store.GetIntakeFormTotals(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get intake form totals: %w", err)
 	}
@@ -142,7 +141,7 @@ func (r *IntakeFormRepository) GetIntakeFormTotals(ctx context.Context) (*domain
 }
 
 func (r *IntakeFormRepository) GetIntakeFormDetail(ctx context.Context, id uuid.UUID) (*domain.IntakeFormDetail, error) {
-	row, err := r.queries.GetIntakeFormDetails(ctx, id)
+	row, err := r.store.GetIntakeFormDetails(ctx, id)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, domain.ErrIntakeFormNotFound
@@ -151,7 +150,7 @@ func (r *IntakeFormRepository) GetIntakeFormDetail(ctx context.Context, id uuid.
 	}
 
 	// Get topic assessments
-	assessmentsRows, err := r.queries.GetIntakeTopicsAssessments(ctx, id)
+	assessmentsRows, err := r.store.GetIntakeTopicsAssessments(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get intake topic assessments: %w", err)
 	}
@@ -256,16 +255,16 @@ func (r *IntakeFormRepository) UpdateIntakeForm(ctx context.Context, params doma
 		}
 	}
 
-	intakeForm, err := r.queries.UpdateIntakeForm(ctx, dbParams)
+	intakeForm, err := r.store.UpdateIntakeForm(ctx, dbParams)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			// Check if there's an active client blocking the update
-			hasActiveClient, checkErr := r.queries.HasActiveClientByIntakeFormID(ctx, &params.ID)
+			hasActiveClient, checkErr := r.store.HasActiveClientByIntakeFormID(ctx, &params.ID)
 			if checkErr == nil && hasActiveClient {
 				return nil, domain.ErrIntakeFormUpdateBlockedByActiveClient
 			}
 			// Check if the intake form exists at all
-			_, existsErr := r.queries.GetIntakeForm(ctx, params.ID)
+			_, existsErr := r.store.GetIntakeForm(ctx, params.ID)
 			if existsErr != nil {
 				if errors.Is(existsErr, pgx.ErrNoRows) {
 					return nil, err // Return original error for not found
@@ -298,7 +297,7 @@ func (r *IntakeFormRepository) UpdateIntakeConclusion(ctx context.Context, id uu
 		IntakeConclusionNotes: params.IntakeConclusionNotes,
 	}
 
-	intakeForm, err := r.queries.UpdateIntakeConclusion(ctx, dbParams)
+	intakeForm, err := r.store.UpdateIntakeConclusion(ctx, dbParams)
 	if err != nil {
 		return nil, fmt.Errorf("failed to update intake conclusion: %w", err)
 	}
@@ -557,55 +556,55 @@ func (r *IntakeFormRepository) PromoteIntakeToClient(ctx context.Context, params
 }
 
 func (r *IntakeFormRepository) GetIntakeForm(ctx context.Context, id uuid.UUID) (db.IntakeForm, error) {
-	return r.queries.GetIntakeForm(ctx, id)
+	return r.store.GetIntakeForm(ctx, id)
 }
 
 func (r *IntakeFormRepository) GetIntakeFormByRegistrationFormID(ctx context.Context, registrationFormID uuid.UUID) (db.IntakeForm, error) {
-	return r.queries.GetIntakeFormByRegistrationFormID(ctx, registrationFormID)
+	return r.store.GetIntakeFormByRegistrationFormID(ctx, registrationFormID)
 }
 
 func (r *IntakeFormRepository) GetRegistrationForm(ctx context.Context, id uuid.UUID) (db.GetRegistrationFormRow, error) {
-	return r.queries.GetRegistrationForm(ctx, id)
+	return r.store.GetRegistrationForm(ctx, id)
 }
 
 func (r *IntakeFormRepository) GetIntakeMaturityAssessment(ctx context.Context, id uuid.UUID) (db.GetIntakeMaturityAssessmentRow, error) {
-	return r.queries.GetIntakeMaturityAssessment(ctx, id)
+	return r.store.GetIntakeMaturityAssessment(ctx, id)
 }
 
 func (r *IntakeFormRepository) GetTopicLevel(ctx context.Context, params db.GetTopicLevelParams) (db.GetTopicLevelRow, error) {
-	return r.queries.GetTopicLevel(ctx, params)
+	return r.store.GetTopicLevel(ctx, params)
 }
 
 func (r *IntakeFormRepository) HasActiveClientByIntakeFormID(ctx context.Context, intakeFormID *uuid.UUID) (bool, error) {
-	return r.queries.HasActiveClientByIntakeFormID(ctx, intakeFormID)
+	return r.store.HasActiveClientByIntakeFormID(ctx, intakeFormID)
 }
 
 func (r *IntakeFormRepository) LockIntakeFormByID(ctx context.Context, id uuid.UUID) (uuid.UUID, error) {
-	return r.queries.LockIntakeFormByID(ctx, id)
+	return r.store.LockIntakeFormByID(ctx, id)
 }
 
 func (r *IntakeFormRepository) GetClientByIntakeFormID(ctx context.Context, intakeFormID *uuid.UUID) (db.ClientDetail, error) {
-	return r.queries.GetClientByIntakeFormID(ctx, intakeFormID)
+	return r.store.GetClientByIntakeFormID(ctx, intakeFormID)
 }
 
 func (r *IntakeFormRepository) CreateClientDetails(ctx context.Context, params db.CreateClientDetailsParams) (db.ClientDetail, error) {
-	return r.queries.CreateClientDetails(ctx, params)
+	return r.store.CreateClientDetails(ctx, params)
 }
 
 func (r *IntakeFormRepository) CreateClientGoalsFromIntakeAssessments(ctx context.Context, params db.CreateClientGoalsFromIntakeAssessmentsParams) ([]db.CreateClientGoalsFromIntakeAssessmentsRow, error) {
-	return r.queries.CreateClientGoalsFromIntakeAssessments(ctx, params)
+	return r.store.CreateClientGoalsFromIntakeAssessments(ctx, params)
 }
 
 func (r *IntakeFormRepository) CreateEmergencyContact(ctx context.Context, params db.CreateEmemrgencyContactParams) (db.ClientEmergencyContact, error) {
-	return r.queries.CreateEmemrgencyContact(ctx, params)
+	return r.store.CreateEmemrgencyContact(ctx, params)
 }
 
 func (r *IntakeFormRepository) CreateIntakeTopicAssessmentsBatch(ctx context.Context, params db.CreateIntakeTopicAssessmentsBatchParams) ([]db.CreateIntakeTopicAssessmentsBatchRow, error) {
-	return r.queries.CreateIntakeTopicAssessmentsBatch(ctx, params)
+	return r.store.CreateIntakeTopicAssessmentsBatch(ctx, params)
 }
 
 func (r *IntakeFormRepository) DeleteIntakeTopicAssessmentsByIntakeForm(ctx context.Context, intakeFormID uuid.UUID) error {
-	return r.queries.DeleteIntakeTopicAssessmentsByIntakeForm(ctx, intakeFormID)
+	return r.store.DeleteIntakeTopicAssessmentsByIntakeForm(ctx, intakeFormID)
 }
 
 // Helper functions

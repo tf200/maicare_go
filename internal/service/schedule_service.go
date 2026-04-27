@@ -7,9 +7,7 @@ import (
 	"runtime"
 	"time"
 
-	"maicare_go/async/aclient"
 	"maicare_go/internal/domain"
-	"maicare_go/service/notification"
 
 	"github.com/google/or-tools/ortools/sat/go/cpmodel"
 	cmpb "github.com/google/or-tools/ortools/sat/proto/cpmodel"
@@ -20,16 +18,16 @@ import (
 )
 
 type ScheduleService struct {
-	repository  domain.ScheduleRepository
-	asynqClient aclient.AsynqClientInterface
-	logger      domain.Logger
+	repository domain.ScheduleRepository
+	notifSvc   domain.NotificationService
+	logger     domain.Logger
 }
 
-func NewScheduleService(repository domain.ScheduleRepository, asynqClient aclient.AsynqClientInterface, logger domain.Logger) domain.ScheduleService {
+func NewScheduleService(repository domain.ScheduleRepository, notifSvc domain.NotificationService, logger domain.Logger) domain.ScheduleService {
 	return &ScheduleService{
-		repository:  repository,
-		asynqClient: asynqClient,
-		logger:      logger,
+		repository: repository,
+		notifSvc:   notifSvc,
+		logger:     logger,
 	}
 }
 
@@ -321,25 +319,27 @@ func (s *ScheduleService) createPresetScheduleForDate(ctx context.Context, creat
 }
 
 func (s *ScheduleService) sendNotificationForNewSchedule(ctx context.Context, scheduleID uuid.UUID, creatorID, recipientID uuid.UUID, startTime, endTime time.Time, locationName string) {
-	if s.asynqClient == nil {
+	if s.notifSvc == nil {
 		return
 	}
-	notifData := &notification.NewScheduleNotificationData{
+	notifData := &domain.NewScheduleNotificationNotificationData{
 		ScheduleID: scheduleID,
 		CreatedBy:  creatorID,
 		StartTime:  startTime,
 		EndTime:    endTime,
 		Location:   locationName,
 	}
-	err := s.asynqClient.EnqueueNotificationTask(ctx, notification.NotificationPayload{
+	err := s.notifSvc.CreateAndDeliver(ctx, domain.NotificationPayload{
 		RecipientUserIDs: []uuid.UUID{recipientID},
-		Type:             notification.TypeNewScheduleNotification,
-		Data:             notification.NotificationData{NewScheduleNotification: notifData},
-		CreatedAt:        time.Now(),
-		Message:          notifData.NewScheduleMessage(),
+		Type:             domain.TypeNewScheduleNotification,
+		Data: domain.NotificationData{
+			NewScheduleNotification: notifData,
+		},
+		CreatedAt: time.Now(),
+		Message:   notifData.NewScheduleMessage(),
 	})
 	if err != nil {
-		s.logError(ctx, "sendNotificationForNewSchedule", "failed to enqueue new schedule notification", err, zap.String("schedule_id", scheduleID.String()))
+		s.logError(ctx, "sendNotificationForNewSchedule", "failed to deliver new schedule notification", err, zap.String("schedule_id", scheduleID.String()))
 	}
 }
 
@@ -491,25 +491,27 @@ func (s *ScheduleService) validateCustomScheduleUpdate(req *domain.UpdateSchedul
 }
 
 func (s *ScheduleService) sendNotificationForUpdatedSchedule(ctx context.Context, scheduleID uuid.UUID, updaterEmployeeID, recipientEmployeeID uuid.UUID, startTime, endTime time.Time, locationName string) {
-	if s.asynqClient == nil {
+	if s.notifSvc == nil {
 		return
 	}
-	notifData := &notification.NewScheduleNotificationData{
+	notifData := &domain.NewScheduleNotificationNotificationData{
 		ScheduleID: scheduleID,
 		CreatedBy:  updaterEmployeeID,
 		StartTime:  startTime,
 		EndTime:    endTime,
 		Location:   locationName,
 	}
-	err := s.asynqClient.EnqueueNotificationTask(ctx, notification.NotificationPayload{
+	err := s.notifSvc.CreateAndDeliver(ctx, domain.NotificationPayload{
 		RecipientUserIDs: []uuid.UUID{recipientEmployeeID},
-		Type:             notification.TypeNewScheduleNotification,
-		Data:             notification.NotificationData{NewScheduleNotification: notifData},
-		CreatedAt:        time.Now(),
-		Message:          notifData.UpdatedScheduleMessage(),
+		Type:             domain.TypeNewScheduleNotification,
+		Data: domain.NotificationData{
+			NewScheduleNotification: notifData,
+		},
+		CreatedAt: time.Now(),
+		Message:   notifData.UpdatedScheduleMessage(),
 	})
 	if err != nil {
-		s.logError(ctx, "sendNotificationForUpdatedSchedule", "failed to enqueue notification task", err)
+		s.logError(ctx, "sendNotificationForUpdatedSchedule", "failed to deliver notification", err)
 	}
 }
 

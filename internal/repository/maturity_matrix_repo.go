@@ -10,15 +10,15 @@ import (
 )
 
 type MaturityMatrixRepository struct {
-	queries *db.Queries
+	store *db.Store
 }
 
-func NewMaturityMatrixRepository(queries *db.Queries) *MaturityMatrixRepository {
-	return &MaturityMatrixRepository{queries: queries}
+func NewMaturityMatrixRepository(store *db.Store) *MaturityMatrixRepository {
+	return &MaturityMatrixRepository{store: store}
 }
 
 func (r *MaturityMatrixRepository) ListMaturityMatrix(ctx context.Context) ([]domain.MaturityMatrix, error) {
-	rows, err := r.queries.ListCarePlanTopics(ctx)
+	rows, err := r.store.ListCarePlanTopics(ctx)
 	if err != nil {
 		return nil, err
 	}

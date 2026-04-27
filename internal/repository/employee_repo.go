@@ -17,16 +17,15 @@ import (
 )
 
 type EmployeeRepository struct {
-	queries db.Querier
-	store   *db.Store
+	store *db.Store
 }
 
-func NewEmployeeRepository(queries db.Querier, store *db.Store) domain.EmployeeRepository {
-	return &EmployeeRepository{queries: queries, store: store}
+func NewEmployeeRepository(store *db.Store) domain.EmployeeRepository {
+	return &EmployeeRepository{store: store}
 }
 
 func (r *EmployeeRepository) GetEmployeeByID(ctx context.Context, id uuid.UUID) (*domain.EmployeeDetail, error) {
-	row, err := r.queries.GetEmployeeProfileByID(ctx, id)
+	row, err := r.store.GetEmployeeProfileByID(ctx, id)
 	if err != nil {
 		if isDBNotFound(err) {
 			return nil, domain.ErrEmployeeNotFound
@@ -38,7 +37,7 @@ func (r *EmployeeRepository) GetEmployeeByID(ctx context.Context, id uuid.UUID) 
 }
 
 func (r *EmployeeRepository) GetEmployeeByUserID(ctx context.Context, userID uuid.UUID) (*domain.EmployeeProfile, error) {
-	row, err := r.queries.GetEmployeeProfileByUserID(ctx, userID)
+	row, err := r.store.GetEmployeeProfileByUserID(ctx, userID)
 	if err != nil {
 		if isDBNotFound(err) {
 			return nil, domain.ErrEmployeeNotFound
@@ -50,7 +49,7 @@ func (r *EmployeeRepository) GetEmployeeByUserID(ctx context.Context, userID uui
 }
 
 func (r *EmployeeRepository) GetEmployeeProfileDetails(ctx context.Context, userID uuid.UUID) (*domain.EmployeeProfileDetails, error) {
-	accountProfile, err := r.queries.GetEmployeeProfileByUserID(ctx, userID)
+	accountProfile, err := r.store.GetEmployeeProfileByUserID(ctx, userID)
 	if err != nil {
 		if isDBNotFound(err) {
 			return nil, domain.ErrEmployeeNotFound
@@ -58,7 +57,7 @@ func (r *EmployeeRepository) GetEmployeeProfileDetails(ctx context.Context, user
 		return nil, err
 	}
 
-	employee, err := r.queries.GetEmployeeProfileByID(ctx, accountProfile.EmployeeID)
+	employee, err := r.store.GetEmployeeProfileByID(ctx, accountProfile.EmployeeID)
 	if err != nil {
 		if isDBNotFound(err) {
 			return nil, domain.ErrEmployeeNotFound
@@ -66,22 +65,22 @@ func (r *EmployeeRepository) GetEmployeeProfileDetails(ctx context.Context, user
 		return nil, err
 	}
 
-	roles, err := r.queries.GetUserRoles(ctx, userID)
+	roles, err := r.store.GetUserRoles(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
 
-	activeSessions, err := r.queries.ListActiveSessionsByUserID(ctx, userID)
+	activeSessions, err := r.store.ListActiveSessionsByUserID(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
 
-	educations, err := r.queries.ListEducations(ctx, employee.ID)
+	educations, err := r.store.ListEducations(ctx, employee.ID)
 	if err != nil {
 		return nil, err
 	}
 
-	experiences, err := r.queries.ListEmployeeExperience(ctx, employee.ID)
+	experiences, err := r.store.ListEmployeeExperience(ctx, employee.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -129,13 +128,13 @@ func (r *EmployeeRepository) GetEmployeeProfileDetails(ctx context.Context, user
 	var locationName *string
 	var organisationName *string
 	if employee.LocationID != nil {
-		location, err := r.queries.GetLocation(ctx, *employee.LocationID)
+		location, err := r.store.GetLocation(ctx, *employee.LocationID)
 		if err != nil {
 			return nil, err
 		}
 		locationName = &location.Name
 
-		organisation, err := r.queries.GetOrganisation(ctx, location.OrganisationID)
+		organisation, err := r.store.GetOrganisation(ctx, location.OrganisationID)
 		if err != nil {
 			return nil, err
 		}
@@ -189,7 +188,7 @@ func (r *EmployeeRepository) GetEmployeeProfileDetails(ctx context.Context, user
 }
 
 func (r *EmployeeRepository) ListEmployees(ctx context.Context, params domain.ListEmployeesParams) (*domain.EmployeePage, error) {
-	rows, err := r.queries.ListEmployeeProfile(ctx, db.ListEmployeeProfileParams{
+	rows, err := r.store.ListEmployeeProfile(ctx, db.ListEmployeeProfileParams{
 		Limit:               params.Limit,
 		Offset:              params.Offset,
 		IncludeArchived:     params.IncludeArchived,
@@ -220,7 +219,7 @@ func (r *EmployeeRepository) ListEmployees(ctx context.Context, params domain.Li
 }
 
 func (r *EmployeeRepository) CountEmployees(ctx context.Context, params domain.ListEmployeesParams) (int64, error) {
-	return r.queries.CountEmployeeProfile(ctx, db.CountEmployeeProfileParams{
+	return r.store.CountEmployeeProfile(ctx, db.CountEmployeeProfileParams{
 		IncludeArchived:     params.IncludeArchived,
 		IncludeOutOfService: params.IncludeOutOfService,
 		LocationID:          params.LocationID,
@@ -284,7 +283,7 @@ func (r *EmployeeRepository) SetProfilePicture(ctx context.Context, employeeID u
 }
 
 func (r *EmployeeRepository) UpdateEmployee(ctx context.Context, id uuid.UUID, params domain.UpdateEmployeeParams) (*domain.EmployeeDetail, error) {
-	row, err := r.queries.UpdateEmployeeProfile(ctx, db.UpdateEmployeeProfileParams{
+	row, err := r.store.UpdateEmployeeProfile(ctx, db.UpdateEmployeeProfileParams{
 		FirstName:           params.FirstName,
 		LastName:            params.LastName,
 		Position:            params.Position,
@@ -316,7 +315,7 @@ func (r *EmployeeRepository) UpdateEmployee(ctx context.Context, id uuid.UUID, p
 }
 
 func (r *EmployeeRepository) GetEmployeeCounts(ctx context.Context) (*domain.EmployeeCounts, error) {
-	row, err := r.queries.GetEmployeeCounts(ctx)
+	row, err := r.store.GetEmployeeCounts(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -325,7 +324,7 @@ func (r *EmployeeRepository) GetEmployeeCounts(ctx context.Context) (*domain.Emp
 }
 
 func (r *EmployeeRepository) SearchEmployeesByNameOrEmail(ctx context.Context, search *string) ([]domain.EmployeeSearchResult, error) {
-	rows, err := r.queries.SearchEmployeesByNameOrEmail(ctx, search)
+	rows, err := r.store.SearchEmployeesByNameOrEmail(ctx, search)
 	if err != nil {
 		return nil, err
 	}
@@ -339,7 +338,7 @@ func (r *EmployeeRepository) SearchEmployeesByNameOrEmail(ctx context.Context, s
 }
 
 func (r *EmployeeRepository) GetContractDetails(ctx context.Context, employeeID uuid.UUID) (*domain.ContractDetails, error) {
-	row, err := r.queries.GetEmployeeContractDetails(ctx, employeeID)
+	row, err := r.store.GetEmployeeContractDetails(ctx, employeeID)
 	if err != nil {
 		if isDBNotFound(err) {
 			return nil, domain.ErrEmployeeNotFound
@@ -351,7 +350,7 @@ func (r *EmployeeRepository) GetContractDetails(ctx context.Context, employeeID 
 }
 
 func (r *EmployeeRepository) AddContractDetails(ctx context.Context, employeeID uuid.UUID, params domain.AddContractDetailsParams) (*domain.EmployeeDetail, error) {
-	row, err := r.queries.AddEmployeeContractDetails(ctx, db.AddEmployeeContractDetailsParams{
+	row, err := r.store.AddEmployeeContractDetails(ctx, db.AddEmployeeContractDetailsParams{
 		ID:                employeeID,
 		ContractHours:     params.ContractHours,
 		ContractStartDate: conv.PgDateFromTime(params.ContractStartDate),
@@ -370,7 +369,7 @@ func (r *EmployeeRepository) AddContractDetails(ctx context.Context, employeeID 
 }
 
 func (r *EmployeeRepository) UpdateIsSubcontractor(ctx context.Context, employeeID uuid.UUID, contractType string) (*domain.EmployeeDetail, error) {
-	row, err := r.queries.UpdateEmployeeIsSubcontractor(ctx, db.UpdateEmployeeIsSubcontractorParams{
+	row, err := r.store.UpdateEmployeeIsSubcontractor(ctx, db.UpdateEmployeeIsSubcontractorParams{
 		ID:           employeeID,
 		ContractType: contractTypeFromString(contractType),
 	})
@@ -385,7 +384,7 @@ func (r *EmployeeRepository) UpdateIsSubcontractor(ctx context.Context, employee
 }
 
 func (r *EmployeeRepository) ListEducation(ctx context.Context, employeeID uuid.UUID) ([]domain.Education, error) {
-	rows, err := r.queries.ListEducations(ctx, employeeID)
+	rows, err := r.store.ListEducations(ctx, employeeID)
 	if err != nil {
 		return nil, err
 	}
@@ -399,7 +398,7 @@ func (r *EmployeeRepository) ListEducation(ctx context.Context, employeeID uuid.
 }
 
 func (r *EmployeeRepository) AddEducation(ctx context.Context, employeeID uuid.UUID, params domain.CreateEducationParams) (*domain.Education, error) {
-	row, err := r.queries.AddEducationToEmployeeProfile(ctx, db.AddEducationToEmployeeProfileParams{
+	row, err := r.store.AddEducationToEmployeeProfile(ctx, db.AddEducationToEmployeeProfileParams{
 		EmployeeID:      employeeID,
 		InstitutionName: params.InstitutionName,
 		Degree:          params.Degree,
@@ -416,7 +415,7 @@ func (r *EmployeeRepository) AddEducation(ctx context.Context, employeeID uuid.U
 }
 
 func (r *EmployeeRepository) UpdateEducation(ctx context.Context, id uuid.UUID, params domain.UpdateEducationParams) (*domain.Education, error) {
-	row, err := r.queries.UpdateEmployeeEducation(ctx, db.UpdateEmployeeEducationParams{
+	row, err := r.store.UpdateEmployeeEducation(ctx, db.UpdateEmployeeEducationParams{
 		ID:              id,
 		InstitutionName: params.InstitutionName,
 		Degree:          params.Degree,
@@ -436,7 +435,7 @@ func (r *EmployeeRepository) UpdateEducation(ctx context.Context, id uuid.UUID, 
 }
 
 func (r *EmployeeRepository) DeleteEducation(ctx context.Context, id uuid.UUID) (*domain.Education, error) {
-	row, err := r.queries.DeleteEmployeeEducation(ctx, id)
+	row, err := r.store.DeleteEmployeeEducation(ctx, id)
 	if err != nil {
 		if isDBNotFound(err) {
 			return nil, domain.ErrEducationNotFound
@@ -449,7 +448,7 @@ func (r *EmployeeRepository) DeleteEducation(ctx context.Context, id uuid.UUID) 
 }
 
 func (r *EmployeeRepository) ListExperience(ctx context.Context, employeeID uuid.UUID) ([]domain.Experience, error) {
-	rows, err := r.queries.ListEmployeeExperience(ctx, employeeID)
+	rows, err := r.store.ListEmployeeExperience(ctx, employeeID)
 	if err != nil {
 		return nil, err
 	}
@@ -463,7 +462,7 @@ func (r *EmployeeRepository) ListExperience(ctx context.Context, employeeID uuid
 }
 
 func (r *EmployeeRepository) AddExperience(ctx context.Context, employeeID uuid.UUID, params domain.CreateExperienceParams) (*domain.Experience, error) {
-	row, err := r.queries.AddEmployeeExperience(ctx, db.AddEmployeeExperienceParams{
+	row, err := r.store.AddEmployeeExperience(ctx, db.AddEmployeeExperienceParams{
 		EmployeeID:  employeeID,
 		JobTitle:    params.JobTitle,
 		CompanyName: params.CompanyName,
@@ -480,7 +479,7 @@ func (r *EmployeeRepository) AddExperience(ctx context.Context, employeeID uuid.
 }
 
 func (r *EmployeeRepository) UpdateExperience(ctx context.Context, id uuid.UUID, params domain.UpdateExperienceParams) (*domain.Experience, error) {
-	row, err := r.queries.UpdateEmployeeExperience(ctx, db.UpdateEmployeeExperienceParams{
+	row, err := r.store.UpdateEmployeeExperience(ctx, db.UpdateEmployeeExperienceParams{
 		ID:          id,
 		JobTitle:    params.JobTitle,
 		CompanyName: params.CompanyName,
@@ -500,7 +499,7 @@ func (r *EmployeeRepository) UpdateExperience(ctx context.Context, id uuid.UUID,
 }
 
 func (r *EmployeeRepository) DeleteExperience(ctx context.Context, id uuid.UUID) (*domain.Experience, error) {
-	row, err := r.queries.DeleteEmployeeExperience(ctx, id)
+	row, err := r.store.DeleteEmployeeExperience(ctx, id)
 	if err != nil {
 		if isDBNotFound(err) {
 			return nil, domain.ErrExperienceNotFound
@@ -513,7 +512,7 @@ func (r *EmployeeRepository) DeleteExperience(ctx context.Context, id uuid.UUID)
 }
 
 func (r *EmployeeRepository) ListCertification(ctx context.Context, employeeID uuid.UUID) ([]domain.Certification, error) {
-	rows, err := r.queries.ListEmployeeCertifications(ctx, employeeID)
+	rows, err := r.store.ListEmployeeCertifications(ctx, employeeID)
 	if err != nil {
 		return nil, err
 	}
@@ -527,7 +526,7 @@ func (r *EmployeeRepository) ListCertification(ctx context.Context, employeeID u
 }
 
 func (r *EmployeeRepository) AddCertification(ctx context.Context, employeeID uuid.UUID, params domain.CreateCertificationParams) (*domain.Certification, error) {
-	row, err := r.queries.AddEmployeeCertification(ctx, db.AddEmployeeCertificationParams{
+	row, err := r.store.AddEmployeeCertification(ctx, db.AddEmployeeCertificationParams{
 		EmployeeID: employeeID,
 		Name:       params.Name,
 		IssuedBy:   params.IssuedBy,
@@ -542,7 +541,7 @@ func (r *EmployeeRepository) AddCertification(ctx context.Context, employeeID uu
 }
 
 func (r *EmployeeRepository) UpdateCertification(ctx context.Context, id uuid.UUID, params domain.UpdateCertificationParams) (*domain.Certification, error) {
-	row, err := r.queries.UpdateEmployeeCertification(ctx, db.UpdateEmployeeCertificationParams{
+	row, err := r.store.UpdateEmployeeCertification(ctx, db.UpdateEmployeeCertificationParams{
 		ID:         id,
 		Name:       params.Name,
 		IssuedBy:   params.IssuedBy,
@@ -560,7 +559,7 @@ func (r *EmployeeRepository) UpdateCertification(ctx context.Context, id uuid.UU
 }
 
 func (r *EmployeeRepository) DeleteCertification(ctx context.Context, id uuid.UUID) (*domain.Certification, error) {
-	row, err := r.queries.DeleteEmployeeCertification(ctx, id)
+	row, err := r.store.DeleteEmployeeCertification(ctx, id)
 	if err != nil {
 		if isDBNotFound(err) {
 			return nil, domain.ErrCertificationNotFound

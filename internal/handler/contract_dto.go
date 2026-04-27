@@ -1,12 +1,12 @@
 package handler
 
 import (
+	"encoding/json"
 	"fmt"
 	"time"
 
 	"maicare_go/internal/domain"
 	"maicare_go/internal/httpapi"
-	"maicare_go/util"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -228,8 +228,8 @@ type contractAuditLogResponse struct {
 	Operation          string          `json:"operation"`
 	ChangedBy          *uuid.UUID      `json:"changed_by"`
 	ChangedAt          time.Time       `json:"changed_at"`
-	OldValues          util.JSONObject `json:"old_values"`
-	NewValues          util.JSONObject `json:"new_values"`
+	OldValues          map[string]interface{} `json:"old_values"`
+	NewValues          map[string]interface{} `json:"new_values"`
 	ChangedFields      []string        `json:"changed_fields"`
 	ChangedByFirstName *string         `json:"changed_by_first_name"`
 	ChangedByLastName  *string         `json:"changed_by_last_name"`
@@ -414,8 +414,8 @@ func toContractAuditLogResponses(items []domain.ContractAuditLog) []contractAudi
 			Operation:          item.Operation,
 			ChangedBy:          item.ChangedBy,
 			ChangedAt:          item.ChangedAt,
-			OldValues:          util.ParseJSONToObject(item.OldValues),
-			NewValues:          util.ParseJSONToObject(item.NewValues),
+			OldValues:          parseJSONToObject(item.OldValues),
+			NewValues:          parseJSONToObject(item.NewValues),
 			ChangedFields:      item.ChangedFields,
 			ChangedByFirstName: item.ChangedByFirstName,
 			ChangedByLastName:  item.ChangedByLastName,
@@ -494,4 +494,15 @@ func getEmployeeIDFromContextForContracts(ctx *gin.Context) (uuid.UUID, error) {
 	default:
 		return uuid.Nil, fmt.Errorf("invalid employee_id type")
 	}
+}
+
+func parseJSONToObject(data []byte) map[string]interface{} {
+	if len(data) == 0 {
+		return nil
+	}
+	var result map[string]interface{}
+	if err := json.Unmarshal(data, &result); err != nil {
+		return map[string]interface{}{}
+	}
+	return result
 }
