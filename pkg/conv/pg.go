@@ -34,6 +34,31 @@ func StringFromPgTime(value pgtype.Time) string {
 	return fmt.Sprintf("%02d:%02d:%02d", hours, minutes, seconds)
 }
 
+func TimeFromPgDate(value pgtype.Date) time.Time {
+	if !value.Valid {
+		return time.Time{}
+	}
+	return value.Time
+}
+
+func PgDateFromTime(value time.Time) pgtype.Date {
+	if value.IsZero() {
+		return pgtype.Date{}
+	}
+	return pgtype.Date{
+		Time:  value,
+		Valid: true,
+	}
+}
+
+func TimePtrFromPgDate(value pgtype.Date) *time.Time {
+	if !value.Valid {
+		return nil
+	}
+	t := value.Time
+	return &t
+}
+
 func PgTimeFromString(value string) (pgtype.Time, error) {
 	parsed, err := time.Parse("15:04:05", value)
 	if err != nil {

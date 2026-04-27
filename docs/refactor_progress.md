@@ -1,5 +1,35 @@
 # Refactor Progress
 
+# 2026-04-02 - Late arrival routes scaffold
+Old: `api/late_arrival_router.go`, `api/late_arrival_handler.go`, `service/late_arrival/*`, `db/sqlc/late_arrival.sql.go`
+New: `internal/domain/late_arrival.go`, `internal/repository/late_arrival_repo.go`, `internal/service/late_arrival_service.go`, `internal/handler/late_arrival_handler.go`, `internal/handler/late_arrival_dto.go`
+Status: scaffolded, unwired
+Notes: migrated late-arrival endpoint surface into the internal stack with domain-owned errors/contracts, repository SQLC mapping via `pkg/conv`, service-level shift/timezone validation, and handler-local DTO mapping
+
+# 2026-03-31 - Handbook routes scaffold
+Old: `api/handbook_router.go`, `api/handbook_handler.go`, `service/handbook/*`
+New: `internal/domain/handbook.go`, `internal/repository/handbook_repo.go`, `internal/service/handbook_service.go`, `internal/handler/handbook_handler.go`, `internal/handler/handbook_dto.go`
+Status: scaffolded, unwired
+Notes: handbook flow now follows the internal refactor pattern: domain models/interfaces own feature contracts and errors, repository maps SQLC rows to domain models, service depends on the domain repository instead of `db.Store`, and handler uses handler-local DTOs instead of binding directly into domain structs
+
+# 2026-03-31 - Shift swap routes scaffold
+Old: `api/shift_swap_router.go`, `api/shift_swap_handler.go`, `service/schedule/shift_swap*`, `db/sqlc/shift_swap.sql.go`
+New: `internal/domain/schedule.go`, `internal/repository/schedule_repo.go`, `internal/service/schedule_shift_swap.go`, `internal/handler/shift_swap_handler.go`, `internal/handler/shift_swap_dto.go`
+Status: scaffolded, unwired
+Notes: migrated shift swap endpoint surface and transactional swap decision flow into the internal schedule stack
+
+# 2026-03-31 - Leave routes scaffold
+Old: `api/leave_router.go`, `api/leave_handler.go`, `service/leave/*`, `db/sqlc/leave_request.sql.go`, `db/sqlc/leave_balance.sql.go`, `db/sqlc/leave_policy.sql.go`
+New: `internal/domain/leave.go`, `internal/repository/leave_repo.go`, `internal/service/leave_service.go`, `internal/handler/leave_handler.go`, `internal/handler/leave_dto.go`
+Status: scaffolded, unwired
+Notes: migrated leave request and leave balance endpoint surface into the internal stack with equivalent permissions/routes and transactional leave decision/adjustment flows
+
+# 2026-03-31 - Schedule routes scaffold
+Old: `api/schedule_router.go`, `api/schedule_handler.go`, `service/schedule/*`
+New: `internal/domain/schedule.go`, `internal/repository/schedule_repo.go`, `internal/service/schedule_service.go`, `internal/handler/schedule_handler.go`
+Status: scaffolded, unwired
+Notes: duplicated the schedule endpoint surface into the internal stack; route wiring is intentionally deferred
+
 # 2026-03-30 - POST /auth/refresh
 
 Old: `api/auth_router.go`, `api/auth_handler.go`, `service/auth/*`, `db/sqlc/session.sql.go`
