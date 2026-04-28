@@ -130,6 +130,22 @@ func (s *ClientService) GetClientStatusCounts(ctx context.Context) (*domain.Clie
 	return counts, nil
 }
 
+func (s *ClientService) GetInCareStats(ctx context.Context) (*domain.InCareStats, error) {
+	stats, err := s.repository.GetInCareStats(ctx)
+	if err != nil {
+		if s.logger != nil {
+			s.logger.LogError(ctx, "ClientService.GetInCareStats", "failed to get in-care stats", err)
+		}
+		return nil, err
+	}
+
+	if s.logger != nil {
+		s.logger.LogInfo(ctx, "ClientService.GetInCareStats", "in-care stats retrieved successfully")
+	}
+
+	return stats, nil
+}
+
 func (s *ClientService) GetClientByID(ctx context.Context, id uuid.UUID) (*domain.ClientPageDetail, error) {
 	detail, err := s.repository.GetClientByID(ctx, id)
 	if err != nil {

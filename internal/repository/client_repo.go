@@ -182,6 +182,43 @@ func (r *ClientRepository) GetClientStatusCounts(ctx context.Context) (*domain.C
 	}, nil
 }
 
+func (r *ClientRepository) GetInCareStats(ctx context.Context) (*domain.InCareStats, error) {
+	query := `
+		SELECT
+			COUNT(*) FILTER (WHERE c.status = 'in_care') AS clients_in_care,
+			COUNT(*) FILTER (WHERE c.status = 'scheduled_in_care') AS clients_scheduled_in_care,
+			COUNT(*) FILTER (
+				WHERE c.status IN ('in_care', 'scheduled_in_care')
+				  AND EXISTS (
+					SELECT 1 FROM contract ct
+					WHERE ct.client_id = c.id
+					  AND ct.status = 'approved'
+					  AND ct.start_date <= CURRENT_TIMESTAMP
+					  AND ct.end_date >= CURRENT_TIMESTAMP
+					  AND ct.end_date <= CURRENT_TIMESTAMP + INTERVAL '30 days'
+				  )
+			) AS contracts_ending_soon,
+			COUNT(*) FILTER (WHERE c.status IN ('in_care', 'scheduled_in_care')) AS total
+		FROM client_details c
+	`
+
+	var stats domain.InCareStats
+	err := r.store.ConnPool.QueryRow(ctx, query).Scan(
+		&stats.ClientsInCare,
+		&stats.ClientsScheduledInCare,
+		&stats.ContractsEndingSoon,
+		&stats.Total,
+	)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return &domain.InCareStats{}, nil
+		}
+		return nil, err
+	}
+
+	return &stats, nil
+}
+
 func (r *ClientRepository) GetClientByID(ctx context.Context, id uuid.UUID) (*domain.ClientPageDetail, error) {
 	client, err := r.store.GetClientDetails(ctx, id)
 	if err != nil {

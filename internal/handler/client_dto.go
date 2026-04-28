@@ -186,6 +186,13 @@ type getClientStatusCountsResponse struct {
 	ClientsOutOrScheduledOutOfCare int64 `json:"clients_out_or_scheduled_out_of_care"`
 }
 
+type getInCareStatsResponse struct {
+	ClientsInCare          int64 `json:"clients_in_care"`
+	ClientsScheduledInCare int64 `json:"clients_scheduled_in_care"`
+	ContractsEndingSoon    int64 `json:"contracts_ending_soon"`
+	Total                  int64 `json:"total"`
+}
+
 // --- Mappers ---
 
 func toCreateClientParams(req createClientRequest) (domain.CreateClientParams, error) {
@@ -356,6 +363,15 @@ func toGetClientStatusCountsResponse(counts *domain.ClientStatusCounts) getClien
 		ClientsInOrScheduledInCare:     counts.ClientsInOrScheduledInCare,
 		ClientsOnWaitingList:           counts.ClientsOnWaitingList,
 		ClientsOutOrScheduledOutOfCare: counts.ClientsOutOrScheduledOutOfCare,
+	}
+}
+
+func toGetInCareStatsResponse(stats *domain.InCareStats) getInCareStatsResponse {
+	return getInCareStatsResponse{
+		ClientsInCare:          stats.ClientsInCare,
+		ClientsScheduledInCare: stats.ClientsScheduledInCare,
+		ContractsEndingSoon:    stats.ContractsEndingSoon,
+		Total:                  stats.Total,
 	}
 }
 

@@ -95,6 +95,13 @@ type ClientStatusCounts struct {
 	ClientsOutOrScheduledOutOfCare int64
 }
 
+type InCareStats struct {
+	ClientsInCare          int64
+	ClientsScheduledInCare int64
+	ContractsEndingSoon    int64
+	Total                  int64
+}
+
 type ClientPage struct {
 	Items      []ClientListItem
 	TotalCount int64
@@ -455,6 +462,7 @@ type ClientRepository interface {
 	ListInCareClients(ctx context.Context, params ListInCareClientsParams) (*InCareClientPage, error)
 	GetClientCounts(ctx context.Context) (*ClientCounts, error)
 	GetClientStatusCounts(ctx context.Context) (*ClientStatusCounts, error)
+	GetInCareStats(ctx context.Context) (*InCareStats, error)
 	GetClientByID(ctx context.Context, id uuid.UUID) (*ClientPageDetail, error)
 	UpdateClient(ctx context.Context, id uuid.UUID, params UpdateClientParams) (*Client, error)
 	GetClientAddresses(ctx context.Context, id uuid.UUID) ([]ClientAddress, error)
@@ -581,6 +589,7 @@ type ClientService interface {
 	ListInCareClients(ctx context.Context, params ListInCareClientsParams) (*InCareClientPage, error)
 	GetClientCounts(ctx context.Context) (*ClientCounts, error)
 	GetClientStatusCounts(ctx context.Context) (*ClientStatusCounts, error)
+	GetInCareStats(ctx context.Context) (*InCareStats, error)
 	GetClientByID(ctx context.Context, id uuid.UUID) (*ClientPageDetail, error)
 	UpdateClient(ctx context.Context, id uuid.UUID, params UpdateClientParams) (*Client, error)
 	GetClientAddresses(ctx context.Context, id uuid.UUID) ([]ClientAddress, error)

@@ -26,6 +26,7 @@ func RegisterClientRoutes(
 		clientsGroup.GET("/waiting-list", auth, requirePermission("CLIENT.VIEW"), handler.ListWaitingListClients)
 		clientsGroup.GET("/in-care", auth, requirePermission("CLIENT.VIEW"), handler.ListInCareClients)
 		clientsGroup.GET("/counts", auth, requirePermission("CLIENT.VIEW"), handler.GetClientsCount)
+		clientsGroup.GET("/incare/stats", auth, requirePermission("CLIENT.VIEW"), handler.GetInCareStats)
 		clientsGroup.GET("/status-counts", auth, requirePermission("CLIENT.VIEW"), handler.GetClientStatusCounts)
 		clientsGroup.GET("/:id", auth, requirePermission("CLIENT.VIEW"), handler.GetClient)
 		clientsGroup.PUT("/:id", auth, requirePermission("CLIENT.UPDATE"), handler.UpdateClient)
@@ -288,6 +289,23 @@ func (h *ClientHandler) GetClientStatusCounts(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, httpapi.OK(toGetClientStatusCountsResponse(counts), "Client status counts fetched successfully"))
+}
+
+// GetInCareStats gets in-care statistics
+// @Summary Get in-care statistics
+// @Tags clients
+// @Produce json
+// @Success 200 {object} httpapi.Envelope[getInCareStatsResponse]
+// @Failure 400,404,500 {object} httpapi.Envelope[any]
+// @Router /clients/incare/stats [get]
+func (h *ClientHandler) GetInCareStats(ctx *gin.Context) {
+	stats, err := h.service.GetInCareStats(ctx.Request.Context())
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, httpapi.Fail("failed to get in-care stats", ""))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, httpapi.OK(toGetInCareStatsResponse(stats), "In-care stats fetched successfully"))
 }
 
 // GetClient gets a client by ID
