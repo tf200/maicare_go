@@ -14,8 +14,9 @@ const (
 )
 
 type TaskEnqueueOptions struct {
-	Queue    string
-	MaxRetry int
+	Queue     string
+	MaxRetry  int
+	ProcessAt *time.Time // Schedule task for a specific time
 }
 
 type IncidentTaskPayload struct {

@@ -10,12 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"maicare_go/bucket"
 	db "maicare_go/db/sqlc"
-	"maicare_go/logger"
-	"maicare_go/service/deps"
-	invoicesvc "maicare_go/service/invoice"
-	"maicare_go/util"
 
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/jackc/pgx/v5"
@@ -46,7 +41,7 @@ func main() {
 	dataSource := flag.String("db", "", "database connection string (defaults to DB_SOURCE, app.env, or local default)")
 	flag.Parse()
 
-	gofakeit.Seed(*seedValue)
+	_ = gofakeit.Seed(*seedValue)
 
 	ctx, cancel := context.WithTimeout(context.Background(), *seedTimeout)
 	defer cancel()
@@ -95,24 +90,7 @@ func main() {
 
 	store := db.NewStore(pool)
 
-	appLogger, err := logger.SetupLogger("development")
-	if err != nil {
-		log.Fatalf("cannot setup logger: %v", err)
-	}
-
-	serviceDeps := deps.NewServiceDependencies(
-		store,
-		nil,
-		appLogger,
-		&util.Config{},
-		bucket.NewNoopObjectStorageClient(),
-		nil,
-		nil,
-		nil,
-	)
-	invoiceService := invoicesvc.NewInvoiceService(serviceDeps)
-
-	seeder := newSeeder(store, invoiceService)
+	seeder := newSeeder(store)
 
 	startedAt := time.Now()
 	fmt.Printf("[seed] start organisations=%d locations_per_org=%d departments=%d handbook_templates_per_department=%d employee_handbook_assignments_per_department=%d coordinators=%d senders=%d registration_forms=%d other_intake_forms=%d waiting_list_clients=%d in_care_clients=%d out_of_care_clients=%d evaluations_per_in_care_client=%d diagnoses_per_client=%d medication_orders_per_client=%d incidents_per_client=%d invoices_per_client=%d payments_per_invoice=%d timeout=%s\n",

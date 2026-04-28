@@ -10,17 +10,16 @@ import (
 	"github.com/google/uuid"
 
 	"maicare_go/internal/domain"
-	"maicare_go/internal/repository"
 	"maicare_go/internal/ws"
 )
 
 type NotificationService struct {
-	repo   *repository.NotificationRepository
+	repo   domain.NotificationRepository
 	hub    *ws.Hub
 	logger domain.Logger
 }
 
-func NewNotificationService(repo *repository.NotificationRepository, hub *ws.Hub, logger domain.Logger) domain.NotificationService {
+func NewNotificationService(repo domain.NotificationRepository, hub *ws.Hub, logger domain.Logger) domain.NotificationService {
 	return &NotificationService{repo: repo, hub: hub, logger: logger}
 }
 

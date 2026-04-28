@@ -16,6 +16,8 @@ var pgxEnumTypes = []string{
 	"_incident_cause_category_enum",
 	"incident_follow_up_action_enum",
 	"_incident_follow_up_action_enum",
+	"client_status_enum",
+	"_client_status_enum",
 }
 
 func RegisterEnumTypes(ctx context.Context, conn *pgx.Conn) error {

@@ -6,19 +6,19 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	db "maicare_go/db/sqlc"
-	"maicare_go/util"
 	"math/rand"
 	"os"
 	"strings"
 	"time"
+
+	db "maicare_go/db/sqlc"
+	"maicare_go/pkg/password"
 
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"golang.org/x/crypto/bcrypt"
 )
 
 func seedOrganisations(ctx context.Context, store *db.Store) (*db.Organisation, error) {
@@ -83,17 +83,17 @@ func seedLocations(ctx context.Context, store *db.Store, organisation *db.Organi
 	return &location, nil
 }
 
-func createCustomUser(ctx context.Context, store *db.Store, email string, password string) (*db.CustomUser, error) {
+func createCustomUser(ctx context.Context, store *db.Store, email string, plainPassword string) (*db.CustomUser, error) {
 
 	// Hash a default password for all users
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	hashedPassword, err := password.HashPassword(plainPassword)
 	if err != nil {
 		return nil, fmt.Errorf("failed to hash password: %w", err)
 	}
 
 	user, err := store.CreateUser(ctx, db.CreateUserParams{
 		Email:    email,
-		Password: string(hashedPassword),
+		Password: hashedPassword,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create user: %w", err)
@@ -195,23 +195,65 @@ func grantPermissions(ctx context.Context, store *db.Store, userID uuid.UUID) {
 	if err != nil {
 		log.Fatalf("Failed to get admin role ID: %v", err)
 	}
-	store.AssignRoleToUser(ctx, db.AssignRoleToUserParams{
+	if err := store.AssignRoleToUser(ctx, db.AssignRoleToUserParams{
 		UserID: userID,
 		RoleID: roleID,
-	})
+	}); err != nil {
+		log.Fatalf("Failed to assign role to user: %v", err)
+	}
+}
+
+func loadEnvFile(path string) {
+	content, err := os.ReadFile(path)
+	if err != nil {
+		if !errors.Is(err, os.ErrNotExist) {
+			log.Printf("[admin] warning: cannot read %s: %v", path, err)
+		}
+		return
+	}
+
+	for _, rawLine := range strings.Split(string(content), "\n") {
+		line := strings.TrimSpace(rawLine)
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+
+		if strings.HasPrefix(line, "export ") {
+			line = strings.TrimSpace(strings.TrimPrefix(line, "export "))
+		}
+
+		key, value, ok := strings.Cut(line, "=")
+		if !ok {
+			continue
+		}
+
+		key = strings.TrimSpace(key)
+		value = strings.TrimSpace(value)
+
+		if len(value) >= 2 {
+			if (value[0] == '"' && value[len(value)-1] == '"') || (value[0] == '\'' && value[len(value)-1] == '\'') {
+				value = value[1 : len(value)-1]
+			}
+		}
+
+		if os.Getenv(key) == "" {
+			os.Setenv(key, strings.TrimSpace(value))
+		}
+	}
 }
 
 func main() {
+	loadEnvFile("app.env")
+
 	dbSourceFlag := flag.String("db", "", "database connection string (defaults to DB_SOURCE then local default)")
 	flag.Parse()
 
-	config, err := util.LoadConfig(".")
-	if err != nil {
-		log.Fatal("Cannot load config:", err)
-	}
-	if config.AdminEmail == "" || config.AdminPassword == "" {
+	adminEmail := strings.TrimSpace(os.Getenv("ADMIN_EMAIL"))
+	adminPassword := strings.TrimSpace(os.Getenv("ADMIN_PASSWORD"))
+	if adminEmail == "" || adminPassword == "" {
 		log.Fatal("ADMIN_EMAIL and ADMIN_PASSWORD must be set in the environment variables")
 	}
+
 	ctx := context.Background()
 	dbSource := strings.TrimSpace(*dbSourceFlag)
 	if dbSource == "" {
@@ -230,7 +272,7 @@ func main() {
 	store := db.NewStore(connPool)
 	fmt.Println("Seeding Admin User...")
 
-	user, err := createCustomUser(ctx, store, config.AdminEmail, config.AdminPassword)
+	user, err := createCustomUser(ctx, store, adminEmail, adminPassword)
 	if err != nil {
 		log.Fatalf("Failed to create admin user: %v", err)
 	}

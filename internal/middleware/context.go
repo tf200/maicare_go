@@ -51,3 +51,11 @@ func ActorRolesFromContext(ctx context.Context) ([]string, bool) {
 func EmployeeIDFromContext(ctx context.Context) uuid.UUID {
 	return ctxkeys.EmployeeIDFromContext(ctx)
 }
+
+func UserIDFromContext(ctx context.Context) uuid.UUID {
+	payload, ok := AuthPayloadFromContext(ctx)
+	if !ok || payload == nil {
+		return uuid.Nil
+	}
+	return payload.UserID
+}

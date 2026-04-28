@@ -105,12 +105,15 @@ func toAsynqOptions(opts *domain.TaskEnqueueOptions) []hibikenasynq.Option {
 		return nil
 	}
 
-	result := make([]hibikenasynq.Option, 0, 2)
+	result := make([]hibikenasynq.Option, 0, 3)
 	if opts.Queue != "" {
 		result = append(result, hibikenasynq.Queue(opts.Queue))
 	}
 	if opts.MaxRetry > 0 {
 		result = append(result, hibikenasynq.MaxRetry(opts.MaxRetry))
+	}
+	if opts.ProcessAt != nil && !opts.ProcessAt.IsZero() {
+		result = append(result, hibikenasynq.ProcessAt(*opts.ProcessAt))
 	}
 
 	return result

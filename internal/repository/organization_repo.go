@@ -410,22 +410,6 @@ func toDomainOrganizationLocationFromLocation(row db.Location) domain.Organizati
 	}
 }
 
-func toDomainOrganizationLocationFromLocationDetail(row db.Location) domain.OrganizationLocation {
-	return domain.OrganizationLocation{
-		ID:                  row.ID,
-		OrganizationID:      row.OrganisationID,
-		Name:                row.Name,
-		Street:              row.Street,
-		HouseNumber:         row.HouseNumber,
-		HouseNumberAddition: row.HouseNumberAddition,
-		PostalCode:          row.PostalCode,
-		City:                row.City,
-		Capacity:            row.Capacity,
-		CreatedAt:           conv.TimeFromPgTimestamptz(row.CreatedAt),
-		UpdatedAt:           conv.TimeFromPgTimestamptz(row.UpdatedAt),
-	}
-}
-
 func toDomainOrganizationLocationFromAllLocations(row db.ListAllLocationsPaginatedRow, shifts []db.LocationShift) domain.OrganizationLocation {
 	return domain.OrganizationLocation{
 		ID:                  row.ID,

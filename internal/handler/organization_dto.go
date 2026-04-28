@@ -51,8 +51,6 @@ type createOrganizationResponse struct {
 	BtwNumber           *string   `json:"btw_number"`
 }
 
-type updateOrganizationResponse = getOrganizationResponse
-
 type deleteOrganizationResponse struct {
 	ID uuid.UUID `json:"id"`
 }

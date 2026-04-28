@@ -3,15 +3,10 @@ package twofa
 import (
 	"encoding/base64"
 	"math/rand"
-	"time"
 
 	"github.com/pquerna/otp/totp"
 	"github.com/skip2/go-qrcode"
 )
-
-func init() {
-	rand.Seed(time.Now().UnixNano())
-}
 
 const (
 	charset    = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"

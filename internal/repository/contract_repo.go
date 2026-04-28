@@ -99,7 +99,7 @@ func (r *ContractRepository) UpdateContract(ctx context.Context, params domain.U
 	if err != nil {
 		return nil, fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 
 	if _, err := tx.Exec(ctx, "SET LOCAL myapp.current_employee_id = $1", employeeID); err != nil {
 		return nil, fmt.Errorf("failed to set current employee ID: %w", err)
@@ -217,7 +217,7 @@ func (r *ContractRepository) UpdateContractStatus(ctx context.Context, params do
 	if err != nil {
 		return nil, fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback(ctx)
+	defer func() { _ = tx.Rollback(ctx) }()
 
 	if _, err := tx.Exec(ctx, "SET LOCAL myapp.current_employee_id = $1", employeeID); err != nil {
 		return nil, fmt.Errorf("failed to set current employee ID: %w", err)

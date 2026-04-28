@@ -563,7 +563,7 @@ func (h *ClientHandler) ListClientDocuments(ctx *gin.Context) {
 		return
 	}
 
-	params := req.PageRequest.Params()
+	params := req.Params()
 	result, err := h.service.ListClientDocuments(ctx.Request.Context(), domain.ListClientDocumentsParams{
 		ClientID: clientID,
 		Limit:    params.Limit,
@@ -814,7 +814,7 @@ func (h *ClientHandler) ListGoalEvaluationHistory(ctx *gin.Context) {
 		return
 	}
 
-	params := req.PageRequest.Params()
+	params := req.Params()
 	result, err := h.service.ListGoalEvaluationHistory(ctx.Request.Context(), domain.ListGoalEvaluationHistoryParams{
 		ClientID: clientID,
 		GoalID:   goalID,
@@ -858,7 +858,7 @@ func (h *ClientHandler) ListClientSubmittedEvaluations(ctx *gin.Context) {
 		return
 	}
 
-	params := req.PageRequest.Params()
+	params := req.Params()
 	result, err := h.service.ListClientSubmittedEvaluations(ctx.Request.Context(), domain.ListClientSubmittedEvaluationsParams{
 		ClientID: clientID,
 		Limit:    params.Limit,
@@ -996,7 +996,7 @@ func (h *ClientHandler) ListLocationTransferRequests(ctx *gin.Context) {
 		return
 	}
 
-	pageParams := req.PageRequest.Params()
+	pageParams := req.Params()
 	result, err := h.service.ListLocationTransferRequests(ctx.Request.Context(), domain.ListLocationTransferParams{
 		Limit:  pageParams.Limit,
 		Offset: pageParams.Offset,
@@ -1065,7 +1065,7 @@ func (h *ClientHandler) ListUpcomingEvaluations(ctx *gin.Context) {
 		return
 	}
 
-	pageParams := req.PageRequest.Params()
+	pageParams := req.Params()
 	result, err := h.service.ListUpcomingEvaluations(ctx.Request.Context(), domain.ListUpcomingEvaluationsParams{
 		EmployeeID: employeeID,
 		Limit:      pageParams.Limit,
@@ -1107,7 +1107,7 @@ func (h *ClientHandler) ListRecentSubmittedEvaluations(ctx *gin.Context) {
 		return
 	}
 
-	pageParams := req.PageRequest.Params()
+	pageParams := req.Params()
 	result, err := h.service.ListRecentSubmittedEvaluations(ctx.Request.Context(), domain.ListRecentSubmittedEvaluationsParams{
 		EmployeeID: employeeID,
 		Limit:      pageParams.Limit,
@@ -1149,7 +1149,7 @@ func (h *ClientHandler) ListRecentDraftEvaluations(ctx *gin.Context) {
 		return
 	}
 
-	pageParams := req.PageRequest.Params()
+	pageParams := req.Params()
 	result, err := h.service.ListRecentDraftEvaluations(ctx.Request.Context(), domain.ListRecentDraftEvaluationsParams{
 		EmployeeID: employeeID,
 		Limit:      pageParams.Limit,
@@ -1271,7 +1271,7 @@ func (h *ClientHandler) ListClientDiagnoses(ctx *gin.Context) {
 		return
 	}
 
-	pageParams := req.PageRequest.Params()
+	pageParams := req.Params()
 	result, err := h.service.ListClientDiagnoses(ctx.Request.Context(), domain.ListClientDiagnosesParams{
 		ClientID: clientID,
 		Limit:    pageParams.Limit,
@@ -1456,7 +1456,7 @@ func (h *ClientHandler) ListClientMedicationOrders(ctx *gin.Context) {
 		return
 	}
 
-	pageParams := req.PageRequest.Params()
+	pageParams := req.Params()
 	result, err := h.service.ListClientMedicationOrders(ctx.Request.Context(), domain.ListClientMedicationOrdersParams{
 		ClientID:    clientID,
 		Status:      req.Status,
@@ -1668,7 +1668,7 @@ func (h *ClientHandler) ListClientEmergencyContacts(ctx *gin.Context) {
 		return
 	}
 
-	pageParams := req.PageRequest.Params()
+	pageParams := req.Params()
 	result, err := h.service.ListClientEmergencyContacts(ctx.Request.Context(), domain.ListClientEmergencyContactsParams{
 		ClientID: clientID,
 		Search:   req.Search,
@@ -1831,7 +1831,7 @@ func (h *ClientHandler) ListAssignedEmployees(ctx *gin.Context) {
 		return
 	}
 
-	pageParams := req.PageRequest.Params()
+	pageParams := req.Params()
 	result, err := h.service.ListAssignedEmployees(ctx.Request.Context(), domain.ListAssignedEmployeesParams{
 		ClientID: clientID,
 		Limit:    pageParams.Limit,
@@ -2018,7 +2018,7 @@ func (h *ClientHandler) ListProgressReports(ctx *gin.Context) {
 		return
 	}
 
-	pageParams := req.PageRequest.Params()
+	pageParams := req.Params()
 	result, err := h.service.ListProgressReports(ctx.Request.Context(), domain.ListProgressReportsParams{
 		ClientID: clientID,
 		Type:     req.Type,
@@ -2204,7 +2204,7 @@ func (h *ClientHandler) ListAiGeneratedReports(ctx *gin.Context) {
 		return
 	}
 
-	pageParams := req.PageRequest.Params()
+	pageParams := req.Params()
 	result, err := h.service.ListAiGeneratedReports(ctx.Request.Context(), domain.ListAiGeneratedReportsParams{
 		ClientID: clientID,
 		Limit:    pageParams.Limit,

@@ -32,7 +32,7 @@ func (h *NotificationHandler) ListNotifications(ctx *gin.Context) {
 		return
 	}
 
-	params := req.PageRequest.Params()
+	params := req.Params()
 	result, err := h.service.ListNotifications(ctx.Request.Context(), payload.UserID, params.Limit, params.Offset)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, httpapi.Fail("failed to list notifications", ""))

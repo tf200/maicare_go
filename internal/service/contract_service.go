@@ -53,7 +53,7 @@ func (s *ContractService) ListContractTypes(ctx context.Context) ([]domain.Creat
 	}
 	result := make([]domain.CreateContractTypeResult, len(types))
 	for i, t := range types {
-		result[i] = domain.CreateContractTypeResult{ID: t.ID, Name: t.Name}
+		result[i] = domain.CreateContractTypeResult(t)
 	}
 	return result, nil
 }

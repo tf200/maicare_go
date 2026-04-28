@@ -256,7 +256,7 @@ func toCreateClientResponse(client *domain.Client) createClientResponse {
 }
 
 func toListClientsParams(req listClientsRequest) domain.ListClientsParams {
-	params := req.PageRequest.Params()
+	params := req.Params()
 	return domain.ListClientsParams{
 		Limit:      params.Limit,
 		Offset:     params.Offset,
@@ -283,7 +283,7 @@ func toListClientsResponse(item domain.ClientListItem) listClientsResponse {
 }
 
 func toListWaitingListClientsParams(req listWaitingListClientsRequest) domain.ListWaitingListClientsParams {
-	params := req.PageRequest.Params()
+	params := req.Params()
 	sortDays := "desc"
 	if req.SortDays != nil {
 		sortDays = *req.SortDays
@@ -312,7 +312,7 @@ func toListWaitingListClientsResponse(item domain.WaitingListClient) listWaiting
 }
 
 func toListInCareClientsParams(req listInCareClientsRequest) domain.ListInCareClientsParams {
-	params := req.PageRequest.Params()
+	params := req.Params()
 	sortDaysInCare := "desc"
 	if req.SortDaysInCare != nil {
 		sortDaysInCare = *req.SortDaysInCare

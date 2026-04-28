@@ -5,19 +5,18 @@ import (
 	"fmt"
 
 	"maicare_go/internal/domain"
-	"maicare_go/internal/repository"
 
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
 type RegistrationFormService struct {
-	repo      *repository.RegistrationFormRepository
+	repo      domain.RegistrationFormRepository
 	logger    domain.Logger
 	taskQueue domain.TaskQueue
 }
 
-func NewRegistrationFormService(repo *repository.RegistrationFormRepository, logger domain.Logger, taskQueue domain.TaskQueue) domain.RegistrationFormService {
+func NewRegistrationFormService(repo domain.RegistrationFormRepository, logger domain.Logger, taskQueue domain.TaskQueue) domain.RegistrationFormService {
 	return &RegistrationFormService{
 		repo:      repo,
 		logger:    logger,
@@ -150,58 +149,6 @@ func derefString(s *string) string {
 		return ""
 	}
 	return *s
-}
-
-// Helper function to calculate risk count for list operations
-func calculateRiskCount(
-	riskAggressiveBehavior *bool,
-	riskSuicidalSelfharm *bool,
-	riskSubstanceAbuse *bool,
-	riskPsychiatricIssues *bool,
-	riskCriminalHistory *bool,
-	riskFlightBehavior *bool,
-	riskWeaponPossession *bool,
-	riskSexualBehavior *bool,
-	riskDayNightRhythm *bool,
-	riskOther *bool,
-) int {
-	count := 0
-	isTruePtr := func(b *bool) bool {
-		return b != nil && *b
-	}
-
-	if isTruePtr(riskAggressiveBehavior) {
-		count++
-	}
-	if isTruePtr(riskSuicidalSelfharm) {
-		count++
-	}
-	if isTruePtr(riskSubstanceAbuse) {
-		count++
-	}
-	if isTruePtr(riskPsychiatricIssues) {
-		count++
-	}
-	if isTruePtr(riskCriminalHistory) {
-		count++
-	}
-	if isTruePtr(riskFlightBehavior) {
-		count++
-	}
-	if isTruePtr(riskWeaponPossession) {
-		count++
-	}
-	if isTruePtr(riskSexualBehavior) {
-		count++
-	}
-	if isTruePtr(riskDayNightRhythm) {
-		count++
-	}
-	if isTruePtr(riskOther) {
-		count++
-	}
-
-	return count
 }
 
 var _ domain.RegistrationFormService = (*RegistrationFormService)(nil)

@@ -355,7 +355,7 @@ func (r *RegistrationFormRepository) GetPublicIntakeOptions(ctx context.Context,
 	}
 
 	var dates []string
-	if form.IntakeOptions != nil && len(form.IntakeOptions) > 0 {
+	if len(form.IntakeOptions) > 0 {
 		if err := json.Unmarshal(form.IntakeOptions, &dates); err != nil {
 			return nil, err
 		}
@@ -378,7 +378,7 @@ func (r *RegistrationFormRepository) SelectIntakeDate(ctx context.Context, param
 	}
 
 	// Validate selected date is in options (permissive - doesn't strictly fail)
-	if form.IntakeOptions != nil && len(form.IntakeOptions) > 0 {
+	if len(form.IntakeOptions) > 0 {
 		var dates []string
 		if err := json.Unmarshal(form.IntakeOptions, &dates); err != nil {
 			// Permissive - continue even if unmarshal fails
@@ -578,7 +578,7 @@ func toDomainRegistrationFormFromGetRow(row db.GetRegistrationFormRow, documentM
 	}
 
 	// Unmarshal intake options
-	if row.IntakeOptions != nil && len(row.IntakeOptions) > 0 {
+	if len(row.IntakeOptions) > 0 {
 		var options []string
 		if err := json.Unmarshal(row.IntakeOptions, &options); err == nil {
 			form.IntakeOptions = options

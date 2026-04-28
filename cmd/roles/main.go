@@ -47,13 +47,13 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	defer conn.Close(context.Background())
+	defer func() { _ = conn.Close(context.Background()) }()
 
 	tx, err := conn.Begin(context.Background())
 	if err != nil {
 		panic(err)
 	}
-	defer tx.Rollback(context.Background())
+	defer func() { _ = tx.Rollback(context.Background()) }()
 
 	fmt.Println("Starting database sync...")
 

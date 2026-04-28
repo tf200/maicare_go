@@ -2,7 +2,6 @@ package main
 
 import (
 	db "maicare_go/db/sqlc"
-	invoicesvc "maicare_go/service/invoice"
 
 	"github.com/google/uuid"
 )
@@ -35,15 +34,13 @@ type SeedData struct {
 }
 
 type Seeder struct {
-	store          *db.Store
-	invoiceService invoicesvc.InvoiceService
-	data           *SeedData
+	store *db.Store
+	data  *SeedData
 }
 
-func newSeeder(store *db.Store, invoiceService invoicesvc.InvoiceService) *Seeder {
+func newSeeder(store *db.Store) *Seeder {
 	return &Seeder{
-		store:          store,
-		invoiceService: invoiceService,
+		store: store,
 		data: &SeedData{
 			ClientCoordinators:  make(map[uuid.UUID]uuid.UUID),
 			DepartmentHandbooks: make(map[uuid.UUID]uuid.UUID),

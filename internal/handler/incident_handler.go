@@ -95,7 +95,7 @@ func (h *IncidentHandler) ListClientIncidents(ctx *gin.Context) {
 		return
 	}
 
-	pageParams := req.PageRequest.Params()
+	pageParams := req.Params()
 	result, err := h.service.ListIncidents(ctx.Request.Context(), domain.ListIncidentsParams{
 		ClientID: clientID,
 		Limit:    pageParams.Limit,
@@ -266,7 +266,7 @@ func (h *IncidentHandler) ListAllIncidents(ctx *gin.Context) {
 		return
 	}
 
-	pageParams := req.PageRequest.Params()
+	pageParams := req.Params()
 	result, err := h.service.ListAllIncidents(ctx.Request.Context(), domain.ListAllIncidentsParams{
 		Limit:       pageParams.Limit,
 		Offset:      pageParams.Offset,

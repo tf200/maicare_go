@@ -68,9 +68,10 @@ func (s *ScheduleService) CreateShiftSwapRequest(
 		RequestedAt:         created.RequestedAt,
 		ExpiresAt:           created.ExpiresAt,
 	}
-	if requesterEmployeeID == created.RequesterEmployeeID {
+	switch requesterEmployeeID {
+	case created.RequesterEmployeeID:
 		resp.Direction = "sent"
-	} else if requesterEmployeeID == created.RecipientEmployeeID {
+	case created.RecipientEmployeeID:
 		resp.Direction = "received"
 	}
 
@@ -111,9 +112,10 @@ func (s *ScheduleService) RespondToShiftSwapRequest(
 		return nil, err
 	}
 
-	if recipientEmployeeID == details.RequesterEmployeeID {
+	switch recipientEmployeeID {
+	case details.RequesterEmployeeID:
 		details.Direction = "sent"
-	} else if recipientEmployeeID == details.RecipientEmployeeID {
+	case details.RecipientEmployeeID:
 		details.Direction = "received"
 	}
 	return details, nil

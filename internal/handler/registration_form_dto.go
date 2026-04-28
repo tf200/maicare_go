@@ -574,7 +574,7 @@ func toUpdateRegistrationFormParams(id uuid.UUID, req updateRegistrationFormRequ
 }
 
 func toListRegistrationFormsParams(req listRegistrationFormsRequest) domain.ListRegistrationFormsParams {
-	page := req.PageRequest.Params()
+	page := req.Params()
 	return domain.ListRegistrationFormsParams{
 		Limit:                  page.Limit,
 		Offset:                 page.Offset,

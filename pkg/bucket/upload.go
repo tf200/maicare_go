@@ -54,7 +54,7 @@ func sanitizeFilename(filename string, maxLen int) string {
 
 	base = filenameBaseSanitizer.ReplaceAllString(base, "_")
 	base = underscoreCollapse.ReplaceAllString(base, "_")
-	base = strings.Trim(base, "._- _")
+	base = strings.Trim(base, "._- ")
 	if base == "" {
 		base = "file"
 	}

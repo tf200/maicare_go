@@ -495,9 +495,10 @@ func toDomainShiftSwapDetails(row db.GetShiftSwapRequestDetailsByIDRow, viewerEm
 		name := strings.TrimSpace(*row.AdminFirstName + " " + *row.AdminLastName)
 		resp.AdminEmployeeName = &name
 	}
-	if viewerEmployeeID == row.RequesterEmployeeID {
+	switch viewerEmployeeID {
+	case row.RequesterEmployeeID:
 		resp.Direction = "sent"
-	} else if viewerEmployeeID == row.RecipientEmployeeID {
+	case row.RecipientEmployeeID:
 		resp.Direction = "received"
 	}
 	return resp
@@ -540,9 +541,10 @@ func toDomainShiftSwapListRow(row db.ListMyShiftSwapRequestsRow, viewerEmployeeI
 		name := strings.TrimSpace(*row.AdminFirstName + " " + *row.AdminLastName)
 		resp.AdminEmployeeName = &name
 	}
-	if viewerEmployeeID == row.RequesterEmployeeID {
+	switch viewerEmployeeID {
+	case row.RequesterEmployeeID:
 		resp.Direction = "sent"
-	} else if viewerEmployeeID == row.RecipientEmployeeID {
+	case row.RecipientEmployeeID:
 		resp.Direction = "received"
 	}
 	return resp
@@ -585,9 +587,10 @@ func toDomainShiftSwapPaginatedRow(row db.ListShiftSwapRequestsPaginatedRow, vie
 		name := strings.TrimSpace(*row.AdminFirstName + " " + *row.AdminLastName)
 		resp.AdminEmployeeName = &name
 	}
-	if viewerEmployeeID == row.RequesterEmployeeID {
+	switch viewerEmployeeID {
+	case row.RequesterEmployeeID:
 		resp.Direction = "sent"
-	} else if viewerEmployeeID == row.RecipientEmployeeID {
+	case row.RecipientEmployeeID:
 		resp.Direction = "received"
 	}
 	return resp

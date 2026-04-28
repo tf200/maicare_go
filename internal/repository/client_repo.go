@@ -115,9 +115,12 @@ func (r *ClientRepository) ListWaitingListClients(ctx context.Context, params do
 }
 
 func (r *ClientRepository) ListInCareClients(ctx context.Context, params domain.ListInCareClientsParams) (*domain.InCareClientPage, error) {
-	statusFilters := make([]db.ClientStatusEnum, len(params.Status))
-	for i, status := range params.Status {
-		statusFilters[i] = db.ClientStatusEnum(status)
+	var statusFilters []db.ClientStatusEnum
+	if len(params.Status) > 0 {
+		statusFilters = make([]db.ClientStatusEnum, len(params.Status))
+		for i, status := range params.Status {
+			statusFilters[i] = db.ClientStatusEnum(status)
+		}
 	}
 
 	rows, err := r.store.ListInCareClients(ctx, db.ListInCareClientsParams{
@@ -875,10 +878,6 @@ func stringPtrOrNil(s string) *string {
 	return &s
 }
 
-func stringPtr(s string) *string {
-	return &s
-}
-
 func toDomainClient(row db.ClientDetail) *domain.Client {
 	return &domain.Client{
 		ID:                         row.ID,
@@ -1180,7 +1179,7 @@ func (r *ClientRepository) UpdateClientGoal(ctx context.Context, clientID uuid.U
 
 		if _, err := q.GetLatestDraftEvaluationByClient(ctx, clientID); err == nil {
 			return domain.ErrClientGoalDraftEvaluationExists
-		} else if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+		} else if !errors.Is(err, pgx.ErrNoRows) {
 			return fmt.Errorf("failed to check for draft evaluations: %w", err)
 		}
 
@@ -2338,7 +2337,7 @@ func (r *ClientRepository) CreateClientMedicationOrder(ctx context.Context, para
 	}
 
 	schedule := params.Schedule
-	if schedule == nil || len(schedule) == 0 {
+	if len(schedule) == 0 {
 		schedule = []byte("[]")
 	}
 

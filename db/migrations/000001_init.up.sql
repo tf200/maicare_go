@@ -1436,6 +1436,9 @@ CREATE TABLE client_documents (
 
 CREATE INDEX client_documents_user_id_idx ON client_documents(client_id);
 CREATE INDEX client_documents_label_idx ON client_documents(label);
+CREATE UNIQUE INDEX client_documents_attachment_uuid_unique_idx
+ON client_documents(attachment_uuid)
+WHERE attachment_uuid IS NOT NULL;
 
 -- Client medication orders (v2)
 CREATE TYPE medication_order_status_enum AS ENUM ('active', 'paused', 'stopped', 'completed');

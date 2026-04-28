@@ -72,29 +72,6 @@ type shiftSwapResponse struct {
 	Direction             string                    `json:"direction,omitempty"`
 }
 
-func toCreateShiftSwapParams(req createShiftSwapRequest) domain.CreateShiftSwapRequest {
-	return domain.CreateShiftSwapRequest{
-		RecipientEmployeeID: req.RecipientEmployeeID,
-		RequesterScheduleID: req.RequesterScheduleID,
-		RecipientScheduleID: req.RecipientScheduleID,
-		ExpiresAt:           req.ExpiresAt,
-	}
-}
-
-func toRespondShiftSwapParams(req respondShiftSwapRequest) domain.RespondShiftSwapRequest {
-	return domain.RespondShiftSwapRequest{
-		Decision: req.Decision,
-		Note:     req.Note,
-	}
-}
-
-func toAdminDecisionShiftSwapParams(req adminDecisionShiftSwapRequest) domain.AdminDecisionShiftSwapRequest {
-	return domain.AdminDecisionShiftSwapRequest{
-		Decision: req.Decision,
-		Note:     req.Note,
-	}
-}
-
 func toListShiftSwapParams(req listShiftSwapRequestsRequest) domain.ListShiftSwapRequestsParams {
 	return domain.ListShiftSwapRequestsParams{
 		Limit:      req.PageSize,

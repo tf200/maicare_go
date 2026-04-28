@@ -94,7 +94,7 @@ func (store *Store) FetchInvoiceTemplateItems(ctx context.Context, data FetchQue
 				}
 			}
 		case TableContract.Name:
-			contract, err := store.Queries.GetClientContract(ctx, data.ContractID)
+			contract, err := store.GetClientContract(ctx, data.ContractID)
 			if err != nil {
 				return nil, fmt.Errorf("failed to get contract for client ID %d: %w", data.ContractID, err)
 			}

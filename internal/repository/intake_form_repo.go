@@ -158,7 +158,7 @@ func (r *IntakeFormRepository) GetIntakeFormDetail(ctx context.Context, id uuid.
 	intakeGoalsAssigned := make([]domain.IntakeGoalTopic, 0, len(assessmentsRows))
 	for _, assessment := range assessmentsRows {
 		var goals []domain.IntakeAssessmentGoal
-		if assessment.ProposedGoals != nil && len(assessment.ProposedGoals) > 0 {
+		if len(assessment.ProposedGoals) > 0 {
 			if err := json.Unmarshal(assessment.ProposedGoals, &goals); err != nil {
 				goals = []domain.IntakeAssessmentGoal{}
 			}
@@ -356,7 +356,7 @@ func (r *IntakeFormRepository) ReplaceIntakeFormGoals(ctx context.Context, intak
 			assessments := make([]domain.IntakeMaturityAssessment, 0, len(rows))
 			for _, row := range rows {
 				var goals []domain.IntakeAssessmentGoal
-				if row.ProposedGoals != nil && len(row.ProposedGoals) > 0 {
+				if len(row.ProposedGoals) > 0 {
 					if err := json.Unmarshal(row.ProposedGoals, &goals); err != nil {
 						goals = []domain.IntakeAssessmentGoal{}
 					}
@@ -657,13 +657,4 @@ func toDomainIntakeFormListItem(row db.ListIntakeFormsRow) domain.IntakeFormList
 	}
 }
 
-func parseProposedGoals(data []byte) []domain.IntakeAssessmentGoal {
-	if data == nil || len(data) == 0 {
-		return []domain.IntakeAssessmentGoal{}
-	}
-	var goals []domain.IntakeAssessmentGoal
-	if err := json.Unmarshal(data, &goals); err != nil {
-		return []domain.IntakeAssessmentGoal{}
-	}
-	return goals
-}
+

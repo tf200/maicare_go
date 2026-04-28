@@ -11,7 +11,6 @@ import (
 	"maicare_go/internal/domain"
 	"maicare_go/internal/httpapi"
 	"maicare_go/internal/ws"
-	"maicare_go/pkg/jwt"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -88,20 +87,10 @@ func (h *WebSocketHandler) HandleWebSocket(ctx *gin.Context) {
 // @Failure 401,500 {object} httpapi.Envelope[struct{}]
 // @Router /auth/ws-ticket [post]
 func (h *WebSocketHandler) CreateWebSocketTicket(ctx *gin.Context) {
-	jwtPayload, err := GetAuthPayload(ctx)
+	payload, err := GetAuthPayload(ctx)
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, httpapi.Fail("unauthorized", err.Error()))
 		return
-	}
-
-	payload := &domain.TokenPayload{
-		ID:         jwtPayload.ID,
-		SessionID:  jwtPayload.SessionID,
-		UserID:     jwtPayload.UserID,
-		EmployeeID: jwtPayload.EmployeeID,
-		TokenType:  domain.TokenType(jwtPayload.TokenType),
-		IssuedAt:   jwtPayload.IssuedAt,
-		ExpiresAt:  jwtPayload.ExpiresAt,
 	}
 
 	ticketValue, expiresAt, err := h.ticketManager.Issue(ctx, payload)
@@ -160,13 +149,13 @@ type createWebSocketTicketResponse struct {
 
 // ==================== Helpers ====================
 
-func GetAuthPayload(ctx *gin.Context) (*jwt.Payload, error) {
+func GetAuthPayload(ctx *gin.Context) (*domain.TokenPayload, error) {
 	payload, exists := ctx.Get("authorization_payload")
 	if !exists {
 		return nil, fmt.Errorf("authorization payload not found")
 	}
 
-	authPayload, ok := payload.(*jwt.Payload)
+	authPayload, ok := payload.(*domain.TokenPayload)
 	if !ok {
 		return nil, fmt.Errorf("invalid authorization payload type")
 	}
