@@ -18,11 +18,12 @@ import (
 type intakeFormService struct {
 	repo      domain.IntakeFormRepository
 	logger    domain.Logger
+	audit     domain.AuditLogger
 	aiService domain.AIService
 }
 
-func NewIntakeFormService(repo domain.IntakeFormRepository, logger domain.Logger, aiService domain.AIService) domain.IntakeFormService {
-	return &intakeFormService{repo: repo, logger: logger, aiService: aiService}
+func NewIntakeFormService(repo domain.IntakeFormRepository, logger domain.Logger, aiService domain.AIService, audit domain.AuditLogger) domain.IntakeFormService {
+	return &intakeFormService{repo: repo, logger: logger, aiService: aiService, audit: audit}
 }
 
 func (s *intakeFormService) CreateIntakeForm(ctx context.Context, params domain.CreateIntakeFormParams) (*domain.IntakeForm, error) {
@@ -100,6 +101,20 @@ func (s *intakeFormService) GetIntakeForm(ctx context.Context, id uuid.UUID) (*d
 
 	if s.logger != nil {
 		s.logger.LogInfo(ctx, "IntakeFormService.GetIntakeForm", "intake form detail retrieved successfully", zap.String("intake_form_id", id.String()))
+	}
+
+	if s.audit != nil {
+		fid := id.String()
+		if auditErr := s.audit.Log(ctx, domain.AuditEvent{
+			EventType:   "record_access",
+			Action:      "read",
+			Result:      "success",
+			SubjectType: "intake_form",
+			SubjectID:   fid,
+			AccessRule:  strPtr("INTAKE_FORM.VIEW"),
+		}); auditErr != nil {
+			s.logger.LogError(ctx, "IntakeFormService.GetIntakeForm", "audit log failed", auditErr)
+		}
 	}
 
 	return detail, nil

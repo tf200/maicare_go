@@ -15,6 +15,7 @@ import (
 	db "maicare_go/db/sqlc"
 	"maicare_go/docs"
 	"maicare_go/internal/adapters"
+	"maicare_go/internal/audit"
 	"maicare_go/internal/domain"
 	"maicare_go/internal/handler"
 	"maicare_go/internal/middleware"
@@ -94,9 +95,10 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 	}
 	pdfService := pkgpdf.NewPdfService(bucketClient)
 	incidentPDFGenerator := adapters.NewIncidentPDFGeneratorAdapter(pdfService)
+	pdfSvc := adapters.NewPDFServiceAdapter(pdfService)
 	aiService := adapters.NewAIServiceStub()
 
-	notificationSvc, handlers := wireServicesAndHandlers(store, appLogger, tokenMaker, taskQueue, storage, incidentPDFGenerator, aiService, hub, ticketManager, &cfg)
+	notificationSvc, handlers := wireServicesAndHandlers(store, appLogger, tokenMaker, taskQueue, storage, incidentPDFGenerator, pdfSvc, aiService, hub, ticketManager, &cfg)
 
 	router := newRouter(cfg, appLogger, tokenMaker, store, handlers)
 
@@ -296,9 +298,10 @@ type appHandlers struct {
 	settings         *handler.SettingsHandler
 	shiftSwap        *handler.ShiftSwapHandler
 	websocket        *handler.WebSocketHandler
+	invoice          *handler.InvoiceHandler
 }
 
-func wireServicesAndHandlers(store *db.Store, logger domain.Logger, tokenMaker domain.TokenMaker, taskQueue domain.TaskQueue, storage domain.Storage, incidentPDFGenerator domain.IncidentPDFGenerator, aiService *adapters.AIServiceStub, hub *ws.Hub, ticketManager *ws.TicketManager, cfg *config.Config) (domain.NotificationService, appHandlers) {
+func wireServicesAndHandlers(store *db.Store, logger domain.Logger, tokenMaker domain.TokenMaker, taskQueue domain.TaskQueue, storage domain.Storage, incidentPDFGenerator domain.IncidentPDFGenerator, pdfService domain.PDFService, aiService *adapters.AIServiceStub, hub *ws.Hub, ticketManager *ws.TicketManager, cfg *config.Config) (domain.NotificationService, appHandlers) {
 	authRepo := repository.NewAuthRepository(store)
 	clientRepo := repository.NewClientRepository(store)
 	contractRepo := repository.NewContractRepository(store)
@@ -322,22 +325,27 @@ func wireServicesAndHandlers(store *db.Store, logger domain.Logger, tokenMaker d
 	scheduleSvc := service.NewScheduleService(scheduleRepo, notificationSvc, logger)
 	eventSvc := service.NewEventService(store, taskQueue, logger)
 
-	authSvc := service.NewAuthService(authRepo, tokenMaker, logger, cfg.AccessTokenDuration, cfg.RefreshTokenDuration, cfg.TwoFATokenDuration)
-	clientSvc := service.NewClientService(clientRepo, taskQueue, storage, aiService, logger)
+	// NEN 7513 audit logger — shared across all services
+	auditLogger := audit.New(store, logger)
+
+	authSvc := service.NewAuthService(authRepo, tokenMaker, logger, auditLogger, cfg.AccessTokenDuration, cfg.RefreshTokenDuration, cfg.TwoFATokenDuration)
+	clientSvc := service.NewClientService(clientRepo, taskQueue, storage, aiService, pdfService, logger, auditLogger)
 	contractSvc := service.NewContractService(contractRepo, storage, logger)
 	employeeSvc := service.NewEmployeeService(employeeRepo, logger)
 	handbookSvc := service.NewHandbookService(handbookRepo, logger)
 	incidentSvc := service.NewIncidentService(incidentRepo, incidentPDFGenerator, taskQueue, logger)
-	intakeSvc := service.NewIntakeFormService(intakeRepo, logger, aiService)
+	intakeSvc := service.NewIntakeFormService(intakeRepo, logger, aiService, auditLogger)
 	lateArrivalSvc := service.NewLateArrivalService(lateArrivalRepo, logger)
 	leaveSvc := service.NewLeaveService(leaveRepo, logger)
 	maturitySvc := service.NewMaturityMatrixService(maturityRepo)
 	organizationSvc := service.NewOrganizationService(organizationRepo, logger)
-	registrationSvc := service.NewRegistrationFormService(registrationRepo, logger, taskQueue)
+	registrationSvc := service.NewRegistrationFormService(registrationRepo, logger, taskQueue, auditLogger)
 	roleSvc := service.NewRoleService(roleRepo, logger)
 	senderSvc := service.NewSenderService(senderRepo, logger)
 	departmentSvc := service.NewDepartmentService(departmentRepo)
 	organizationProfileSvc := service.NewOrganizationProfileService(organizationProfileRepo)
+
+	invoiceSvc := service.NewInvoiceService(store, logger, storage, pdfService)
 
 	return notificationSvc, appHandlers{
 		auth:             handler.NewAuthHandler(authSvc),
@@ -360,6 +368,7 @@ func wireServicesAndHandlers(store *db.Store, logger domain.Logger, tokenMaker d
 		settings:         handler.NewSettingsHandler(departmentSvc, organizationProfileSvc),
 		shiftSwap:        handler.NewShiftSwapHandler(scheduleSvc),
 		websocket:        handler.NewWebSocketHandler(hub, ticketManager, cfg),
+		invoice:          handler.NewInvoiceHandler(invoiceSvc),
 	}
 }
 
@@ -402,6 +411,7 @@ func newRouter(cfg config.Config, logger domain.Logger, tokenMaker domain.TokenM
 	handler.RegisterSettingsRoutes(base, handlers.settings, auth, requirePermission)
 	handler.RegisterShiftSwapRoutes(base, handlers.shiftSwap, auth, requirePermission)
 	handler.RegisterWebSocketRoutes(base, handlers.websocket, auth)
+	handler.RegisterInvoiceRoutes(base, handlers.invoice, auth, requirePermission)
 
 	return router
 }

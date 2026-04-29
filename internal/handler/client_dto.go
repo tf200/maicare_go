@@ -193,6 +193,13 @@ type getInCareStatsResponse struct {
 	Total                  int64 `json:"total"`
 }
 
+type getWaitingListStatsResponse struct {
+	TotalClients      int64   `json:"total_clients"`
+	TotalCrisis       int64   `json:"total_crisis"`
+	TotalRegular      int64   `json:"total_regular"`
+	AvgDaysInWaitlist float64 `json:"avg_days_in_waitlist"`
+}
+
 // --- Mappers ---
 
 func toCreateClientParams(req createClientRequest) (domain.CreateClientParams, error) {
@@ -375,6 +382,15 @@ func toGetInCareStatsResponse(stats *domain.InCareStats) getInCareStatsResponse 
 	}
 }
 
+func toGetWaitingListStatsResponse(stats *domain.WaitingListStats) getWaitingListStatsResponse {
+	return getWaitingListStatsResponse{
+		TotalClients:      stats.TotalClients,
+		TotalCrisis:       stats.TotalCrisis,
+		TotalRegular:      stats.TotalRegular,
+		AvgDaysInWaitlist: stats.AvgDaysInWaitlist,
+	}
+}
+
 // --- Get Client By ID ---
 
 type getClientResponse struct {
@@ -400,18 +416,42 @@ type getClientResponse struct {
 	StatusTimeline    *clientStatusTimelineResponse    `json:"status_timeline,omitempty"`
 }
 
+type clientEducationResponse struct {
+	CurrentlyEnrolled bool     `json:"currently_enrolled"`
+	Institution       *string  `json:"institution"`
+	MentorName        *string  `json:"mentor_name"`
+	MentorPhone       *string  `json:"mentor_phone"`
+	MentorEmail       *string  `json:"mentor_email"`
+	AdditionalNotes   *string  `json:"additional_notes"`
+	Level             string   `json:"level"`
+}
+
+type clientWorkResponse struct {
+	CurrentlyEmployed  bool      `json:"currently_employed"`
+	CurrentEmployer    *string   `json:"current_employer"`
+	EmployerPhone      *string   `json:"employer_phone"`
+	EmployerEmail      *string   `json:"employer_email"`
+	CurrentPosition    *string   `json:"current_position"`
+	StartDate          time.Time `json:"start_date"`
+	AdditionalNotes    *string   `json:"additional_notes"`
+}
+
 type clientPageClientResponse struct {
-	ID          uuid.UUID               `json:"id"`
-	FirstName   string                  `json:"first_name"`
-	LastName    string                  `json:"last_name"`
-	Bsn         *string                 `json:"bsn"`
-	FileNumber  string                  `json:"file_number"`
-	Gender      string                  `json:"gender"`
-	DateOfBirth *time.Time              `json:"date_of_birth"`
-	Age         *int32                  `json:"age"`
-	CareType    *string                 `json:"care_type"`
-	Address     clientAddressResponse   `json:"address"`
-	Location    *clientLocationResponse `json:"location"`
+	ID              uuid.UUID               `json:"id"`
+	FirstName       string                  `json:"first_name"`
+	LastName        string                  `json:"last_name"`
+	Bsn             *string                 `json:"bsn"`
+	BsnVerifiedBy   *uuid.UUID              `json:"bsn_verified_by"`
+	BsnVerifiedByName *string               `json:"bsn_verified_by_name"`
+	FileNumber      string                  `json:"file_number"`
+	Gender          string                  `json:"gender"`
+	DateOfBirth     *time.Time              `json:"date_of_birth"`
+	Age             *int32                  `json:"age"`
+	CareType        *string                 `json:"care_type"`
+	Address         clientAddressResponse   `json:"address"`
+	Location        *clientLocationResponse `json:"location"`
+	Education       *clientEducationResponse `json:"education,omitempty"`
+	Work            *clientWorkResponse      `json:"work,omitempty"`
 }
 
 type clientLocationResponse struct {
@@ -574,22 +614,13 @@ type updateClientRequest struct {
 	Identity                   *bool      `json:"identity"`
 	Bsn                        *string    `json:"bsn"`
 	BsnVerifiedBy              *uuid.UUID `json:"bsn_verified_by"`
-	Source                     *string    `json:"source"`
-	Birthplace                 *string    `json:"birthplace"`
 	Nationality                *string    `json:"nationality"`
 	Email                      *string    `json:"email"`
 	PhoneNumber                *string    `json:"phone_number"`
-	OrganizationID             *uuid.UUID `json:"organization_id"`
-	Departement                *string    `json:"departement"`
 	Gender                     *string    `json:"gender"`
 	Filenumber                 *string    `json:"filenumber"`
-	ProfilePicture             *string    `json:"profile_picture"`
-	Infix                      *string    `json:"infix"`
 	SenderID                   *uuid.UUID `json:"sender_id"`
 	LocationID                 *uuid.UUID `json:"location_id"`
-	DepartureReason            *string    `json:"departure_reason"`
-	DepartureReport            *string    `json:"departure_report"`
-	LegalMeasure               *string    `json:"legal_measure"`
 	EducationCurrentlyEnrolled *bool      `json:"education_currently_enrolled"`
 	EducationInstitution       *string    `json:"education_institution"`
 	EducationMentorName        *string    `json:"education_mentor_name"`
@@ -604,8 +635,6 @@ type updateClientRequest struct {
 	WorkCurrentPosition        *string    `json:"work_current_position"`
 	WorkStartDate              time.Time  `json:"work_start_date"`
 	WorkAdditionalNotes        *string    `json:"work_additional_notes"`
-	LivingSituation            *string    `json:"living_situation"`
-	LivingSituationNotes       *string    `json:"living_situation_notes"`
 }
 
 type updateClientResponse struct {
@@ -617,23 +646,14 @@ type updateClientResponse struct {
 	Status                string     `json:"status"`
 	Bsn                   *string    `json:"bsn"`
 	BsnVerifiedBy         *uuid.UUID `json:"bsn_verified_by"`
-	Source                *string    `json:"source"`
-	Birthplace            *string    `json:"birthplace"`
 	Email                 string     `json:"email"`
 	PhoneNumber           *string    `json:"phone_number"`
-	OrganizationID        *uuid.UUID `json:"organization_id"`
-	Departement           *string    `json:"departement"`
 	Gender                string     `json:"gender"`
 	Filenumber            string     `json:"filenumber"`
-	ProfilePicture        *string    `json:"profile_picture"`
-	Infix                 *string    `json:"infix"`
 	Created               time.Time  `json:"created"`
 	SenderID              *uuid.UUID `json:"sender_id"`
 	LocationID            *uuid.UUID `json:"location_id"`
-	DepartureReason       *string    `json:"departure_reason"`
-	DepartureReport       *string    `json:"departure_report"`
 	Addresses             []address  `json:"addresses"`
-	LegalMeasure          *string    `json:"legal_measure"`
 	HasUntakenMedications bool       `json:"has_untaken_medications"`
 }
 
@@ -808,15 +828,17 @@ func toGetClientResponse(detail *domain.ClientPageDetail) getClientResponse {
 		SchemaVersion: detail.SchemaVersion,
 		Status:        detail.Status,
 		Client: clientPageClientResponse{
-			ID:          detail.Client.ID,
-			FirstName:   detail.Client.FirstName,
-			LastName:    detail.Client.LastName,
-			Bsn:         detail.Client.Bsn,
-			FileNumber:  detail.Client.FileNumber,
-			Gender:      detail.Client.Gender,
-			DateOfBirth: detail.Client.DateOfBirth,
-			Age:         detail.Client.Age,
-			CareType:    detail.Client.CareType,
+			ID:              detail.Client.ID,
+			FirstName:       detail.Client.FirstName,
+			LastName:        detail.Client.LastName,
+			Bsn:             detail.Client.Bsn,
+			BsnVerifiedBy:   detail.Client.BsnVerifiedBy,
+			BsnVerifiedByName: detail.Client.BsnVerifiedByName,
+			FileNumber:      detail.Client.FileNumber,
+			Gender:          detail.Client.Gender,
+			DateOfBirth:     detail.Client.DateOfBirth,
+			Age:             detail.Client.Age,
+			CareType:        detail.Client.CareType,
 			Address: clientAddressResponse{
 				Street:              detail.Client.Address.Street,
 				HouseNumber:         detail.Client.Address.HouseNumber,
@@ -825,6 +847,24 @@ func toGetClientResponse(detail *domain.ClientPageDetail) getClientResponse {
 				City:                detail.Client.Address.City,
 			},
 			Location: location,
+			Education: &clientEducationResponse{
+				CurrentlyEnrolled: detail.Client.EducationCurrentlyEnrolled,
+				Institution:       detail.Client.EducationInstitution,
+				MentorName:        detail.Client.EducationMentorName,
+				MentorPhone:       detail.Client.EducationMentorPhone,
+				MentorEmail:       detail.Client.EducationMentorEmail,
+				AdditionalNotes:   detail.Client.EducationAdditionalNotes,
+				Level:             detail.Client.EducationLevel,
+			},
+			Work: &clientWorkResponse{
+				CurrentlyEmployed: detail.Client.WorkCurrentlyEmployed,
+				CurrentEmployer:   detail.Client.WorkCurrentEmployer,
+				EmployerPhone:     detail.Client.WorkCurrentEmployerPhone,
+				EmployerEmail:     detail.Client.WorkCurrentEmployerEmail,
+				CurrentPosition:   detail.Client.WorkCurrentPosition,
+				StartDate:         detail.Client.WorkStartDate,
+				AdditionalNotes:   detail.Client.WorkAdditionalNotes,
+			},
 		},
 		Care:              care,
 		CareSchedule:      careSchedule,
@@ -874,22 +914,13 @@ func toUpdateClientParams(req updateClientRequest) domain.UpdateClientParams {
 		Identity:                   req.Identity,
 		Bsn:                        req.Bsn,
 		BsnVerifiedBy:              req.BsnVerifiedBy,
-		Source:                     req.Source,
-		Birthplace:                 req.Birthplace,
 		Nationality:                req.Nationality,
 		Email:                      req.Email,
 		PhoneNumber:                req.PhoneNumber,
-		OrganizationID:             req.OrganizationID,
-		Departement:                req.Departement,
 		Gender:                     req.Gender,
 		Filenumber:                 req.Filenumber,
-		ProfilePicture:             req.ProfilePicture,
-		Infix:                      req.Infix,
 		SenderID:                   req.SenderID,
 		LocationID:                 req.LocationID,
-		DepartureReason:            req.DepartureReason,
-		DepartureReport:            req.DepartureReport,
-		LegalMeasure:               req.LegalMeasure,
 		EducationCurrentlyEnrolled: req.EducationCurrentlyEnrolled,
 		EducationInstitution:       req.EducationInstitution,
 		EducationMentorName:        req.EducationMentorName,
@@ -904,8 +935,6 @@ func toUpdateClientParams(req updateClientRequest) domain.UpdateClientParams {
 		WorkCurrentPosition:        req.WorkCurrentPosition,
 		WorkStartDate:              req.WorkStartDate,
 		WorkAdditionalNotes:        req.WorkAdditionalNotes,
-		LivingSituation:            req.LivingSituation,
-		LivingSituationNotes:       req.LivingSituationNotes,
 	}
 }
 
@@ -2368,5 +2397,115 @@ func toAiGeneratedReportResponse(r domain.AiGeneratedReport) aiGeneratedReportRe
 		EndDate:    r.EndDate,
 		ReportText: r.ReportText,
 		CreatedAt:  r.CreatedAt,
+	}
+}
+
+// =====================
+// Appointment Card
+// =====================
+
+type getAppointmentCardResponse struct {
+	ID                     uuid.UUID `json:"id"`
+	ClientID               uuid.UUID `json:"client_id"`
+	GeneralInformation     []string  `json:"general_information"`
+	ImportantContacts      []string  `json:"important_contacts"`
+	HouseholdInfo          []string  `json:"household_info"`
+	OrganizationAgreements []string  `json:"organization_agreements"`
+	YouthOfficerAgreements []string  `json:"youth_officer_agreements"`
+	TreatmentAgreements    []string  `json:"treatment_agreements"`
+	SmokingRules           []string  `json:"smoking_rules"`
+	Work                   []string  `json:"work"`
+	SchoolInternship       []string  `json:"school_internship"`
+	Travel                 []string  `json:"travel"`
+	Leave                  []string  `json:"leave"`
+	CreatedAt              time.Time `json:"created_at"`
+	UpdatedAt              time.Time `json:"updated_at"`
+}
+
+type updateAppointmentCardRequest struct {
+	GeneralInformation     []string `json:"general_information"`
+	ImportantContacts      []string `json:"important_contacts"`
+	HouseholdInfo          []string `json:"household_info"`
+	OrganizationAgreements []string `json:"organization_agreements"`
+	YouthOfficerAgreements []string `json:"youth_officer_agreements"`
+	TreatmentAgreements    []string `json:"treatment_agreements"`
+	SmokingRules           []string `json:"smoking_rules"`
+	Work                   []string `json:"work"`
+	SchoolInternship       []string `json:"school_internship"`
+	Travel                 []string `json:"travel"`
+	Leave                  []string `json:"leave"`
+}
+
+type updateAppointmentCardResponse struct {
+	ID                     uuid.UUID `json:"id"`
+	ClientID               uuid.UUID `json:"client_id"`
+	GeneralInformation     []string  `json:"general_information"`
+	ImportantContacts      []string  `json:"important_contacts"`
+	HouseholdInfo          []string  `json:"household_info"`
+	OrganizationAgreements []string  `json:"organization_agreements"`
+	YouthOfficerAgreements []string  `json:"youth_officer_agreements"`
+	TreatmentAgreements    []string  `json:"treatment_agreements"`
+	SmokingRules           []string  `json:"smoking_rules"`
+	Work                   []string  `json:"work"`
+	SchoolInternship       []string  `json:"school_internship"`
+	Travel                 []string  `json:"travel"`
+	Leave                  []string  `json:"leave"`
+	CreatedAt              time.Time `json:"created_at"`
+	UpdatedAt              time.Time `json:"updated_at"`
+}
+
+func toGetAppointmentCardResponse(card *domain.AppointmentCard) getAppointmentCardResponse {
+	return getAppointmentCardResponse{
+		ID:                     card.ID,
+		ClientID:               card.ClientID,
+		GeneralInformation:     card.GeneralInformation,
+		ImportantContacts:      card.ImportantContacts,
+		HouseholdInfo:          card.HouseholdInfo,
+		OrganizationAgreements: card.OrganizationAgreements,
+		YouthOfficerAgreements: card.YouthOfficerAgreements,
+		TreatmentAgreements:    card.TreatmentAgreements,
+		SmokingRules:           card.SmokingRules,
+		Work:                   card.Work,
+		SchoolInternship:       card.SchoolInternship,
+		Travel:                 card.Travel,
+		Leave:                  card.Leave,
+		CreatedAt:              card.CreatedAt,
+		UpdatedAt:              card.UpdatedAt,
+	}
+}
+
+func toUpdateAppointmentCardResponse(card *domain.AppointmentCard) updateAppointmentCardResponse {
+	return updateAppointmentCardResponse{
+		ID:                     card.ID,
+		ClientID:               card.ClientID,
+		GeneralInformation:     card.GeneralInformation,
+		ImportantContacts:      card.ImportantContacts,
+		HouseholdInfo:          card.HouseholdInfo,
+		OrganizationAgreements: card.OrganizationAgreements,
+		YouthOfficerAgreements: card.YouthOfficerAgreements,
+		TreatmentAgreements:    card.TreatmentAgreements,
+		SmokingRules:           card.SmokingRules,
+		Work:                   card.Work,
+		SchoolInternship:       card.SchoolInternship,
+		Travel:                 card.Travel,
+		Leave:                  card.Leave,
+		CreatedAt:              card.CreatedAt,
+		UpdatedAt:              card.UpdatedAt,
+	}
+}
+
+func toUpdateAppointmentCardParams(req updateAppointmentCardRequest) domain.UpdateAppointmentCardParams {
+	return domain.UpdateAppointmentCardParams{
+		GeneralInformation:     req.GeneralInformation,
+		ImportantContacts:      req.ImportantContacts,
+		HouseholdInfo:          req.HouseholdInfo,
+		OrganizationAgreements: req.OrganizationAgreements,
+		YouthOfficerAgreements: req.YouthOfficerAgreements,
+		TreatmentAgreements:    req.TreatmentAgreements,
+		SmokingRules:           req.SmokingRules,
+		Work:                   req.Work,
+		SchoolInternship:       req.SchoolInternship,
+		Travel:                 req.Travel,
+		Leave:                  req.Leave,
 	}
 }

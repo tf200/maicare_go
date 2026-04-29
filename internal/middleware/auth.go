@@ -67,6 +67,7 @@ func (m *AuthMiddleware) Handle() gin.HandlerFunc {
 
 		requestCtx := WithAuthPayload(ctx.Request.Context(), payload)
 		requestCtx = ctxkeys.WithEmployeeID(requestCtx, payload.EmployeeID)
+		requestCtx = WithSessionID(requestCtx, payload.SessionID)
 		ctx.Request = ctx.Request.WithContext(requestCtx)
 		ctx.Set(string(authPayloadKey), payload)
 		ctx.Set("user_id", payload.UserID.String())

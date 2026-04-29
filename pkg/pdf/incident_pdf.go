@@ -8,6 +8,14 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/johnfercher/maroto/v2"
+	"github.com/johnfercher/maroto/v2/pkg/components/text"
+	"github.com/johnfercher/maroto/v2/pkg/config"
+	"github.com/johnfercher/maroto/v2/pkg/consts/align"
+	"github.com/johnfercher/maroto/v2/pkg/consts/border"
+	"github.com/johnfercher/maroto/v2/pkg/consts/fontstyle"
+	"github.com/johnfercher/maroto/v2/pkg/core"
+	"github.com/johnfercher/maroto/v2/pkg/props"
 )
 
 type IncidentReportData struct {
@@ -45,62 +53,126 @@ type IncidentReportData struct {
 func (s *pdfService) GenerateIncidentPDF(ctx context.Context, incidentData IncidentReportData) ([]byte, error) {
 	_ = ctx
 
-	headerLines := []string{
-		fmt.Sprintf("Incident ID: %s", incidentData.ID),
-		fmt.Sprintf("Occurred at: %s", formatTimeOrNA(incidentData.OccurredAt)),
-		fmt.Sprintf("Location: %s (%s)", incidentData.LocationName, incidentData.LocationID),
-		fmt.Sprintf("Reporter: %s %s (%s)", incidentData.EmployeeFirstName, incidentData.EmployeeLastName, incidentData.EmployeeID),
-		fmt.Sprintf("Client: %s %s (%s)", incidentData.ClientFirstName, incidentData.ClientLastName, incidentData.ClientID),
-	}
-
-	sections := []documentSection{
-		{
-			Title: "Incident details",
-			Lines: []string{
-				fmt.Sprintf("Reporter involvement: %s", incidentData.ReporterInvolvement),
-				fmt.Sprintf("Incident type: %s", incidentData.IncidentType),
-				fmt.Sprintf("Severity: %s", incidentData.SeverityOfIncident),
-				fmt.Sprintf("Informed parties: %s", joinOrNA(incidentData.InformedParties)),
-			},
-		},
-		{
-			Title: "Impact and risk",
-			Lines: []string{
-				fmt.Sprintf("Incident explanation: %s", stringOrNA(incidentData.IncidentExplanation)),
-				fmt.Sprintf("Recurrence risk: %s", incidentData.RecurrenceRisk),
-				fmt.Sprintf("Preventive steps: %s", stringOrNA(incidentData.IncidentPreventSteps)),
-				fmt.Sprintf("Taken measures: %s", stringOrNA(incidentData.IncidentTakenMeasures)),
-			},
-		},
-		{
-			Title: "Cause analysis",
-			Lines: []string{
-				fmt.Sprintf("Cause categories: %s", joinOrNA(incidentData.CauseCategories)),
-				fmt.Sprintf("Cause explanation: %s", stringOrNA(incidentData.CauseExplanation)),
-			},
-		},
-		{
-			Title: "Damage and follow-up",
-			Lines: []string{
-				fmt.Sprintf("Physical injury: %s", incidentData.PhysicalInjury),
-				fmt.Sprintf("Physical injury description: %s", stringOrNA(incidentData.PhysicalInjuryDesc)),
-				fmt.Sprintf("Psychological damage: %s", incidentData.PsychologicalDamage),
-				fmt.Sprintf("Psychological damage description: %s", stringOrNA(incidentData.PsychologicalDamageDesc)),
-				fmt.Sprintf("Needed consultation: %s", incidentData.NeededConsultation),
-				fmt.Sprintf("Follow-up actions: %s", joinOrNA(incidentData.FollowUpActions)),
-				fmt.Sprintf("Follow-up notes: %s", stringOrNA(incidentData.FollowUpNotes)),
-				fmt.Sprintf("Employee absent: %s", yesNo(incidentData.IsEmployeeAbsent)),
-				fmt.Sprintf("Additional details: %s", stringOrNA(incidentData.AdditionalDetails)),
-			},
-		},
-	}
-
-	pdfBytes, err := buildSectionsPDF("Incident report", headerLines, sections)
+	pdfBytes, err := buildIncidentReportPDF(incidentData)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate incident pdf: %w", err)
 	}
 
 	return pdfBytes, nil
+}
+
+func buildIncidentReportPDF(incidentData IncidentReportData) ([]byte, error) {
+	primary := &props.Color{Red: 24, Green: 74, Blue: 96}
+	muted := &props.Color{Red: 89, Green: 101, Blue: 113}
+	lightBlue := &props.Color{Red: 232, Green: 242, Blue: 247}
+	lightGray := &props.Color{Red: 246, Green: 248, Blue: 250}
+	borderColor := &props.Color{Red: 214, Green: 222, Blue: 228}
+	severityColor := incidentSeverityColor(incidentData.SeverityOfIncident)
+
+	cfg := config.NewBuilder().
+		WithLeftMargin(12).
+		WithRightMargin(12).
+		WithTopMargin(12).
+		WithBottomMargin(12).
+		Build()
+
+	m := maroto.New(cfg)
+
+	m.AddRow(20,
+		text.NewCol(8, "Incident Report", props.Text{Style: fontstyle.Bold, Size: 20, Color: primary, Top: 4}),
+		text.NewCol(4, fmt.Sprintf("Generated\n%s", time.Now().Format("2006-01-02 15:04")), props.Text{Size: 8, Align: align.Right, Color: muted, Top: 3}),
+	).WithStyle(&props.Cell{BackgroundColor: lightBlue})
+
+	m.AddRow(8,
+		text.NewCol(8, fmt.Sprintf("Incident ID: %s", incidentData.ID.String()), props.Text{Size: 8, Color: muted, Top: 2}),
+		text.NewCol(4, strings.ToUpper(displayValue(incidentData.SeverityOfIncident)), props.Text{Style: fontstyle.Bold, Size: 11, Align: align.Center, Color: &props.WhiteColor, Top: 2}),
+	).WithStyle(&props.Cell{BackgroundColor: severityColor})
+
+	addIncidentSpacer(m, 4)
+	addIncidentInfoGrid(m, incidentData, primary, muted, lightGray, borderColor)
+	addIncidentSpacer(m, 4)
+
+	addIncidentSection(m, "Incident Details", primary, lightBlue, borderColor, []incidentField{
+		{Label: "Occurred at", Value: formatTimeOrNA(incidentData.OccurredAt)},
+		{Label: "Location", Value: fmt.Sprintf("%s (%s)", displayValue(incidentData.LocationName), incidentData.LocationID.String())},
+		{Label: "Reporter involvement", Value: incidentData.ReporterInvolvement},
+		{Label: "Incident type", Value: incidentData.IncidentType},
+		{Label: "Informed parties", Value: joinOrNA(incidentData.InformedParties)},
+	})
+
+	addIncidentSection(m, "Impact And Risk", primary, lightBlue, borderColor, []incidentField{
+		{Label: "Explanation", Value: stringOrNA(incidentData.IncidentExplanation)},
+		{Label: "Recurrence risk", Value: incidentData.RecurrenceRisk},
+		{Label: "Preventive steps", Value: stringOrNA(incidentData.IncidentPreventSteps)},
+		{Label: "Taken measures", Value: stringOrNA(incidentData.IncidentTakenMeasures)},
+	})
+
+	addIncidentSection(m, "Cause Analysis", primary, lightBlue, borderColor, []incidentField{
+		{Label: "Cause categories", Value: joinOrNA(incidentData.CauseCategories)},
+		{Label: "Cause explanation", Value: stringOrNA(incidentData.CauseExplanation)},
+	})
+
+	addIncidentSection(m, "Damage And Follow-Up", primary, lightBlue, borderColor, []incidentField{
+		{Label: "Physical injury", Value: incidentData.PhysicalInjury},
+		{Label: "Physical injury details", Value: stringOrNA(incidentData.PhysicalInjuryDesc)},
+		{Label: "Psychological damage", Value: incidentData.PsychologicalDamage},
+		{Label: "Psychological damage details", Value: stringOrNA(incidentData.PsychologicalDamageDesc)},
+		{Label: "Needed consultation", Value: incidentData.NeededConsultation},
+		{Label: "Follow-up actions", Value: joinOrNA(incidentData.FollowUpActions)},
+		{Label: "Follow-up notes", Value: stringOrNA(incidentData.FollowUpNotes)},
+		{Label: "Employee absent", Value: yesNo(incidentData.IsEmployeeAbsent)},
+		{Label: "Additional details", Value: stringOrNA(incidentData.AdditionalDetails)},
+	})
+
+	document, err := m.Generate()
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate incident maroto document: %w", err)
+	}
+
+	return document.GetBytes(), nil
+}
+
+type incidentField struct {
+	Label string
+	Value string
+}
+
+func addIncidentInfoGrid(m core.Maroto, incidentData IncidentReportData, primary, muted, background, borderColor *props.Color) {
+	m.AddRow(9,
+		text.NewCol(6, "Client", props.Text{Style: fontstyle.Bold, Size: 9, Color: muted, Top: 2, Left: 2}),
+		text.NewCol(6, "Reporter", props.Text{Style: fontstyle.Bold, Size: 9, Color: muted, Top: 2, Left: 2}),
+	).WithStyle(&props.Cell{BackgroundColor: background, BorderType: border.Full, BorderColor: borderColor, BorderThickness: 0.1})
+	m.AddRow(13,
+		text.NewCol(6, fmt.Sprintf("%s %s\n%s", displayValue(incidentData.ClientFirstName), displayValue(incidentData.ClientLastName), incidentData.ClientID.String()), props.Text{Size: 10, Color: primary, Top: 2, Left: 2}),
+		text.NewCol(6, fmt.Sprintf("%s %s\n%s", displayValue(incidentData.EmployeeFirstName), displayValue(incidentData.EmployeeLastName), incidentData.EmployeeID.String()), props.Text{Size: 10, Color: primary, Top: 2, Left: 2}),
+	).WithStyle(&props.Cell{BorderType: border.Full, BorderColor: borderColor, BorderThickness: 0.1})
+}
+
+func addIncidentSection(m core.Maroto, title string, primary, headerBackground, borderColor *props.Color, fields []incidentField) {
+	addIncidentSpacer(m, 3)
+	m.AddRow(9, text.NewCol(12, title, props.Text{Style: fontstyle.Bold, Size: 11, Color: primary, Top: 2, Left: 2})).WithStyle(&props.Cell{BackgroundColor: headerBackground, BorderType: border.Full, BorderColor: borderColor, BorderThickness: 0.1})
+
+	for _, field := range fields {
+		m.AddAutoRow(
+			text.NewCol(3, field.Label, props.Text{Style: fontstyle.Bold, Size: 9, Color: primary, Top: 2, Left: 2, Bottom: 2}),
+			text.NewCol(9, displayValue(field.Value), props.Text{Size: 9, Top: 2, Left: 2, Bottom: 2}),
+		).WithStyle(&props.Cell{BorderType: border.Full, BorderColor: borderColor, BorderThickness: 0.1})
+	}
+}
+
+func addIncidentSpacer(m core.Maroto, height float64) {
+	m.AddRow(height, text.NewCol(12, "", props.Text{Size: 1}))
+}
+
+func incidentSeverityColor(severity string) *props.Color {
+	switch strings.ToLower(strings.TrimSpace(severity)) {
+	case "fatal", "serious", "critical", "high":
+		return &props.Color{Red: 172, Green: 44, Blue: 45}
+	case "moderate", "medium":
+		return &props.Color{Red: 189, Green: 117, Blue: 37}
+	default:
+		return &props.Color{Red: 24, Green: 74, Blue: 96}
+	}
 }
 
 func (s *pdfService) generateIncidentPDF(incidentData IncidentReportData) (multipart.File, error) {
@@ -155,6 +227,14 @@ func joinOrNA(values []string) string {
 		return "N/A"
 	}
 	return strings.Join(values, "; ")
+}
+
+func displayValue(value string) string {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return "N/A"
+	}
+	return value
 }
 
 func formatTimeOrNA(value time.Time) string {

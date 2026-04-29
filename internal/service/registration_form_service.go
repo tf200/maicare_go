@@ -13,14 +13,16 @@ import (
 type RegistrationFormService struct {
 	repo      domain.RegistrationFormRepository
 	logger    domain.Logger
+	audit     domain.AuditLogger
 	taskQueue domain.TaskQueue
 }
 
-func NewRegistrationFormService(repo domain.RegistrationFormRepository, logger domain.Logger, taskQueue domain.TaskQueue) domain.RegistrationFormService {
+func NewRegistrationFormService(repo domain.RegistrationFormRepository, logger domain.Logger, taskQueue domain.TaskQueue, audit domain.AuditLogger) domain.RegistrationFormService {
 	return &RegistrationFormService{
 		repo:      repo,
 		logger:    logger,
 		taskQueue: taskQueue,
+		audit:     audit,
 	}
 }
 
@@ -48,6 +50,21 @@ func (s *RegistrationFormService) GetRegistrationForm(ctx context.Context, id uu
 		s.logError(ctx, "GetRegistrationForm", err, zap.String("form_id", id.String()))
 		return nil, err
 	}
+
+	if s.audit != nil {
+		fid := id.String()
+		if auditErr := s.audit.Log(ctx, domain.AuditEvent{
+			EventType:   "record_access",
+			Action:      "read",
+			Result:      "success",
+			SubjectType: "registration_form",
+			SubjectID:   fid,
+			AccessRule:  strPtr("REGISTRATION_FORM.VIEW"),
+		}); auditErr != nil {
+			s.logError(ctx, "GetRegistrationForm::Audit", auditErr, zap.String("form_id", fid))
+		}
+	}
+
 	return form, nil
 }
 

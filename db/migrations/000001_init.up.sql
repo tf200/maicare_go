@@ -2807,27 +2807,55 @@ INSERT INTO template_items (item_tag, description, source_table, source_column) 
 ('contract.financing_option', 'Financing option', 'contract', 'financing_option');
 
 -- ===============================================
--- AUDIT LOGGING
+-- AUDIT LOGGING (NEN 7513-compliant)
 -- ===============================================
 CREATE TABLE audit (
     event_id UUID PRIMARY KEY,
+    append_seq BIGSERIAL NOT NULL UNIQUE,
+    event_group_id UUID,
+    occurred_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     event_type TEXT NOT NULL,
-    occured_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    actor_role TEXT[] NOT NULL,
-    actor_id UUID NOT NULL,
-    subject_type TEXT NOT NULL,
-    subject_id UUID NOT NULL,
-    access_reason TEXT NOT NULL,
     action TEXT NOT NULL,
     result TEXT NOT NULL,
-    module TEXT NOT NULL,
-    tenant_id TEXT NOT NULL,
-    details JSONB,
+    actor_user_id UUID,
+    actor_employee_id UUID,
+    actor_roles TEXT[],
+    subject_type TEXT NOT NULL,
+    subject_id TEXT,
+    client_id UUID,
+    access_rule TEXT,
+    access_reason TEXT,
+    session_id UUID,
+    request_id TEXT,
     ip INET,
     user_agent TEXT,
+    route TEXT,
+    method TEXT,
+    details JSONB,
     hash_prev TEXT NOT NULL,
     hash_self TEXT NOT NULL
 );
+
+-- Append-only protection: audit rows must never be mutated
+CREATE OR REPLACE FUNCTION reject_audit_mutations()
+RETURNS TRIGGER AS $$
+BEGIN
+    RAISE EXCEPTION 'audit table is append-only: UPDATE and DELETE are not allowed';
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_audit_append_only
+    BEFORE UPDATE OR DELETE ON audit
+    FOR EACH ROW
+    EXECUTE FUNCTION reject_audit_mutations();
+
+-- Indexes for NEN 7513 query patterns
+CREATE INDEX idx_audit_client_id_occurred_at ON audit (client_id, occurred_at DESC);
+CREATE INDEX idx_audit_subject ON audit (subject_type, subject_id, occurred_at DESC);
+CREATE INDEX idx_audit_actor_employee ON audit (actor_employee_id, occurred_at DESC);
+CREATE INDEX idx_audit_event_group ON audit (event_group_id);
+CREATE INDEX idx_audit_session ON audit (session_id);
+CREATE INDEX idx_audit_append_seq ON audit (append_seq DESC);
 
 -- ===============================================
 -- ROW LEVEL SECURITY (RLS)

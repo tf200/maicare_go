@@ -24,6 +24,7 @@ func RegisterClientRoutes(
 		clientsGroup.POST("", auth, requirePermission("CLIENT.CREATE"), handler.CreateClient)
 		clientsGroup.GET("", auth, requirePermission("CLIENT.VIEW"), handler.ListClients)
 		clientsGroup.GET("/waiting-list", auth, requirePermission("CLIENT.VIEW"), handler.ListWaitingListClients)
+		clientsGroup.GET("/waiting-list/stats", auth, requirePermission("CLIENT.VIEW"), handler.GetWaitingListStats)
 		clientsGroup.GET("/in-care", auth, requirePermission("CLIENT.VIEW"), handler.ListInCareClients)
 		clientsGroup.GET("/counts", auth, requirePermission("CLIENT.VIEW"), handler.GetClientsCount)
 		clientsGroup.GET("/incare/stats", auth, requirePermission("CLIENT.VIEW"), handler.GetInCareStats)
@@ -86,6 +87,11 @@ func RegisterClientRoutes(
 		clientsGroup.POST("/:id/ai_progress_reports", auth, requirePermission("CLIENT.AI_PROGRESS_REPORT.GENERATE"), handler.GenerateAutoReports)
 		clientsGroup.POST("/:id/ai_progress_reports/confirm", auth, requirePermission("CLIENT.AI_PROGRESS_REPORT.CONFIRM"), handler.ConfirmAiProgressReport)
 		clientsGroup.GET("/:id/ai_progress_reports", auth, requirePermission("CLIENT.AI_PROGRESS_REPORT.VIEW"), handler.ListAiGeneratedReports)
+
+		// Appointment Cards
+		clientsGroup.GET("/:id/appointment_cards", auth, requirePermission("APPOINTMENT_CARD.VIEW"), handler.GetAppointmentCard)
+		clientsGroup.PUT("/:id/appointment_cards", auth, requirePermission("APPOINTMENT_CARD.UPDATE"), handler.UpdateAppointmentCard)
+		clientsGroup.POST("/:id/appointment_cards/generate_document", auth, requirePermission("APPOINTMENT_CARD.GENERATE_DOCUMENT"), handler.GenerateAppointmentCardDocument)
 	}
 }
 
@@ -306,6 +312,23 @@ func (h *ClientHandler) GetInCareStats(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, httpapi.OK(toGetInCareStatsResponse(stats), "In-care stats fetched successfully"))
+}
+
+// GetWaitingListStats gets waiting list statistics
+// @Summary Get waiting list statistics
+// @Tags clients
+// @Produce json
+// @Success 200 {object} httpapi.Envelope[getWaitingListStatsResponse]
+// @Failure 400,404,500 {object} httpapi.Envelope[any]
+// @Router /clients/waiting-list/stats [get]
+func (h *ClientHandler) GetWaitingListStats(ctx *gin.Context) {
+	stats, err := h.service.GetWaitingListStats(ctx.Request.Context())
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, httpapi.Fail("failed to get waiting list stats", ""))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, httpapi.OK(toGetWaitingListStatsResponse(stats), "Waiting list stats fetched successfully"))
 }
 
 // GetClient gets a client by ID
@@ -2240,4 +2263,73 @@ func (h *ClientHandler) ListAiGeneratedReports(ctx *gin.Context) {
 
 	pageResp := httpapi.NewPageResponse(ctx, req.PageRequest, items, result.TotalCount)
 	ctx.JSON(http.StatusOK, httpapi.OK(pageResp, "Progress reports retrieved successfully"))
+}
+
+// GetAppointmentCard retrieves an appointment card by client ID
+func (h *ClientHandler) GetAppointmentCard(ctx *gin.Context) {
+	clientID, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, httpapi.Fail("invalid client ID", ""))
+		return
+	}
+
+	card, err := h.service.GetAppointmentCard(ctx.Request.Context(), clientID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, httpapi.Fail("failed to get appointment card", ""))
+		return
+	}
+
+	if card == nil {
+		ctx.JSON(http.StatusOK, httpapi.OK[any](nil, "Appointment card not found"))
+		return
+	}
+
+	resp := toGetAppointmentCardResponse(card)
+	ctx.JSON(http.StatusOK, httpapi.OK(resp, "Appointment card retrieved successfully"))
+}
+
+// UpdateAppointmentCard creates or updates an appointment card for a client
+func (h *ClientHandler) UpdateAppointmentCard(ctx *gin.Context) {
+	clientID, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, httpapi.Fail("invalid client ID", ""))
+		return
+	}
+
+	var req updateAppointmentCardRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, httpapi.Fail("invalid request body", ""))
+		return
+	}
+
+	card, err := h.service.UpdateAppointmentCard(ctx.Request.Context(), clientID, toUpdateAppointmentCardParams(req))
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, httpapi.Fail("failed to update appointment card", ""))
+		return
+	}
+
+	resp := toUpdateAppointmentCardResponse(card)
+	ctx.JSON(http.StatusOK, httpapi.OK(resp, "Appointment card updated successfully"))
+}
+
+// GenerateAppointmentCardDocument generates a PDF document for the appointment card
+func (h *ClientHandler) GenerateAppointmentCardDocument(ctx *gin.Context) {
+	clientID, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, httpapi.Fail("invalid client ID", ""))
+		return
+	}
+
+	pdfBytes, fileName, err := h.service.GenerateAppointmentCardDocument(ctx.Request.Context(), clientID)
+	if err != nil {
+		if err.Error() == "appointment card not found" {
+			ctx.JSON(http.StatusNotFound, httpapi.Fail("appointment card not found", ""))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, httpapi.Fail("failed to generate appointment card document", ""))
+		return
+	}
+
+	ctx.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", fileName))
+	ctx.Data(http.StatusOK, "application/pdf", pdfBytes)
 }

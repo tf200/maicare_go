@@ -6,6 +6,7 @@ import (
 
 	"maicare_go/internal/domain"
 	"maicare_go/internal/httpapi"
+	"maicare_go/internal/middleware"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -269,6 +270,12 @@ func (h *IntakeFormHandler) UpdateIntakeConclusion(ctx *gin.Context) {
 // @Success 200 {object} httpapi.Envelope[promoteIntakeToClientResponse]
 // @Router /intake_forms/{id}/promote [post]
 func (h *IntakeFormHandler) PromoteIntakeToClient(ctx *gin.Context) {
+	payload, ok := middleware.AuthPayloadFromContext(ctx.Request.Context())
+	if !ok || payload == nil {
+		ctx.JSON(http.StatusUnauthorized, httpapi.Fail("unauthorized access", ""))
+		return
+	}
+
 	var req promoteIntakeToClientRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, httpapi.Fail("invalid request body", err.Error()))
@@ -277,6 +284,7 @@ func (h *IntakeFormHandler) PromoteIntakeToClient(ctx *gin.Context) {
 
 	result, err := h.service.PromoteIntakeToClient(ctx.Request.Context(), domain.PromoteIntakeToClientParams{
 		IntakeFormID: req.IntakeFormID,
+		EmployeeID:   payload.EmployeeID,
 	})
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, httpapi.Fail("failed to promote intake to client", err.Error()))

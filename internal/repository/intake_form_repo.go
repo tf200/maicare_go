@@ -443,6 +443,7 @@ func (r *IntakeFormRepository) PromoteIntakeToClient(ctx context.Context, params
 			DateOfBirth:                regForm.ClientDateOfBirth,
 			Identity:                   true,
 			Bsn:                        &regForm.ClientBsnNumber,
+			BsnVerifiedBy:              &params.EmployeeID,
 			Gender:                     regForm.ClientGender,
 			Email:                      regForm.ClientEmail,
 			PhoneNumber:                &regForm.ClientPhoneNumber,

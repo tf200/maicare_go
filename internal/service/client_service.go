@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -10,6 +11,7 @@ import (
 	"maicare_go/internal/domain"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"go.uber.org/zap"
 )
 
@@ -18,18 +20,22 @@ const maxFileSize = 100 << 20 // 100MB
 type ClientService struct {
 	repository domain.ClientRepository
 	logger     domain.Logger
+	audit      domain.AuditLogger
 	taskQueue  domain.TaskQueue
 	storage    domain.Storage
 	reportGen  domain.AutoReportGenerator
+	pdfService domain.PDFService
 }
 
-func NewClientService(repository domain.ClientRepository, taskQueue domain.TaskQueue, storage domain.Storage, reportGen domain.AutoReportGenerator, logger domain.Logger) domain.ClientService {
+func NewClientService(repository domain.ClientRepository, taskQueue domain.TaskQueue, storage domain.Storage, reportGen domain.AutoReportGenerator, pdfService domain.PDFService, logger domain.Logger, audit domain.AuditLogger) domain.ClientService {
 	return &ClientService{
 		repository: repository,
 		taskQueue:  taskQueue,
 		storage:    storage,
 		reportGen:  reportGen,
+		pdfService: pdfService,
 		logger:     logger,
+		audit:      audit,
 	}
 }
 
@@ -63,6 +69,37 @@ func (s *ClientService) ListClients(ctx context.Context, params domain.ListClien
 		return nil, err
 	}
 
+	if s.audit != nil && len(page.Items) > 0 {
+		subjectIDs := make([]string, len(page.Items))
+		for i, item := range page.Items {
+			subjectIDs[i] = item.ID.String()
+		}
+		details := map[string]any{
+			"limit":  params.Limit,
+			"offset": params.Offset,
+			"total":  page.TotalCount,
+			"count":  len(page.Items),
+		}
+		if params.Search != nil && *params.Search != "" {
+			details["search"] = *params.Search
+		}
+		if params.Status != nil && *params.Status != "" {
+			details["status"] = *params.Status
+		}
+		if auditErr := s.audit.LogBatch(ctx, domain.AuditBatchEvent{
+			EventGroupID: uuid.New().String(),
+			EventType:    "record_access",
+			Action:       "list",
+			Result:       "success",
+			SubjectType:  "client",
+			SubjectIDs:   subjectIDs,
+			AccessRule:   strPtr("CLIENT.VIEW"),
+			Details:      details,
+		}); auditErr != nil {
+			s.logger.LogError(ctx, "ClientService.ListClients", "audit log failed", auditErr)
+		}
+	}
+
 	return page, nil
 }
 
@@ -77,6 +114,36 @@ func (s *ClientService) ListWaitingListClients(ctx context.Context, params domai
 			s.logger.LogError(ctx, "ClientService.ListWaitingListClients", "failed to list waiting list clients", err)
 		}
 		return nil, err
+	}
+
+	if s.audit != nil && len(page.Items) > 0 {
+		subjectIDs := make([]string, len(page.Items))
+		for i, item := range page.Items {
+			subjectIDs[i] = item.ID.String()
+		}
+		details := map[string]any{
+			"limit":     params.Limit,
+			"offset":    params.Offset,
+			"total":     page.TotalCount,
+			"count":     len(page.Items),
+			"sort_days": params.SortDays,
+			"page_type": "waiting_list",
+		}
+		if params.Search != nil && *params.Search != "" {
+			details["search"] = *params.Search
+		}
+		if auditErr := s.audit.LogBatch(ctx, domain.AuditBatchEvent{
+			EventGroupID: uuid.New().String(),
+			EventType:    "record_access",
+			Action:       "list",
+			Result:       "success",
+			SubjectType:  "client",
+			SubjectIDs:   subjectIDs,
+			AccessRule:   strPtr("CLIENT.VIEW"),
+			Details:      details,
+		}); auditErr != nil {
+			s.logger.LogError(ctx, "ClientService.ListWaitingListClients", "audit log failed", auditErr)
+		}
 	}
 
 	return page, nil
@@ -95,6 +162,33 @@ func (s *ClientService) ListInCareClients(ctx context.Context, params domain.Lis
 		return nil, err
 	}
 
+	if s.audit != nil && len(page.Items) > 0 {
+		subjectIDs := make([]string, len(page.Items))
+		for i, item := range page.Items {
+			subjectIDs[i] = item.ID.String()
+		}
+		details := map[string]any{
+			"limit":          params.Limit,
+			"offset":         params.Offset,
+			"total":          page.TotalCount,
+			"count":          len(page.Items),
+			"sort_days_care": params.SortDaysInCare,
+			"page_type":      "in_care",
+		}
+		if auditErr := s.audit.LogBatch(ctx, domain.AuditBatchEvent{
+			EventGroupID: uuid.New().String(),
+			EventType:    "record_access",
+			Action:       "list",
+			Result:       "success",
+			SubjectType:  "client",
+			SubjectIDs:   subjectIDs,
+			AccessRule:   strPtr("CLIENT.VIEW"),
+			Details:      details,
+		}); auditErr != nil {
+			s.logger.LogError(ctx, "ClientService.ListInCareClients", "audit log failed", auditErr)
+		}
+	}
+
 	return page, nil
 }
 
@@ -109,6 +203,26 @@ func (s *ClientService) GetClientCounts(ctx context.Context) (*domain.ClientCoun
 
 	if s.logger != nil {
 		s.logger.LogInfo(ctx, "ClientService.GetClientCounts", "client counts retrieved successfully")
+	}
+
+	if s.audit != nil {
+		if auditErr := s.audit.Log(ctx, domain.AuditEvent{
+			EventType:   "record_access",
+			Action:      "read",
+			Result:      "success",
+			SubjectType: "client",
+			SubjectID:   "summary",
+			AccessRule:  strPtr("CLIENT.VIEW"),
+			Details: map[string]any{
+				"metric":             "client_counts",
+				"total_clients":      counts.TotalClients,
+				"clients_in_care":    counts.ClientsInCare,
+				"clients_waiting":    counts.ClientsOnWaitingList,
+				"clients_out_of_care": counts.ClientsOutOfCare,
+			},
+		}); auditErr != nil {
+			s.logger.LogError(ctx, "ClientService.GetClientCounts", "audit log failed", auditErr)
+		}
 	}
 
 	return counts, nil
@@ -127,6 +241,25 @@ func (s *ClientService) GetClientStatusCounts(ctx context.Context) (*domain.Clie
 		s.logger.LogInfo(ctx, "ClientService.GetClientStatusCounts", "client status counts retrieved successfully")
 	}
 
+	if s.audit != nil {
+		if auditErr := s.audit.Log(ctx, domain.AuditEvent{
+			EventType:   "record_access",
+			Action:      "read",
+			Result:      "success",
+			SubjectType: "client",
+			SubjectID:   "summary",
+			AccessRule:  strPtr("CLIENT.VIEW"),
+			Details: map[string]any{
+				"metric":                      "client_status_counts",
+				"in_or_scheduled_care":        counts.ClientsInOrScheduledInCare,
+				"waiting_list":                counts.ClientsOnWaitingList,
+				"out_or_scheduled_out_of_care": counts.ClientsOutOrScheduledOutOfCare,
+			},
+		}); auditErr != nil {
+			s.logger.LogError(ctx, "ClientService.GetClientStatusCounts", "audit log failed", auditErr)
+		}
+	}
+
 	return counts, nil
 }
 
@@ -143,6 +276,61 @@ func (s *ClientService) GetInCareStats(ctx context.Context) (*domain.InCareStats
 		s.logger.LogInfo(ctx, "ClientService.GetInCareStats", "in-care stats retrieved successfully")
 	}
 
+	if s.audit != nil {
+		if auditErr := s.audit.Log(ctx, domain.AuditEvent{
+			EventType:   "record_access",
+			Action:      "read",
+			Result:      "success",
+			SubjectType: "client",
+			SubjectID:   "summary",
+			AccessRule:  strPtr("CLIENT.VIEW"),
+			Details: map[string]any{
+				"metric":               "in_care_stats",
+				"clients_in_care":      stats.ClientsInCare,
+				"clients_scheduled":    stats.ClientsScheduledInCare,
+				"contracts_ending_soon": stats.ContractsEndingSoon,
+			},
+		}); auditErr != nil {
+			s.logger.LogError(ctx, "ClientService.GetInCareStats", "audit log failed", auditErr)
+		}
+	}
+
+	return stats, nil
+}
+
+func (s *ClientService) GetWaitingListStats(ctx context.Context) (*domain.WaitingListStats, error) {
+	stats, err := s.repository.GetWaitingListStats(ctx)
+	if err != nil {
+		if s.logger != nil {
+			s.logger.LogError(ctx, "ClientService.GetWaitingListStats", "failed to get waiting list stats", err)
+		}
+		return nil, err
+	}
+
+	if s.logger != nil {
+		s.logger.LogInfo(ctx, "ClientService.GetWaitingListStats", "waiting list stats retrieved successfully")
+	}
+
+	if s.audit != nil {
+		if auditErr := s.audit.Log(ctx, domain.AuditEvent{
+			EventType:   "record_access",
+			Action:      "read",
+			Result:      "success",
+			SubjectType: "client",
+			SubjectID:   "summary",
+			AccessRule:  strPtr("CLIENT.VIEW"),
+			Details: map[string]any{
+				"metric":            "waiting_list_stats",
+				"total_clients":     stats.TotalClients,
+				"total_crisis":      stats.TotalCrisis,
+				"total_regular":     stats.TotalRegular,
+				"avg_days_waitlist": stats.AvgDaysInWaitlist,
+			},
+		}); auditErr != nil {
+			s.logger.LogError(ctx, "ClientService.GetWaitingListStats", "audit log failed", auditErr)
+		}
+	}
+
 	return stats, nil
 }
 
@@ -155,6 +343,21 @@ func (s *ClientService) GetClientByID(ctx context.Context, id uuid.UUID) (*domai
 			)
 		}
 		return nil, err
+	}
+
+	if s.audit != nil {
+		cid := id.String()
+		if auditErr := s.audit.Log(ctx, domain.AuditEvent{
+			EventType:   "record_access",
+			Action:      "read",
+			Result:      "success",
+			SubjectType: "client",
+			SubjectID:   cid,
+			ClientID:    &cid,
+			AccessRule:  strPtr("CLIENT.VIEW"),
+		}); auditErr != nil {
+			s.logger.LogError(ctx, "ClientService.GetClientByID", "audit log failed", auditErr)
+		}
 	}
 
 	return detail, nil
@@ -1337,4 +1540,111 @@ func (s *ClientService) ListAiGeneratedReports(ctx context.Context, params domai
 		return nil, err
 	}
 	return result, nil
+}
+
+// =====================
+// Appointment Card
+// =====================
+
+func (s *ClientService) GetAppointmentCard(ctx context.Context, clientID uuid.UUID) (*domain.AppointmentCard, error) {
+	card, err := s.repository.GetAppointmentCard(ctx, clientID)
+	if err != nil {
+		if s.logger != nil {
+			s.logger.LogError(ctx, "ClientService.GetAppointmentCard", "failed to get appointment card", err,
+				zap.String("client_id", clientID.String()),
+			)
+		}
+		return nil, fmt.Errorf("failed to get appointment card")
+	}
+	if card == nil {
+		if s.logger != nil {
+			s.logger.LogInfo(ctx, "ClientService.GetAppointmentCard", "appointment card not found",
+				zap.String("client_id", clientID.String()),
+			)
+		}
+		return nil, nil
+	}
+	return card, nil
+}
+
+func (s *ClientService) UpdateAppointmentCard(ctx context.Context, clientID uuid.UUID, params domain.UpdateAppointmentCardParams) (*domain.AppointmentCard, error) {
+	card, err := s.repository.UpdateAppointmentCard(ctx, clientID, params)
+	if err != nil {
+		// If no existing row to update, create a new one (upsert)
+		if errors.Is(err, pgx.ErrNoRows) {
+			createdCard, createErr := s.repository.CreateAppointmentCard(ctx, clientID, params)
+			if createErr != nil {
+				if s.logger != nil {
+					s.logger.LogError(ctx, "ClientService.UpdateAppointmentCard", "failed to create appointment card during upsert", createErr,
+						zap.String("client_id", clientID.String()),
+					)
+				}
+				return nil, fmt.Errorf("failed to update appointment card")
+			}
+			return createdCard, nil
+		}
+		if s.logger != nil {
+			s.logger.LogError(ctx, "ClientService.UpdateAppointmentCard", "failed to update appointment card", err,
+				zap.String("client_id", clientID.String()),
+			)
+		}
+		return nil, fmt.Errorf("failed to update appointment card")
+	}
+	return card, nil
+}
+
+func (s *ClientService) GenerateAppointmentCardDocument(ctx context.Context, clientID uuid.UUID) ([]byte, string, error) {
+	card, err := s.repository.GetAppointmentCard(ctx, clientID)
+	if err != nil {
+		if s.logger != nil {
+			s.logger.LogError(ctx, "ClientService.GenerateAppointmentCardDocument", "failed to get appointment card", err,
+				zap.String("client_id", clientID.String()),
+			)
+		}
+		return nil, "", fmt.Errorf("failed to retrieve appointment card")
+	}
+	if card == nil {
+		if s.logger != nil {
+			s.logger.LogWarn(ctx, "ClientService.GenerateAppointmentCardDocument", "appointment card not found",
+				zap.String("client_id", clientID.String()),
+			)
+		}
+		return nil, "", fmt.Errorf("appointment card not found")
+	}
+
+	pdfData := domain.AppointmentCardPDF{
+		ID:                     card.ID,
+		ClientName:             card.ClientFirstName + " " + card.ClientLastName,
+		Date:                   card.CreatedAt.Format("02-01-2006"),
+		GeneralInformation:     card.GeneralInformation,
+		ImportantContacts:      card.ImportantContacts,
+		HouseholdInfo:          card.HouseholdInfo,
+		OrganizationAgreements: card.OrganizationAgreements,
+		YouthOfficerAgreements: card.YouthOfficerAgreements,
+		TreatmentAgreements:    card.TreatmentAgreements,
+		SmokingRules:           card.SmokingRules,
+		Work:                   card.Work,
+		SchoolInternship:       card.SchoolInternship,
+		Travel:                 card.Travel,
+		Leave:                  card.Leave,
+	}
+
+	pdfBytes, err := s.pdfService.GenerateAppointmentCardPDF(ctx, pdfData)
+	if err != nil {
+		if s.logger != nil {
+			s.logger.LogError(ctx, "ClientService.GenerateAppointmentCardDocument", "failed to generate appointment card PDF", err,
+				zap.String("client_id", clientID.String()),
+			)
+		}
+		return nil, "", fmt.Errorf("failed to generate appointment card PDF")
+	}
+
+	fileName := fmt.Sprintf("appointment_card_%s.pdf", card.ID.String())
+	return pdfBytes, fileName, nil
+}
+
+// strPtr returns a pointer to the given string.
+// Useful for audit event fields that take *string.
+func strPtr(s string) *string {
+	return &s
 }

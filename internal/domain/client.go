@@ -102,6 +102,13 @@ type InCareStats struct {
 	Total                  int64
 }
 
+type WaitingListStats struct {
+	TotalClients      int64
+	TotalCrisis       int64
+	TotalRegular      int64
+	AvgDaysInWaitlist float64
+}
+
 type ClientPage struct {
 	Items      []ClientListItem
 	TotalCount int64
@@ -174,22 +181,13 @@ type UpdateClientParams struct {
 	Identity                   *bool
 	Bsn                        *string
 	BsnVerifiedBy              *uuid.UUID
-	Source                     *string
-	Birthplace                 *string
 	Nationality                *string
 	Email                      *string
 	PhoneNumber                *string
-	OrganizationID             *uuid.UUID
-	Departement                *string
 	Gender                     *string
 	Filenumber                 *string
-	ProfilePicture             *string
-	Infix                      *string
 	SenderID                   *uuid.UUID
 	LocationID                 *uuid.UUID
-	DepartureReason            *string
-	DepartureReport            *string
-	LegalMeasure               *string
 	EducationCurrentlyEnrolled *bool
 	EducationInstitution       *string
 	EducationMentorName        *string
@@ -204,8 +202,6 @@ type UpdateClientParams struct {
 	WorkCurrentPosition        *string
 	WorkStartDate              time.Time
 	WorkAdditionalNotes        *string
-	LivingSituation            *string
-	LivingSituationNotes       *string
 }
 
 type ClientAddress struct {
@@ -219,17 +215,33 @@ type ClientAddress struct {
 }
 
 type ClientPageClient struct {
-	ID          uuid.UUID
-	FirstName   string
-	LastName    string
-	Bsn         *string
-	FileNumber  string
-	Gender      string
-	DateOfBirth *time.Time
-	Age         *int32
-	CareType    *string
-	Address     ClientAddress
-	Location    *ClientLocation
+	ID                         uuid.UUID
+	FirstName                  string
+	LastName                   string
+	Bsn                        *string
+	BsnVerifiedBy              *uuid.UUID
+	BsnVerifiedByName          *string
+	FileNumber                 string
+	Gender                     string
+	DateOfBirth                *time.Time
+	Age                        *int32
+	CareType                   *string
+	Address                    ClientAddress
+	Location                   *ClientLocation
+	EducationCurrentlyEnrolled bool
+	EducationInstitution       *string
+	EducationMentorName        *string
+	EducationMentorPhone       *string
+	EducationMentorEmail       *string
+	EducationAdditionalNotes   *string
+	EducationLevel             string
+	WorkCurrentlyEmployed      bool
+	WorkCurrentEmployer        *string
+	WorkCurrentEmployerPhone   *string
+	WorkCurrentEmployerEmail   *string
+	WorkCurrentPosition        *string
+	WorkStartDate              time.Time
+	WorkAdditionalNotes        *string
 }
 
 type ClientLocation struct {
@@ -463,6 +475,7 @@ type ClientRepository interface {
 	GetClientCounts(ctx context.Context) (*ClientCounts, error)
 	GetClientStatusCounts(ctx context.Context) (*ClientStatusCounts, error)
 	GetInCareStats(ctx context.Context) (*InCareStats, error)
+	GetWaitingListStats(ctx context.Context) (*WaitingListStats, error)
 	GetClientByID(ctx context.Context, id uuid.UUID) (*ClientPageDetail, error)
 	UpdateClient(ctx context.Context, id uuid.UUID, params UpdateClientParams) (*Client, error)
 	GetClientAddresses(ctx context.Context, id uuid.UUID) ([]ClientAddress, error)
@@ -520,6 +533,9 @@ type ClientRepository interface {
 	GetProgressReportsByDateRange(ctx context.Context, params GetProgressReportsByDateRangeParams) ([]ProgressReport, error)
 	CreateAiGeneratedReport(ctx context.Context, params CreateAiGeneratedReportParams) (*AiGeneratedReport, error)
 	ListAiGeneratedReports(ctx context.Context, params ListAiGeneratedReportsParams) (*ListAiGeneratedReportsResult, error)
+	GetAppointmentCard(ctx context.Context, clientID uuid.UUID) (*AppointmentCard, error)
+	CreateAppointmentCard(ctx context.Context, clientID uuid.UUID, params UpdateAppointmentCardParams) (*AppointmentCard, error)
+	UpdateAppointmentCard(ctx context.Context, clientID uuid.UUID, params UpdateAppointmentCardParams) (*AppointmentCard, error)
 }
 
 type UpdateClientStatusParams struct {
@@ -590,6 +606,7 @@ type ClientService interface {
 	GetClientCounts(ctx context.Context) (*ClientCounts, error)
 	GetClientStatusCounts(ctx context.Context) (*ClientStatusCounts, error)
 	GetInCareStats(ctx context.Context) (*InCareStats, error)
+	GetWaitingListStats(ctx context.Context) (*WaitingListStats, error)
 	GetClientByID(ctx context.Context, id uuid.UUID) (*ClientPageDetail, error)
 	UpdateClient(ctx context.Context, id uuid.UUID, params UpdateClientParams) (*Client, error)
 	GetClientAddresses(ctx context.Context, id uuid.UUID) ([]ClientAddress, error)
@@ -646,6 +663,9 @@ type ClientService interface {
 	GenerateAutoReports(ctx context.Context, clientID uuid.UUID, startDate, endDate time.Time) (string, error)
 	ConfirmAiProgressReport(ctx context.Context, clientID uuid.UUID, reportText string, startDate, endDate time.Time) (*AiGeneratedReport, error)
 	ListAiGeneratedReports(ctx context.Context, params ListAiGeneratedReportsParams) (*ListAiGeneratedReportsResult, error)
+	GetAppointmentCard(ctx context.Context, clientID uuid.UUID) (*AppointmentCard, error)
+	UpdateAppointmentCard(ctx context.Context, clientID uuid.UUID, params UpdateAppointmentCardParams) (*AppointmentCard, error)
+	GenerateAppointmentCardDocument(ctx context.Context, clientID uuid.UUID) ([]byte, string, error)
 }
 
 var (
@@ -1362,6 +1382,44 @@ type ListAiGeneratedReportsParams struct {
 type ListAiGeneratedReportsResult struct {
 	Items      []AiGeneratedReport
 	TotalCount int64
+}
+
+// =====================
+// Appointment Card
+// =====================
+
+type AppointmentCard struct {
+	ID                     uuid.UUID
+	ClientID               uuid.UUID
+	GeneralInformation     []string
+	ImportantContacts      []string
+	HouseholdInfo          []string
+	OrganizationAgreements []string
+	YouthOfficerAgreements []string
+	TreatmentAgreements    []string
+	SmokingRules           []string
+	Work                   []string
+	SchoolInternship       []string
+	Travel                 []string
+	Leave                  []string
+	CreatedAt              time.Time
+	UpdatedAt              time.Time
+	ClientFirstName        string
+	ClientLastName         string
+}
+
+type UpdateAppointmentCardParams struct {
+	GeneralInformation     []string
+	ImportantContacts      []string
+	HouseholdInfo          []string
+	OrganizationAgreements []string
+	YouthOfficerAgreements []string
+	TreatmentAgreements    []string
+	SmokingRules           []string
+	Work                   []string
+	SchoolInternship       []string
+	Travel                 []string
+	Leave                  []string
 }
 
 // =====================

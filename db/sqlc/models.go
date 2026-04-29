@@ -3143,23 +3143,30 @@ type AttachmentFile struct {
 }
 
 type Audit struct {
-	EventID      uuid.UUID          `json:"event_id"`
-	EventType    string             `json:"event_type"`
-	OccuredAt    pgtype.Timestamptz `json:"occured_at"`
-	ActorRole    []string           `json:"actor_role"`
-	ActorID      uuid.UUID          `json:"actor_id"`
-	SubjectType  string             `json:"subject_type"`
-	SubjectID    uuid.UUID          `json:"subject_id"`
-	AccessReason string             `json:"access_reason"`
-	Action       string             `json:"action"`
-	Result       string             `json:"result"`
-	Module       string             `json:"module"`
-	TenantID     string             `json:"tenant_id"`
-	Details      []byte             `json:"details"`
-	Ip           *netip.Addr        `json:"ip"`
-	UserAgent    *string            `json:"user_agent"`
-	HashPrev     string             `json:"hash_prev"`
-	HashSelf     string             `json:"hash_self"`
+	EventID         uuid.UUID          `json:"event_id"`
+	AppendSeq       int64              `json:"append_seq"`
+	EventGroupID    *uuid.UUID         `json:"event_group_id"`
+	OccurredAt      pgtype.Timestamptz `json:"occurred_at"`
+	EventType       string             `json:"event_type"`
+	Action          string             `json:"action"`
+	Result          string             `json:"result"`
+	ActorUserID     *uuid.UUID         `json:"actor_user_id"`
+	ActorEmployeeID *uuid.UUID         `json:"actor_employee_id"`
+	ActorRoles      []string           `json:"actor_roles"`
+	SubjectType     string             `json:"subject_type"`
+	SubjectID       *string            `json:"subject_id"`
+	ClientID        *uuid.UUID         `json:"client_id"`
+	AccessRule      *string            `json:"access_rule"`
+	AccessReason    *string            `json:"access_reason"`
+	SessionID       *uuid.UUID         `json:"session_id"`
+	RequestID       *string            `json:"request_id"`
+	Ip              *netip.Addr        `json:"ip"`
+	UserAgent       *string            `json:"user_agent"`
+	Route           *string            `json:"route"`
+	Method          *string            `json:"method"`
+	Details         []byte             `json:"details"`
+	HashPrev        string             `json:"hash_prev"`
+	HashSelf        string             `json:"hash_self"`
 }
 
 type BilledCalendarEvent struct {

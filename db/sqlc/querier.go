@@ -33,6 +33,7 @@ type Querier interface {
 	AssignEmployee(ctx context.Context, arg AssignEmployeeParams) (AssignEmployeeRow, error)
 	AssignRoleToUser(ctx context.Context, arg AssignRoleToUserParams) error
 	AssignSender(ctx context.Context, arg AssignSenderParams) (ClientDetail, error)
+	BulkCreateAuditRecords(ctx context.Context, arg []BulkCreateAuditRecordsParams) (int64, error)
 	CancelCalendarEvent(ctx context.Context, id uuid.UUID) error
 	CancelClientGoalByID(ctx context.Context, arg CancelClientGoalByIDParams) (ClientGoal, error)
 	CheckAllShiftsExist(ctx context.Context, arg CheckAllShiftsExistParams) (bool, error)
@@ -58,7 +59,6 @@ type Querier interface {
 	CreateAiGeneratedReport(ctx context.Context, arg CreateAiGeneratedReportParams) (AiGeneratedReport, error)
 	CreateAppointmentCard(ctx context.Context, arg CreateAppointmentCardParams) (AppointmentCard, error)
 	CreateAttachment(ctx context.Context, arg CreateAttachmentParams) (AttachmentFile, error)
-	// Audit table queries
 	CreateAuditRecord(ctx context.Context, arg CreateAuditRecordParams) error
 	CreateCalendarEvent(ctx context.Context, arg CreateCalendarEventParams) (CalendarEvent, error)
 	CreateClientDetails(ctx context.Context, arg CreateClientDetailsParams) (ClientDetail, error)
@@ -281,6 +281,7 @@ type Querier interface {
 	ListAssignedSchedulesForEmployeeOnDate(ctx context.Context, arg ListAssignedSchedulesForEmployeeOnDateParams) ([]ListAssignedSchedulesForEmployeeOnDateRow, error)
 	ListAttendeesByEventIDs(ctx context.Context, eventIds []uuid.UUID) ([]ListAttendeesByEventIDsRow, error)
 	ListAuditRecords(ctx context.Context, arg ListAuditRecordsParams) ([]Audit, error)
+	ListAuditRecordsByClientID(ctx context.Context, arg ListAuditRecordsByClientIDParams) ([]Audit, error)
 	ListCarePlanTopics(ctx context.Context) ([]Topic, error)
 	ListClientActiveApprovedContracts(ctx context.Context, clientID uuid.UUID) ([]ListClientActiveApprovedContractsRow, error)
 	ListClientAppointmentsInRange(ctx context.Context, arg ListClientAppointmentsInRangeParams) ([]ListClientAppointmentsInRangeRow, error)
@@ -380,6 +381,8 @@ type Querier interface {
 	// ==========================================
 	ListWorkApprovalQueueOneOffAppointmentsStartingInRange(ctx context.Context, arg ListWorkApprovalQueueOneOffAppointmentsStartingInRangeParams) ([]CalendarEvent, error)
 	ListWorkApprovalQueueRecurringMastersStartingBeforeEnd(ctx context.Context, arg ListWorkApprovalQueueRecurringMastersStartingBeforeEndParams) ([]CalendarEvent, error)
+	// Audit table queries
+	LockAuditHashChain(ctx context.Context) error
 	LockIntakeFormByID(ctx context.Context, id uuid.UUID) (uuid.UUID, error)
 	LockLeaveBalanceByEmployeeYear(ctx context.Context, arg LockLeaveBalanceByEmployeeYearParams) (LeaveBalance, error)
 	LockLeaveRequestByID(ctx context.Context, id uuid.UUID) (LeaveRequest, error)

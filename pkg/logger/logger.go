@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"maicare_go/internal/domain"
+	"maicare_go/internal/middleware"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -103,7 +104,7 @@ func (l *Logger) LogInfo(ctx context.Context, operation, message string, fields 
 
 func (l *Logger) log(ctx context.Context, level zapcore.Level, operation, message string, fields ...zap.Field) {
 	requestID := "unknown"
-	if v, ok := ctx.Value("request_id").(string); ok {
+	if v, ok := middleware.RequestIDFromContext(ctx); ok {
 		requestID = v
 	}
 

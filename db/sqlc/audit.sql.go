@@ -13,86 +13,116 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type BulkCreateAuditRecordsParams struct {
+	EventID         uuid.UUID          `json:"event_id"`
+	EventGroupID    *uuid.UUID         `json:"event_group_id"`
+	OccurredAt      pgtype.Timestamptz `json:"occurred_at"`
+	EventType       string             `json:"event_type"`
+	Action          string             `json:"action"`
+	Result          string             `json:"result"`
+	ActorUserID     *uuid.UUID         `json:"actor_user_id"`
+	ActorEmployeeID *uuid.UUID         `json:"actor_employee_id"`
+	ActorRoles      []string           `json:"actor_roles"`
+	SubjectType     string             `json:"subject_type"`
+	SubjectID       *string            `json:"subject_id"`
+	ClientID        *uuid.UUID         `json:"client_id"`
+	AccessRule      *string            `json:"access_rule"`
+	AccessReason    *string            `json:"access_reason"`
+	SessionID       *uuid.UUID         `json:"session_id"`
+	RequestID       *string            `json:"request_id"`
+	Ip              *netip.Addr        `json:"ip"`
+	UserAgent       *string            `json:"user_agent"`
+	Route           *string            `json:"route"`
+	Method          *string            `json:"method"`
+	Details         []byte             `json:"details"`
+	HashPrev        string             `json:"hash_prev"`
+	HashSelf        string             `json:"hash_self"`
+}
+
 const createAuditRecord = `-- name: CreateAuditRecord :exec
-
-
 INSERT INTO audit (
     event_id,
+    event_group_id,
+    occurred_at,
     event_type,
-    occured_at,
-    actor_role,
-    actor_id,
-    subject_type,
-    subject_id,
-    access_reason,
     action,
     result,
-    module,
-    tenant_id,
-    details,
+    actor_user_id,
+    actor_employee_id,
+    actor_roles,
+    subject_type,
+    subject_id,
+    client_id,
+    access_rule,
+    access_reason,
+    session_id,
+    request_id,
     ip,
     user_agent,
+    route,
+    method,
+    details,
     hash_prev,
     hash_self
 ) VALUES (
-    $1,
-    $2,
-    $3,
-    $4,
-    $5,
-    $6,
-    $7,
-    $8,
-    $9,
-    $10,
-    $11,
-    $12,
-    $13,
-    $14,
-    $15,
-    $16,
-    $17
+    $1, $2, $3, $4, $5, $6,
+    $7, $8, $9,
+    $10, $11, $12,
+    $13, $14,
+    $15, $16, $17, $18, $19, $20,
+    $21, $22, $23
 )
 `
 
 type CreateAuditRecordParams struct {
-	EventID      uuid.UUID          `json:"event_id"`
-	EventType    string             `json:"event_type"`
-	OccuredAt    pgtype.Timestamptz `json:"occured_at"`
-	ActorRole    []string           `json:"actor_role"`
-	ActorID      uuid.UUID          `json:"actor_id"`
-	SubjectType  string             `json:"subject_type"`
-	SubjectID    uuid.UUID          `json:"subject_id"`
-	AccessReason string             `json:"access_reason"`
-	Action       string             `json:"action"`
-	Result       string             `json:"result"`
-	Module       string             `json:"module"`
-	TenantID     string             `json:"tenant_id"`
-	Details      []byte             `json:"details"`
-	Ip           *netip.Addr        `json:"ip"`
-	UserAgent    *string            `json:"user_agent"`
-	HashPrev     string             `json:"hash_prev"`
-	HashSelf     string             `json:"hash_self"`
+	EventID         uuid.UUID          `json:"event_id"`
+	EventGroupID    *uuid.UUID         `json:"event_group_id"`
+	OccurredAt      pgtype.Timestamptz `json:"occurred_at"`
+	EventType       string             `json:"event_type"`
+	Action          string             `json:"action"`
+	Result          string             `json:"result"`
+	ActorUserID     *uuid.UUID         `json:"actor_user_id"`
+	ActorEmployeeID *uuid.UUID         `json:"actor_employee_id"`
+	ActorRoles      []string           `json:"actor_roles"`
+	SubjectType     string             `json:"subject_type"`
+	SubjectID       *string            `json:"subject_id"`
+	ClientID        *uuid.UUID         `json:"client_id"`
+	AccessRule      *string            `json:"access_rule"`
+	AccessReason    *string            `json:"access_reason"`
+	SessionID       *uuid.UUID         `json:"session_id"`
+	RequestID       *string            `json:"request_id"`
+	Ip              *netip.Addr        `json:"ip"`
+	UserAgent       *string            `json:"user_agent"`
+	Route           *string            `json:"route"`
+	Method          *string            `json:"method"`
+	Details         []byte             `json:"details"`
+	HashPrev        string             `json:"hash_prev"`
+	HashSelf        string             `json:"hash_self"`
 }
 
-// Audit table queries
 func (q *Queries) CreateAuditRecord(ctx context.Context, arg CreateAuditRecordParams) error {
 	_, err := q.db.Exec(ctx, createAuditRecord,
 		arg.EventID,
+		arg.EventGroupID,
+		arg.OccurredAt,
 		arg.EventType,
-		arg.OccuredAt,
-		arg.ActorRole,
-		arg.ActorID,
-		arg.SubjectType,
-		arg.SubjectID,
-		arg.AccessReason,
 		arg.Action,
 		arg.Result,
-		arg.Module,
-		arg.TenantID,
-		arg.Details,
+		arg.ActorUserID,
+		arg.ActorEmployeeID,
+		arg.ActorRoles,
+		arg.SubjectType,
+		arg.SubjectID,
+		arg.ClientID,
+		arg.AccessRule,
+		arg.AccessReason,
+		arg.SessionID,
+		arg.RequestID,
 		arg.Ip,
 		arg.UserAgent,
+		arg.Route,
+		arg.Method,
+		arg.Details,
 		arg.HashPrev,
 		arg.HashSelf,
 	)
@@ -102,7 +132,7 @@ func (q *Queries) CreateAuditRecord(ctx context.Context, arg CreateAuditRecordPa
 const getLatestAuditHash = `-- name: GetLatestAuditHash :one
 SELECT hash_self
 FROM audit
-ORDER BY occured_at DESC
+ORDER BY append_seq DESC
 LIMIT 1
 `
 
@@ -114,43 +144,26 @@ func (q *Queries) GetLatestAuditHash(ctx context.Context) (string, error) {
 }
 
 const listAuditRecords = `-- name: ListAuditRecords :many
-SELECT
-    event_id,
-    event_type,
-    occured_at,
-    actor_role,
-    actor_id,
-    subject_type,
-    subject_id,
-    access_reason,
-    action,
-    result,
-    module,
-    tenant_id,
-    details,
-    ip,
-    user_agent,
-    hash_prev,
-    hash_self
+SELECT event_id, append_seq, event_group_id, occurred_at, event_type, action, result, actor_user_id, actor_employee_id, actor_roles, subject_type, subject_id, client_id, access_rule, access_reason, session_id, request_id, ip, user_agent, route, method, details, hash_prev, hash_self
 FROM audit
 WHERE
-    ($3::UUID IS NULL OR subject_id = $3::UUID)
-    AND ($4::UUID IS NULL OR actor_id = $4::UUID)
-    AND ($5::TIMESTAMPTZ IS NULL OR occured_at >= $5::TIMESTAMPTZ)
-    AND ($6::TIMESTAMPTZ IS NULL OR occured_at <= $6::TIMESTAMPTZ)
-    AND ($7::TEXT IS NULL OR tenant_id = $7::TEXT)
-ORDER BY occured_at DESC
+    ($3::TEXT IS NULL OR subject_id = $3::TEXT)
+    AND ($4::UUID IS NULL OR actor_user_id = $4::UUID)
+    AND ($5::TIMESTAMPTZ IS NULL OR occurred_at >= $5::TIMESTAMPTZ)
+    AND ($6::TIMESTAMPTZ IS NULL OR occurred_at <= $6::TIMESTAMPTZ)
+    AND ($7::UUID IS NULL OR client_id = $7::UUID)
+ORDER BY occurred_at DESC
 LIMIT $1 OFFSET $2
 `
 
 type ListAuditRecordsParams struct {
-	Limit     int32              `json:"limit"`
-	Offset    int32              `json:"offset"`
-	SubjectID *uuid.UUID         `json:"subject_id"`
-	ActorID   *uuid.UUID         `json:"actor_id"`
-	StartTime pgtype.Timestamptz `json:"start_time"`
-	EndTime   pgtype.Timestamptz `json:"end_time"`
-	TenantID  *string            `json:"tenant_id"`
+	Limit       int32              `json:"limit"`
+	Offset      int32              `json:"offset"`
+	SubjectID   *string            `json:"subject_id"`
+	ActorUserID *uuid.UUID         `json:"actor_user_id"`
+	StartTime   pgtype.Timestamptz `json:"start_time"`
+	EndTime     pgtype.Timestamptz `json:"end_time"`
+	ClientID    *uuid.UUID         `json:"client_id"`
 }
 
 func (q *Queries) ListAuditRecords(ctx context.Context, arg ListAuditRecordsParams) ([]Audit, error) {
@@ -158,10 +171,10 @@ func (q *Queries) ListAuditRecords(ctx context.Context, arg ListAuditRecordsPara
 		arg.Limit,
 		arg.Offset,
 		arg.SubjectID,
-		arg.ActorID,
+		arg.ActorUserID,
 		arg.StartTime,
 		arg.EndTime,
-		arg.TenantID,
+		arg.ClientID,
 	)
 	if err != nil {
 		return nil, err
@@ -172,20 +185,27 @@ func (q *Queries) ListAuditRecords(ctx context.Context, arg ListAuditRecordsPara
 		var i Audit
 		if err := rows.Scan(
 			&i.EventID,
+			&i.AppendSeq,
+			&i.EventGroupID,
+			&i.OccurredAt,
 			&i.EventType,
-			&i.OccuredAt,
-			&i.ActorRole,
-			&i.ActorID,
-			&i.SubjectType,
-			&i.SubjectID,
-			&i.AccessReason,
 			&i.Action,
 			&i.Result,
-			&i.Module,
-			&i.TenantID,
-			&i.Details,
+			&i.ActorUserID,
+			&i.ActorEmployeeID,
+			&i.ActorRoles,
+			&i.SubjectType,
+			&i.SubjectID,
+			&i.ClientID,
+			&i.AccessRule,
+			&i.AccessReason,
+			&i.SessionID,
+			&i.RequestID,
 			&i.Ip,
 			&i.UserAgent,
+			&i.Route,
+			&i.Method,
+			&i.Details,
 			&i.HashPrev,
 			&i.HashSelf,
 		); err != nil {
@@ -197,4 +217,74 @@ func (q *Queries) ListAuditRecords(ctx context.Context, arg ListAuditRecordsPara
 		return nil, err
 	}
 	return items, nil
+}
+
+const listAuditRecordsByClientID = `-- name: ListAuditRecordsByClientID :many
+SELECT event_id, append_seq, event_group_id, occurred_at, event_type, action, result, actor_user_id, actor_employee_id, actor_roles, subject_type, subject_id, client_id, access_rule, access_reason, session_id, request_id, ip, user_agent, route, method, details, hash_prev, hash_self
+FROM audit
+WHERE client_id = $1
+ORDER BY occurred_at DESC
+LIMIT $2 OFFSET $3
+`
+
+type ListAuditRecordsByClientIDParams struct {
+	ClientID *uuid.UUID `json:"client_id"`
+	Limit    int32      `json:"limit"`
+	Offset   int32      `json:"offset"`
+}
+
+func (q *Queries) ListAuditRecordsByClientID(ctx context.Context, arg ListAuditRecordsByClientIDParams) ([]Audit, error) {
+	rows, err := q.db.Query(ctx, listAuditRecordsByClientID, arg.ClientID, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Audit{}
+	for rows.Next() {
+		var i Audit
+		if err := rows.Scan(
+			&i.EventID,
+			&i.AppendSeq,
+			&i.EventGroupID,
+			&i.OccurredAt,
+			&i.EventType,
+			&i.Action,
+			&i.Result,
+			&i.ActorUserID,
+			&i.ActorEmployeeID,
+			&i.ActorRoles,
+			&i.SubjectType,
+			&i.SubjectID,
+			&i.ClientID,
+			&i.AccessRule,
+			&i.AccessReason,
+			&i.SessionID,
+			&i.RequestID,
+			&i.Ip,
+			&i.UserAgent,
+			&i.Route,
+			&i.Method,
+			&i.Details,
+			&i.HashPrev,
+			&i.HashSelf,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const lockAuditHashChain = `-- name: LockAuditHashChain :exec
+
+SELECT pg_advisory_xact_lock(7513)
+`
+
+// Audit table queries
+func (q *Queries) LockAuditHashChain(ctx context.Context) error {
+	_, err := q.db.Exec(ctx, lockAuditHashChain)
+	return err
 }

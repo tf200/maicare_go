@@ -29,6 +29,10 @@ func (m *RequestContextMiddleware) Handle() gin.HandlerFunc {
 		ctx.Set(string(requestIDContextKey), requestID)
 
 		requestCtx := WithRequestID(ctx.Request.Context(), requestID)
+		requestCtx = WithClientIP(requestCtx, ctx.ClientIP())
+		requestCtx = WithUserAgent(requestCtx, ctx.GetHeader("User-Agent"))
+		requestCtx = WithMethod(requestCtx, ctx.Request.Method)
+		requestCtx = WithRoute(requestCtx, ctx.FullPath())
 		ctx.Request = ctx.Request.WithContext(requestCtx)
 
 		if m.logger != nil {

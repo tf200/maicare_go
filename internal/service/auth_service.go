@@ -21,6 +21,7 @@ type AuthService struct {
 	repository           domain.AuthRepository
 	tokenMaker           domain.TokenMaker
 	logger               domain.Logger
+	audit                domain.AuditLogger
 	accessTokenDuration  time.Duration
 	refreshTokenDuration time.Duration
 	twoFATokenDuration   time.Duration
@@ -34,6 +35,7 @@ func NewAuthService(
 	repository domain.AuthRepository,
 	tokenMaker domain.TokenMaker,
 	logger domain.Logger,
+	audit domain.AuditLogger,
 	accessTokenDuration time.Duration,
 	refreshTokenDuration time.Duration,
 	twoFATokenDuration time.Duration,
@@ -42,6 +44,7 @@ func NewAuthService(
 		repository:           repository,
 		tokenMaker:           tokenMaker,
 		logger:               logger,
+		audit:                audit,
 		accessTokenDuration:  accessTokenDuration,
 		refreshTokenDuration: refreshTokenDuration,
 		twoFATokenDuration:   twoFATokenDuration,
@@ -64,10 +67,12 @@ func (s *AuthService) Login(ctx context.Context, params domain.LoginParams, clie
 
 	if err := s.checkAttemptAllowed(s.loginAttempts, emailKey, now); err != nil {
 		s.logger.LogWarn(ctx, "Login", "login blocked due to too many attempts", zap.String("email", email))
+		s.auditAuthEvent(ctx, "login", "blocked", email, clientIP, userAgent, "too many attempts by email")
 		return nil, domain.ErrTooManyAttempts
 	}
 	if err := s.checkAttemptAllowed(s.loginAttempts, ipKey, now); err != nil {
 		s.logger.LogWarn(ctx, "Login", "login blocked due to too many attempts", zap.String("client_ip", clientIP))
+		s.auditAuthEvent(ctx, "login", "blocked", email, clientIP, userAgent, "too many attempts by IP")
 		return nil, domain.ErrTooManyAttempts
 	}
 
@@ -78,6 +83,7 @@ func (s *AuthService) Login(ctx context.Context, params domain.LoginParams, clie
 			s.recordAttemptFailure(s.loginAttempts, ipKey, now)
 			s.logger.LogWarn(ctx, "Login", "failed login attempt: user not found",
 				zap.String("email", email), zap.String("client_ip", clientIP), zap.String("user_agent", userAgent))
+			s.auditAuthEvent(ctx, "login", "failure", email, clientIP, userAgent, "user not found")
 			return nil, domain.ErrInvalidCredentials
 		}
 		s.logger.LogError(ctx, "Login", "database error during login", err, zap.String("email", email))
@@ -89,6 +95,7 @@ func (s *AuthService) Login(ctx context.Context, params domain.LoginParams, clie
 		s.recordAttemptFailure(s.loginAttempts, ipKey, now)
 		s.logger.LogWarn(ctx, "Login", "failed login attempt: incorrect password",
 			zap.String("email", email), zap.String("client_ip", clientIP), zap.String("user_agent", userAgent))
+		s.auditAuthEvent(ctx, "login", "failure", email, clientIP, userAgent, "incorrect password")
 		return nil, domain.ErrInvalidCredentials
 	}
 
@@ -119,6 +126,8 @@ func (s *AuthService) Login(ctx context.Context, params domain.LoginParams, clie
 
 		s.logger.LogInfo(ctx, "Login", "2FA required for user",
 			zap.String("email", email), zap.String("client_ip", clientIP), zap.String("user_agent", userAgent))
+
+		s.auditAuthEvent(ctx, "login", "success_2fa_required", email, clientIP, userAgent, "")
 
 		return &domain.LoginResult{
 			RequiresTwoFA: true,
@@ -156,6 +165,8 @@ func (s *AuthService) Login(ctx context.Context, params domain.LoginParams, clie
 	s.logger.LogInfo(ctx, "Login", "user logged in successfully",
 		zap.String("email", email), zap.String("client_ip", clientIP),
 		zap.String("user_agent", userAgent), zap.String("session_id", session.ID.String()))
+
+	s.auditAuthEvent(ctx, "login", "success", email, clientIP, userAgent, "")
 
 	return &domain.LoginResult{
 		AccessToken:   accessToken,
@@ -247,6 +258,20 @@ func (s *AuthService) Logout(ctx context.Context, params domain.LogoutParams) er
 	s.logger.LogInfo(ctx, "Logout", "user logged out successfully",
 		zap.String("session_id", params.SessionID.String()))
 
+	if s.audit != nil {
+		sid := params.SessionID.String()
+		if auditErr := s.audit.Log(ctx, domain.AuditEvent{
+			EventType:   "authentication",
+			Action:      "logout",
+			Result:      "success",
+			SubjectType: "session",
+			SubjectID:   sid,
+			AccessRule:  strPtr("AUTH.LOGOUT"),
+		}); auditErr != nil {
+			s.logger.LogError(ctx, "Logout", "audit log failed", auditErr)
+		}
+	}
+
 	return nil
 }
 
@@ -323,6 +348,7 @@ func (s *AuthService) Verify2FA(ctx context.Context, code string, tempToken stri
 		s.recordAttemptFailure(s.twoFAAttempts, ipKey, now)
 		s.recordAttemptFailure(s.twoFAAttempts, emailKey, now)
 		s.logger.LogWarn(ctx, "Verify2FA", "invalid 2FA code", zap.String("user_id", user.ID.String()))
+		s.auditAuthEvent(ctx, "2fa_verify", "failure", user.Email, clientIP, userAgent, "invalid code")
 		return nil, domain.ErrInvalidTwoFACode
 	}
 
@@ -368,6 +394,8 @@ func (s *AuthService) Verify2FA(ctx context.Context, code string, tempToken stri
 	s.logger.LogInfo(ctx, "Verify2FA", "2FA verification successful",
 		zap.String("user_id", user.ID.String()), zap.String("session_id", session.ID.String()),
 		zap.String("client_ip", clientIP), zap.String("user_agent", userAgent))
+
+	s.auditAuthEvent(ctx, "2fa_verify", "success", user.Email, clientIP, userAgent, "")
 
 	return &domain.LoginResult{
 		AccessToken:   accessToken,
@@ -551,6 +579,29 @@ func (s *AuthService) clearAttemptState(store map[string]attemptState, key strin
 	defer s.mu.Unlock()
 
 	delete(store, key)
+}
+
+func (s *AuthService) auditAuthEvent(ctx context.Context, action, result, email, clientIP, userAgent, failureReason string) {
+	if s.audit == nil {
+		return
+	}
+	details := map[string]any{
+		"email": email,
+	}
+	if failureReason != "" {
+		details["failure_reason"] = failureReason
+	}
+	if err := s.audit.Log(ctx, domain.AuditEvent{
+		EventType:   "authentication",
+		Action:      action,
+		Result:      result,
+		SubjectType: "user",
+		SubjectID:   email,
+		AccessRule:  strPtr("AUTH.LOGIN"),
+		Details:     details,
+	}); err != nil {
+		s.logger.LogError(ctx, "AuthService.auditAuthEvent", "audit log failed", err)
+	}
 }
 
 func loginAttemptKeyForEmail(email string) string {

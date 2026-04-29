@@ -209,6 +209,7 @@ type GenerateIntakeGoalsResult struct {
 
 type PromoteIntakeToClientParams struct {
 	IntakeFormID uuid.UUID
+	EmployeeID   uuid.UUID
 }
 
 type PromoteIntakeToClientResult struct {

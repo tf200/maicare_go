@@ -34,3 +34,4 @@ Refactor the current codebase, focusing primarily on the `service` layer methods
 
 - [x] `service/auth/auth.go`
 - [x] `service/auth/roles.go`
+- [x] Invoice service refactored from `service/invoice/` → `internal/service/invoice_service.go`, `internal/domain/invoice.go`, `internal/handler/invoice_handler.go`, `internal/handler/invoice_dto.go`, `internal/handler/invoice_routes.go`, wired in `internal/app/app.go`

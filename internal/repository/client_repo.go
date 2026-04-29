@@ -219,6 +219,35 @@ func (r *ClientRepository) GetInCareStats(ctx context.Context) (*domain.InCareSt
 	return &stats, nil
 }
 
+func (r *ClientRepository) GetWaitingListStats(ctx context.Context) (*domain.WaitingListStats, error) {
+	query := `
+		SELECT
+			COUNT(*) AS total_clients,
+			COUNT(*) FILTER (WHERE rf.addmission_type = 'crisis_admission') AS total_crisis,
+			COUNT(*) FILTER (WHERE rf.addmission_type = 'regular_placement') AS total_regular,
+			COALESCE(ROUND(AVG(CURRENT_DATE - c.created_at::date), 1), 0)::float8 AS avg_days_in_waitlist
+		FROM client_details c
+		LEFT JOIN registration_form rf ON c.registration_form_id = rf.id
+		WHERE c.status = 'on_waiting_list'
+	`
+
+	var stats domain.WaitingListStats
+	err := r.store.ConnPool.QueryRow(ctx, query).Scan(
+		&stats.TotalClients,
+		&stats.TotalCrisis,
+		&stats.TotalRegular,
+		&stats.AvgDaysInWaitlist,
+	)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return &domain.WaitingListStats{}, nil
+		}
+		return nil, err
+	}
+
+	return &stats, nil
+}
+
 func (r *ClientRepository) GetClientByID(ctx context.Context, id uuid.UUID) (*domain.ClientPageDetail, error) {
 	client, err := r.store.GetClientDetails(ctx, id)
 	if err != nil {
@@ -661,19 +690,37 @@ func (r *ClientRepository) GetClientByID(ctx context.Context, id uuid.UUID) (*do
 		waitlistSince = client.CreatedAt.Time
 	}
 
+	// Build bsn_verified_by full name
+	var bsnVerifiedByName *string
+	if client.BsnVerifiedByFirstName != nil || client.BsnVerifiedByLastName != nil {
+		name := ""
+		if client.BsnVerifiedByFirstName != nil {
+			name = *client.BsnVerifiedByFirstName
+		}
+		if client.BsnVerifiedByLastName != nil {
+			if name != "" {
+				name += " "
+			}
+			name += *client.BsnVerifiedByLastName
+		}
+		bsnVerifiedByName = &name
+	}
+
 	return &domain.ClientPageDetail{
 		SchemaVersion: 1,
 		Status:        string(client.Status),
 		Client: domain.ClientPageClient{
-			ID:          client.ID,
-			FirstName:   client.FirstName,
-			LastName:    client.LastName,
-			Bsn:         client.Bsn,
-			FileNumber:  client.Filenumber,
-			Gender:      string(client.Gender),
-			DateOfBirth: dateOfBirth,
-			Age:         age,
-			CareType:    db.IntakeCareTypePtrFromEnum(client.CareType),
+			ID:                         client.ID,
+			FirstName:                  client.FirstName,
+			LastName:                   client.LastName,
+			Bsn:                        client.Bsn,
+			BsnVerifiedBy:              client.BsnVerifiedBy,
+			BsnVerifiedByName:          bsnVerifiedByName,
+			FileNumber:                 client.Filenumber,
+			Gender:                     string(client.Gender),
+			DateOfBirth:                dateOfBirth,
+			Age:                        age,
+			CareType:                   db.IntakeCareTypePtrFromEnum(client.CareType),
 			Address: domain.ClientAddress{
 				Street:              client.Street,
 				HouseNumber:         client.HouseNumber,
@@ -681,7 +728,21 @@ func (r *ClientRepository) GetClientByID(ctx context.Context, id uuid.UUID) (*do
 				PostalCode:          client.PostalCode,
 				City:                client.City,
 			},
-			Location: location,
+			Location:                   location,
+			EducationCurrentlyEnrolled: client.EducationCurrentlyEnrolled,
+			EducationInstitution:       client.EducationInstitution,
+			EducationMentorName:        client.EducationMentorName,
+			EducationMentorPhone:       client.EducationMentorPhone,
+			EducationMentorEmail:       client.EducationMentorEmail,
+			EducationAdditionalNotes:   client.EducationAdditionalNotes,
+			EducationLevel:             string(client.EducationLevel),
+			WorkCurrentlyEmployed:      client.WorkCurrentlyEmployed,
+			WorkCurrentEmployer:        client.WorkCurrentEmployer,
+			WorkCurrentEmployerPhone:   client.WorkCurrentEmployerPhone,
+			WorkCurrentEmployerEmail:   client.WorkCurrentEmployerEmail,
+			WorkCurrentPosition:        client.WorkCurrentPosition,
+			WorkStartDate:              conv.TimeFromPgDate(client.WorkStartDate),
+			WorkAdditionalNotes:        client.WorkAdditionalNotes,
 		},
 		Care:              care,
 		CareSchedule:      careSchedule,
@@ -3368,6 +3429,101 @@ func toDomainProgressReportFromGetRow(row db.GetProgressReportRow) *domain.Progr
 		EmployeeFirstName:      row.EmployeeFirstName,
 		EmployeeLastName:       row.EmployeeLastName,
 		EmployeeProfilePicture: row.EmployeeProfilePicture,
+	}
+}
+
+// =====================
+// Appointment Card
+// =====================
+
+func (r *ClientRepository) GetAppointmentCard(ctx context.Context, clientID uuid.UUID) (*domain.AppointmentCard, error) {
+	row, err := r.store.GetAppointmentCard(ctx, clientID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("failed to get appointment card: %w", err)
+	}
+	return &domain.AppointmentCard{
+		ID:                     row.ID,
+		ClientID:               row.ClientID,
+		GeneralInformation:     row.GeneralInformation,
+		ImportantContacts:      row.ImportantContacts,
+		HouseholdInfo:          row.HouseholdInfo,
+		OrganizationAgreements: row.OrganizationAgreements,
+		YouthOfficerAgreements: row.YouthOfficerAgreements,
+		TreatmentAgreements:    row.TreatmentAgreements,
+		SmokingRules:           row.SmokingRules,
+		Work:                   row.Work,
+		SchoolInternship:       row.SchoolInternship,
+		Travel:                 row.Travel,
+		Leave:                  row.Leave,
+		CreatedAt:              conv.TimeFromPgTimestamptz(row.CreatedAt),
+		UpdatedAt:              conv.TimeFromPgTimestamptz(row.UpdatedAt),
+		ClientFirstName:        row.FirstName,
+		ClientLastName:         row.LastName,
+	}, nil
+}
+
+func (r *ClientRepository) CreateAppointmentCard(ctx context.Context, clientID uuid.UUID, params domain.UpdateAppointmentCardParams) (*domain.AppointmentCard, error) {
+	card, err := r.store.CreateAppointmentCard(ctx, db.CreateAppointmentCardParams{
+		ClientID:               clientID,
+		GeneralInformation:     params.GeneralInformation,
+		ImportantContacts:      params.ImportantContacts,
+		HouseholdInfo:          params.HouseholdInfo,
+		OrganizationAgreements: params.OrganizationAgreements,
+		YouthOfficerAgreements: params.YouthOfficerAgreements,
+		TreatmentAgreements:    params.TreatmentAgreements,
+		SmokingRules:           params.SmokingRules,
+		Work:                   params.Work,
+		SchoolInternship:       params.SchoolInternship,
+		Travel:                 params.Travel,
+		Leave:                  params.Leave,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to create appointment card: %w", err)
+	}
+	return toDomainAppointmentCard(card), nil
+}
+
+func (r *ClientRepository) UpdateAppointmentCard(ctx context.Context, clientID uuid.UUID, params domain.UpdateAppointmentCardParams) (*domain.AppointmentCard, error) {
+	card, err := r.store.UpdateAppointmentCard(ctx, db.UpdateAppointmentCardParams{
+		ClientID:               clientID,
+		GeneralInformation:     params.GeneralInformation,
+		ImportantContacts:      params.ImportantContacts,
+		HouseholdInfo:          params.HouseholdInfo,
+		OrganizationAgreements: params.OrganizationAgreements,
+		YouthOfficerAgreements: params.YouthOfficerAgreements,
+		TreatmentAgreements:    params.TreatmentAgreements,
+		SmokingRules:           params.SmokingRules,
+		Work:                   params.Work,
+		SchoolInternship:       params.SchoolInternship,
+		Travel:                 params.Travel,
+		Leave:                  params.Leave,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to update appointment card: %w", err)
+	}
+	return toDomainAppointmentCard(card), nil
+}
+
+func toDomainAppointmentCard(card db.AppointmentCard) *domain.AppointmentCard {
+	return &domain.AppointmentCard{
+		ID:                     card.ID,
+		ClientID:               card.ClientID,
+		GeneralInformation:     card.GeneralInformation,
+		ImportantContacts:      card.ImportantContacts,
+		HouseholdInfo:          card.HouseholdInfo,
+		OrganizationAgreements: card.OrganizationAgreements,
+		YouthOfficerAgreements: card.YouthOfficerAgreements,
+		TreatmentAgreements:    card.TreatmentAgreements,
+		SmokingRules:           card.SmokingRules,
+		Work:                   card.Work,
+		SchoolInternship:       card.SchoolInternship,
+		Travel:                 card.Travel,
+		Leave:                  card.Leave,
+		CreatedAt:              conv.TimeFromPgTimestamptz(card.CreatedAt),
+		UpdatedAt:              conv.TimeFromPgTimestamptz(card.UpdatedAt),
 	}
 }
 
