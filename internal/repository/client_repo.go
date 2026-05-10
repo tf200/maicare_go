@@ -636,8 +636,8 @@ func (r *ClientRepository) GetClientByID(ctx context.Context, id uuid.UUID) (*do
 	if client.Status == db.ClientStatusEnumScheduledOutOfCare {
 		dischargeDate := conv.TimePtrFromPgDate(client.DischargeDate)
 		var dischargeReason *string
-		if client.DischargeReason.Valid {
-			reason := string(client.DischargeReason.DischargeReasonEnum)
+		if client.DischargeReason != nil {
+			reason := string(*client.DischargeReason)
 			dischargeReason = &reason
 		}
 
@@ -673,8 +673,8 @@ func (r *ClientRepository) GetClientByID(ctx context.Context, id uuid.UUID) (*do
 
 	if client.Status == db.ClientStatusEnumOutOfCare {
 		var dischargeReason *string
-		if client.DischargeReason.Valid {
-			reason := string(client.DischargeReason.DischargeReasonEnum)
+		if client.DischargeReason != nil {
+			reason := string(*client.DischargeReason)
 			dischargeReason = &reason
 		}
 
@@ -710,17 +710,17 @@ func (r *ClientRepository) GetClientByID(ctx context.Context, id uuid.UUID) (*do
 		SchemaVersion: 1,
 		Status:        string(client.Status),
 		Client: domain.ClientPageClient{
-			ID:                         client.ID,
-			FirstName:                  client.FirstName,
-			LastName:                   client.LastName,
-			Bsn:                        client.Bsn,
-			BsnVerifiedBy:              client.BsnVerifiedBy,
-			BsnVerifiedByName:          bsnVerifiedByName,
-			FileNumber:                 client.Filenumber,
-			Gender:                     string(client.Gender),
-			DateOfBirth:                dateOfBirth,
-			Age:                        age,
-			CareType:                   db.IntakeCareTypePtrFromEnum(client.CareType),
+			ID:                client.ID,
+			FirstName:         client.FirstName,
+			LastName:          client.LastName,
+			Bsn:               client.Bsn,
+			BsnVerifiedBy:     client.BsnVerifiedBy,
+			BsnVerifiedByName: bsnVerifiedByName,
+			FileNumber:        client.Filenumber,
+			Gender:            string(client.Gender),
+			DateOfBirth:       dateOfBirth,
+			Age:               age,
+			CareType:          db.IntakeCareTypePtrFromEnum(client.CareType),
 			Address: domain.ClientAddress{
 				Street:              client.Street,
 				HouseNumber:         client.HouseNumber,
@@ -1028,8 +1028,8 @@ func toDomainClientListItem(row db.ListClientDetailsRow) domain.ClientListItem {
 
 func toDomainWaitingListClient(row db.ListWaitingListClientsRow) domain.WaitingListClient {
 	var admissionType *string
-	if row.AdmissionType.Valid {
-		s := string(row.AdmissionType.AdmissionTypeEnum)
+	if row.AdmissionType != nil {
+		s := string(*row.AdmissionType)
 		admissionType = &s
 	}
 
@@ -1549,7 +1549,7 @@ func (r *ClientRepository) CreateGoalEvaluation(ctx context.Context, clientID uu
 		evaluation, err = q.UpdateGoalEvaluation(ctx, db.UpdateGoalEvaluationParams{
 			ID:           evaluation.ID,
 			OverallNotes: params.OverallNotes,
-			Status:       db.NullEvaluationStatusEnum{Valid: false},
+			Status:       nil,
 		})
 		if err != nil {
 			return fmt.Errorf("failed to update evaluation header: %w", err)
@@ -1666,9 +1666,10 @@ func (r *ClientRepository) trySubmitGoalEvaluationDraft(ctx context.Context, eva
 			return &goalEvaluationSubmitBlockedError{message: err.Error()}
 		}
 
+		completedStatus := db.EvaluationStatusEnumCompleted
 		updatedEvaluation, err := q.UpdateGoalEvaluation(ctx, db.UpdateGoalEvaluationParams{
 			ID:     evaluationID,
-			Status: db.NullEvaluationStatusEnum{EvaluationStatusEnum: db.EvaluationStatusEnumCompleted, Valid: true},
+			Status: &completedStatus,
 		})
 		if err != nil {
 			var pgErr *pgconn.PgError
@@ -2371,8 +2372,8 @@ func (r *ClientRepository) UpdateClientDiagnosis(ctx context.Context, params dom
 			Code:                params.Code,
 			Title:               params.Title,
 			Description:         params.Description,
-			Status:              db.NullDiagnosisStatusEnum{Valid: params.Status != nil, DiagnosisStatusEnum: db.DiagnosisStatusEnum(*params.Status)},
-			Severity:            db.NullDiagnosisSeverityEnum{Valid: params.Severity != nil, DiagnosisSeverityEnum: db.DiagnosisSeverityEnum(*params.Severity)},
+			Status:              diagnosisStatusFromPtr(params.Status),
+			Severity:            diagnosisSeverityFromPtr(params.Severity),
 			DiagnosedOn:         diagnosedOn,
 			ResolvedOn:          resolvedOn,
 			DiagnosingClinician: params.DiagnosingClinician,
@@ -2477,8 +2478,8 @@ func (r *ClientRepository) CreateClientMedicationOrder(ctx context.Context, para
 func (r *ClientRepository) ListClientMedicationOrders(ctx context.Context, params domain.ListClientMedicationOrdersParams) (*domain.ListClientMedicationOrdersResult, error) {
 	rows, err := r.store.ListClientMedicationOrders(ctx, db.ListClientMedicationOrdersParams{
 		ClientID:    params.ClientID,
-		Status:      db.NullMedicationOrderStatusEnum{Valid: params.Status != nil, MedicationOrderStatusEnum: db.MedicationOrderStatusEnum(*params.Status)},
-		AdminMode:   db.NullMedicationAdminModeEnum{Valid: params.AdminMode != nil, MedicationAdminModeEnum: db.MedicationAdminModeEnum(*params.AdminMode)},
+		Status:      medicationOrderStatusFromPtr(params.Status),
+		AdminMode:   medicationAdminModeFromPtr(params.AdminMode),
 		DiagnosisID: params.DiagnosisID,
 		Search:      params.Search,
 		Offset:      params.Offset,
@@ -2554,8 +2555,8 @@ func (r *ClientRepository) UpdateClientMedicationOrder(ctx context.Context, para
 			MaxDosesPer24h:        params.MaxDosesPer24h,
 			StartDate:             startDate,
 			EndDate:               endDate,
-			Status:                db.NullMedicationOrderStatusEnum{Valid: params.Status != nil, MedicationOrderStatusEnum: db.MedicationOrderStatusEnum(*params.Status)},
-			AdminMode:             db.NullMedicationAdminModeEnum{Valid: params.AdminMode != nil, MedicationAdminModeEnum: db.MedicationAdminModeEnum(*params.AdminMode)},
+			Status:                medicationOrderStatusFromPtr(params.Status),
+			AdminMode:             medicationAdminModeFromPtr(params.AdminMode),
 			ResponsibleEmployeeID: params.ResponsibleEmployeeID,
 			IsCritical:            params.IsCritical,
 			Notes:                 params.Notes,
@@ -2606,10 +2607,11 @@ func (r *ClientRepository) GetClientMedicalOverview(ctx context.Context, clientI
 			return err
 		}
 
+		activeStatus := db.MedicationOrderStatusEnumActive
 		medicationOrders, err = q.ListClientMedicationOrders(ctx, db.ListClientMedicationOrdersParams{
 			ClientID:    clientID,
-			Status:      db.NullMedicationOrderStatusEnum{MedicationOrderStatusEnum: db.MedicationOrderStatusEnum("active"), Valid: true},
-			AdminMode:   db.NullMedicationAdminModeEnum{Valid: false},
+			Status:      &activeStatus,
+			AdminMode:   nil,
 			DiagnosisID: nil,
 			Search:      nil,
 			Offset:      0,
@@ -3013,7 +3015,7 @@ func (r *ClientRepository) PutClientOutOfCare(ctx context.Context, clientID uuid
 			ID:              clientID,
 			Status:          targetStatus,
 			DischargeDate:   pgtype.Date{Time: dischargeDay, Valid: true},
-			DischargeReason: db.NullDischargeReasonEnum{DischargeReasonEnum: dischargeReason, Valid: true},
+			DischargeReason: &dischargeReason,
 			FinalEvaluation: finalEvaluation,
 		})
 		if err != nil {
@@ -3046,7 +3048,7 @@ func (r *ClientRepository) PutClientOutOfCare(ctx context.Context, clientID uuid
 			ID:              updatedClient.ID,
 			Status:          string(updatedClient.Status),
 			DischargeDate:   updatedClient.DischargeDate.Time,
-			DischargeReason: string(updatedClient.DischargeReason.DischargeReasonEnum),
+			DischargeReason: string(*updatedClient.DischargeReason),
 			FinalEvaluation: updatedClient.FinalEvaluation,
 		}
 		return nil
@@ -3086,8 +3088,8 @@ func toDomainSender(d db.Sender) *domain.Sender {
 
 func toDomainClientEmergencyContact(d db.ClientEmergencyContact) *domain.ClientEmergencyContact {
 	var relationStatus *string
-	if d.RelationStatus.Valid {
-		s := string(d.RelationStatus.RelationStatusEnum)
+	if d.RelationStatus != nil {
+		s := string(*d.RelationStatus)
 		relationStatus = &s
 	}
 
@@ -3111,8 +3113,8 @@ func toDomainClientEmergencyContact(d db.ClientEmergencyContact) *domain.ClientE
 
 func toDomainClientEmergencyContactFromRow(row db.ListEmergencyContactsRow) domain.ClientEmergencyContact {
 	var relationStatus *string
-	if row.RelationStatus.Valid {
-		s := string(row.RelationStatus.RelationStatusEnum)
+	if row.RelationStatus != nil {
+		s := string(*row.RelationStatus)
 		relationStatus = &s
 	}
 
@@ -3547,4 +3549,36 @@ func toDomainAiGeneratedReportFromRow(row db.ListAiGeneratedReportsRow) domain.A
 		EndDate:    conv.TimeFromPgDate(row.EndDate),
 		CreatedAt:  conv.TimeFromPgTimestamptz(row.CreatedAt),
 	}
+}
+
+func diagnosisStatusFromPtr(value *string) *db.DiagnosisStatusEnum {
+	if value == nil {
+		return nil
+	}
+	status := db.DiagnosisStatusEnum(*value)
+	return &status
+}
+
+func diagnosisSeverityFromPtr(value *string) *db.DiagnosisSeverityEnum {
+	if value == nil {
+		return nil
+	}
+	severity := db.DiagnosisSeverityEnum(*value)
+	return &severity
+}
+
+func medicationOrderStatusFromPtr(value *string) *db.MedicationOrderStatusEnum {
+	if value == nil {
+		return nil
+	}
+	status := db.MedicationOrderStatusEnum(*value)
+	return &status
+}
+
+func medicationAdminModeFromPtr(value *string) *db.MedicationAdminModeEnum {
+	if value == nil {
+		return nil
+	}
+	mode := db.MedicationAdminModeEnum(*value)
+	return &mode
 }

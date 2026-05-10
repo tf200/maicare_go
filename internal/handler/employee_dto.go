@@ -132,42 +132,43 @@ type searchEmployeesRequest struct {
 }
 
 type employeeDetailResponse struct {
-	ID                  uuid.UUID  `json:"id"`
-	UserID              uuid.UUID  `json:"user_id"`
-	FirstName           string     `json:"first_name"`
-	LastName            string     `json:"last_name"`
-	Bsn                 string     `json:"bsn"`
-	Street              string     `json:"street"`
-	HouseNumber         string     `json:"house_number"`
-	HouseNumberAddition *string    `json:"house_number_addition"`
-	PostalCode          string     `json:"postal_code"`
-	City                string     `json:"city"`
-	Position            *string    `json:"position"`
-	EmployeeNumber      *string    `json:"employee_number"`
-	EmploymentNumber    *string    `json:"employment_number"`
-	PrivateEmailAddress *string    `json:"private_email_address"`
-	WorkEmailAddress    *string    `json:"work_email_address"`
-	PrivatePhoneNumber  *string    `json:"private_phone_number"`
-	WorkPhoneNumber     *string    `json:"work_phone_number"`
-	DateOfBirth         *time.Time `json:"date_of_birth"`
-	HomeTelephoneNumber *string    `json:"home_telephone_number"`
-	CreatedAt           time.Time  `json:"created_at"`
-	Gender              string     `json:"gender"`
-	LocationID          *uuid.UUID `json:"location_id"`
-	DepartmentID        *uuid.UUID `json:"department_id"`
-	ManagerEmployeeID   *uuid.UUID `json:"manager_employee_id"`
-	HasBorrowed         bool       `json:"has_borrowed"`
-	OutOfService        *bool      `json:"out_of_service"`
-	IsArchived          bool       `json:"is_archived"`
-	ContractHours       *float64   `json:"contract_hours"`
-	ContractEndDate     *time.Time `json:"contract_end_date"`
-	ContractStartDate   *time.Time `json:"contract_start_date"`
-	ContractType        string     `json:"contract_type"`
-	ContractRate        *float64   `json:"contract_rate"`
-	ProfilePicture      *string    `json:"profile_picture"`
-	DepartmentName      *string    `json:"department_name"`
-	ManagerFirstName    *string    `json:"manager_first_name"`
-	ManagerLastName     *string    `json:"manager_last_name"`
+	ID                  uuid.UUID             `json:"id"`
+	UserID              uuid.UUID             `json:"user_id"`
+	FirstName           string                `json:"first_name"`
+	LastName            string                `json:"last_name"`
+	Bsn                 string                `json:"bsn"`
+	Street              string                `json:"street"`
+	HouseNumber         string                `json:"house_number"`
+	HouseNumberAddition *string               `json:"house_number_addition"`
+	PostalCode          string                `json:"postal_code"`
+	City                string                `json:"city"`
+	Position            *string               `json:"position"`
+	EmployeeNumber      *string               `json:"employee_number"`
+	EmploymentNumber    *string               `json:"employment_number"`
+	PrivateEmailAddress *string               `json:"private_email_address"`
+	WorkEmailAddress    *string               `json:"work_email_address"`
+	PrivatePhoneNumber  *string               `json:"private_phone_number"`
+	WorkPhoneNumber     *string               `json:"work_phone_number"`
+	DateOfBirth         *time.Time            `json:"date_of_birth"`
+	HomeTelephoneNumber *string               `json:"home_telephone_number"`
+	CreatedAt           time.Time             `json:"created_at"`
+	Gender              string                `json:"gender"`
+	LocationID          *uuid.UUID            `json:"location_id"`
+	DepartmentID        *uuid.UUID            `json:"department_id"`
+	ManagerEmployeeID   *uuid.UUID            `json:"manager_employee_id"`
+	HasBorrowed         bool                  `json:"has_borrowed"`
+	OutOfService        *bool                 `json:"out_of_service"`
+	IsArchived          bool                  `json:"is_archived"`
+	ContractHours       *float64              `json:"contract_hours"`
+	ContractEndDate     *time.Time            `json:"contract_end_date"`
+	ContractStartDate   *time.Time            `json:"contract_start_date"`
+	ContractType        string                `json:"contract_type"`
+	ContractRate        *float64              `json:"contract_rate"`
+	ProfilePicture      *string               `json:"profile_picture"`
+	DepartmentName      *string               `json:"department_name"`
+	ManagerFirstName    *string               `json:"manager_first_name"`
+	ManagerLastName     *string               `json:"manager_last_name"`
+	Role                *employeeRoleResponse `json:"role"`
 }
 
 type employeeListItemResponse struct {
@@ -247,6 +248,16 @@ type employeeProfileDetailsResponse struct {
 type employeeRoleResponse struct {
 	ID   uuid.UUID `json:"id"`
 	Name string    `json:"name"`
+}
+
+func toEmployeeRoleResponse(role *domain.EmployeeRole) *employeeRoleResponse {
+	if role == nil {
+		return nil
+	}
+	return &employeeRoleResponse{
+		ID:   role.ID,
+		Name: role.Name,
+	}
 }
 
 type briefEducationDetailResponse struct {
@@ -543,6 +554,7 @@ func toEmployeeDetailResponse(emp *domain.EmployeeDetail) employeeDetailResponse
 		DepartmentName:      emp.DepartmentName,
 		ManagerFirstName:    emp.ManagerFirstName,
 		ManagerLastName:     emp.ManagerLastName,
+		Role:                toEmployeeRoleResponse(emp.Role),
 	}
 }
 

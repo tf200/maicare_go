@@ -1,780 +1,561 @@
 package db
 
-// CarePlanInterventionFrequencyEnum helpers
-// func NullCarePlanInterventionFrequencyFromPtr(ptr *string) NullCarePlanInterventionFrequencyEnum {
-// 	if ptr != nil {
-// 		return NullCarePlanInterventionFrequencyEnum{
-// 			CarePlanInterventionFrequencyEnum: CarePlanInterventionFrequencyEnum(*ptr),
-// 			Valid:                             true,
-// 		}
-// 	}
-// 	return NullCarePlanInterventionFrequencyEnum{Valid: false}
-// }
-
-// func CarePlanInterventionFrequencyPtrFromEnum(enum NullCarePlanInterventionFrequencyEnum) *string {
-// 	if enum.Valid {
-// 		str := string(enum.CarePlanInterventionFrequencyEnum)
-// 		return &str
-// 	}
-// 	return nil
-// }
-
-// // CarePlanObjectiveStatusEnum helpers
-// func NullCarePlanObjectiveStatusFromPtr(ptr *string) NullCarePlanObjectiveStatusEnum {
-// 	if ptr != nil {
-// 		return NullCarePlanObjectiveStatusEnum{
-// 			CarePlanObjectiveStatusEnum: CarePlanObjectiveStatusEnum(*ptr),
-// 			Valid:                       true,
-// 		}
-// 	}
-// 	return NullCarePlanObjectiveStatusEnum{Valid: false}
-// }
-
-// func CarePlanObjectiveStatusPtrFromEnum(enum NullCarePlanObjectiveStatusEnum) *string {
-// 	if enum.Valid {
-// 		str := string(enum.CarePlanObjectiveStatusEnum)
-// 		return &str
-// 	}
-// 	return nil
-// }
-
-// // CarePlanReportTypeEnum helpers
-// func NullCarePlanReportTypeFromPtr(ptr *string) NullCarePlanReportTypeEnum {
-// 	if ptr != nil {
-// 		return NullCarePlanReportTypeEnum{
-// 			CarePlanReportTypeEnum: CarePlanReportTypeEnum(*ptr),
-// 			Valid:                  true,
-// 		}
-// 	}
-// 	return NullCarePlanReportTypeEnum{Valid: false}
-// }
-
-// func CarePlanReportTypePtrFromEnum(enum NullCarePlanReportTypeEnum) *string {
-// 	if enum.Valid {
-// 		str := string(enum.CarePlanReportTypeEnum)
-// 		return &str
-// 	}
-// 	return nil
-// }
-
-// // CarePlanRiskLevelEnum helpers
-// func NullCarePlanRiskLevelFromPtr(ptr *string) NullCarePlanRiskLevelEnum {
-// 	if ptr != nil {
-// 		return NullCarePlanRiskLevelEnum{
-// 			CarePlanRiskLevelEnum: CarePlanRiskLevelEnum(*ptr),
-// 			Valid:                 true,
-// 		}
-// 	}
-// 	return NullCarePlanRiskLevelEnum{Valid: false}
-// }
-
-// func CarePlanRiskLevelPtrFromEnum(enum NullCarePlanRiskLevelEnum) *string {
-// 	if enum.Valid {
-// 		str := string(enum.CarePlanRiskLevelEnum)
-// 		return &str
-// 	}
-// 	return nil
-// }
-
-// CarePlanStatusEnum helpers
-// func NullCarePlanStatusFromPtr(ptr *string) NullCarePlanStatusEnum {
-// 	if ptr != nil {
-// 		return NullCarePlanStatusEnum{
-// 			CarePlanStatusEnum: CarePlanStatusEnum(*ptr),
-// 			Valid:              true,
-// 		}
-// 	}
-// 	return NullCarePlanStatusEnum{Valid: false}
-// }
-
-// func CarePlanStatusPtrFromEnum(enum NullCarePlanStatusEnum) *string {
-// 	if enum.Valid {
-// 		str := string(enum.CarePlanStatusEnum)
-// 		return &str
-// 	}
-// 	return nil
-// }
-
-// // CarePlanTimeframeEnum helpers
-// func NullCarePlanTimeframeFromPtr(timeframePtr *string) NullCarePlanTimeframeEnum {
-// 	if timeframePtr != nil {
-// 		return NullCarePlanTimeframeEnum{
-// 			CarePlanTimeframeEnum: CarePlanTimeframeEnum(*timeframePtr),
-// 			Valid:                 true,
-// 		}
-// 	}
-// 	return NullCarePlanTimeframeEnum{Valid: false}
-// }
-
-// func CarePlanTimeframePtrFromEnum(timeframeEnum NullCarePlanTimeframeEnum) *string {
-// 	if timeframeEnum.Valid {
-// 		timeframeStr := string(timeframeEnum.CarePlanTimeframeEnum)
-// 		return &timeframeStr
-// 	}
-// 	return nil
-// }
-
-// CareTypeEnum helpers
-func NullCareTypeFromPtr(ptr *string) NullCareTypeEnum {
-	if ptr != nil {
-		return NullCareTypeEnum{
-			CareTypeEnum: CareTypeEnum(*ptr),
-			Valid:        true,
-		}
+func NullCareTypeFromPtr(ptr *string) *CareTypeEnum {
+	if ptr == nil {
+		return nil
 	}
-	return NullCareTypeEnum{Valid: false}
+	value := CareTypeEnum(*ptr)
+	return &value
 }
 
-func CareTypePtrFromEnum(enum NullCareTypeEnum) *string {
-	if enum.Valid {
-		str := string(enum.CareTypeEnum)
-		return &str
+func CareTypePtrFromEnum(value *CareTypeEnum) *string {
+	if value == nil {
+		return nil
 	}
-	return nil
+	str := string(*value)
+	return &str
 }
 
-// ClientDocumentLabelEnum helpers
-func NullClientDocumentLabelFromPtr(ptr *string) NullClientDocumentLabelEnum {
-	if ptr != nil {
-		return NullClientDocumentLabelEnum{
-			ClientDocumentLabelEnum: ClientDocumentLabelEnum(*ptr),
-			Valid:                   true,
-		}
+func NullClientDocumentLabelFromPtr(ptr *string) *ClientDocumentLabelEnum {
+	if ptr == nil {
+		return nil
 	}
-	return NullClientDocumentLabelEnum{Valid: false}
+	value := ClientDocumentLabelEnum(*ptr)
+	return &value
 }
 
-func ClientDocumentLabelPtrFromEnum(enum NullClientDocumentLabelEnum) *string {
-	if enum.Valid {
-		str := string(enum.ClientDocumentLabelEnum)
-		return &str
+func ClientDocumentLabelPtrFromEnum(value *ClientDocumentLabelEnum) *string {
+	if value == nil {
+		return nil
 	}
-	return nil
+	str := string(*value)
+	return &str
 }
 
-// ClientEducationLevelEnum helpers
-func NullClientEducationLevelFromPtr(ptr *string) NullEducationLevelEnum {
-	if ptr != nil {
-		return NullEducationLevelEnum{
-			EducationLevelEnum: EducationLevelEnum(*ptr),
-			Valid:              true,
-		}
+func NullClientEducationLevelFromPtr(ptr *string) *EducationLevelEnum {
+	if ptr == nil {
+		return nil
 	}
-	return NullEducationLevelEnum{Valid: false}
+	value := EducationLevelEnum(*ptr)
+	return &value
 }
 
-func ClientEducationLevelPtrFromEnum(enum NullEducationLevelEnum) *string {
-	if enum.Valid {
-		str := string(enum.EducationLevelEnum)
-		return &str
+func ClientEducationLevelPtrFromEnum(value *EducationLevelEnum) *string {
+	if value == nil {
+		return nil
 	}
-	return nil
+	str := string(*value)
+	return &str
 }
 
-// ClientLivingSituationEnum helpers
-func NullClientLivingSituationFromPtr(ptr *string) NullClientLivingSituationEnum {
-	if ptr != nil {
-		return NullClientLivingSituationEnum{
-			ClientLivingSituationEnum: ClientLivingSituationEnum(*ptr),
-			Valid:                     true,
-		}
+func NullClientLivingSituationFromPtr(ptr *string) *ClientLivingSituationEnum {
+	if ptr == nil {
+		return nil
 	}
-	return NullClientLivingSituationEnum{Valid: false}
+	value := ClientLivingSituationEnum(*ptr)
+	return &value
 }
 
-func ClientLivingSituationPtrFromEnum(enum NullClientLivingSituationEnum) *string {
-	if enum.Valid {
-		str := string(enum.ClientLivingSituationEnum)
-		return &str
+func ClientLivingSituationPtrFromEnum(value *ClientLivingSituationEnum) *string {
+	if value == nil {
+		return nil
 	}
-	return nil
+	str := string(*value)
+	return &str
 }
 
-// ClientLocationTransferStatusEnum helpers
-func NullClientLocationTransferStatusFromPtr(ptr *string) NullClientLocationTransferStatusEnum {
-	if ptr != nil {
-		return NullClientLocationTransferStatusEnum{
-			ClientLocationTransferStatusEnum: ClientLocationTransferStatusEnum(*ptr),
-			Valid:                            true,
-		}
+func NullClientLocationTransferStatusFromPtr(ptr *string) *ClientLocationTransferStatusEnum {
+	if ptr == nil {
+		return nil
 	}
-	return NullClientLocationTransferStatusEnum{Valid: false}
+	value := ClientLocationTransferStatusEnum(*ptr)
+	return &value
 }
 
-func ClientLocationTransferStatusPtrFromEnum(enum NullClientLocationTransferStatusEnum) *string {
-	if enum.Valid {
-		str := string(enum.ClientLocationTransferStatusEnum)
-		return &str
+func ClientLocationTransferStatusPtrFromEnum(value *ClientLocationTransferStatusEnum) *string {
+	if value == nil {
+		return nil
 	}
-	return nil
+	str := string(*value)
+	return &str
 }
 
-// ClientStatusEnum helpers
-func NullClientStatusFromPtr(ptr *string) NullClientStatusEnum {
-	if ptr != nil {
-		return NullClientStatusEnum{
-			ClientStatusEnum: ClientStatusEnum(*ptr),
-			Valid:            true,
-		}
+func NullClientStatusFromPtr(ptr *string) *ClientStatusEnum {
+	if ptr == nil {
+		return nil
 	}
-	return NullClientStatusEnum{Valid: false}
+	value := ClientStatusEnum(*ptr)
+	return &value
 }
 
-func ClientStatusPtrFromEnum(enum NullClientStatusEnum) *string {
-	if enum.Valid {
-		str := string(enum.ClientStatusEnum)
-		return &str
+func ClientStatusPtrFromEnum(value *ClientStatusEnum) *string {
+	if value == nil {
+		return nil
 	}
-	return nil
+	str := string(*value)
+	return &str
 }
 
-// IntakeCareTypeEnum helpers
-func NullIntakeCareTypeFromPtr(ptr *string) NullIntakeCareTypeEnum {
-	if ptr != nil {
-		return NullIntakeCareTypeEnum{
-			IntakeCareTypeEnum: IntakeCareTypeEnum(*ptr),
-			Valid:              true,
-		}
+func NullIntakeCareTypeFromPtr(ptr *string) *IntakeCareTypeEnum {
+	if ptr == nil {
+		return nil
 	}
-	return NullIntakeCareTypeEnum{Valid: false}
+	value := IntakeCareTypeEnum(*ptr)
+	return &value
 }
 
-func IntakeCareTypePtrFromEnum(enum NullIntakeCareTypeEnum) *string {
-	if enum.Valid {
-		str := string(enum.IntakeCareTypeEnum)
-		return &str
+func IntakeCareTypePtrFromEnum(value *IntakeCareTypeEnum) *string {
+	if value == nil {
+		return nil
 	}
-	return nil
+	str := string(*value)
+	return &str
 }
 
-// IntakeConclusionEnum helpers
-func NullIntakeConclusionFromPtr(ptr *string) NullIntakeConclusionEnum {
-	if ptr != nil {
-		return NullIntakeConclusionEnum{
-			IntakeConclusionEnum: IntakeConclusionEnum(*ptr),
-			Valid:                true,
-		}
+func NullIntakeConclusionFromPtr(ptr *string) *IntakeConclusionEnum {
+	if ptr == nil {
+		return nil
 	}
-	return NullIntakeConclusionEnum{Valid: false}
+	value := IntakeConclusionEnum(*ptr)
+	return &value
 }
 
-func IntakeConclusionPtrFromEnum(enum NullIntakeConclusionEnum) *string {
-	if enum.Valid {
-		str := string(enum.IntakeConclusionEnum)
-		return &str
+func IntakeConclusionPtrFromEnum(value *IntakeConclusionEnum) *string {
+	if value == nil {
+		return nil
 	}
-	return nil
+	str := string(*value)
+	return &str
 }
 
-// ContractAuditOperationEnum helpers
-func NullContractAuditOperationFromPtr(ptr *string) NullContractAuditOperationEnum {
-	if ptr != nil {
-		return NullContractAuditOperationEnum{
-			ContractAuditOperationEnum: ContractAuditOperationEnum(*ptr),
-			Valid:                      true,
-		}
+func NullContractAuditOperationFromPtr(ptr *string) *ContractAuditOperationEnum {
+	if ptr == nil {
+		return nil
 	}
-	return NullContractAuditOperationEnum{Valid: false}
+	value := ContractAuditOperationEnum(*ptr)
+	return &value
 }
 
-func ContractAuditOperationPtrFromEnum(enum NullContractAuditOperationEnum) *string {
-	if enum.Valid {
-		str := string(enum.ContractAuditOperationEnum)
-		return &str
+func ContractAuditOperationPtrFromEnum(value *ContractAuditOperationEnum) *string {
+	if value == nil {
+		return nil
 	}
-	return nil
+	str := string(*value)
+	return &str
 }
 
-// ContractReminderTypeEnum helpers
-func NullContractReminderTypeFromPtr(ptr *string) NullContractReminderTypeEnum {
-	if ptr != nil {
-		return NullContractReminderTypeEnum{
-			ContractReminderTypeEnum: ContractReminderTypeEnum(*ptr),
-			Valid:                    true,
-		}
+func NullContractReminderTypeFromPtr(ptr *string) *ContractReminderTypeEnum {
+	if ptr == nil {
+		return nil
 	}
-	return NullContractReminderTypeEnum{Valid: false}
+	value := ContractReminderTypeEnum(*ptr)
+	return &value
 }
 
-func ContractReminderTypePtrFromEnum(enum NullContractReminderTypeEnum) *string {
-	if enum.Valid {
-		str := string(enum.ContractReminderTypeEnum)
-		return &str
+func ContractReminderTypePtrFromEnum(value *ContractReminderTypeEnum) *string {
+	if value == nil {
+		return nil
 	}
-	return nil
+	str := string(*value)
+	return &str
 }
 
-// ContractStatusEnum helpers
-func NullContractStatusFromPtr(ptr *string) NullContractStatusEnum {
-	if ptr != nil {
-		return NullContractStatusEnum{
-			ContractStatusEnum: ContractStatusEnum(*ptr),
-			Valid:              true,
-		}
+func NullContractStatusFromPtr(ptr *string) *ContractStatusEnum {
+	if ptr == nil {
+		return nil
 	}
-	return NullContractStatusEnum{Valid: false}
+	value := ContractStatusEnum(*ptr)
+	return &value
 }
 
-func ContractStatusPtrFromEnum(enum NullContractStatusEnum) *string {
-	if enum.Valid {
-		str := string(enum.ContractStatusEnum)
-		return &str
+func ContractStatusPtrFromEnum(value *ContractStatusEnum) *string {
+	if value == nil {
+		return nil
 	}
-	return nil
+	str := string(*value)
+	return &str
 }
 
-// EmotionalStateEnum helpers
-func NullEmotionalStateFromPtr(ptr *string) NullEmotionalStateEnum {
-	if ptr != nil {
-		return NullEmotionalStateEnum{
-			EmotionalStateEnum: EmotionalStateEnum(*ptr),
-			Valid:              true,
-		}
+func NullEmotionalStateFromPtr(ptr *string) *EmotionalStateEnum {
+	if ptr == nil {
+		return nil
 	}
-	return NullEmotionalStateEnum{Valid: false}
+	value := EmotionalStateEnum(*ptr)
+	return &value
 }
 
-func EmotionalStatePtrFromEnum(enum NullEmotionalStateEnum) *string {
-	if enum.Valid {
-		str := string(enum.EmotionalStateEnum)
-		return &str
+func EmotionalStatePtrFromEnum(value *EmotionalStateEnum) *string {
+	if value == nil {
+		return nil
 	}
-	return nil
+	str := string(*value)
+	return &str
 }
 
-// EmployeeContractTypeEnum helpers
-func NullEmployeeContractTypeFromPtr(ptr *string) NullEmployeeContractTypeEnum {
-	if ptr != nil {
-		return NullEmployeeContractTypeEnum{
-			EmployeeContractTypeEnum: EmployeeContractTypeEnum(*ptr),
-			Valid:                    true,
-		}
+func NullEmployeeContractTypeFromPtr(ptr *string) *EmployeeContractTypeEnum {
+	if ptr == nil {
+		return nil
 	}
-	return NullEmployeeContractTypeEnum{Valid: false}
+	value := EmployeeContractTypeEnum(*ptr)
+	return &value
 }
 
-func EmployeeContractTypePtrFromEnum(enum NullEmployeeContractTypeEnum) *string {
-	if enum.Valid {
-		str := string(enum.EmployeeContractTypeEnum)
-		return &str
+func EmployeeContractTypePtrFromEnum(value *EmployeeContractTypeEnum) *string {
+	if value == nil {
+		return nil
 	}
-	return nil
+	str := string(*value)
+	return &str
 }
 
-// EmployeeGenderEnum helpers
-func NullGenderFromPtr(ptr *string) NullGenderEnum {
-	if ptr != nil {
-		return NullGenderEnum{
-			GenderEnum: GenderEnum(*ptr),
-			Valid:      true,
-		}
+func NullGenderFromPtr(ptr *string) *GenderEnum {
+	if ptr == nil {
+		return nil
 	}
-	return NullGenderEnum{Valid: false}
+	value := GenderEnum(*ptr)
+	return &value
 }
 
-func EmployeeGenderPtrFromEnum(enum NullGenderEnum) *string {
-	if enum.Valid {
-		str := string(enum.GenderEnum)
-		return &str
+func EmployeeGenderPtrFromEnum(value *GenderEnum) *string {
+	if value == nil {
+		return nil
 	}
-	return nil
+	str := string(*value)
+	return &str
 }
 
-// FinancingActEnum helpers
-func NullFinancingActFromPtr(ptr *string) NullFinancingActEnum {
-	if ptr != nil {
-		return NullFinancingActEnum{
-			FinancingActEnum: FinancingActEnum(*ptr),
-			Valid:            true,
-		}
+func NullFinancingActFromPtr(ptr *string) *FinancingActEnum {
+	if ptr == nil {
+		return nil
 	}
-	return NullFinancingActEnum{Valid: false}
+	value := FinancingActEnum(*ptr)
+	return &value
 }
 
-func FinancingActPtrFromEnum(enum NullFinancingActEnum) *string {
-	if enum.Valid {
-		str := string(enum.FinancingActEnum)
-		return &str
+func FinancingActPtrFromEnum(value *FinancingActEnum) *string {
+	if value == nil {
+		return nil
 	}
-	return nil
+	str := string(*value)
+	return &str
 }
 
-// FinancingOptionEnum helpers
-func NullFinancingOptionFromPtr(ptr *string) NullFinancingOptionEnum {
-	if ptr != nil {
-		return NullFinancingOptionEnum{
-			FinancingOptionEnum: FinancingOptionEnum(*ptr),
-			Valid:               true,
-		}
+func NullFinancingOptionFromPtr(ptr *string) *FinancingOptionEnum {
+	if ptr == nil {
+		return nil
 	}
-	return NullFinancingOptionEnum{Valid: false}
+	value := FinancingOptionEnum(*ptr)
+	return &value
 }
 
-func FinancingOptionPtrFromEnum(enum NullFinancingOptionEnum) *string {
-	if enum.Valid {
-		str := string(enum.FinancingOptionEnum)
-		return &str
+func FinancingOptionPtrFromEnum(value *FinancingOptionEnum) *string {
+	if value == nil {
+		return nil
 	}
-	return nil
+	str := string(*value)
+	return &str
 }
 
-// FormStatusEnum helpers
-func NullFormStatusFromPtr(ptr *string) NullFormStatusEnum {
-	if ptr != nil {
-		return NullFormStatusEnum{
-			FormStatusEnum: FormStatusEnum(*ptr),
-			Valid:          true,
-		}
+func NullFormStatusFromPtr(ptr *string) *FormStatusEnum {
+	if ptr == nil {
+		return nil
 	}
-	return NullFormStatusEnum{Valid: false}
+	value := FormStatusEnum(*ptr)
+	return &value
 }
 
-func FormStatusPtrFromEnum(enum NullFormStatusEnum) *string {
-	if enum.Valid {
-		str := string(enum.FormStatusEnum)
-		return &str
+func FormStatusPtrFromEnum(value *FormStatusEnum) *string {
+	if value == nil {
+		return nil
 	}
-	return nil
+	str := string(*value)
+	return &str
 }
 
-// HoursTypeEnum helpers
-func NullHoursTypeFromPtr(ptr *string) NullHoursTypeEnum {
-	if ptr != nil {
-		return NullHoursTypeEnum{
-			HoursTypeEnum: HoursTypeEnum(*ptr),
-			Valid:         true,
-		}
+func NullHoursTypeFromPtr(ptr *string) *HoursTypeEnum {
+	if ptr == nil {
+		return nil
 	}
-	return NullHoursTypeEnum{Valid: false}
+	value := HoursTypeEnum(*ptr)
+	return &value
 }
 
-func HoursTypePtrFromEnum(enum NullHoursTypeEnum) *string {
-	if enum.Valid {
-		str := string(enum.HoursTypeEnum)
-		return &str
+func HoursTypePtrFromEnum(value *HoursTypeEnum) *string {
+	if value == nil {
+		return nil
 	}
-	return nil
+	str := string(*value)
+	return &str
 }
 
-// IncidentReporterInvolvementEnum helpers
-func NullIncidentReporterInvolvementFromPtr(ptr *string) NullIncidentReporterInvolvementEnum {
-	if ptr != nil {
-		return NullIncidentReporterInvolvementEnum{
-			IncidentReporterInvolvementEnum: IncidentReporterInvolvementEnum(*ptr),
-			Valid:                           true,
-		}
+func NullIncidentReporterInvolvementFromPtr(ptr *string) *IncidentReporterInvolvementEnum {
+	if ptr == nil {
+		return nil
 	}
-	return NullIncidentReporterInvolvementEnum{Valid: false}
+	value := IncidentReporterInvolvementEnum(*ptr)
+	return &value
 }
 
-func IncidentReporterInvolvementPtrFromEnum(enum NullIncidentReporterInvolvementEnum) *string {
-	if enum.Valid {
-		str := string(enum.IncidentReporterInvolvementEnum)
-		return &str
+func IncidentReporterInvolvementPtrFromEnum(value *IncidentReporterInvolvementEnum) *string {
+	if value == nil {
+		return nil
 	}
-	return nil
+	str := string(*value)
+	return &str
 }
 
-// InvoiceAuditOperationEnum helpers
-func NullInvoiceAuditOperationFromPtr(ptr *string) NullInvoiceAuditOperationEnum {
-	if ptr != nil {
-		return NullInvoiceAuditOperationEnum{
-			InvoiceAuditOperationEnum: InvoiceAuditOperationEnum(*ptr),
-			Valid:                     true,
-		}
+func NullInvoiceAuditOperationFromPtr(ptr *string) *InvoiceAuditOperationEnum {
+	if ptr == nil {
+		return nil
 	}
-	return NullInvoiceAuditOperationEnum{Valid: false}
+	value := InvoiceAuditOperationEnum(*ptr)
+	return &value
 }
 
-func InvoiceAuditOperationPtrFromEnum(enum NullInvoiceAuditOperationEnum) *string {
-	if enum.Valid {
-		str := string(enum.InvoiceAuditOperationEnum)
-		return &str
+func InvoiceAuditOperationPtrFromEnum(value *InvoiceAuditOperationEnum) *string {
+	if value == nil {
+		return nil
 	}
-	return nil
+	str := string(*value)
+	return &str
 }
 
-// InvoiceStatusEnum helpers
-func NullInvoiceStatusFromPtr(ptr *string) NullInvoiceStatusEnum {
-	if ptr != nil {
-		return NullInvoiceStatusEnum{
-			InvoiceStatusEnum: InvoiceStatusEnum(*ptr),
-			Valid:             true,
-		}
+func NullInvoiceStatusFromPtr(ptr *string) *InvoiceStatusEnum {
+	if ptr == nil {
+		return nil
 	}
-	return NullInvoiceStatusEnum{Valid: false}
+	value := InvoiceStatusEnum(*ptr)
+	return &value
 }
 
-func InvoiceStatusPtrFromEnum(enum NullInvoiceStatusEnum) *string {
-	if enum.Valid {
-		str := string(enum.InvoiceStatusEnum)
-		return &str
+func InvoiceStatusPtrFromEnum(value *InvoiceStatusEnum) *string {
+	if value == nil {
+		return nil
 	}
-	return nil
+	str := string(*value)
+	return &str
 }
 
-// InvoiceTypeEnum helpers
-func NullInvoiceTypeFromPtr(ptr *string) NullInvoiceTypeEnum {
-	if ptr != nil {
-		return NullInvoiceTypeEnum{
-			InvoiceTypeEnum: InvoiceTypeEnum(*ptr),
-			Valid:           true,
-		}
+func NullInvoiceTypeFromPtr(ptr *string) *InvoiceTypeEnum {
+	if ptr == nil {
+		return nil
 	}
-	return NullInvoiceTypeEnum{Valid: false}
+	value := InvoiceTypeEnum(*ptr)
+	return &value
 }
 
-func InvoiceTypePtrFromEnum(enum NullInvoiceTypeEnum) *string {
-	if enum.Valid {
-		str := string(enum.InvoiceTypeEnum)
-		return &str
+func InvoiceTypePtrFromEnum(value *InvoiceTypeEnum) *string {
+	if value == nil {
+		return nil
 	}
-	return nil
+	str := string(*value)
+	return &str
 }
 
-// LocationTypeEnum helpers
-func NullLocationTypeFromPtr(ptr *string) NullLocationTypeEnum {
-	if ptr != nil {
-		return NullLocationTypeEnum{
-			LocationTypeEnum: LocationTypeEnum(*ptr),
-			Valid:            true,
-		}
+func NullLocationTypeFromPtr(ptr *string) *LocationTypeEnum {
+	if ptr == nil {
+		return nil
 	}
-	return NullLocationTypeEnum{Valid: false}
+	value := LocationTypeEnum(*ptr)
+	return &value
 }
 
-func LocationTypePtrFromEnum(enum NullLocationTypeEnum) *string {
-	if enum.Valid {
-		str := string(enum.LocationTypeEnum)
-		return &str
+func LocationTypePtrFromEnum(value *LocationTypeEnum) *string {
+	if value == nil {
+		return nil
 	}
-	return nil
+	str := string(*value)
+	return &str
 }
 
-// NeededConsultationEnum helpers
-func NullNeededConsultationFromPtr(ptr *string) NullNeededConsultationEnum {
-	if ptr != nil {
-		return NullNeededConsultationEnum{
-			NeededConsultationEnum: NeededConsultationEnum(*ptr),
-			Valid:                  true,
-		}
+func NullNeededConsultationFromPtr(ptr *string) *NeededConsultationEnum {
+	if ptr == nil {
+		return nil
 	}
-	return NullNeededConsultationEnum{Valid: false}
+	value := NeededConsultationEnum(*ptr)
+	return &value
 }
 
-func NeededConsultationPtrFromEnum(enum NullNeededConsultationEnum) *string {
-	if enum.Valid {
-		str := string(enum.NeededConsultationEnum)
-		return &str
+func NeededConsultationPtrFromEnum(value *NeededConsultationEnum) *string {
+	if value == nil {
+		return nil
 	}
-	return nil
+	str := string(*value)
+	return &str
 }
 
-// NotificationTypeEnum helpers
-func NullNotificationTypeFromPtr(ptr *string) NullNotificationTypeEnum {
-	if ptr != nil {
-		return NullNotificationTypeEnum{
-			NotificationTypeEnum: NotificationTypeEnum(*ptr),
-			Valid:                true,
-		}
+func NullNotificationTypeFromPtr(ptr *string) *NotificationTypeEnum {
+	if ptr == nil {
+		return nil
 	}
-	return NullNotificationTypeEnum{Valid: false}
+	value := NotificationTypeEnum(*ptr)
+	return &value
 }
 
-func NotificationTypePtrFromEnum(enum NullNotificationTypeEnum) *string {
-	if enum.Valid {
-		str := string(enum.NotificationTypeEnum)
-		return &str
+func NotificationTypePtrFromEnum(value *NotificationTypeEnum) *string {
+	if value == nil {
+		return nil
 	}
-	return nil
+	str := string(*value)
+	return &str
 }
 
-// PaymentMethodEnum helpers
-func NullPaymentMethodFromPtr(ptr *string) NullPaymentMethodEnum {
-	if ptr != nil {
-		return NullPaymentMethodEnum{
-			PaymentMethodEnum: PaymentMethodEnum(*ptr),
-			Valid:             true,
-		}
+func NullPaymentMethodFromPtr(ptr *string) *PaymentMethodEnum {
+	if ptr == nil {
+		return nil
 	}
-	return NullPaymentMethodEnum{Valid: false}
+	value := PaymentMethodEnum(*ptr)
+	return &value
 }
 
-func PaymentMethodPtrFromEnum(enum NullPaymentMethodEnum) *string {
-	if enum.Valid {
-		str := string(enum.PaymentMethodEnum)
-		return &str
+func PaymentMethodPtrFromEnum(value *PaymentMethodEnum) *string {
+	if value == nil {
+		return nil
 	}
-	return nil
+	str := string(*value)
+	return &str
 }
 
-// PaymentStatusEnum helpers
-func NullPaymentStatusFromPtr(ptr *string) NullPaymentStatusEnum {
-	if ptr != nil {
-		return NullPaymentStatusEnum{
-			PaymentStatusEnum: PaymentStatusEnum(*ptr),
-			Valid:             true,
-		}
+func NullPaymentStatusFromPtr(ptr *string) *PaymentStatusEnum {
+	if ptr == nil {
+		return nil
 	}
-	return NullPaymentStatusEnum{Valid: false}
+	value := PaymentStatusEnum(*ptr)
+	return &value
 }
 
-func PaymentStatusPtrFromEnum(enum NullPaymentStatusEnum) *string {
-	if enum.Valid {
-		str := string(enum.PaymentStatusEnum)
-		return &str
+func PaymentStatusPtrFromEnum(value *PaymentStatusEnum) *string {
+	if value == nil {
+		return nil
 	}
-	return nil
+	str := string(*value)
+	return &str
 }
 
-// PhysicalInjuryEnum helpers
-func NullPhysicalInjuryFromPtr(ptr *string) NullPhysicalInjuryEnum {
-	if ptr != nil {
-		return NullPhysicalInjuryEnum{
-			PhysicalInjuryEnum: PhysicalInjuryEnum(*ptr),
-			Valid:              true,
-		}
+func NullPhysicalInjuryFromPtr(ptr *string) *PhysicalInjuryEnum {
+	if ptr == nil {
+		return nil
 	}
-	return NullPhysicalInjuryEnum{Valid: false}
+	value := PhysicalInjuryEnum(*ptr)
+	return &value
 }
 
-func PhysicalInjuryPtrFromEnum(enum NullPhysicalInjuryEnum) *string {
-	if enum.Valid {
-		str := string(enum.PhysicalInjuryEnum)
-		return &str
+func PhysicalInjuryPtrFromEnum(value *PhysicalInjuryEnum) *string {
+	if value == nil {
+		return nil
 	}
-	return nil
+	str := string(*value)
+	return &str
 }
 
-// PriceTimeUnitEnum helpers
-func NullPriceTimeUnitFromPtr(ptr *string) NullPriceTimeUnitEnum {
-	if ptr != nil {
-		return NullPriceTimeUnitEnum{
-			PriceTimeUnitEnum: PriceTimeUnitEnum(*ptr),
-			Valid:             true,
-		}
+func NullPriceTimeUnitFromPtr(ptr *string) *PriceTimeUnitEnum {
+	if ptr == nil {
+		return nil
 	}
-	return NullPriceTimeUnitEnum{Valid: false}
+	value := PriceTimeUnitEnum(*ptr)
+	return &value
 }
 
-func PriceTimeUnitPtrFromEnum(enum NullPriceTimeUnitEnum) *string {
-	if enum.Valid {
-		str := string(enum.PriceTimeUnitEnum)
-		return &str
+func PriceTimeUnitPtrFromEnum(value *PriceTimeUnitEnum) *string {
+	if value == nil {
+		return nil
 	}
-	return nil
+	str := string(*value)
+	return &str
 }
 
-// ProgressReportTypeEnum helpers
-func NullProgressReportTypeFromPtr(ptr *string) NullProgressReportTypeEnum {
-	if ptr != nil {
-		return NullProgressReportTypeEnum{
-			ProgressReportTypeEnum: ProgressReportTypeEnum(*ptr),
-			Valid:                  true,
-		}
+func NullProgressReportTypeFromPtr(ptr *string) *ProgressReportTypeEnum {
+	if ptr == nil {
+		return nil
 	}
-	return NullProgressReportTypeEnum{Valid: false}
+	value := ProgressReportTypeEnum(*ptr)
+	return &value
 }
 
-func ProgressReportTypePtrFromEnum(enum NullProgressReportTypeEnum) *string {
-	if enum.Valid {
-		str := string(enum.ProgressReportTypeEnum)
-		return &str
+func ProgressReportTypePtrFromEnum(value *ProgressReportTypeEnum) *string {
+	if value == nil {
+		return nil
 	}
-	return nil
+	str := string(*value)
+	return &str
 }
 
-// PsychologicalDamageEnum helpers
-func NullPsychologicalDamageFromPtr(ptr *string) NullPsychologicalDamageEnum {
-	if ptr != nil {
-		return NullPsychologicalDamageEnum{
-			PsychologicalDamageEnum: PsychologicalDamageEnum(*ptr),
-			Valid:                   true,
-		}
+func NullPsychologicalDamageFromPtr(ptr *string) *PsychologicalDamageEnum {
+	if ptr == nil {
+		return nil
 	}
-	return NullPsychologicalDamageEnum{Valid: false}
+	value := PsychologicalDamageEnum(*ptr)
+	return &value
 }
 
-func PsychologicalDamagePtrFromEnum(enum NullPsychologicalDamageEnum) *string {
-	if enum.Valid {
-		str := string(enum.PsychologicalDamageEnum)
-		return &str
+func PsychologicalDamagePtrFromEnum(value *PsychologicalDamageEnum) *string {
+	if value == nil {
+		return nil
 	}
-	return nil
+	str := string(*value)
+	return &str
 }
 
-// RecurrenceRiskEnum helpers
-func NullRecurrenceRiskFromPtr(ptr *string) NullRecurrenceRiskEnum {
-	if ptr != nil {
-		return NullRecurrenceRiskEnum{
-			RecurrenceRiskEnum: RecurrenceRiskEnum(*ptr),
-			Valid:              true,
-		}
+func NullRecurrenceRiskFromPtr(ptr *string) *RecurrenceRiskEnum {
+	if ptr == nil {
+		return nil
 	}
-	return NullRecurrenceRiskEnum{Valid: false}
+	value := RecurrenceRiskEnum(*ptr)
+	return &value
 }
 
-func RecurrenceRiskPtrFromEnum(enum NullRecurrenceRiskEnum) *string {
-	if enum.Valid {
-		str := string(enum.RecurrenceRiskEnum)
-		return &str
+func RecurrenceRiskPtrFromEnum(value *RecurrenceRiskEnum) *string {
+	if value == nil {
+		return nil
 	}
-	return nil
+	str := string(*value)
+	return &str
 }
 
-// RelationStatusEnum helpers
-func NullRelationStatusFromPtr(ptr *string) NullRelationStatusEnum {
-	if ptr != nil {
-		return NullRelationStatusEnum{
-			RelationStatusEnum: RelationStatusEnum(*ptr),
-			Valid:              true,
-		}
+func NullRelationStatusFromPtr(ptr *string) *RelationStatusEnum {
+	if ptr == nil {
+		return nil
 	}
-	return NullRelationStatusEnum{Valid: false}
+	value := RelationStatusEnum(*ptr)
+	return &value
 }
 
-func RelationStatusPtrFromEnum(enum NullRelationStatusEnum) *string {
-	if enum.Valid {
-		str := string(enum.RelationStatusEnum)
-		return &str
+func RelationStatusPtrFromEnum(value *RelationStatusEnum) *string {
+	if value == nil {
+		return nil
 	}
-	return nil
+	str := string(*value)
+	return &str
 }
 
-// SenderTypesEnum helpers
-func NullSenderTypesFromPtr(ptr *string) NullSenderTypesEnum {
-	if ptr != nil {
-		return NullSenderTypesEnum{
-			SenderTypesEnum: SenderTypesEnum(*ptr),
-			Valid:           true,
-		}
+func NullSenderTypesFromPtr(ptr *string) *SenderTypesEnum {
+	if ptr == nil {
+		return nil
 	}
-	return NullSenderTypesEnum{Valid: false}
+	value := SenderTypesEnum(*ptr)
+	return &value
 }
 
-func SenderTypesPtrFromEnum(enum NullSenderTypesEnum) *string {
-	if enum.Valid {
-		str := string(enum.SenderTypesEnum)
-		return &str
+func SenderTypesPtrFromEnum(value *SenderTypesEnum) *string {
+	if value == nil {
+		return nil
 	}
-	return nil
+	str := string(*value)
+	return &str
 }
 
-// SeverityOfIncidentEnum helpers
-func NullSeverityOfIncidentFromPtr(ptr *string) NullSeverityOfIncidentEnum {
-	if ptr != nil {
-		return NullSeverityOfIncidentEnum{
-			SeverityOfIncidentEnum: SeverityOfIncidentEnum(*ptr),
-			Valid:                  true,
-		}
+func NullSeverityOfIncidentFromPtr(ptr *string) *SeverityOfIncidentEnum {
+	if ptr == nil {
+		return nil
 	}
-	return NullSeverityOfIncidentEnum{Valid: false}
+	value := SeverityOfIncidentEnum(*ptr)
+	return &value
 }
 
-func SeverityOfIncidentPtrFromEnum(enum NullSeverityOfIncidentEnum) *string {
-	if enum.Valid {
-		str := string(enum.SeverityOfIncidentEnum)
-		return &str
+func SeverityOfIncidentPtrFromEnum(value *SeverityOfIncidentEnum) *string {
+	if value == nil {
+		return nil
 	}
-	return nil
+	str := string(*value)
+	return &str
 }

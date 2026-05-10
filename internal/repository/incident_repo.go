@@ -295,18 +295,20 @@ func followUpActionsToStrings(values []db.IncidentFollowUpActionEnum) []string {
 	return result
 }
 
-func nullIncidentTypeFromPtr(ptr *string) db.NullIncidentTypeEnum {
+func nullIncidentTypeFromPtr(ptr *string) *db.IncidentTypeEnum {
 	if ptr == nil {
-		return db.NullIncidentTypeEnum{Valid: false}
+		return nil
 	}
-	return db.NullIncidentTypeEnum{IncidentTypeEnum: db.IncidentTypeEnum(*ptr), Valid: true}
+	value := db.IncidentTypeEnum(*ptr)
+	return &value
 }
 
-func nullIncidentReporterInvolvementFromPtr(ptr *string) db.NullIncidentReporterInvolvementEnum {
+func nullIncidentReporterInvolvementFromPtr(ptr *string) *db.IncidentReporterInvolvementEnum {
 	if ptr == nil {
-		return db.NullIncidentReporterInvolvementEnum{Valid: false}
+		return nil
 	}
-	return db.NullIncidentReporterInvolvementEnum{IncidentReporterInvolvementEnum: db.IncidentReporterInvolvementEnum(*ptr), Valid: true}
+	value := db.IncidentReporterInvolvementEnum(*ptr)
+	return &value
 }
 
 func toDomainIncident(row *db.CreateIncidentRow) *domain.Incident {

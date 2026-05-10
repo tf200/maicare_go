@@ -317,14 +317,12 @@ func (r *ContractRepository) ListContracts(ctx context.Context, params domain.Li
 			}
 			return result
 		}(),
-		FinancingOption: func() db.NullFinancingOptionEnum {
+		FinancingOption: func() *db.FinancingOptionEnum {
 			if params.FinancingOption == nil {
-				return db.NullFinancingOptionEnum{Valid: false}
+				return nil
 			}
-			return db.NullFinancingOptionEnum{
-				FinancingOptionEnum: db.FinancingOptionEnum(*params.FinancingOption),
-				Valid:               true,
-			}
+			value := db.FinancingOptionEnum(*params.FinancingOption)
+			return &value
 		}(),
 	})
 	if err != nil {

@@ -71,6 +71,7 @@ type EmployeeDetail struct {
 	DepartmentName      *string
 	ManagerFirstName    *string
 	ManagerLastName     *string
+	Role                *EmployeeRole
 }
 
 // EmployeeProfile is the domain struct for the current user's profile (with permissions).

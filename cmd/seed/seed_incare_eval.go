@@ -72,13 +72,10 @@ func (s *Seeder) SeedOutOfCareClients(ctx context.Context, count int, evaluation
 			})
 
 			updatedClient, err := q.PutClientOutOfCare(ctx, db.PutClientOutOfCareParams{
-				ID:            client.ID,
-				Status:        db.ClientStatusEnumOutOfCare,
-				DischargeDate: pgDate(dischargeDate),
-				DischargeReason: db.NullDischargeReasonEnum{
-					DischargeReasonEnum: dischargeReason,
-					Valid:               true,
-				},
+				ID:              client.ID,
+				Status:          db.ClientStatusEnumOutOfCare,
+				DischargeDate:   pgDate(dischargeDate),
+				DischargeReason: &dischargeReason,
 				FinalEvaluation: stringPtr(finalEvaluation),
 			})
 			if err != nil {
@@ -316,7 +313,7 @@ func (s *Seeder) createCompletedEvaluationIfAllowed(ctx context.Context, q *db.Q
 			PeriodStart:             pgDate(periodStart),
 			PeriodEnd:               pgDate(periodEnd),
 			EvaluationIntervalWeeks: &intervalWeeks,
-			Status:                  db.NullEvaluationStatusEnum{Valid: false},
+			Status:                  nil,
 			OverallNotes:            &overallNotes,
 		})
 		if err != nil {
@@ -332,7 +329,8 @@ func (s *Seeder) createCompletedEvaluationIfAllowed(ctx context.Context, q *db.Q
 		}
 	}
 
-	if _, err := q.UpdateGoalEvaluation(ctx, db.UpdateGoalEvaluationParams{ID: eval.ID, Status: db.NullEvaluationStatusEnum{EvaluationStatusEnum: db.EvaluationStatusEnumCompleted, Valid: true}, EvaluationDate: pgtype.Date{}, PeriodStart: pgtype.Date{}, PeriodEnd: pgtype.Date{}}); err != nil {
+	completedStatus := db.EvaluationStatusEnumCompleted
+	if _, err := q.UpdateGoalEvaluation(ctx, db.UpdateGoalEvaluationParams{ID: eval.ID, Status: &completedStatus, EvaluationDate: pgtype.Date{}, PeriodStart: pgtype.Date{}, PeriodEnd: pgtype.Date{}}); err != nil {
 		return uuid.Nil, false, fmt.Errorf("mark evaluation as completed: %w", err)
 	}
 
@@ -375,7 +373,7 @@ func (s *Seeder) createDraftEvaluation(ctx context.Context, q *db.Queries, clien
 			PeriodStart:             pgDate(periodStart),
 			PeriodEnd:               pgDate(periodEnd),
 			EvaluationIntervalWeeks: &intervalWeeks,
-			Status:                  db.NullEvaluationStatusEnum{Valid: false},
+			Status:                  nil,
 			OverallNotes:            &overallNotes,
 		})
 		if err != nil {

@@ -77,9 +77,9 @@ func (r *IntakeFormRepository) CreateIntakeForm(ctx context.Context, params doma
 }
 
 func (r *IntakeFormRepository) ListIntakeForms(ctx context.Context, params domain.ListIntakeFormsParams) ([]domain.IntakeFormListItem, int64, error) {
-	status := db.NullIntakeConclusionEnum{}
+	var status *db.IntakeConclusionEnum
 	if params.Status != nil {
-		status = db.NullIntakeConclusionEnum{IntakeConclusionEnum: *params.Status, Valid: true}
+		status = params.Status
 	}
 
 	sortBy := ""
@@ -210,8 +210,8 @@ func (r *IntakeFormRepository) GetIntakeFormDetail(ctx context.Context, id uuid.
 		UpdatedAt:                row.UpdatedAt.Time,
 		ClientFirstName:          row.ClientFirstName,
 		ClientLastName:           row.ClientLastName,
-		ClientBsnNumber:           row.ClientBsnNumber,
-		DesiredGoals:              row.ClientGoals,
+		ClientBsnNumber:          row.ClientBsnNumber,
+		DesiredGoals:             row.ClientGoals,
 		SenderName:               row.SenderName,
 		Location:                 location,
 		IntakeGoalsAssigned:      intakeGoalsAssigned,
@@ -223,7 +223,7 @@ func (r *IntakeFormRepository) UpdateIntakeForm(ctx context.Context, params doma
 	dbParams := db.UpdateIntakeFormParams{
 		ID:                       params.ID,
 		DateOfIntake:             pgtype.Timestamptz{Time: *params.DateOfIntake, Valid: params.DateOfIntake != nil},
-		CareType:                 db.NullIntakeCareTypeEnum{IntakeCareTypeEnum: *params.CareType, Valid: params.CareType != nil},
+		CareType:                 db.NullIntakeCareTypeFromPtr((*string)(params.CareType)),
 		IntakeParticipants:       *params.IntakeParticipants,
 		SelfSufficiency:          params.SelfSufficiency,
 		SenderID:                 params.SenderID,
@@ -420,10 +420,10 @@ func (r *IntakeFormRepository) PromoteIntakeToClient(ctx context.Context, params
 		if err == nil && clientDetail.ID != uuid.Nil {
 			// Client already exists, return existing result
 			result = &domain.PromoteIntakeToClientResult{
-				ClientID:     clientDetail.ID,
-				IntakeFormID: params.IntakeFormID,
+				ClientID:           clientDetail.ID,
+				IntakeFormID:       params.IntakeFormID,
 				RegistrationFormID: intakeForm.RegistrationFormID,
-				Message:      "Client already exists",
+				Message:            "Client already exists",
 			}
 			return nil
 		}
@@ -447,7 +447,7 @@ func (r *IntakeFormRepository) PromoteIntakeToClient(ctx context.Context, params
 			Gender:                     regForm.ClientGender,
 			Email:                      regForm.ClientEmail,
 			PhoneNumber:                &regForm.ClientPhoneNumber,
-			CareType:                   db.NullIntakeCareTypeEnum{IntakeCareTypeEnum: intakeForm.CareType, Valid: true},
+			CareType:                   &intakeForm.CareType,
 			SenderID:                   intakeForm.SenderID,
 			LocationID:                 intakeForm.AssignedLocationID,
 			Street:                     regForm.ClientStreet,
@@ -657,5 +657,3 @@ func toDomainIntakeFormListItem(row db.ListIntakeFormsRow) domain.IntakeFormList
 		AssignedLocationAddress: address,
 	}
 }
-
-

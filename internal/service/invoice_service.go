@@ -30,9 +30,9 @@ var (
 )
 
 type InvoiceService struct {
-	store     *db.Store
-	logger    domain.Logger
-	storage   domain.Storage
+	store      *db.Store
+	logger     domain.Logger
+	storage    domain.Storage
 	pdfService domain.PDFService
 }
 
@@ -377,6 +377,8 @@ func (s *InvoiceService) CreateInvoice(ctx context.Context, params domain.Create
 	grossTotal := amountFromCents(grossTotalCents)
 	snapshotBytes, _ := json.Marshal(lines)
 
+	manualSource := db.InvoiceSourceEnumManual
+	conceptStatus := db.InvoiceStatusEnumConcept
 	updated, err := qtx.UpdateInvoice(ctx, db.UpdateInvoiceParams{
 		ID:                inv.ID,
 		IssueDate:         pgtype.Date{Valid: false},
@@ -385,7 +387,7 @@ func (s *InvoiceService) CreateInvoice(ctx context.Context, params domain.Create
 		PeriodEnd:         pgtype.Timestamptz{Valid: false},
 		BillingCycle:      nil,
 		BillingTimezone:   &billingTz,
-		Source:            db.NullInvoiceSourceEnum{Valid: true, InvoiceSourceEnum: db.InvoiceSourceEnumManual},
+		Source:            &manualSource,
 		OriginalInvoiceID: nil,
 		ReplacesInvoiceID: nil,
 		BillToSnapshot:    nil,
@@ -396,7 +398,7 @@ func (s *InvoiceService) CreateInvoice(ctx context.Context, params domain.Create
 		GrossTotalAmount:  &grossTotal,
 		Currency:          &currency,
 		ExtraContent:      nil,
-		Status:            db.NullInvoiceStatusEnum{Valid: true, InvoiceStatusEnum: db.InvoiceStatusEnumConcept},
+		Status:            &conceptStatus,
 		WarningCount:      nil,
 		RunID:             nil,
 		LockedAt:          pgtype.Timestamptz{Valid: false},
@@ -477,9 +479,10 @@ func (s *InvoiceService) ListInvoices(ctx context.Context, params domain.ListInv
 		}
 	}
 
-	source := db.NullInvoiceSourceEnum{Valid: false}
+	var source *db.InvoiceSourceEnum
 	if params.Source != nil {
-		source = db.NullInvoiceSourceEnum{InvoiceSourceEnum: db.InvoiceSourceEnum(*params.Source), Valid: true}
+		value := db.InvoiceSourceEnum(*params.Source)
+		source = &value
 	}
 
 	sortBy := params.SortBy
@@ -523,22 +526,22 @@ func (s *InvoiceService) ListInvoices(ctx context.Context, params domain.ListInv
 	resp := make([]domain.InvoiceListItem, 0, len(invoices))
 	for _, inv := range invoices {
 		resp = append(resp, domain.InvoiceListItem{
-			ID:              inv.ID,
-			InvoiceNumber:   inv.InvoiceNumber,
-			SenderName:      inv.SenderName,
-			IsOverdue:       inv.IsOverdue,
-			ClientFirstName: inv.ClientFirstName,
-			ClientLastName:  inv.ClientLastName,
+			ID:               inv.ID,
+			InvoiceNumber:    inv.InvoiceNumber,
+			SenderName:       inv.SenderName,
+			IsOverdue:        inv.IsOverdue,
+			ClientFirstName:  inv.ClientFirstName,
+			ClientLastName:   inv.ClientLastName,
 			ClientFilenumber: inv.ClientFilenumber,
-			Currency:        inv.Currency,
-			GrossTotal:      inv.GrossTotalAmount,
-			BalanceDue:      inv.BalanceDueAmount,
-			PaidTotal:       inv.PaidTotalAmount,
-			Status:          string(inv.Status),
-			IssueDate:       inv.IssueDate.Time,
-			DueDate:         inv.DueDate.Time,
-			ClientID:        inv.ClientID,
-			SenderID:        inv.SenderID,
+			Currency:         inv.Currency,
+			GrossTotal:       inv.GrossTotalAmount,
+			BalanceDue:       inv.BalanceDueAmount,
+			PaidTotal:        inv.PaidTotalAmount,
+			Status:           string(inv.Status),
+			IssueDate:        inv.IssueDate.Time,
+			DueDate:          inv.DueDate.Time,
+			ClientID:         inv.ClientID,
+			SenderID:         inv.SenderID,
 		})
 	}
 
@@ -656,7 +659,7 @@ func (s *InvoiceService) UpdateInvoice(ctx context.Context, invoiceID uuid.UUID,
 				grossAmt := amountFromCents(amts.grossCents)
 
 				updatedLine, err := qtx.UpdateInvoiceLine(ctx, db.UpdateInvoiceLineParams{
-					LineType:    db.NullInvoiceLineTypeEnum{Valid: false},
+					LineType:    nil,
 					ContractID:  nil,
 					ServiceType: nil,
 					Description: &description,
@@ -752,7 +755,7 @@ func (s *InvoiceService) UpdateInvoice(ctx context.Context, invoiceID uuid.UUID,
 		PeriodEnd:        pgtype.Timestamptz{Valid: false},
 		BillingCycle:     nil,
 		BillingTimezone:  nil,
-		Source:           db.NullInvoiceSourceEnum{Valid: false},
+		Source:           nil,
 		BillToSnapshot:   nil,
 		ClientSnapshot:   nil,
 		DetailsSnapshot:  detailsSnapshot,
@@ -761,7 +764,7 @@ func (s *InvoiceService) UpdateInvoice(ctx context.Context, invoiceID uuid.UUID,
 		GrossTotalAmount: grossTotalAmount,
 		Currency:         nil,
 		ExtraContent:     params.ExtraContent,
-		Status:           db.NullInvoiceStatusEnum{Valid: false},
+		Status:           nil,
 		WarningCount:     nil,
 		RunID:            nil,
 		LockedAt:         locked,
@@ -1135,28 +1138,28 @@ func (s *InvoiceService) generateInvoiceForTarget(ctx context.Context, p generat
 	})
 
 	updated, err := qtx.UpdateInvoice(ctx, db.UpdateInvoiceParams{
-		ID:                inv.ID,
-		IssueDate:         pgtype.Date{Valid: false},
-		DueDate:           pgtype.Date{Valid: false},
-		PeriodStart:       pgtype.Timestamptz{Valid: false},
-		PeriodEnd:         pgtype.Timestamptz{Valid: false},
-		BillingCycle:      nil,
-		BillingTimezone:   nil,
-		Source:            db.NullInvoiceSourceEnum{Valid: false},
-		BillToSnapshot:    nil,
-		ClientSnapshot:    nil,
-		DetailsSnapshot:   snapshotBytes,
-		NetTotalAmount:    &netTotal,
-		VatTotalAmount:    &vatTotal,
-		GrossTotalAmount:  &grossTotal,
-		Currency:          nil,
-		ExtraContent:      nil,
-		Status:            db.NullInvoiceStatusEnum{Valid: false},
-		WarningCount:      &wc,
-		RunID:             nil,
-		LockedAt:          pgtype.Timestamptz{Valid: false},
-		CalcVersion:       nil,
-		CalcMetadata:      calcMeta,
+		ID:               inv.ID,
+		IssueDate:        pgtype.Date{Valid: false},
+		DueDate:          pgtype.Date{Valid: false},
+		PeriodStart:      pgtype.Timestamptz{Valid: false},
+		PeriodEnd:        pgtype.Timestamptz{Valid: false},
+		BillingCycle:     nil,
+		BillingTimezone:  nil,
+		Source:           nil,
+		BillToSnapshot:   nil,
+		ClientSnapshot:   nil,
+		DetailsSnapshot:  snapshotBytes,
+		NetTotalAmount:   &netTotal,
+		VatTotalAmount:   &vatTotal,
+		GrossTotalAmount: &grossTotal,
+		Currency:         nil,
+		ExtraContent:     nil,
+		Status:           nil,
+		WarningCount:     &wc,
+		RunID:            nil,
+		LockedAt:         pgtype.Timestamptz{Valid: false},
+		CalcVersion:      nil,
+		CalcMetadata:     calcMeta,
 	})
 	if err != nil {
 		return nil, warningCount, fmt.Errorf("failed to update invoice totals: %w", err)
@@ -1326,7 +1329,7 @@ func (s *InvoiceService) CreditInvoice(ctx context.Context, invoiceID uuid.UUID,
 		PeriodEnd:         pgtype.Timestamptz{Valid: false},
 		BillingCycle:      nil,
 		BillingTimezone:   nil,
-		Source:            db.NullInvoiceSourceEnum{Valid: false},
+		Source:            nil,
 		OriginalInvoiceID: nil,
 		ReplacesInvoiceID: nil,
 		BillToSnapshot:    nil,
@@ -1337,7 +1340,7 @@ func (s *InvoiceService) CreditInvoice(ctx context.Context, invoiceID uuid.UUID,
 		GrossTotalAmount:  &grossTotal,
 		Currency:          nil,
 		ExtraContent:      nil,
-		Status:            db.NullInvoiceStatusEnum{Valid: false},
+		Status:            nil,
 		WarningCount:      nil,
 		RunID:             nil,
 		LockedAt:          pgtype.Timestamptz{Valid: false},
@@ -1811,7 +1814,7 @@ func (s *InvoiceService) UpdatePayment(ctx context.Context, invoiceID uuid.UUID,
 		if newStatus != originalInvoiceStatus {
 			updatedInvoice, err := qtx.UpdateInvoice(ctx, db.UpdateInvoiceParams{
 				ID:     invoiceID,
-				Status: db.NullInvoiceStatusEnum{InvoiceStatusEnum: newStatus, Valid: true},
+				Status: &newStatus,
 			})
 			if err != nil {
 				s.logger.LogError(ctx, "InvoiceService.UpdatePayment", "failed to update invoice status", err, zap.String("invoice_id", invoiceID.String()))
@@ -1899,7 +1902,7 @@ func (s *InvoiceService) DeletePayment(ctx context.Context, invoiceID uuid.UUID,
 		if newStatus != originalInvoiceStatus {
 			updatedInvoice, err := qtx.UpdateInvoice(ctx, db.UpdateInvoiceParams{
 				ID:     invoiceID,
-				Status: db.NullInvoiceStatusEnum{InvoiceStatusEnum: newStatus, Valid: true},
+				Status: &newStatus,
 			})
 			if err != nil {
 				s.logger.LogError(ctx, "InvoiceService.DeletePayment", "failed to update invoice status", err, zap.String("invoice_id", invoiceID.String()))

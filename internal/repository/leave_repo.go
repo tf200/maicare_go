@@ -277,18 +277,15 @@ func (r *leaveTxRepo) GetLeaveRequestForUpdate(ctx context.Context, leaveRequest
 func (r *leaveTxRepo) UpdateLeaveRequestEditableFields(ctx context.Context, leaveRequestID uuid.UUID, params domain.UpdateLeaveRequestParams) (*domain.LeaveRequest, error) {
 	row, err := r.store.UpdateLeaveRequestEditableFields(ctx, db.UpdateLeaveRequestEditableFieldsParams{
 		ID: leaveRequestID,
-		LeaveType: func() db.NullLeaveRequestTypeEnum {
+		LeaveType: func() *db.LeaveRequestTypeEnum {
 			if params.LeaveType == nil {
-				return db.NullLeaveRequestTypeEnum{}
+				return nil
 			}
 			leaveType, ok := toDBLeaveType(*params.LeaveType)
 			if !ok {
-				return db.NullLeaveRequestTypeEnum{}
+				return nil
 			}
-			return db.NullLeaveRequestTypeEnum{
-				LeaveRequestTypeEnum: leaveType,
-				Valid:                true,
-			}
+			return &leaveType
 		}(),
 		StartDate: func() pgtype.Date {
 			if params.StartDate == nil {
@@ -578,18 +575,15 @@ func toDBLeaveStatus(value string) (db.LeaveRequestStatusEnum, bool) {
 	}
 }
 
-func toDBNullLeaveStatus(value *string) db.NullLeaveRequestStatusEnum {
+func toDBNullLeaveStatus(value *string) *db.LeaveRequestStatusEnum {
 	if value == nil {
-		return db.NullLeaveRequestStatusEnum{}
+		return nil
 	}
 	parsed, ok := toDBLeaveStatus(*value)
 	if !ok {
-		return db.NullLeaveRequestStatusEnum{}
+		return nil
 	}
-	return db.NullLeaveRequestStatusEnum{
-		LeaveRequestStatusEnum: parsed,
-		Valid:                  true,
-	}
+	return &parsed
 }
 
 func trimStringPtr(value *string) *string {

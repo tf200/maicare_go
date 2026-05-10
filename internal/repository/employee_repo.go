@@ -355,7 +355,7 @@ func (r *EmployeeRepository) AddContractDetails(ctx context.Context, employeeID 
 		ContractHours:     params.ContractHours,
 		ContractStartDate: conv.PgDateFromTime(params.ContractStartDate),
 		ContractEndDate:   conv.PgDateFromTime(params.ContractEndDate),
-		ContractType:      db.NullEmployeeContractTypeEnum{},
+		ContractType:      nil,
 		ContractRate:      params.ContractRate,
 	})
 	if err != nil {
@@ -622,6 +622,7 @@ func toDomainEmployeeDetailFromGetEmployeeProfileByIDRow(row db.GetEmployeeProfi
 		DepartmentName:      row.DepartmentName,
 		ManagerFirstName:    row.ManagerFirstName,
 		ManagerLastName:     row.ManagerLastName,
+		Role:                toDomainEmployeeRole(row.RoleID, row.RoleName),
 	}
 }
 
@@ -771,12 +772,12 @@ func genderEnumFromString(value string) db.GenderEnum {
 	}
 }
 
-func nullGenderEnumFromPtr(value *string) db.NullGenderEnum {
+func nullGenderEnumFromPtr(value *string) *db.GenderEnum {
 	if value == nil {
-		return db.NullGenderEnum{}
+		return nil
 	}
-
-	return db.NullGenderEnum{GenderEnum: genderEnumFromString(*value), Valid: true}
+	gender := genderEnumFromString(*value)
+	return &gender
 }
 
 func contractTypeFromString(value string) db.EmployeeContractTypeEnum {
@@ -788,12 +789,22 @@ func contractTypeFromString(value string) db.EmployeeContractTypeEnum {
 	}
 }
 
-func nullContractTypeFromPtr(value *string) db.NullEmployeeContractTypeEnum {
-	if value == nil {
-		return db.NullEmployeeContractTypeEnum{}
+func toDomainEmployeeRole(id *uuid.UUID, name *string) *domain.EmployeeRole {
+	if id == nil || name == nil {
+		return nil
 	}
+	return &domain.EmployeeRole{
+		ID:   *id,
+		Name: *name,
+	}
+}
 
-	return db.NullEmployeeContractTypeEnum{EmployeeContractTypeEnum: contractTypeFromString(*value), Valid: true}
+func nullContractTypeFromPtr(value *string) *db.EmployeeContractTypeEnum {
+	if value == nil {
+		return nil
+	}
+	contractType := contractTypeFromString(*value)
+	return &contractType
 }
 
 var _ domain.EmployeeRepository = (*EmployeeRepository)(nil)

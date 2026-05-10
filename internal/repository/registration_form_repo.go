@@ -677,11 +677,12 @@ func calculateRiskCount(
 	return count
 }
 
-func nullAdmissionTypeEnumFromPtr(value *string) db.NullAdmissionTypeEnum {
+func nullAdmissionTypeEnumFromPtr(value *string) *db.AdmissionTypeEnum {
 	if value == nil {
-		return db.NullAdmissionTypeEnum{}
+		return nil
 	}
-	return db.NullAdmissionTypeEnum{AdmissionTypeEnum: db.AdmissionTypeEnum(*value), Valid: true}
+	admissionType := db.AdmissionTypeEnum(*value)
+	return &admissionType
 }
 
 func randomString(n int) string {

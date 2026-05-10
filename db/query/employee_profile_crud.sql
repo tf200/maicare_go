@@ -137,11 +137,15 @@ SELECT
     cu.profile_picture as profile_picture,
     d.name AS department_name,
     mgr.first_name AS manager_first_name,
-    mgr.last_name AS manager_last_name
+    mgr.last_name AS manager_last_name,
+    r.id AS role_id,
+    r.name AS role_name
 FROM employee_profile ep
 JOIN custom_user cu ON ep.user_id = cu.id
 LEFT JOIN departments d ON d.id = ep.department_id
 LEFT JOIN employee_profile mgr ON mgr.id = ep.manager_employee_id
+LEFT JOIN user_roles ur ON ur.user_id = ep.user_id
+LEFT JOIN roles r ON r.id = ur.role_id
 WHERE ep.id = $1;
 
 -- name: UpdateEmployeeProfile :one

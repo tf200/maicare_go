@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
-	"github.com/goccy/go-json"
 	"fmt"
+	"github.com/goccy/go-json"
 	"strings"
 
 	db "maicare_go/db/sqlc"
@@ -78,13 +78,10 @@ func (s *Seeder) SeedWaitingListClients(ctx context.Context, count int) error {
 				FormStatus:                db.FormStatusEnumProcessed,
 				ProcessedByEmployeeID:     nil,
 				IntakeAppointmentLocation: stringPtr("Office"),
-				AddmissionType: db.NullAdmissionTypeEnum{
-					AdmissionTypeEnum: admissionType,
-					Valid:             true,
-				},
-				IntakeOptions:   []byte("[]"),
-				IntakeToken:     stringPtr(uuid.NewString()),
-				RejectionReason: nil,
+				AddmissionType:            &admissionType,
+				IntakeOptions:             []byte("[]"),
+				IntakeToken:               stringPtr(uuid.NewString()),
+				RejectionReason:           nil,
 			})
 			if err != nil {
 				return fmt.Errorf("update registration form status: %w", err)
@@ -151,7 +148,7 @@ func (s *Seeder) SeedWaitingListClients(ctx context.Context, count int) error {
 				Email:                      registrationForm.ClientEmail,
 				PhoneNumber:                &registrationForm.ClientPhoneNumber,
 				Gender:                     registrationForm.ClientGender,
-				CareType:                   db.NullIntakeCareTypeEnum{IntakeCareTypeEnum: intakeForm.CareType, Valid: true},
+				CareType:                   &intakeForm.CareType,
 				SenderID:                   intakeForm.SenderID,
 				LocationID:                 intakeForm.AssignedLocationID,
 				Street:                     registrationForm.ClientStreet,
@@ -198,7 +195,7 @@ func (s *Seeder) SeedWaitingListClients(ctx context.Context, count int) error {
 			}
 
 			if registrationForm.Guardian1FirstName != "" {
-				relationStatus := db.NullRelationStatusEnum{RelationStatusEnum: db.RelationStatusEnumPrimaryRelationship, Valid: true}
+				relationStatus := db.RelationStatusEnumPrimaryRelationship
 				if _, err := q.CreateEmemrgencyContact(ctx, db.CreateEmemrgencyContactParams{
 					ClientID:         client.ID,
 					FirstName:        &registrationForm.Guardian1FirstName,
@@ -206,7 +203,7 @@ func (s *Seeder) SeedWaitingListClients(ctx context.Context, count int) error {
 					Email:            &registrationForm.Guardian1Email,
 					PhoneNumber:      &registrationForm.Guardian1PhoneNumber,
 					Relationship:     &registrationForm.Guardian1Relationship,
-					RelationStatus:   relationStatus,
+					RelationStatus:   &relationStatus,
 					MedicalReports:   true,
 					IncidentsReports: true,
 					GoalsReports:     true,
@@ -216,7 +213,7 @@ func (s *Seeder) SeedWaitingListClients(ctx context.Context, count int) error {
 			}
 
 			if registrationForm.Guardian2FirstName != "" {
-				relationStatus := db.NullRelationStatusEnum{RelationStatusEnum: db.RelationStatusEnumSecondaryRelationship, Valid: true}
+				relationStatus := db.RelationStatusEnumSecondaryRelationship
 				if _, err := q.CreateEmemrgencyContact(ctx, db.CreateEmemrgencyContactParams{
 					ClientID:         client.ID,
 					FirstName:        &registrationForm.Guardian2FirstName,
@@ -224,7 +221,7 @@ func (s *Seeder) SeedWaitingListClients(ctx context.Context, count int) error {
 					Email:            &registrationForm.Guardian2Email,
 					PhoneNumber:      &registrationForm.Guardian2PhoneNumber,
 					Relationship:     &registrationForm.Guardian2Relationship,
-					RelationStatus:   relationStatus,
+					RelationStatus:   &relationStatus,
 					MedicalReports:   false,
 					IncidentsReports: true,
 					GoalsReports:     true,
@@ -294,13 +291,10 @@ func (s *Seeder) SeedOtherIntakeForms(ctx context.Context, count int) error {
 				FormStatus:                db.FormStatusEnumProcessed,
 				ProcessedByEmployeeID:     nil,
 				IntakeAppointmentLocation: stringPtr("Office"),
-				AddmissionType: db.NullAdmissionTypeEnum{
-					AdmissionTypeEnum: admissionType,
-					Valid:             true,
-				},
-				IntakeOptions:   []byte("[]"),
-				IntakeToken:     stringPtr(uuid.NewString()),
-				RejectionReason: nil,
+				AddmissionType:            &admissionType,
+				IntakeOptions:             []byte("[]"),
+				IntakeToken:               stringPtr(uuid.NewString()),
+				RejectionReason:           nil,
 			})
 			if err != nil {
 				return fmt.Errorf("update registration form status: %w", err)

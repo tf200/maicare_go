@@ -363,17 +363,14 @@ func (r *ScheduleRepository) ListMyShiftSwapRequests(ctx context.Context, employ
 
 func (r *ScheduleRepository) ListShiftSwapRequests(ctx context.Context, params domain.ListShiftSwapRequestsParams) (*domain.ShiftSwapPage, error) {
 	queryArg := db.ListShiftSwapRequestsPaginatedParams{
-		Status:     db.NullShiftSwapStatusEnum{},
+		Status:     nil,
 		EmployeeID: params.EmployeeID,
 		Limit:      params.Limit,
 		Offset:     params.Offset,
 	}
 	if params.Status != nil {
 		if parsed, ok := parseDBShiftSwapStatus(*params.Status); ok {
-			queryArg.Status = db.NullShiftSwapStatusEnum{
-				ShiftSwapStatusEnum: parsed,
-				Valid:               true,
-			}
+			queryArg.Status = &parsed
 		}
 	}
 

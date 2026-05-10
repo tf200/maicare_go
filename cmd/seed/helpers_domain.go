@@ -122,13 +122,14 @@ func buildProposedGoals(topicName string) []map[string]string {
 	}
 }
 
-func contractSettingsFromIntakeCareType(careType db.NullIntakeCareTypeEnum) (db.CareTypeEnum, db.PriceTimeUnitEnum, *float64, db.NullHoursTypeEnum) {
-	if careType.Valid && careType.IntakeCareTypeEnum == db.IntakeCareTypeEnumAmbulatorySupport {
+func contractSettingsFromIntakeCareType(careType *db.IntakeCareTypeEnum) (db.CareTypeEnum, db.PriceTimeUnitEnum, *float64, *db.HoursTypeEnum) {
+	if careType != nil && *careType == db.IntakeCareTypeEnumAmbulatorySupport {
 		hours := float64(gofakeit.Number(4, 24))
-		return db.CareTypeEnumAmbulante, db.PriceTimeUnitEnumHourly, &hours, db.NullHoursTypeEnum{HoursTypeEnum: db.HoursTypeEnumWeekly, Valid: true}
+		hoursType := db.HoursTypeEnumWeekly
+		return db.CareTypeEnumAmbulante, db.PriceTimeUnitEnumHourly, &hours, &hoursType
 	}
 
-	return db.CareTypeEnumAccommodation, db.PriceTimeUnitEnumWeekly, nil, db.NullHoursTypeEnum{Valid: false}
+	return db.CareTypeEnumAccommodation, db.PriceTimeUnitEnumWeekly, nil, nil
 }
 
 func randomGoals() []string {
