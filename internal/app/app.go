@@ -281,6 +281,7 @@ type appHandlers struct {
 	auth             *handler.AuthHandler
 	client           *handler.ClientHandler
 	contract         *handler.ContractHandler
+	dashboard        *handler.DashboardHandler
 	employee         *handler.EmployeeHandler
 	handbook         *handler.HandbookHandler
 	incident         *handler.IncidentHandler
@@ -305,6 +306,7 @@ func wireServicesAndHandlers(store *db.Store, logger domain.Logger, tokenMaker d
 	authRepo := repository.NewAuthRepository(store)
 	clientRepo := repository.NewClientRepository(store)
 	contractRepo := repository.NewContractRepository(store)
+	dashboardRepo := repository.NewDashboardRepository(store)
 	employeeRepo := repository.NewEmployeeRepository(store)
 	handbookRepo := repository.NewHandbookRepository(store)
 	incidentRepo := repository.NewIncidentRepository(store)
@@ -331,6 +333,7 @@ func wireServicesAndHandlers(store *db.Store, logger domain.Logger, tokenMaker d
 	authSvc := service.NewAuthService(authRepo, tokenMaker, logger, auditLogger, cfg.AccessTokenDuration, cfg.RefreshTokenDuration, cfg.TwoFATokenDuration)
 	clientSvc := service.NewClientService(clientRepo, taskQueue, storage, aiService, pdfService, logger, auditLogger)
 	contractSvc := service.NewContractService(contractRepo, storage, logger)
+	dashboardSvc := service.NewDashboardService(dashboardRepo, logger, auditLogger)
 	employeeSvc := service.NewEmployeeService(employeeRepo, logger)
 	handbookSvc := service.NewHandbookService(handbookRepo, logger)
 	incidentSvc := service.NewIncidentService(incidentRepo, incidentPDFGenerator, taskQueue, logger)
@@ -351,6 +354,7 @@ func wireServicesAndHandlers(store *db.Store, logger domain.Logger, tokenMaker d
 		auth:             handler.NewAuthHandler(authSvc),
 		client:           handler.NewClientHandler(clientSvc),
 		contract:         handler.NewContractHandler(contractSvc),
+		dashboard:        handler.NewDashboardHandler(dashboardSvc),
 		employee:         handler.NewEmployeeHandler(employeeSvc),
 		handbook:         handler.NewHandbookHandler(handbookSvc),
 		incident:         handler.NewIncidentHandler(incidentSvc),
@@ -394,6 +398,7 @@ func newRouter(cfg config.Config, logger domain.Logger, tokenMaker domain.TokenM
 	handler.RegisterClientRoutes(base, handlers.client, auth, requirePermission)
 	handler.RegisterEvaluationRoutes(base, handlers.client, auth, requirePermission)
 	handler.RegisterContractRoutes(base, handlers.contract, auth, requirePermission)
+	handler.RegisterDashboardRoutes(base, handlers.dashboard, auth, requirePermission)
 	handler.RegisterEmployeeRoutes(base, handlers.employee, auth, requirePermission)
 	handler.RegisterHandbookRoutes(base, handlers.handbook, auth, requirePermission)
 	handler.RegisterIncidentRoutes(base, handlers.incident, auth, requirePermission)

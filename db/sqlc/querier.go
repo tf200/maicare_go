@@ -157,6 +157,7 @@ type Querier interface {
 	GetActiveEmployeeHandbookByEmployeeID(ctx context.Context, employeeID uuid.UUID) (GetActiveEmployeeHandbookByEmployeeIDRow, error)
 	GetActiveHandbookTemplateByDepartment(ctx context.Context, departmentID uuid.UUID) (HandbookTemplate, error)
 	GetActiveLeavePolicyByType(ctx context.Context, leaveType LeaveRequestTypeEnum) (LeavePolicy, error)
+	GetAdminDashboardStatCards(ctx context.Context) (GetAdminDashboardStatCardsRow, error)
 	// Returns the ID of the admin role.
 	GetAdminRoleId(ctx context.Context) (uuid.UUID, error)
 	GetAiGeneratedReport(ctx context.Context, id uuid.UUID) (AiGeneratedReport, error)
@@ -299,6 +300,7 @@ type Querier interface {
 	ListContractTypes(ctx context.Context) ([]ContractType, error)
 	ListContracts(ctx context.Context, arg ListContractsParams) ([]ListContractsRow, error)
 	ListContractsTobeReminded(ctx context.Context) ([]ListContractsTobeRemindedRow, error)
+	ListDashboardRegistrationsToday(ctx context.Context, limit int32) ([]ListDashboardRegistrationsTodayRow, error)
 	ListDepartments(ctx context.Context) ([]ListDepartmentsRow, error)
 	ListDueScheduledOutOfCareMissingFinalEvaluation(ctx context.Context) ([]uuid.UUID, error)
 	ListEducations(ctx context.Context, employeeID uuid.UUID) ([]EmployeeEducation, error)
@@ -363,6 +365,7 @@ type Querier interface {
 	ListSeriesExceptionsStartingInRange(ctx context.Context, arg ListSeriesExceptionsStartingInRangeParams) ([]CalendarEvent, error)
 	ListShiftSwapRequestsPaginated(ctx context.Context, arg ListShiftSwapRequestsPaginatedParams) ([]ListShiftSwapRequestsPaginatedRow, error)
 	ListSubmittedEvaluationsByClient(ctx context.Context, arg ListSubmittedEvaluationsByClientParams) ([]ListSubmittedEvaluationsByClientRow, error)
+	ListTopAdminActions(ctx context.Context, limit int32) ([]ListTopAdminActionsRow, error)
 	ListTopEmergencyContactsByClientID(ctx context.Context, clientID uuid.UUID) ([]ListTopEmergencyContactsByClientIDRow, error)
 	// ==========================================
 	// Invoicing Helpers
