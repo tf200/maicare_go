@@ -128,6 +128,19 @@ JOIN employee_profile ep ON ua.employee_id = ep.id
 JOIN client_details cl ON ua.client_id = cl.id
 LEFT JOIN location l ON cl.location_id = l.id;
 
+-- name: UpsertMainCoordinatorByEmployee :exec
+INSERT INTO assigned_employee (
+    client_id,
+    employee_id,
+    start_date,
+    role
+) VALUES (
+    $1, $2, CURRENT_DATE, 'coordinator'
+)
+ON CONFLICT (client_id) WHERE role = 'coordinator'
+DO UPDATE SET
+    employee_id = EXCLUDED.employee_id;
+
 
 
 

@@ -202,6 +202,7 @@ type UpdateClientParams struct {
 	WorkCurrentPosition        *string
 	WorkStartDate              time.Time
 	WorkAdditionalNotes        *string
+	CoordinatorEmployeeID      *uuid.UUID
 }
 
 type ClientAddress struct {

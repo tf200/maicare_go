@@ -801,7 +801,71 @@ func calculateAge(dateOfBirth pgtype.Date) *int32 {
 }
 
 func (r *ClientRepository) UpdateClient(ctx context.Context, id uuid.UUID, params domain.UpdateClientParams) (*domain.Client, error) {
-	return nil, errors.New("UpdateClient is not yet implemented")
+	var updated db.ClientDetail
+
+	var gender *db.GenderEnum
+	if params.Gender != nil {
+		value := db.GenderEnum(*params.Gender)
+		gender = &value
+	}
+	var educationLevel *db.EducationLevelEnum
+	if params.EducationLevel != nil {
+		value := db.EducationLevelEnum(*params.EducationLevel)
+		educationLevel = &value
+	}
+
+	err := r.store.ExecTx(ctx, func(q *db.Queries) error {
+		var err error
+		updated, err = q.UpdateClientDetailsV2(ctx, db.UpdateClientDetailsV2Params{
+			ID:                         id,
+			FirstName:                  params.FirstName,
+			LastName:                   params.LastName,
+			DateOfBirth:                conv.PgDateFromTime(params.DateOfBirth),
+			Identity:                   params.Identity,
+			Bsn:                        params.Bsn,
+			BsnVerifiedBy:              params.BsnVerifiedBy,
+			Email:                      params.Email,
+			PhoneNumber:                params.PhoneNumber,
+			Gender:                     gender,
+			Filenumber:                 params.Filenumber,
+			SenderID:                   params.SenderID,
+			LocationID:                 params.LocationID,
+			EducationCurrentlyEnrolled: params.EducationCurrentlyEnrolled,
+			EducationInstitution:       params.EducationInstitution,
+			EducationMentorName:        params.EducationMentorName,
+			EducationMentorPhone:       params.EducationMentorPhone,
+			EducationMentorEmail:       params.EducationMentorEmail,
+			EducationAdditionalNotes:   params.EducationAdditionalNotes,
+			EducationLevel:             educationLevel,
+			WorkCurrentlyEmployed:      params.WorkCurrentlyEmployed,
+			WorkCurrentEmployer:        params.WorkCurrentEmployer,
+			WorkCurrentEmployerPhone:   params.WorkCurrentEmployerPhone,
+			WorkCurrentEmployerEmail:   params.WorkCurrentEmployerEmail,
+			WorkCurrentPosition:        params.WorkCurrentPosition,
+			WorkStartDate:              conv.PgDateFromTime(params.WorkStartDate),
+			WorkAdditionalNotes:        params.WorkAdditionalNotes,
+			Nationality:                params.Nationality,
+		})
+		if err != nil {
+			return err
+		}
+
+		if params.CoordinatorEmployeeID != nil {
+			if err := q.UpsertMainCoordinatorByEmployee(ctx, db.UpsertMainCoordinatorByEmployeeParams{
+				ClientID:   id,
+				EmployeeID: *params.CoordinatorEmployeeID,
+			}); err != nil {
+				return fmt.Errorf("failed to update main coordinator: %w", err)
+			}
+		}
+
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return toDomainClient(updated), nil
 }
 
 func (r *ClientRepository) GetClientAddresses(ctx context.Context, id uuid.UUID) ([]domain.ClientAddress, error) {

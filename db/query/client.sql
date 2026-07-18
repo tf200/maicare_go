@@ -402,6 +402,39 @@ ORDER BY c.end_date ASC;
 -- WHERE id = $1
 -- RETURNING *;
 
+-- name: UpdateClientDetailsV2 :one
+UPDATE client_details
+SET
+    first_name = COALESCE(sqlc.narg('first_name'), first_name),
+    last_name = COALESCE(sqlc.narg('last_name'), last_name),
+    date_of_birth = COALESCE(sqlc.narg('date_of_birth'), date_of_birth),
+    "identity" = COALESCE(sqlc.narg('identity'), "identity"),
+    bsn = COALESCE(sqlc.narg('bsn'), bsn),
+    bsn_verified_by = COALESCE(sqlc.narg('bsn_verified_by'), bsn_verified_by),
+    email = COALESCE(sqlc.narg('email'), email),
+    phone_number = COALESCE(sqlc.narg('phone_number'), phone_number),
+    gender = COALESCE(sqlc.narg('gender'), gender),
+    filenumber = COALESCE(sqlc.narg('filenumber'), filenumber),
+    sender_id = COALESCE(sqlc.narg('sender_id'), sender_id),
+    location_id = COALESCE(sqlc.narg('location_id'), location_id),
+    education_currently_enrolled = COALESCE(sqlc.narg('education_currently_enrolled'), education_currently_enrolled),
+    education_institution = COALESCE(sqlc.narg('education_institution'), education_institution),
+    education_mentor_name = COALESCE(sqlc.narg('education_mentor_name'), education_mentor_name),
+    education_mentor_phone = COALESCE(sqlc.narg('education_mentor_phone'), education_mentor_phone),
+    education_mentor_email = COALESCE(sqlc.narg('education_mentor_email'), education_mentor_email),
+    education_additional_notes = COALESCE(sqlc.narg('education_additional_notes'), education_additional_notes),
+    education_level = COALESCE(sqlc.narg('education_level'), education_level),
+    work_currently_employed = COALESCE(sqlc.narg('work_currently_employed'), work_currently_employed),
+    work_current_employer = COALESCE(sqlc.narg('work_current_employer'), work_current_employer),
+    work_current_employer_phone = COALESCE(sqlc.narg('work_current_employer_phone'), work_current_employer_phone),
+    work_current_employer_email = COALESCE(sqlc.narg('work_current_employer_email'), work_current_employer_email),
+    work_current_position = COALESCE(sqlc.narg('work_current_position'), work_current_position),
+    work_start_date = COALESCE(sqlc.narg('work_start_date'), work_start_date),
+    work_additional_notes = COALESCE(sqlc.narg('work_additional_notes'), work_additional_notes),
+    nationality = COALESCE(sqlc.narg('nationality'), nationality)
+WHERE id = $1
+RETURNING *;
+
 -- name: UpdateClientStatus :one
 UPDATE client_details
 SET status = $2

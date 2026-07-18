@@ -1885,18 +1885,71 @@ func (q *Queries) PutClientOutOfCare(ctx context.Context, arg PutClientOutOfCare
 	return i, err
 }
 
-const updateClientStatus = `-- name: UpdateClientStatus :one
+const updateClientDetailsV2 = `-- name: UpdateClientDetailsV2 :one
 
 
 UPDATE client_details
-SET status = $2
+SET
+    first_name = COALESCE($2, first_name),
+    last_name = COALESCE($3, last_name),
+    date_of_birth = COALESCE($4, date_of_birth),
+    "identity" = COALESCE($5, "identity"),
+    bsn = COALESCE($6, bsn),
+    bsn_verified_by = COALESCE($7, bsn_verified_by),
+    email = COALESCE($8, email),
+    phone_number = COALESCE($9, phone_number),
+    gender = COALESCE($10, gender),
+    filenumber = COALESCE($11, filenumber),
+    sender_id = COALESCE($12, sender_id),
+    location_id = COALESCE($13, location_id),
+    education_currently_enrolled = COALESCE($14, education_currently_enrolled),
+    education_institution = COALESCE($15, education_institution),
+    education_mentor_name = COALESCE($16, education_mentor_name),
+    education_mentor_phone = COALESCE($17, education_mentor_phone),
+    education_mentor_email = COALESCE($18, education_mentor_email),
+    education_additional_notes = COALESCE($19, education_additional_notes),
+    education_level = COALESCE($20, education_level),
+    work_currently_employed = COALESCE($21, work_currently_employed),
+    work_current_employer = COALESCE($22, work_current_employer),
+    work_current_employer_phone = COALESCE($23, work_current_employer_phone),
+    work_current_employer_email = COALESCE($24, work_current_employer_email),
+    work_current_position = COALESCE($25, work_current_position),
+    work_start_date = COALESCE($26, work_start_date),
+    work_additional_notes = COALESCE($27, work_additional_notes),
+    nationality = COALESCE($28, nationality)
 WHERE id = $1
 RETURNING id, intake_form_id, registration_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, evaluation_intervals_weeks, care_type, email, phone_number, gender, filenumber, created_at, placed_in_care_at, care_start_date, last_evaluation_anchor_date, next_evaluation_date, discharge_date, discharge_reason, final_evaluation, sender_id, location_id, street, house_number, house_number_addition, postal_code, city, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, nationality, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes
 `
 
-type UpdateClientStatusParams struct {
-	ID     uuid.UUID        `json:"id"`
-	Status ClientStatusEnum `json:"status"`
+type UpdateClientDetailsV2Params struct {
+	ID                         uuid.UUID           `json:"id"`
+	FirstName                  *string             `json:"first_name"`
+	LastName                   *string             `json:"last_name"`
+	DateOfBirth                pgtype.Date         `json:"date_of_birth"`
+	Identity                   *bool               `json:"identity"`
+	Bsn                        *string             `json:"bsn"`
+	BsnVerifiedBy              *uuid.UUID          `json:"bsn_verified_by"`
+	Email                      *string             `json:"email"`
+	PhoneNumber                *string             `json:"phone_number"`
+	Gender                     *GenderEnum         `json:"gender"`
+	Filenumber                 *string             `json:"filenumber"`
+	SenderID                   *uuid.UUID          `json:"sender_id"`
+	LocationID                 *uuid.UUID          `json:"location_id"`
+	EducationCurrentlyEnrolled *bool               `json:"education_currently_enrolled"`
+	EducationInstitution       *string             `json:"education_institution"`
+	EducationMentorName        *string             `json:"education_mentor_name"`
+	EducationMentorPhone       *string             `json:"education_mentor_phone"`
+	EducationMentorEmail       *string             `json:"education_mentor_email"`
+	EducationAdditionalNotes   *string             `json:"education_additional_notes"`
+	EducationLevel             *EducationLevelEnum `json:"education_level"`
+	WorkCurrentlyEmployed      *bool               `json:"work_currently_employed"`
+	WorkCurrentEmployer        *string             `json:"work_current_employer"`
+	WorkCurrentEmployerPhone   *string             `json:"work_current_employer_phone"`
+	WorkCurrentEmployerEmail   *string             `json:"work_current_employer_email"`
+	WorkCurrentPosition        *string             `json:"work_current_position"`
+	WorkStartDate              pgtype.Date         `json:"work_start_date"`
+	WorkAdditionalNotes        *string             `json:"work_additional_notes"`
+	Nationality                *string             `json:"nationality"`
 }
 
 // -- name: UpdateClientDetails :one
@@ -1938,6 +1991,113 @@ type UpdateClientStatusParams struct {
 //
 // WHERE id = $1
 // RETURNING *;
+func (q *Queries) UpdateClientDetailsV2(ctx context.Context, arg UpdateClientDetailsV2Params) (ClientDetail, error) {
+	row := q.db.QueryRow(ctx, updateClientDetailsV2,
+		arg.ID,
+		arg.FirstName,
+		arg.LastName,
+		arg.DateOfBirth,
+		arg.Identity,
+		arg.Bsn,
+		arg.BsnVerifiedBy,
+		arg.Email,
+		arg.PhoneNumber,
+		arg.Gender,
+		arg.Filenumber,
+		arg.SenderID,
+		arg.LocationID,
+		arg.EducationCurrentlyEnrolled,
+		arg.EducationInstitution,
+		arg.EducationMentorName,
+		arg.EducationMentorPhone,
+		arg.EducationMentorEmail,
+		arg.EducationAdditionalNotes,
+		arg.EducationLevel,
+		arg.WorkCurrentlyEmployed,
+		arg.WorkCurrentEmployer,
+		arg.WorkCurrentEmployerPhone,
+		arg.WorkCurrentEmployerEmail,
+		arg.WorkCurrentPosition,
+		arg.WorkStartDate,
+		arg.WorkAdditionalNotes,
+		arg.Nationality,
+	)
+	var i ClientDetail
+	err := row.Scan(
+		&i.ID,
+		&i.IntakeFormID,
+		&i.RegistrationFormID,
+		&i.FirstName,
+		&i.LastName,
+		&i.DateOfBirth,
+		&i.Identity,
+		&i.Status,
+		&i.Bsn,
+		&i.BsnVerifiedBy,
+		&i.EvaluationIntervalsWeeks,
+		&i.CareType,
+		&i.Email,
+		&i.PhoneNumber,
+		&i.Gender,
+		&i.Filenumber,
+		&i.CreatedAt,
+		&i.PlacedInCareAt,
+		&i.CareStartDate,
+		&i.LastEvaluationAnchorDate,
+		&i.NextEvaluationDate,
+		&i.DischargeDate,
+		&i.DischargeReason,
+		&i.FinalEvaluation,
+		&i.SenderID,
+		&i.LocationID,
+		&i.Street,
+		&i.HouseNumber,
+		&i.HouseNumberAddition,
+		&i.PostalCode,
+		&i.City,
+		&i.EducationCurrentlyEnrolled,
+		&i.EducationInstitution,
+		&i.EducationMentorName,
+		&i.EducationMentorPhone,
+		&i.EducationMentorEmail,
+		&i.EducationAdditionalNotes,
+		&i.EducationLevel,
+		&i.WorkCurrentlyEmployed,
+		&i.WorkCurrentEmployer,
+		&i.WorkCurrentEmployerPhone,
+		&i.WorkCurrentEmployerEmail,
+		&i.WorkCurrentPosition,
+		&i.WorkStartDate,
+		&i.WorkAdditionalNotes,
+		&i.Nationality,
+		&i.RiskAggressiveBehavior,
+		&i.RiskSuicidalSelfharm,
+		&i.RiskSubstanceAbuse,
+		&i.RiskPsychiatricIssues,
+		&i.RiskCriminalHistory,
+		&i.RiskFlightBehavior,
+		&i.RiskWeaponPossession,
+		&i.RiskSexualBehavior,
+		&i.RiskDayNightRhythm,
+		&i.RiskOther,
+		&i.RiskOtherDescription,
+		&i.RiskAdditionalNotes,
+	)
+	return i, err
+}
+
+const updateClientStatus = `-- name: UpdateClientStatus :one
+UPDATE client_details
+SET status = $2
+WHERE id = $1
+RETURNING id, intake_form_id, registration_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, evaluation_intervals_weeks, care_type, email, phone_number, gender, filenumber, created_at, placed_in_care_at, care_start_date, last_evaluation_anchor_date, next_evaluation_date, discharge_date, discharge_reason, final_evaluation, sender_id, location_id, street, house_number, house_number_addition, postal_code, city, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, nationality, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes
+`
+
+type UpdateClientStatusParams struct {
+	ID     uuid.UUID        `json:"id"`
+	Status ClientStatusEnum `json:"status"`
+}
+
 func (q *Queries) UpdateClientStatus(ctx context.Context, arg UpdateClientStatusParams) (ClientDetail, error) {
 	row := q.db.QueryRow(ctx, updateClientStatus, arg.ID, arg.Status)
 	var i ClientDetail

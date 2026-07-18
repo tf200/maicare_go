@@ -413,9 +413,6 @@ type Querier interface {
 	UpdateCalendarEvent(ctx context.Context, arg UpdateCalendarEventParams) (CalendarEvent, error)
 	UpdateCalendarEventRRule(ctx context.Context, arg UpdateCalendarEventRRuleParams) error
 	UpdateCalendarEventWorkApproval(ctx context.Context, arg UpdateCalendarEventWorkApprovalParams) error
-	UpdateClientDiagnosis(ctx context.Context, arg UpdateClientDiagnosisParams) (ClientDiagnosis, error)
-	UpdateClientGoalByID(ctx context.Context, arg UpdateClientGoalByIDParams) (ClientGoal, error)
-	UpdateClientMedicationOrder(ctx context.Context, arg UpdateClientMedicationOrderParams) (ClientMedicationOrder, error)
 	// -- name: UpdateClientDetails :one
 	// UPDATE client_details
 	// SET
@@ -453,6 +450,10 @@ type Querier interface {
 	//     nationality = COALESCE (sqlc.narg('nationality'), nationality)
 	// WHERE id = $1
 	// RETURNING *;
+	UpdateClientDetailsV2(ctx context.Context, arg UpdateClientDetailsV2Params) (ClientDetail, error)
+	UpdateClientDiagnosis(ctx context.Context, arg UpdateClientDiagnosisParams) (ClientDiagnosis, error)
+	UpdateClientGoalByID(ctx context.Context, arg UpdateClientGoalByIDParams) (ClientGoal, error)
+	UpdateClientMedicationOrder(ctx context.Context, arg UpdateClientMedicationOrderParams) (ClientMedicationOrder, error)
 	UpdateClientStatus(ctx context.Context, arg UpdateClientStatusParams) (ClientDetail, error)
 	UpdateContract(ctx context.Context, arg UpdateContractParams) (Contract, error)
 	UpdateContractStatus(ctx context.Context, arg UpdateContractStatusParams) (Contract, error)
@@ -498,6 +499,7 @@ type Querier interface {
 	UpsertGoalEvaluationItem(ctx context.Context, arg UpsertGoalEvaluationItemParams) (ClientGoalEvaluationItem, error)
 	// Join to get the client location name
 	UpsertMainCoordinator(ctx context.Context, arg UpsertMainCoordinatorParams) (UpsertMainCoordinatorRow, error)
+	UpsertMainCoordinatorByEmployee(ctx context.Context, arg UpsertMainCoordinatorByEmployeeParams) error
 	UrgentCasesCount(ctx context.Context) (int64, error)
 	VoidBilledCalendarEventsByInvoice(ctx context.Context, invoiceID uuid.UUID) error
 	WaiveActiveEmployeeHandbooksByEmployeeID(ctx context.Context, employeeID uuid.UUID) error

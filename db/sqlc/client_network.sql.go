@@ -752,3 +752,27 @@ func (q *Queries) UpsertMainCoordinator(ctx context.Context, arg UpsertMainCoord
 	)
 	return i, err
 }
+
+const upsertMainCoordinatorByEmployee = `-- name: UpsertMainCoordinatorByEmployee :exec
+INSERT INTO assigned_employee (
+    client_id,
+    employee_id,
+    start_date,
+    role
+) VALUES (
+    $1, $2, CURRENT_DATE, 'coordinator'
+)
+ON CONFLICT (client_id) WHERE role = 'coordinator'
+DO UPDATE SET
+    employee_id = EXCLUDED.employee_id
+`
+
+type UpsertMainCoordinatorByEmployeeParams struct {
+	ClientID   uuid.UUID `json:"client_id"`
+	EmployeeID uuid.UUID `json:"employee_id"`
+}
+
+func (q *Queries) UpsertMainCoordinatorByEmployee(ctx context.Context, arg UpsertMainCoordinatorByEmployeeParams) error {
+	_, err := q.db.Exec(ctx, upsertMainCoordinatorByEmployee, arg.ClientID, arg.EmployeeID)
+	return err
+}

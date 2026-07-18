@@ -635,6 +635,7 @@ type updateClientRequest struct {
 	WorkCurrentPosition        *string    `json:"work_current_position"`
 	WorkStartDate              time.Time  `json:"work_start_date"`
 	WorkAdditionalNotes        *string    `json:"work_additional_notes"`
+	CoordinatorEmployeeID      *uuid.UUID `json:"coordinator_employee_id"`
 }
 
 type updateClientResponse struct {
@@ -935,6 +936,7 @@ func toUpdateClientParams(req updateClientRequest) domain.UpdateClientParams {
 		WorkCurrentPosition:        req.WorkCurrentPosition,
 		WorkStartDate:              req.WorkStartDate,
 		WorkAdditionalNotes:        req.WorkAdditionalNotes,
+		CoordinatorEmployeeID:      req.CoordinatorEmployeeID,
 	}
 }
 
