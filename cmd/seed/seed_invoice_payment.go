@@ -7,6 +7,7 @@ import (
 	"time"
 
 	db "maicare_go/db/sqlc"
+	"maicare_go/internal/domain"
 
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/google/uuid"
@@ -34,6 +35,7 @@ func (s *Seeder) SeedInvoicesAndPaymentsForInCareClients(ctx context.Context, in
 		generated := 0
 		maxAttempts := invoicesPerClient * 6
 		basePeriodStart := time.Now().UTC().Truncate(24 * time.Hour)
+		var lastGenerationErr error
 
 		for attempt := 0; generated < invoicesPerClient && attempt < maxAttempts; attempt++ {
 			// Move windows forward from "now" so they overlap the contract approved-effective period.
@@ -44,47 +46,32 @@ func (s *Seeder) SeedInvoicesAndPaymentsForInCareClients(ctx context.Context, in
 				return fmt.Errorf("seed billable appointments for client %s: %w", clientID, err)
 			}
 
-			// Pick a sender for this invoice
-			senderID := oneOf(s.data.SenderIDs)
-
-			invoice, err := s.store.CreateInvoice(ctx, db.CreateInvoiceParams{
-				InvoiceNumber:   fmt.Sprintf("INV-SEED-%s-%d", clientID.String()[:8], generated+1),
-				InvoiceSequence: int64(gofakeit.Number(1, 99999)),
-				DueDate:         pgtype.Date{Time: periodEnd.AddDate(0, 0, 30), Valid: true},
-				IssueDate:       pgtype.Date{Time: periodStart, Valid: true},
-				Status:          db.InvoiceStatusEnumOutstanding,
-				InvoiceType:     db.InvoiceTypeEnumStandard,
-				Source:          db.InvoiceSourceEnumAuto,
-				PeriodStart:     pgtype.Timestamptz{Time: periodStart, Valid: true},
-				PeriodEnd:       pgtype.Timestamptz{Time: periodEnd, Valid: true},
-				BillingCycle:    stringPtr("monthly"),
-				BillingTimezone: "UTC",
-				Currency:        "EUR",
+			generatedInvoice, _, err := s.invoiceService.GenerateInvoice(ctx, domain.GenerateInvoiceParams{
 				ClientID:        clientID,
-				SenderID:        senderID,
-				WarningCount:    0,
+				StartDate:       periodStart,
+				EndDate:         periodEnd,
+				BillingTimezone: "Europe/Amsterdam",
+				BillingCycle:    "iso_4_week",
 			})
 			if err != nil {
-				return fmt.Errorf("create invoice for client %s: %w", clientID, err)
-			}
-
-			s.data.InvoiceIDs = append(s.data.InvoiceIDs, invoice.ID)
-			generated++
-
-			// Calculate a plausible gross total from the seeded appointments
-			grossTotal := roundMoney(gofakeit.Float64Range(500, 5000))
-
-			if maxPaymentsPerInvoice == 0 || grossTotal <= 0 {
+				lastGenerationErr = err
 				continue
 			}
 
-			if err := s.seedPaymentsForInvoice(ctx, invoice.ID, grossTotal, maxPaymentsPerInvoice, employeeID); err != nil {
-				return fmt.Errorf("seed payments for invoice %s: %w", invoice.ID, err)
+			s.data.InvoiceIDs = append(s.data.InvoiceIDs, generatedInvoice.ID)
+			generated++
+
+			if maxPaymentsPerInvoice == 0 || generatedInvoice.GrossTotal <= 0 {
+				continue
+			}
+
+			if err := s.seedPaymentsForInvoice(ctx, generatedInvoice.ID, generatedInvoice.GrossTotal, maxPaymentsPerInvoice, employeeID); err != nil {
+				return fmt.Errorf("seed payments for invoice %s: %w", generatedInvoice.ID, err)
 			}
 		}
 
 		if generated < invoicesPerClient {
-			return fmt.Errorf("generated %d/%d invoices for client %s", generated, invoicesPerClient, clientID)
+			return fmt.Errorf("generated %d/%d invoices for client %s: %w", generated, invoicesPerClient, clientID, lastGenerationErr)
 		}
 	}
 
@@ -163,6 +150,15 @@ func (s *Seeder) seedBillableAppointmentsForClient(ctx context.Context, clientID
 			}); err != nil {
 				return fmt.Errorf("add employee attendee: %w", err)
 			}
+
+			if err := q.UpdateCalendarEventWorkApproval(ctx, db.UpdateCalendarEventWorkApprovalParams{
+				WorkApprovalStatus: db.CalendarEventWorkApprovalStatusEnumApproved,
+				ActorUserID:        nil,
+				RejectionReason:    nil,
+				EventID:            event.ID,
+			}); err != nil {
+				return fmt.Errorf("approve calendar event work: %w", err)
+			}
 		}
 		return nil
 	})
@@ -197,32 +193,30 @@ func (s *Seeder) seedPaymentsForInvoice(ctx context.Context, invoiceID uuid.UUID
 			continue
 		}
 
-	method := oneOf([]db.PaymentMethodEnum{
-		db.PaymentMethodEnumBankTransfer,
-		db.PaymentMethodEnumCreditCard,
-		db.PaymentMethodEnumCash,
-		db.PaymentMethodEnumCheck,
-	})
+		method := oneOf([]string{
+			string(db.PaymentMethodEnumBankTransfer),
+			string(db.PaymentMethodEnumCreditCard),
+			string(db.PaymentMethodEnumCash),
+			string(db.PaymentMethodEnumCheck),
+		})
 
-	paymentDate := randomRecentDate(45)
-	ref := fmt.Sprintf("SEED-PMT-%s-%02d", invoiceID.String()[:8], i+1)
-	notes := "Seeded payment"
+		paymentDate := randomRecentDate(45)
+		ref := fmt.Sprintf("SEED-PMT-%s-%02d", invoiceID.String()[:8], i+1)
+		notes := "Seeded payment"
 
-	payment, err := s.store.CreatePayment(ctx, db.CreatePaymentParams{
-		InvoiceID:        invoiceID,
-		PaymentMethod:    method,
-		PaymentStatus:    db.PaymentStatusEnumCompleted,
-		Amount:           amount,
-		PaymentDate:      pgtype.Date{Time: paymentDate, Valid: true},
-		PaymentReference: &ref,
-		Notes:            &notes,
-		RecordedBy:       &employeeID,
-	})
-	if err != nil {
-		return fmt.Errorf("create payment %d: %w", i+1, err)
-	}
+		payment, err := s.invoiceService.CreatePayment(ctx, invoiceID, employeeID, domain.CreatePaymentParams{
+			PaymentMethod:    method,
+			PaymentStatus:    string(db.PaymentStatusEnumCompleted),
+			Amount:           amount,
+			PaymentDate:      paymentDate,
+			PaymentReference: &ref,
+			Notes:            &notes,
+		})
+		if err != nil {
+			return fmt.Errorf("create payment %d: %w", i+1, err)
+		}
 
-	s.data.PaymentIDs = append(s.data.PaymentIDs, payment.ID)
+		s.data.PaymentIDs = append(s.data.PaymentIDs, payment.PaymentID)
 		remaining = roundMoney(remaining - amount)
 		if remaining <= 0 {
 			break
