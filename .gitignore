@@ -7,3 +7,4 @@ entrypoint.sh
 /admin
 *.env
 /cmd/deploy/
+app.env.dev
