@@ -137,6 +137,43 @@ func (h *EmployeeHandler) UpdateEmployee(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, httpapi.OK(toEmployeeDetailResponse(employee), "Employee updated successfully"))
 }
 
+// UpdateEmployeePassword resets an employee's password as an administrator.
+// @Summary Reset an employee password
+// @Tags employees
+// @Accept json
+// @Produce json
+// @Param id path string true "Employee ID"
+// @Param request body updateEmployeePasswordRequest true "New employee password"
+// @Success 200 {object} httpapi.Envelope[any]
+// @Failure 400 {object} httpapi.Envelope[any]
+// @Failure 404 {object} httpapi.Envelope[any]
+// @Failure 500 {object} httpapi.Envelope[any]
+// @Router /employees/{id}/password [put]
+func (h *EmployeeHandler) UpdateEmployeePassword(ctx *gin.Context) {
+	employeeID, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, httpapi.Fail("invalid employee ID", ""))
+		return
+	}
+
+	var req updateEmployeePasswordRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, httpapi.Fail(err.Error(), ""))
+		return
+	}
+
+	if err := h.service.UpdateEmployeePassword(ctx.Request.Context(), employeeID, req.NewPassword); err != nil {
+		if errors.Is(err, domain.ErrEmployeeNotFound) {
+			ctx.JSON(http.StatusNotFound, httpapi.Fail(err.Error(), ""))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, httpapi.Fail("failed to update employee password", ""))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, httpapi.OK[any](nil, "Employee password updated successfully"))
+}
+
 func (h *EmployeeHandler) GetEmployeeProfile(ctx *gin.Context) {
 	payload, ok := middleware.AuthPayloadFromContext(ctx.Request.Context())
 	if !ok || payload == nil {

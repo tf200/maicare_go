@@ -83,6 +83,20 @@ func (s *EmployeeService) UpdateEmployee(ctx context.Context, id uuid.UUID, para
 	return emp, nil
 }
 
+func (s *EmployeeService) UpdateEmployeePassword(ctx context.Context, employeeID uuid.UUID, rawPassword string) error {
+	hashedPassword, err := password.HashPassword(rawPassword)
+	if err != nil {
+		s.logError(ctx, "UpdateEmployeePassword", err, zap.String("employee_id", employeeID.String()))
+		return domain.ErrPasswordHashFailed
+	}
+
+	if err := s.repo.UpdateEmployeePassword(ctx, employeeID, hashedPassword); err != nil {
+		s.logError(ctx, "UpdateEmployeePassword", err, zap.String("employee_id", employeeID.String()))
+		return err
+	}
+	return nil
+}
+
 func (s *EmployeeService) GetEmployeeCounts(ctx context.Context) (*domain.EmployeeCounts, error) {
 	counts, err := s.repo.GetEmployeeCounts(ctx)
 	if err != nil {

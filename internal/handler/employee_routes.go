@@ -13,6 +13,7 @@ func RegisterEmployeeRoutes(
 	rg.GET("/employees/counts", auth, requirePermission("EMPLOYEE.VIEW"), handler.GetEmployeeCounts)
 	rg.GET("/employees/:id", auth, requirePermission("EMPLOYEE.VIEW"), handler.GetEmployeeByID)
 	rg.PUT("/employees/:id", auth, requirePermission("EMPLOYEE.UPDATE"), handler.UpdateEmployee)
+	rg.PUT("/employees/:id/password", auth, requirePermission("EMPLOYEE.UPDATE"), handler.UpdateEmployeePassword)
 	rg.GET("/employees/profile", auth, handler.GetEmployeeProfile)
 	rg.GET("/employees/profile/details", auth, handler.GetEmployeeProfileDetails)
 	rg.PUT("/employees/:id/profile_picture", auth, requirePermission("EMPLOYEE.UPDATE"), handler.SetProfilePicture)

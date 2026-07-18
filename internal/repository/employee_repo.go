@@ -314,6 +314,20 @@ func (r *EmployeeRepository) UpdateEmployee(ctx context.Context, id uuid.UUID, p
 	return toDomainEmployeeDetailFromEmployeeProfile(row), nil
 }
 
+func (r *EmployeeRepository) UpdateEmployeePassword(ctx context.Context, employeeID uuid.UUID, password string) error {
+	_, err := r.store.UpdateEmployeePassword(ctx, db.UpdateEmployeePasswordParams{
+		ID:       employeeID,
+		Password: password,
+	})
+	if err != nil {
+		if isDBNotFound(err) {
+			return domain.ErrEmployeeNotFound
+		}
+		return err
+	}
+	return nil
+}
+
 func (r *EmployeeRepository) GetEmployeeCounts(ctx context.Context) (*domain.EmployeeCounts, error) {
 	row, err := r.store.GetEmployeeCounts(ctx)
 	if err != nil {

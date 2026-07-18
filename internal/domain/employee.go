@@ -366,6 +366,7 @@ type EmployeeRepository interface {
 	CountEmployees(ctx context.Context, params ListEmployeesParams) (int64, error)
 	CreateEmployee(ctx context.Context, params CreateEmployeeParams) (*EmployeeDetail, error)
 	UpdateEmployee(ctx context.Context, id uuid.UUID, params UpdateEmployeeParams) (*EmployeeDetail, error)
+	UpdateEmployeePassword(ctx context.Context, employeeID uuid.UUID, password string) error
 	GetEmployeeCounts(ctx context.Context) (*EmployeeCounts, error)
 	SearchEmployeesByNameOrEmail(ctx context.Context, search *string) ([]EmployeeSearchResult, error)
 	SetProfilePicture(ctx context.Context, employeeID uuid.UUID, attachmentID uuid.UUID) (uuid.UUID, string, *string, error)
@@ -401,6 +402,7 @@ type EmployeeService interface {
 	ListEmployees(ctx context.Context, params ListEmployeesParams) (*EmployeePage, error)
 	CreateEmployee(ctx context.Context, params CreateEmployeeParams) (*EmployeeDetail, error)
 	UpdateEmployee(ctx context.Context, id uuid.UUID, params UpdateEmployeeParams) (*EmployeeDetail, error)
+	UpdateEmployeePassword(ctx context.Context, employeeID uuid.UUID, password string) error
 	GetEmployeeCounts(ctx context.Context) (*EmployeeCounts, error)
 	SearchEmployeesByNameOrEmail(ctx context.Context, search *string) ([]EmployeeSearchResult, error)
 	SetProfilePicture(ctx context.Context, employeeID uuid.UUID, attachmentID uuid.UUID) (userID uuid.UUID, email string, profilePicture *string, err error)

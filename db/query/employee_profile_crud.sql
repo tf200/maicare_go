@@ -171,3 +171,11 @@ SET
     is_archived = COALESCE(sqlc.narg('is_archived'), is_archived)
 WHERE id = sqlc.arg('id')
 RETURNING *;
+
+-- name: UpdateEmployeePassword :one
+UPDATE custom_user cu
+SET password = $2
+FROM employee_profile ep
+WHERE ep.id = $1
+  AND cu.id = ep.user_id
+RETURNING cu.id;

@@ -456,6 +456,27 @@ func (q *Queries) ListEmployeeProfile(ctx context.Context, arg ListEmployeeProfi
 	return items, nil
 }
 
+const updateEmployeePassword = `-- name: UpdateEmployeePassword :one
+UPDATE custom_user cu
+SET password = $2
+FROM employee_profile ep
+WHERE ep.id = $1
+  AND cu.id = ep.user_id
+RETURNING cu.id
+`
+
+type UpdateEmployeePasswordParams struct {
+	ID       uuid.UUID `json:"id"`
+	Password string    `json:"password"`
+}
+
+func (q *Queries) UpdateEmployeePassword(ctx context.Context, arg UpdateEmployeePasswordParams) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, updateEmployeePassword, arg.ID, arg.Password)
+	var id uuid.UUID
+	err := row.Scan(&id)
+	return id, err
+}
+
 const updateEmployeeProfile = `-- name: UpdateEmployeeProfile :one
 UPDATE employee_profile
 SET

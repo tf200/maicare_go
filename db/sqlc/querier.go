@@ -462,6 +462,7 @@ type Querier interface {
 	UpdateEmployeeEducation(ctx context.Context, arg UpdateEmployeeEducationParams) (EmployeeEducation, error)
 	UpdateEmployeeExperience(ctx context.Context, arg UpdateEmployeeExperienceParams) (EmployeeExperience, error)
 	UpdateEmployeeIsSubcontractor(ctx context.Context, arg UpdateEmployeeIsSubcontractorParams) (EmployeeProfile, error)
+	UpdateEmployeePassword(ctx context.Context, arg UpdateEmployeePasswordParams) (uuid.UUID, error)
 	UpdateEmployeeProfile(ctx context.Context, arg UpdateEmployeeProfileParams) (EmployeeProfile, error)
 	UpdateGoalEvaluation(ctx context.Context, arg UpdateGoalEvaluationParams) (ClientGoalEvaluation, error)
 	UpdateHandbookStepByID(ctx context.Context, arg UpdateHandbookStepByIDParams) (HandbookStep, error)

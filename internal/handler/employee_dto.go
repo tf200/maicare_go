@@ -59,6 +59,10 @@ type updateEmployeeRequest struct {
 	IsArchived          *bool      `json:"is_archived"`
 }
 
+type updateEmployeePasswordRequest struct {
+	NewPassword string `json:"new_password" binding:"required,min=8"`
+}
+
 type listEmployeesRequest struct {
 	httpapi.PageRequest
 	IncludeArchived     *bool      `form:"is_archived"`
