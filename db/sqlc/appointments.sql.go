@@ -1183,7 +1183,7 @@ WHERE id = $4
 
 type UpdateCalendarEventWorkApprovalParams struct {
 	WorkApprovalStatus CalendarEventWorkApprovalStatusEnum `json:"work_approval_status"`
-	ActorUserID        uuid.UUID                           `json:"actor_user_id"`
+	ActorUserID        *uuid.UUID                          `json:"actor_user_id"`
 	RejectionReason    *string                             `json:"rejection_reason"`
 	EventID            uuid.UUID                           `json:"event_id"`
 }
