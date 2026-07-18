@@ -49,8 +49,11 @@ ENV CGO_ENABLED=1
 ENV CGO_CFLAGS="-I/opt/ortools/include"
 ENV CGO_LDFLAGS="-L/opt/ortools/lib -lortools -Wl,-rpath,/opt/ortools/lib"
 
-# Build the Go application with OR-Tools enabled
-RUN go build -tags ortools -ldflags="-s -w" -o main .
+# Build the Go application and utilities with OR-Tools enabled
+RUN go build -tags ortools -ldflags="-s -w" -o main . \
+    && go build -tags ortools -ldflags="-s -w" -o seed ./cmd/seed \
+    && go build -tags ortools -ldflags="-s -w" -o roles-sync ./cmd/roles \
+    && go build -tags ortools -ldflags="-s -w" -o create-admin ./cmd/admin
 
 # Stage 2: Final Image
 FROM debian:bookworm-slim
@@ -67,8 +70,11 @@ RUN apt-get update \
 # Set the working directory
 WORKDIR /app
 
-# Copy the compiled binary from the builder stage
+# Copy the compiled binaries from the builder stage
 COPY --from=builder /app/main .
+COPY --from=builder /app/seed .
+COPY --from=builder /app/roles-sync .
+COPY --from=builder /app/create-admin .
 
 # Copy OR-Tools shared libraries
 COPY --from=builder /opt/ortools/lib /opt/ortools/lib
@@ -76,6 +82,7 @@ COPY --from=builder /opt/ortools/lib /opt/ortools/lib
 ENV LD_LIBRARY_PATH=/opt/ortools/lib
 
 COPY db/migrations /app/db/migrations
+COPY roles /app/roles
 
 # Expose the desired port
 EXPOSE 8080
