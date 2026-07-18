@@ -329,11 +329,11 @@ LIMIT 1;
 UPDATE calendar_events
 SET
     work_approval_status = sqlc.arg(work_approval_status),
-    work_approved_by = CASE WHEN sqlc.arg(work_approval_status) = 'approved' THEN sqlc.arg(actor_user_id) ELSE NULL END,
+    work_approved_by = CASE WHEN sqlc.arg(work_approval_status) = 'approved' THEN sqlc.arg(actor_user_id)::uuid ELSE NULL END,
     work_approved_at = CASE WHEN sqlc.arg(work_approval_status) = 'approved' THEN CURRENT_TIMESTAMP ELSE NULL END,
-    work_rejected_by = CASE WHEN sqlc.arg(work_approval_status) = 'rejected' THEN sqlc.arg(actor_user_id) ELSE NULL END,
+    work_rejected_by = CASE WHEN sqlc.arg(work_approval_status) = 'rejected' THEN sqlc.arg(actor_user_id)::uuid ELSE NULL END,
     work_rejected_at = CASE WHEN sqlc.arg(work_approval_status) = 'rejected' THEN CURRENT_TIMESTAMP ELSE NULL END,
-    work_rejection_reason = CASE WHEN sqlc.arg(work_approval_status) = 'rejected' THEN sqlc.narg(rejection_reason) ELSE NULL END,
+    work_rejection_reason = CASE WHEN sqlc.arg(work_approval_status) = 'rejected' THEN sqlc.narg(rejection_reason)::text ELSE NULL END,
     updated_at = now()
 WHERE id = sqlc.arg(event_id);
 

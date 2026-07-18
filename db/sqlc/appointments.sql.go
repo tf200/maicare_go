@@ -1172,18 +1172,18 @@ const updateCalendarEventWorkApproval = `-- name: UpdateCalendarEventWorkApprova
 UPDATE calendar_events
 SET
     work_approval_status = $1,
-    work_approved_by = CASE WHEN $1 = 'approved' THEN $2 ELSE NULL END,
+    work_approved_by = CASE WHEN $1 = 'approved' THEN $2::uuid ELSE NULL END,
     work_approved_at = CASE WHEN $1 = 'approved' THEN CURRENT_TIMESTAMP ELSE NULL END,
-    work_rejected_by = CASE WHEN $1 = 'rejected' THEN $2 ELSE NULL END,
+    work_rejected_by = CASE WHEN $1 = 'rejected' THEN $2::uuid ELSE NULL END,
     work_rejected_at = CASE WHEN $1 = 'rejected' THEN CURRENT_TIMESTAMP ELSE NULL END,
-    work_rejection_reason = CASE WHEN $1 = 'rejected' THEN $3 ELSE NULL END,
+    work_rejection_reason = CASE WHEN $1 = 'rejected' THEN $3::text ELSE NULL END,
     updated_at = now()
 WHERE id = $4
 `
 
 type UpdateCalendarEventWorkApprovalParams struct {
 	WorkApprovalStatus CalendarEventWorkApprovalStatusEnum `json:"work_approval_status"`
-	ActorUserID        *uuid.UUID                          `json:"actor_user_id"`
+	ActorUserID        uuid.UUID                           `json:"actor_user_id"`
 	RejectionReason    *string                             `json:"rejection_reason"`
 	EventID            uuid.UUID                           `json:"event_id"`
 }
