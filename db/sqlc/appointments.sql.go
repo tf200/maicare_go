@@ -1171,12 +1171,12 @@ func (q *Queries) UpdateCalendarEventRRule(ctx context.Context, arg UpdateCalend
 const updateCalendarEventWorkApproval = `-- name: UpdateCalendarEventWorkApproval :exec
 UPDATE calendar_events
 SET
-    work_approval_status = $1,
-    work_approved_by = CASE WHEN $1 = 'approved' THEN $2::uuid ELSE NULL END,
-    work_approved_at = CASE WHEN $1 = 'approved' THEN CURRENT_TIMESTAMP ELSE NULL END,
-    work_rejected_by = CASE WHEN $1 = 'rejected' THEN $2::uuid ELSE NULL END,
-    work_rejected_at = CASE WHEN $1 = 'rejected' THEN CURRENT_TIMESTAMP ELSE NULL END,
-    work_rejection_reason = CASE WHEN $1 = 'rejected' THEN $3::text ELSE NULL END,
+    work_approval_status = $1::calendar_event_work_approval_status_enum,
+    work_approved_by = CASE WHEN $1::calendar_event_work_approval_status_enum = 'approved' THEN $2::uuid ELSE NULL END,
+    work_approved_at = CASE WHEN $1::calendar_event_work_approval_status_enum = 'approved' THEN CURRENT_TIMESTAMP ELSE NULL END,
+    work_rejected_by = CASE WHEN $1::calendar_event_work_approval_status_enum = 'rejected' THEN $2::uuid ELSE NULL END,
+    work_rejected_at = CASE WHEN $1::calendar_event_work_approval_status_enum = 'rejected' THEN CURRENT_TIMESTAMP ELSE NULL END,
+    work_rejection_reason = CASE WHEN $1::calendar_event_work_approval_status_enum = 'rejected' THEN $3::text ELSE NULL END,
     updated_at = now()
 WHERE id = $4
 `
