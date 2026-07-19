@@ -359,7 +359,6 @@ type RegistrationFormRepository interface {
 type RegistrationFormService interface {
 	StartUploadSession(ctx context.Context) (string, error)
 	InitRegistrationUpload(ctx context.Context, token string, params InitAttachmentUploadParams) (*InitAttachmentUploadResult, error)
-	GetAttachment(ctx context.Context, id uuid.UUID) (*AttachmentResult, error)
 	CreateRegistrationForm(ctx context.Context, params CreateRegistrationFormParams) (*RegistrationForm, error)
 	ListRegistrationForms(ctx context.Context, params ListRegistrationFormsParams) (*ListResult[RegistrationFormListItem], error)
 	GetRegistrationFormCounts(ctx context.Context) (RegistrationFormCounts, error)

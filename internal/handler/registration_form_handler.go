@@ -182,10 +182,6 @@ func (h *RegistrationFormHandler) ReplaceRegistrationFormDocument(ctx *gin.Conte
 		return
 	}
 
-	if _, err := h.service.GetAttachment(ctx.Request.Context(), req.FileID); err != nil {
-		ctx.JSON(http.StatusBadRequest, httpapi.Fail("attachment not found", ""))
-		return
-	}
 	result, err := h.service.ReplaceRegistrationFormDocument(ctx.Request.Context(), domain.ReplaceRegistrationFormDocumentParams{
 		ID: id, DocumentType: req.DocumentType, FileID: req.FileID,
 	})

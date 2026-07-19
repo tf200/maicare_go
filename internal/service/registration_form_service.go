@@ -72,10 +72,6 @@ func (s *RegistrationFormService) InitRegistrationUpload(ctx context.Context, to
 	return result, nil
 }
 
-func (s *RegistrationFormService) GetAttachment(ctx context.Context, id uuid.UUID) (*domain.AttachmentResult, error) {
-	return s.attachments.GetAttachment(ctx, id)
-}
-
 func (s *RegistrationFormService) CreateRegistrationForm(ctx context.Context, params domain.CreateRegistrationFormParams) (*domain.RegistrationForm, error) {
 	ids := registrationAttachmentIDs(params)
 	session, err := s.uploads.GetActive(ctx, hashUploadToken(params.RegistrationUploadToken))
@@ -160,6 +156,10 @@ func (s *RegistrationFormService) UpdateRegistrationForm(ctx context.Context, pa
 }
 
 func (s *RegistrationFormService) ReplaceRegistrationFormDocument(ctx context.Context, params domain.ReplaceRegistrationFormDocumentParams) (*domain.RegistrationForm, error) {
+	if _, err := s.attachments.ConfirmUpload(ctx, params.FileID); err != nil {
+		s.logError(ctx, "ReplaceRegistrationFormDocument::ConfirmUpload", err, zap.String("file_id", params.FileID.String()))
+		return nil, err
+	}
 	form, err := s.repo.ReplaceRegistrationFormDocument(ctx, params)
 	if err != nil {
 		s.logError(ctx, "ReplaceRegistrationFormDocument", err, zap.String("form_id", params.ID.String()))
