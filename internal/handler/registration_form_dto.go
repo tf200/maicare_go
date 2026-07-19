@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	"maicare_go/pkg/conv"
+
 	"maicare_go/internal/domain"
 	"maicare_go/internal/httpapi"
 
@@ -219,7 +221,7 @@ type registrationFormResponse struct {
 	ID                            uuid.UUID                     `json:"id"`
 	ClientFirstName               string                        `json:"client_first_name"`
 	ClientLastName                string                        `json:"client_last_name"`
-	ClientDateOfBirth             *time.Time                    `json:"client_date_of_birth"`
+	ClientDateOfBirth             *string                       `json:"client_date_of_birth"`
 	ClientBsnNumber               string                        `json:"client_bsn_number"`
 	ClientGender                  string                        `json:"client_gender"`
 	ClientNationality             string                        `json:"client_nationality"`
@@ -273,7 +275,7 @@ type registrationFormResponse struct {
 	DocumentDiagnosis             *documentResponse             `json:"document_diagnosis"`
 	DocumentSafetyPlan            *documentResponse             `json:"document_safety_plan"`
 	DocumentIDCopy                *documentResponse             `json:"document_id_copy"`
-	ApplicationDate               time.Time                     `json:"application_date"`
+	ApplicationDate               string                        `json:"application_date"`
 	ReferrerSignature             *bool                         `json:"referrer_signature"`
 	FormStatus                    string                        `json:"form_status"`
 	CreatedAt                     time.Time                     `json:"created_at"`
@@ -325,13 +327,13 @@ type registrationEducationResponse struct {
 }
 
 type workResponse struct {
-	CurrentEmployer   *string    `json:"current_employer"`
-	EmployerPhone     *string    `json:"employer_phone"`
-	EmployerEmail     *string    `json:"employer_email"`
-	CurrentPosition   *string    `json:"current_position"`
-	CurrentlyEmployed bool       `json:"currently_employed"`
-	StartDate         *time.Time `json:"start_date"`
-	AdditionalNotes   *string    `json:"additional_notes"`
+	CurrentEmployer   *string `json:"current_employer"`
+	EmployerPhone     *string `json:"employer_phone"`
+	EmployerEmail     *string `json:"employer_email"`
+	CurrentPosition   *string `json:"current_position"`
+	CurrentlyEmployed bool    `json:"currently_employed"`
+	StartDate         *string `json:"start_date"`
+	AdditionalNotes   *string `json:"additional_notes"`
 }
 
 type publicIntakeOptionsResponse struct {
@@ -347,7 +349,7 @@ func toRegistrationFormResponse(f domain.RegistrationForm) registrationFormRespo
 		ID:                        f.ID,
 		ClientFirstName:           f.ClientFirstName,
 		ClientLastName:            f.ClientLastName,
-		ClientDateOfBirth:         f.ClientDateOfBirth,
+		ClientDateOfBirth:         conv.DateStringPtr(f.ClientDateOfBirth),
 		ClientBsnNumber:           f.ClientBsnNumber,
 		ClientGender:              f.ClientGender,
 		ClientNationality:         f.ClientNationality,
@@ -389,7 +391,7 @@ func toRegistrationFormResponse(f domain.RegistrationForm) registrationFormRespo
 			EmployerEmail:     f.WorkEmployerEmail,
 			CurrentPosition:   f.WorkCurrentPosition,
 			CurrentlyEmployed: f.WorkCurrentlyEmployed,
-			StartDate:         f.WorkStartDate,
+			StartDate:         conv.DateStringPtr(f.WorkStartDate),
 			AdditionalNotes:   f.WorkAdditionalNotes,
 		},
 		CareProtectedLiving:           f.CareProtectedLiving,
@@ -417,7 +419,7 @@ func toRegistrationFormResponse(f domain.RegistrationForm) registrationFormRespo
 		DocumentDiagnosis:             toDocumentResponse(f.DocumentDiagnosis),
 		DocumentSafetyPlan:            toDocumentResponse(f.DocumentSafetyPlan),
 		DocumentIDCopy:                toDocumentResponse(f.DocumentIDCopy),
-		ApplicationDate:               f.ApplicationDate,
+		ApplicationDate:               conv.DateString(f.ApplicationDate),
 		ReferrerSignature:             f.ReferrerSignature,
 		FormStatus:                    f.FormStatus,
 		CreatedAt:                     f.CreatedAt,
@@ -479,7 +481,7 @@ func toCreateRegistrationFormParams(req createRegistrationFormRequest) (domain.C
 	if err != nil {
 		return domain.CreateRegistrationFormParams{}, err
 	}
-	applicationDate, err := time.Parse("2006-01-02", req.ApplicationDate)
+	applicationDate, err := conv.ParseDate(req.ApplicationDate)
 	if err != nil {
 		return domain.CreateRegistrationFormParams{}, fmt.Errorf("application_date must use YYYY-MM-DD format")
 	}
@@ -651,11 +653,11 @@ func parseRegistrationDate(value *string) (*time.Time, error) {
 	if value == nil || *value == "" {
 		return nil, nil
 	}
-	parsed, err := time.Parse("2006-01-02", *value)
+	parsed, err := conv.ParseDatePtr(value)
 	if err != nil {
 		return nil, fmt.Errorf("client_date_of_birth must use YYYY-MM-DD format")
 	}
-	return &parsed, nil
+	return parsed, nil
 }
 
 func toListRegistrationFormsParams(req listRegistrationFormsRequest) domain.ListRegistrationFormsParams {
