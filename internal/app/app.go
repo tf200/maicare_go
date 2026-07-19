@@ -279,6 +279,7 @@ func loggerSync(logger domain.Logger) interface{ Sync() error } {
 
 type appHandlers struct {
 	auth             *handler.AuthHandler
+	attachment       *handler.AttachmentHandler
 	client           *handler.ClientHandler
 	contract         *handler.ContractHandler
 	dashboard        *handler.DashboardHandler
@@ -304,6 +305,7 @@ type appHandlers struct {
 
 func wireServicesAndHandlers(store *db.Store, logger domain.Logger, tokenMaker domain.TokenMaker, taskQueue domain.TaskQueue, storage domain.Storage, incidentPDFGenerator domain.IncidentPDFGenerator, pdfService domain.PDFService, aiService *adapters.AIServiceStub, hub *ws.Hub, ticketManager *ws.TicketManager, cfg *config.Config) (domain.NotificationService, appHandlers) {
 	authRepo := repository.NewAuthRepository(store)
+	attachmentRepo := repository.NewAttachmentRepository(store)
 	clientRepo := repository.NewClientRepository(store)
 	contractRepo := repository.NewContractRepository(store)
 	dashboardRepo := repository.NewDashboardRepository(store)
@@ -331,6 +333,7 @@ func wireServicesAndHandlers(store *db.Store, logger domain.Logger, tokenMaker d
 	auditLogger := audit.New(store, logger)
 
 	authSvc := service.NewAuthService(authRepo, tokenMaker, logger, auditLogger, cfg.AccessTokenDuration, cfg.RefreshTokenDuration, cfg.TwoFATokenDuration)
+	attachmentSvc := service.NewAttachmentService(attachmentRepo, storage, logger)
 	clientSvc := service.NewClientService(clientRepo, taskQueue, storage, aiService, pdfService, logger, auditLogger)
 	contractSvc := service.NewContractService(contractRepo, storage, logger)
 	dashboardSvc := service.NewDashboardService(dashboardRepo, logger, auditLogger)
@@ -352,6 +355,7 @@ func wireServicesAndHandlers(store *db.Store, logger domain.Logger, tokenMaker d
 
 	return notificationSvc, appHandlers{
 		auth:             handler.NewAuthHandler(authSvc),
+		attachment:       handler.NewAttachmentHandler(attachmentSvc),
 		client:           handler.NewClientHandler(clientSvc),
 		contract:         handler.NewContractHandler(contractSvc),
 		dashboard:        handler.NewDashboardHandler(dashboardSvc),
@@ -395,6 +399,7 @@ func newRouter(cfg config.Config, logger domain.Logger, tokenMaker domain.TokenM
 	base := router.Group("/")
 
 	handler.RegisterAuthRoutes(base, handlers.auth)
+	handler.RegisterAttachmentRoutes(base, handlers.attachment, auth)
 	handler.RegisterClientRoutes(base, handlers.client, auth, requirePermission)
 	handler.RegisterEvaluationRoutes(base, handlers.client, auth, requirePermission)
 	handler.RegisterContractRoutes(base, handlers.contract, auth, requirePermission)
