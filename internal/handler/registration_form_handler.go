@@ -99,6 +99,20 @@ func (h *RegistrationFormHandler) ListRegistrationForms(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, httpapi.OK(httpapi.NewPageResponse(ctx, req.PageRequest, items, result.TotalCount), "Registration forms retrieved successfully"))
 }
 
+func (h *RegistrationFormHandler) GetRegistrationFormCounts(ctx *gin.Context) {
+	result, err := h.service.GetRegistrationFormCounts(ctx.Request.Context())
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, httpapi.Fail("failed to get registration form counts", ""))
+		return
+	}
+	ctx.JSON(http.StatusOK, httpapi.OK(gin.H{
+		"total":          result.Total,
+		"pending_review": result.PendingReview,
+		"processed":      result.Processed,
+		"high_risk":      result.HighRisk,
+	}, "Registration form counts retrieved successfully"))
+}
+
 func (h *RegistrationFormHandler) GetRegistrationForm(ctx *gin.Context) {
 	id, err := uuid.Parse(ctx.Param("id"))
 	if err != nil {
@@ -149,6 +163,42 @@ func (h *RegistrationFormHandler) UpdateRegistrationForm(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, httpapi.OK(toRegistrationFormResponse(*result), "Registration form updated successfully"))
+}
+
+func (h *RegistrationFormHandler) ReplaceRegistrationFormDocument(ctx *gin.Context) {
+	id, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, httpapi.Fail("invalid registration form ID", ""))
+		return
+	}
+
+	var req replaceRegistrationFormDocumentRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, httpapi.Fail("invalid request body", err.Error()))
+		return
+	}
+	if !supportedRegistrationDocumentTypes[req.DocumentType] {
+		ctx.JSON(http.StatusBadRequest, httpapi.Fail("invalid document_type", "unsupported registration document type"))
+		return
+	}
+
+	if _, err := h.service.GetAttachment(ctx.Request.Context(), req.FileID); err != nil {
+		ctx.JSON(http.StatusBadRequest, httpapi.Fail("attachment not found", ""))
+		return
+	}
+	result, err := h.service.ReplaceRegistrationFormDocument(ctx.Request.Context(), domain.ReplaceRegistrationFormDocumentParams{
+		ID: id, DocumentType: req.DocumentType, FileID: req.FileID,
+	})
+	if err != nil {
+		if errors.Is(err, domain.ErrRegistrationFormNotFound) || errors.Is(err, pgx.ErrNoRows) {
+			ctx.JSON(http.StatusNotFound, httpapi.Fail("registration form not found", ""))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, httpapi.Fail("failed to replace registration document", ""))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, httpapi.OK(toRegistrationFormResponse(*result), "Registration document replaced successfully"))
 }
 
 func (h *RegistrationFormHandler) DeleteRegistrationForm(ctx *gin.Context) {

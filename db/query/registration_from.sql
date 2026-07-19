@@ -123,6 +123,25 @@ WHERE
     AND (sqlc.narg('risk_sexual_behavior')::BOOLEAN IS NULL OR risk_sexual_behavior = sqlc.narg('risk_sexual_behavior'))
     AND (sqlc.narg('risk_day_night_rhythm')::BOOLEAN IS NULL OR risk_day_night_rhythm = sqlc.narg('risk_day_night_rhythm'));
 
+-- name: GetRegistrationFormCounts :one
+SELECT
+    COUNT(*) AS total,
+    COUNT(*) FILTER (WHERE form_status = 'pending') AS pending_review,
+    COUNT(*) FILTER (WHERE form_status = 'processed') AS processed,
+    COUNT(*) FILTER (WHERE
+        (CASE WHEN risk_aggressive_behavior THEN 1 ELSE 0 END) +
+        (CASE WHEN risk_suicidal_selfharm THEN 1 ELSE 0 END) +
+        (CASE WHEN risk_substance_abuse THEN 1 ELSE 0 END) +
+        (CASE WHEN risk_psychiatric_issues THEN 1 ELSE 0 END) +
+        (CASE WHEN risk_criminal_history THEN 1 ELSE 0 END) +
+        (CASE WHEN risk_flight_behavior THEN 1 ELSE 0 END) +
+        (CASE WHEN risk_weapon_possession THEN 1 ELSE 0 END) +
+        (CASE WHEN risk_sexual_behavior THEN 1 ELSE 0 END) +
+        (CASE WHEN risk_day_night_rhythm THEN 1 ELSE 0 END) +
+        (CASE WHEN risk_other THEN 1 ELSE 0 END) >= 3
+    ) AS high_risk
+FROM registration_form;
+
 
 
 
@@ -213,6 +232,20 @@ RETURNING *;
 -- name: DeleteRegistrationForm :exec
 DELETE FROM registration_form
 WHERE id = $1;
+
+-- name: ReplaceRegistrationFormDocument :one
+UPDATE registration_form
+SET
+    document_referral = CASE WHEN sqlc.arg('document_type') = 'document_referral' THEN sqlc.arg('file_id') ELSE document_referral END,
+    document_education_report = CASE WHEN sqlc.arg('document_type') = 'document_education_report' THEN sqlc.arg('file_id') ELSE document_education_report END,
+    document_action_plan = CASE WHEN sqlc.arg('document_type') = 'document_action_plan' THEN sqlc.arg('file_id') ELSE document_action_plan END,
+    document_psychiatric_report = CASE WHEN sqlc.arg('document_type') = 'document_psychiatric_report' THEN sqlc.arg('file_id') ELSE document_psychiatric_report END,
+    document_diagnosis = CASE WHEN sqlc.arg('document_type') = 'document_diagnosis' THEN sqlc.arg('file_id') ELSE document_diagnosis END,
+    document_safety_plan = CASE WHEN sqlc.arg('document_type') = 'document_safety_plan' THEN sqlc.arg('file_id') ELSE document_safety_plan END,
+    document_id_copy = CASE WHEN sqlc.arg('document_type') = 'document_id_copy' THEN sqlc.arg('file_id') ELSE document_id_copy END,
+    updated_at = CURRENT_TIMESTAMP
+WHERE id = sqlc.arg('id')
+RETURNING *;
 
 
 -- name: UpdateRegistrationFormStatus :one

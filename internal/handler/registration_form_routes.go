@@ -17,8 +17,10 @@ func RegisterRegistrationFormRoutes(
 
 	// Protected routes
 	rg.GET("/registration_forms", auth, requirePermission("REGISTRATION_FORM.VIEW"), handler.ListRegistrationForms)
+	rg.GET("/registration_forms/counts", auth, requirePermission("REGISTRATION_FORM.VIEW"), handler.GetRegistrationFormCounts)
 	rg.GET("/registration_forms/:id", auth, requirePermission("REGISTRATION_FORM.VIEW"), handler.GetRegistrationForm)
 	rg.PUT("/registration_forms/:id", auth, requirePermission("REGISTRATION_FORM.UPDATE"), handler.UpdateRegistrationForm)
+	rg.PUT("/registration_forms/:id/documents", auth, requirePermission("REGISTRATION_FORM.UPDATE"), handler.ReplaceRegistrationFormDocument)
 	rg.DELETE("/registration_forms/:id", auth, requirePermission("REGISTRATION_FORM.DELETE"), handler.DeleteRegistrationForm)
 	rg.POST("/registration_forms/:id/status", auth, requirePermission("REGISTRATION_FORM.UPDATE"), handler.UpdateRegistrationFormStatus)
 	rg.POST("/registration_forms/:id/process", auth, requirePermission("REGISTRATION_FORM.UPDATE"), handler.ProcessRegistrationForm)

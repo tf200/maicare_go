@@ -239,6 +239,7 @@ type Querier interface {
 	GetProgressReportsByDateRange(ctx context.Context, arg GetProgressReportsByDateRangeParams) ([]ProgressReport, error)
 	GetRegistrationForm(ctx context.Context, id uuid.UUID) (GetRegistrationFormRow, error)
 	GetRegistrationFormByToken(ctx context.Context, intakeToken *string) (RegistrationForm, error)
+	GetRegistrationFormCounts(ctx context.Context) (GetRegistrationFormCountsRow, error)
 	GetScheduleById(ctx context.Context, id uuid.UUID) (GetScheduleByIdRow, error)
 	GetScheduleForSwapValidation(ctx context.Context, id uuid.UUID) (GetScheduleForSwapValidationRow, error)
 	GetSchedulesByLocationInRange(ctx context.Context, arg GetSchedulesByLocationInRangeParams) ([]GetSchedulesByLocationInRangeRow, error)
@@ -406,6 +407,7 @@ type Querier interface {
 	RegistrationUploadSessionHasAttachments(ctx context.Context, arg RegistrationUploadSessionHasAttachmentsParams) (bool, error)
 	// Removes *all* permissions from the given role.
 	RemovePermissionsFromRole(ctx context.Context, roleID uuid.UUID) error
+	ReplaceRegistrationFormDocument(ctx context.Context, arg ReplaceRegistrationFormDocumentParams) (RegistrationForm, error)
 	SearchEmployeesByNameOrEmail(ctx context.Context, search *string) ([]SearchEmployeesByNameOrEmailRow, error)
 	SetAttachmentAsUsedorUnused(ctx context.Context, arg SetAttachmentAsUsedorUnusedParams) (AttachmentFile, error)
 	SetAttachmentsAsUsedorUnusedByUUIDs(ctx context.Context, arg SetAttachmentsAsUsedorUnusedByUUIDsParams) ([]AttachmentFile, error)

@@ -236,6 +236,13 @@ type ListRegistrationFormsParams struct {
 	RiskDayNightRhythm     *bool
 }
 
+type RegistrationFormCounts struct {
+	Total         int64
+	PendingReview int64
+	Processed     int64
+	HighRisk      int64
+}
+
 // UpdateRegistrationFormParams parameters for updating a registration form
 type UpdateRegistrationFormParams struct {
 	ID                            uuid.UUID
@@ -304,6 +311,12 @@ type UpdateRegistrationFormParams struct {
 	ReferrerSignature             *bool
 }
 
+type ReplaceRegistrationFormDocumentParams struct {
+	ID           uuid.UUID
+	DocumentType string
+	FileID       uuid.UUID
+}
+
 // UpdateRegistrationFormStatusParams parameters for updating status
 type UpdateRegistrationFormStatusParams struct {
 	ID                        uuid.UUID
@@ -332,8 +345,10 @@ type SelectIntakeDateParams struct {
 type RegistrationFormRepository interface {
 	CreateRegistrationForm(ctx context.Context, params CreateRegistrationFormParams) (*RegistrationForm, error)
 	ListRegistrationForms(ctx context.Context, params ListRegistrationFormsParams) (*ListResult[RegistrationFormListItem], error)
+	GetRegistrationFormCounts(ctx context.Context) (RegistrationFormCounts, error)
 	GetRegistrationForm(ctx context.Context, id uuid.UUID) (*RegistrationForm, error)
 	UpdateRegistrationForm(ctx context.Context, params UpdateRegistrationFormParams) (*RegistrationForm, error)
+	ReplaceRegistrationFormDocument(ctx context.Context, params ReplaceRegistrationFormDocumentParams) (*RegistrationForm, error)
 	DeleteRegistrationForm(ctx context.Context, id uuid.UUID) error
 	UpdateRegistrationFormStatus(ctx context.Context, params UpdateRegistrationFormStatusParams) error
 	ProcessRegistrationForm(ctx context.Context, params ProcessRegistrationFormParams) (*RegistrationForm, string, error)
@@ -344,10 +359,13 @@ type RegistrationFormRepository interface {
 type RegistrationFormService interface {
 	StartUploadSession(ctx context.Context) (string, error)
 	InitRegistrationUpload(ctx context.Context, token string, params InitAttachmentUploadParams) (*InitAttachmentUploadResult, error)
+	GetAttachment(ctx context.Context, id uuid.UUID) (*AttachmentResult, error)
 	CreateRegistrationForm(ctx context.Context, params CreateRegistrationFormParams) (*RegistrationForm, error)
 	ListRegistrationForms(ctx context.Context, params ListRegistrationFormsParams) (*ListResult[RegistrationFormListItem], error)
+	GetRegistrationFormCounts(ctx context.Context) (RegistrationFormCounts, error)
 	GetRegistrationForm(ctx context.Context, id uuid.UUID) (*RegistrationForm, error)
 	UpdateRegistrationForm(ctx context.Context, params UpdateRegistrationFormParams) (*RegistrationForm, error)
+	ReplaceRegistrationFormDocument(ctx context.Context, params ReplaceRegistrationFormDocumentParams) (*RegistrationForm, error)
 	DeleteRegistrationForm(ctx context.Context, id uuid.UUID) error
 	UpdateRegistrationFormStatus(ctx context.Context, params UpdateRegistrationFormStatusParams) error
 	ProcessRegistrationForm(ctx context.Context, params ProcessRegistrationFormParams) error

@@ -679,6 +679,45 @@ func (q *Queries) GetRegistrationFormByToken(ctx context.Context, intakeToken *s
 	return i, err
 }
 
+const getRegistrationFormCounts = `-- name: GetRegistrationFormCounts :one
+SELECT
+    COUNT(*) AS total,
+    COUNT(*) FILTER (WHERE form_status = 'pending') AS pending_review,
+    COUNT(*) FILTER (WHERE form_status = 'processed') AS processed,
+    COUNT(*) FILTER (WHERE
+        (CASE WHEN risk_aggressive_behavior THEN 1 ELSE 0 END) +
+        (CASE WHEN risk_suicidal_selfharm THEN 1 ELSE 0 END) +
+        (CASE WHEN risk_substance_abuse THEN 1 ELSE 0 END) +
+        (CASE WHEN risk_psychiatric_issues THEN 1 ELSE 0 END) +
+        (CASE WHEN risk_criminal_history THEN 1 ELSE 0 END) +
+        (CASE WHEN risk_flight_behavior THEN 1 ELSE 0 END) +
+        (CASE WHEN risk_weapon_possession THEN 1 ELSE 0 END) +
+        (CASE WHEN risk_sexual_behavior THEN 1 ELSE 0 END) +
+        (CASE WHEN risk_day_night_rhythm THEN 1 ELSE 0 END) +
+        (CASE WHEN risk_other THEN 1 ELSE 0 END) >= 3
+    ) AS high_risk
+FROM registration_form
+`
+
+type GetRegistrationFormCountsRow struct {
+	Total         int64 `json:"total"`
+	PendingReview int64 `json:"pending_review"`
+	Processed     int64 `json:"processed"`
+	HighRisk      int64 `json:"high_risk"`
+}
+
+func (q *Queries) GetRegistrationFormCounts(ctx context.Context) (GetRegistrationFormCountsRow, error) {
+	row := q.db.QueryRow(ctx, getRegistrationFormCounts)
+	var i GetRegistrationFormCountsRow
+	err := row.Scan(
+		&i.Total,
+		&i.PendingReview,
+		&i.Processed,
+		&i.HighRisk,
+	)
+	return i, err
+}
+
 const listRegistrationForms = `-- name: ListRegistrationForms :many
 SELECT
     rf.id, rf.client_first_name, rf.client_last_name, rf.client_date_of_birth, rf.client_bsn_number, rf.client_gender, rf.client_nationality, rf.client_phone_number, rf.client_email, rf.client_street, rf.client_house_number, rf.client_house_number_addition, rf.client_postal_code, rf.client_city, rf.referrer_first_name, rf.referrer_last_name, rf.referrer_organization, rf.referrer_job_title, rf.referrer_phone_number, rf.referrer_email, rf.guardian1_first_name, rf.guardian1_last_name, rf.guardian1_relationship, rf.guardian1_phone_number, rf.guardian1_email, rf.guardian2_first_name, rf.guardian2_last_name, rf.guardian2_relationship, rf.guardian2_phone_number, rf.guardian2_email, rf.education_institution, rf.education_mentor_name, rf.education_mentor_phone, rf.education_mentor_email, rf.education_currently_enrolled, rf.education_additional_notes, rf.education_level, rf.work_current_employer, rf.work_employer_phone, rf.work_employer_email, rf.work_current_position, rf.work_currently_employed, rf.work_start_date, rf.work_additional_notes, rf.care_protected_living, rf.care_assisted_independent_living, rf.care_room_training_center, rf.care_ambulatory_guidance, rf.application_reason, rf.client_goals, rf.risk_aggressive_behavior, rf.risk_suicidal_selfharm, rf.risk_substance_abuse, rf.risk_psychiatric_issues, rf.risk_criminal_history, rf.risk_flight_behavior, rf.risk_weapon_possession, rf.risk_sexual_behavior, rf.risk_day_night_rhythm, rf.risk_other, rf.risk_other_description, rf.risk_additional_notes, rf.document_referral, rf.document_education_report, rf.document_action_plan, rf.document_psychiatric_report, rf.document_diagnosis, rf.document_safety_plan, rf.document_id_copy, rf.application_date, rf.referrer_signature, rf.form_status, rf.intake_options, rf.intake_token, rf.created_at, rf.updated_at, rf.submitted_at, rf.processed_at, rf.processed_by_employee_id, rf.intake_appointment_datetime, rf.intake_appointment_location, rf.addmission_type, rf.rejection_reason,
@@ -923,6 +962,118 @@ func (q *Queries) ListRegistrationForms(ctx context.Context, arg ListRegistratio
 		return nil, err
 	}
 	return items, nil
+}
+
+const replaceRegistrationFormDocument = `-- name: ReplaceRegistrationFormDocument :one
+UPDATE registration_form
+SET
+    document_referral = CASE WHEN $1 = 'document_referral' THEN $2 ELSE document_referral END,
+    document_education_report = CASE WHEN $1 = 'document_education_report' THEN $2 ELSE document_education_report END,
+    document_action_plan = CASE WHEN $1 = 'document_action_plan' THEN $2 ELSE document_action_plan END,
+    document_psychiatric_report = CASE WHEN $1 = 'document_psychiatric_report' THEN $2 ELSE document_psychiatric_report END,
+    document_diagnosis = CASE WHEN $1 = 'document_diagnosis' THEN $2 ELSE document_diagnosis END,
+    document_safety_plan = CASE WHEN $1 = 'document_safety_plan' THEN $2 ELSE document_safety_plan END,
+    document_id_copy = CASE WHEN $1 = 'document_id_copy' THEN $2 ELSE document_id_copy END,
+    updated_at = CURRENT_TIMESTAMP
+WHERE id = $3
+RETURNING id, client_first_name, client_last_name, client_date_of_birth, client_bsn_number, client_gender, client_nationality, client_phone_number, client_email, client_street, client_house_number, client_house_number_addition, client_postal_code, client_city, referrer_first_name, referrer_last_name, referrer_organization, referrer_job_title, referrer_phone_number, referrer_email, guardian1_first_name, guardian1_last_name, guardian1_relationship, guardian1_phone_number, guardian1_email, guardian2_first_name, guardian2_last_name, guardian2_relationship, guardian2_phone_number, guardian2_email, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_currently_enrolled, education_additional_notes, education_level, work_current_employer, work_employer_phone, work_employer_email, work_current_position, work_currently_employed, work_start_date, work_additional_notes, care_protected_living, care_assisted_independent_living, care_room_training_center, care_ambulatory_guidance, application_reason, client_goals, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes, document_referral, document_education_report, document_action_plan, document_psychiatric_report, document_diagnosis, document_safety_plan, document_id_copy, application_date, referrer_signature, form_status, intake_options, intake_token, created_at, updated_at, submitted_at, processed_at, processed_by_employee_id, intake_appointment_datetime, intake_appointment_location, addmission_type, rejection_reason
+`
+
+type ReplaceRegistrationFormDocumentParams struct {
+	DocumentType interface{} `json:"document_type"`
+	FileID       *uuid.UUID  `json:"file_id"`
+	ID           uuid.UUID   `json:"id"`
+}
+
+func (q *Queries) ReplaceRegistrationFormDocument(ctx context.Context, arg ReplaceRegistrationFormDocumentParams) (RegistrationForm, error) {
+	row := q.db.QueryRow(ctx, replaceRegistrationFormDocument, arg.DocumentType, arg.FileID, arg.ID)
+	var i RegistrationForm
+	err := row.Scan(
+		&i.ID,
+		&i.ClientFirstName,
+		&i.ClientLastName,
+		&i.ClientDateOfBirth,
+		&i.ClientBsnNumber,
+		&i.ClientGender,
+		&i.ClientNationality,
+		&i.ClientPhoneNumber,
+		&i.ClientEmail,
+		&i.ClientStreet,
+		&i.ClientHouseNumber,
+		&i.ClientHouseNumberAddition,
+		&i.ClientPostalCode,
+		&i.ClientCity,
+		&i.ReferrerFirstName,
+		&i.ReferrerLastName,
+		&i.ReferrerOrganization,
+		&i.ReferrerJobTitle,
+		&i.ReferrerPhoneNumber,
+		&i.ReferrerEmail,
+		&i.Guardian1FirstName,
+		&i.Guardian1LastName,
+		&i.Guardian1Relationship,
+		&i.Guardian1PhoneNumber,
+		&i.Guardian1Email,
+		&i.Guardian2FirstName,
+		&i.Guardian2LastName,
+		&i.Guardian2Relationship,
+		&i.Guardian2PhoneNumber,
+		&i.Guardian2Email,
+		&i.EducationInstitution,
+		&i.EducationMentorName,
+		&i.EducationMentorPhone,
+		&i.EducationMentorEmail,
+		&i.EducationCurrentlyEnrolled,
+		&i.EducationAdditionalNotes,
+		&i.EducationLevel,
+		&i.WorkCurrentEmployer,
+		&i.WorkEmployerPhone,
+		&i.WorkEmployerEmail,
+		&i.WorkCurrentPosition,
+		&i.WorkCurrentlyEmployed,
+		&i.WorkStartDate,
+		&i.WorkAdditionalNotes,
+		&i.CareProtectedLiving,
+		&i.CareAssistedIndependentLiving,
+		&i.CareRoomTrainingCenter,
+		&i.CareAmbulatoryGuidance,
+		&i.ApplicationReason,
+		&i.ClientGoals,
+		&i.RiskAggressiveBehavior,
+		&i.RiskSuicidalSelfharm,
+		&i.RiskSubstanceAbuse,
+		&i.RiskPsychiatricIssues,
+		&i.RiskCriminalHistory,
+		&i.RiskFlightBehavior,
+		&i.RiskWeaponPossession,
+		&i.RiskSexualBehavior,
+		&i.RiskDayNightRhythm,
+		&i.RiskOther,
+		&i.RiskOtherDescription,
+		&i.RiskAdditionalNotes,
+		&i.DocumentReferral,
+		&i.DocumentEducationReport,
+		&i.DocumentActionPlan,
+		&i.DocumentPsychiatricReport,
+		&i.DocumentDiagnosis,
+		&i.DocumentSafetyPlan,
+		&i.DocumentIDCopy,
+		&i.ApplicationDate,
+		&i.ReferrerSignature,
+		&i.FormStatus,
+		&i.IntakeOptions,
+		&i.IntakeToken,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.SubmittedAt,
+		&i.ProcessedAt,
+		&i.ProcessedByEmployeeID,
+		&i.IntakeAppointmentDatetime,
+		&i.IntakeAppointmentLocation,
+		&i.AddmissionType,
+		&i.RejectionReason,
+	)
+	return i, err
 }
 
 const updateRegistrationForm = `-- name: UpdateRegistrationForm :one

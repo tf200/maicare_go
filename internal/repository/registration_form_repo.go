@@ -152,6 +152,19 @@ func (r *RegistrationFormRepository) ListRegistrationForms(ctx context.Context, 
 	}, nil
 }
 
+func (r *RegistrationFormRepository) GetRegistrationFormCounts(ctx context.Context) (domain.RegistrationFormCounts, error) {
+	counts, err := r.store.GetRegistrationFormCounts(ctx)
+	if err != nil {
+		return domain.RegistrationFormCounts{}, err
+	}
+	return domain.RegistrationFormCounts{
+		Total:         counts.Total,
+		PendingReview: counts.PendingReview,
+		Processed:     counts.Processed,
+		HighRisk:      counts.HighRisk,
+	}, nil
+}
+
 func (r *RegistrationFormRepository) GetRegistrationForm(ctx context.Context, id uuid.UUID) (*domain.RegistrationForm, error) {
 	row, err := r.store.GetRegistrationForm(ctx, id)
 	if err != nil {
@@ -281,6 +294,21 @@ func (r *RegistrationFormRepository) UpdateRegistrationForm(ctx context.Context,
 		return nil, err
 	}
 
+	return toDomainRegistrationForm(form), nil
+}
+
+func (r *RegistrationFormRepository) ReplaceRegistrationFormDocument(ctx context.Context, params domain.ReplaceRegistrationFormDocumentParams) (*domain.RegistrationForm, error) {
+	form, err := r.store.ReplaceRegistrationFormDocument(ctx, db.ReplaceRegistrationFormDocumentParams{
+		ID:           params.ID,
+		DocumentType: params.DocumentType,
+		FileID:       &params.FileID,
+	})
+	if err != nil {
+		if isDBNotFound(err) {
+			return nil, domain.ErrRegistrationFormNotFound
+		}
+		return nil, err
+	}
 	return toDomainRegistrationForm(form), nil
 }
 

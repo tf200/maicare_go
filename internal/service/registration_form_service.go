@@ -47,6 +47,10 @@ func (s *RegistrationFormService) StartUploadSession(ctx context.Context) (strin
 	return token, nil
 }
 
+func (s *RegistrationFormService) GetRegistrationFormCounts(ctx context.Context) (domain.RegistrationFormCounts, error) {
+	return s.repo.GetRegistrationFormCounts(ctx)
+}
+
 func (s *RegistrationFormService) InitRegistrationUpload(ctx context.Context, token string, params domain.InitAttachmentUploadParams) (*domain.InitAttachmentUploadResult, error) {
 	if params.Size > 20<<20 {
 		return nil, fmt.Errorf("file size exceeds maximum limit of 20MB")
@@ -66,6 +70,10 @@ func (s *RegistrationFormService) InitRegistrationUpload(ctx context.Context, to
 		return nil, err
 	}
 	return result, nil
+}
+
+func (s *RegistrationFormService) GetAttachment(ctx context.Context, id uuid.UUID) (*domain.AttachmentResult, error) {
+	return s.attachments.GetAttachment(ctx, id)
 }
 
 func (s *RegistrationFormService) CreateRegistrationForm(ctx context.Context, params domain.CreateRegistrationFormParams) (*domain.RegistrationForm, error) {
@@ -146,6 +154,15 @@ func (s *RegistrationFormService) UpdateRegistrationForm(ctx context.Context, pa
 	form, err := s.repo.UpdateRegistrationForm(ctx, params)
 	if err != nil {
 		s.logError(ctx, "UpdateRegistrationForm", err, zap.String("form_id", params.ID.String()))
+		return nil, err
+	}
+	return form, nil
+}
+
+func (s *RegistrationFormService) ReplaceRegistrationFormDocument(ctx context.Context, params domain.ReplaceRegistrationFormDocumentParams) (*domain.RegistrationForm, error) {
+	form, err := s.repo.ReplaceRegistrationFormDocument(ctx, params)
+	if err != nil {
+		s.logError(ctx, "ReplaceRegistrationFormDocument", err, zap.String("form_id", params.ID.String()))
 		return nil, err
 	}
 	return form, nil
