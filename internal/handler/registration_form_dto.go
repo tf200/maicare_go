@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"time"
 
 	"maicare_go/internal/domain"
@@ -14,7 +15,7 @@ import (
 type createRegistrationFormRequest struct {
 	ClientFirstName               string     `json:"client_first_name" binding:"required"`
 	ClientLastName                string     `json:"client_last_name" binding:"required"`
-	ClientDateOfBirth             *time.Time `json:"client_date_of_birth"`
+	ClientDateOfBirth             *string    `json:"client_date_of_birth"`
 	ClientBsnNumber               string     `json:"client_bsn_number" binding:"required"`
 	ClientGender                  string     `json:"client_gender" binding:"required,oneof=male female other unknown"`
 	ClientNationality             string     `json:"client_nationality" binding:"required"`
@@ -100,7 +101,7 @@ type listRegistrationFormsRequest struct {
 type updateRegistrationFormRequest struct {
 	ClientFirstName               *string    `json:"client_first_name"`
 	ClientLastName                *string    `json:"client_last_name"`
-	ClientDateOfBirth             *time.Time `json:"client_date_of_birth"`
+	ClientDateOfBirth             *string    `json:"client_date_of_birth"`
 	ClientBsnNumber               *string    `json:"client_bsn_number"`
 	ClientGender                  *string    `json:"client_gender" binding:"omitempty,oneof=male female other unknown"`
 	ClientNationality             *string    `json:"client_nationality"`
@@ -430,11 +431,16 @@ func toPublicIntakeOptionsResponse(opts domain.PublicIntakeOptions) publicIntake
 	}
 }
 
-func toCreateRegistrationFormParams(req createRegistrationFormRequest) domain.CreateRegistrationFormParams {
+func toCreateRegistrationFormParams(req createRegistrationFormRequest) (domain.CreateRegistrationFormParams, error) {
+	clientDateOfBirth, err := parseRegistrationDate(req.ClientDateOfBirth)
+	if err != nil {
+		return domain.CreateRegistrationFormParams{}, err
+	}
+
 	return domain.CreateRegistrationFormParams{
 		ClientFirstName:               req.ClientFirstName,
 		ClientLastName:                req.ClientLastName,
-		ClientDateOfBirth:             req.ClientDateOfBirth,
+		ClientDateOfBirth:             clientDateOfBirth,
 		ClientBsnNumber:               req.ClientBsnNumber,
 		ClientGender:                  req.ClientGender,
 		ClientNationality:             req.ClientNationality,
@@ -501,15 +507,20 @@ func toCreateRegistrationFormParams(req createRegistrationFormRequest) domain.Cr
 		DocumentIDCopy:                req.DocumentIDCopy,
 		ApplicationDate:               req.ApplicationDate,
 		ReferrerSignature:             req.ReferrerSignature,
-	}
+	}, nil
 }
 
-func toUpdateRegistrationFormParams(id uuid.UUID, req updateRegistrationFormRequest) domain.UpdateRegistrationFormParams {
+func toUpdateRegistrationFormParams(id uuid.UUID, req updateRegistrationFormRequest) (domain.UpdateRegistrationFormParams, error) {
+	clientDateOfBirth, err := parseRegistrationDate(req.ClientDateOfBirth)
+	if err != nil {
+		return domain.UpdateRegistrationFormParams{}, err
+	}
+
 	return domain.UpdateRegistrationFormParams{
 		ID:                            id,
 		ClientFirstName:               req.ClientFirstName,
 		ClientLastName:                req.ClientLastName,
-		ClientDateOfBirth:             req.ClientDateOfBirth,
+		ClientDateOfBirth:             clientDateOfBirth,
 		ClientBsnNumber:               req.ClientBsnNumber,
 		ClientGender:                  req.ClientGender,
 		ClientNationality:             req.ClientNationality,
@@ -570,7 +581,18 @@ func toUpdateRegistrationFormParams(id uuid.UUID, req updateRegistrationFormRequ
 		RiskAdditionalNotes:           req.RiskAdditionalNotes,
 		ApplicationDate:               req.ApplicationDate,
 		ReferrerSignature:             req.ReferrerSignature,
+	}, nil
+}
+
+func parseRegistrationDate(value *string) (*time.Time, error) {
+	if value == nil || *value == "" {
+		return nil, nil
 	}
+	parsed, err := time.Parse("2006-01-02", *value)
+	if err != nil {
+		return nil, fmt.Errorf("client_date_of_birth must use YYYY-MM-DD format")
+	}
+	return &parsed, nil
 }
 
 func toListRegistrationFormsParams(req listRegistrationFormsRequest) domain.ListRegistrationFormsParams {

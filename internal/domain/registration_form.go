@@ -10,6 +10,21 @@ import (
 
 var ErrRegistrationFormNotFound = errors.New("registration form not found")
 
+type RegistrationUploadSession struct {
+	ID            uuid.UUID
+	TokenHash     string
+	AttachmentIDs []uuid.UUID
+	ExpiresAt     time.Time
+}
+
+type RegistrationUploadSessionRepository interface {
+	Create(ctx context.Context, tokenHash string, expiresAt time.Time) (*RegistrationUploadSession, error)
+	GetActive(ctx context.Context, tokenHash string) (*RegistrationUploadSession, error)
+	AddAttachment(ctx context.Context, sessionID, attachmentID uuid.UUID) error
+	HasAttachments(ctx context.Context, sessionID uuid.UUID, attachmentIDs []uuid.UUID) (bool, error)
+	Consume(ctx context.Context, sessionID uuid.UUID) error
+}
+
 // Document represents a file attachment
 type Document struct {
 	ID   uuid.UUID `json:"id"`
@@ -133,6 +148,7 @@ type PublicIntakeOptions struct {
 
 // CreateRegistrationFormParams parameters for creating a registration form
 type CreateRegistrationFormParams struct {
+	RegistrationUploadToken       string
 	ClientFirstName               string
 	ClientLastName                string
 	ClientDateOfBirth             *time.Time
@@ -326,6 +342,8 @@ type RegistrationFormRepository interface {
 }
 
 type RegistrationFormService interface {
+	StartUploadSession(ctx context.Context) (string, error)
+	InitRegistrationUpload(ctx context.Context, token string, params InitAttachmentUploadParams) (*InitAttachmentUploadResult, error)
 	CreateRegistrationForm(ctx context.Context, params CreateRegistrationFormParams) (*RegistrationForm, error)
 	ListRegistrationForms(ctx context.Context, params ListRegistrationFormsParams) (*ListResult[RegistrationFormListItem], error)
 	GetRegistrationForm(ctx context.Context, id uuid.UUID) (*RegistrationForm, error)

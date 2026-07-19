@@ -2,7 +2,11 @@ package service
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
+	"time"
 
 	"maicare_go/internal/domain"
 
@@ -11,28 +15,98 @@ import (
 )
 
 type RegistrationFormService struct {
-	repo      domain.RegistrationFormRepository
-	logger    domain.Logger
-	audit     domain.AuditLogger
-	taskQueue domain.TaskQueue
+	repo        domain.RegistrationFormRepository
+	uploads     domain.RegistrationUploadSessionRepository
+	attachments domain.AttachmentService
+	logger      domain.Logger
+	audit       domain.AuditLogger
+	taskQueue   domain.TaskQueue
 }
 
-func NewRegistrationFormService(repo domain.RegistrationFormRepository, logger domain.Logger, taskQueue domain.TaskQueue, audit domain.AuditLogger) domain.RegistrationFormService {
+func NewRegistrationFormService(repo domain.RegistrationFormRepository, uploads domain.RegistrationUploadSessionRepository, attachments domain.AttachmentService, logger domain.Logger, taskQueue domain.TaskQueue, audit domain.AuditLogger) domain.RegistrationFormService {
 	return &RegistrationFormService{
-		repo:      repo,
-		logger:    logger,
-		taskQueue: taskQueue,
-		audit:     audit,
+		repo:        repo,
+		uploads:     uploads,
+		attachments: attachments,
+		logger:      logger,
+		taskQueue:   taskQueue,
+		audit:       audit,
 	}
 }
 
+func (s *RegistrationFormService) StartUploadSession(ctx context.Context) (string, error) {
+	tokenBytes := make([]byte, 32)
+	if _, err := rand.Read(tokenBytes); err != nil {
+		return "", err
+	}
+	token := hex.EncodeToString(tokenBytes)
+	hash := sha256.Sum256([]byte(token))
+	if _, err := s.uploads.Create(ctx, hex.EncodeToString(hash[:]), time.Now().Add(24*time.Hour)); err != nil {
+		return "", err
+	}
+	return token, nil
+}
+
+func (s *RegistrationFormService) InitRegistrationUpload(ctx context.Context, token string, params domain.InitAttachmentUploadParams) (*domain.InitAttachmentUploadResult, error) {
+	if params.Size > 20<<20 {
+		return nil, fmt.Errorf("file size exceeds maximum limit of 20MB")
+	}
+	if params.ContentType != "application/pdf" && params.ContentType != "image/jpeg" && params.ContentType != "image/png" {
+		return nil, fmt.Errorf("unsupported file type: %s", params.ContentType)
+	}
+	session, err := s.uploads.GetActive(ctx, hashUploadToken(token))
+	if err != nil {
+		return nil, fmt.Errorf("invalid registration upload session")
+	}
+	result, err := s.attachments.InitUpload(ctx, params)
+	if err != nil {
+		return nil, err
+	}
+	if err := s.uploads.AddAttachment(ctx, session.ID, result.FileID); err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
 func (s *RegistrationFormService) CreateRegistrationForm(ctx context.Context, params domain.CreateRegistrationFormParams) (*domain.RegistrationForm, error) {
+	ids := registrationAttachmentIDs(params)
+	session, err := s.uploads.GetActive(ctx, hashUploadToken(params.RegistrationUploadToken))
+	if err != nil {
+		return nil, fmt.Errorf("invalid registration upload session")
+	}
+	valid, err := s.uploads.HasAttachments(ctx, session.ID, ids)
+	if err != nil || !valid {
+		return nil, fmt.Errorf("invalid registration attachments")
+	}
+	for _, id := range ids {
+		if _, err := s.attachments.ConfirmUpload(ctx, id); err != nil {
+			return nil, err
+		}
+	}
 	form, err := s.repo.CreateRegistrationForm(ctx, params)
 	if err != nil {
 		s.logError(ctx, "CreateRegistrationForm", err, zap.String("client_name", params.ClientFirstName+" "+params.ClientLastName))
 		return nil, err
 	}
+	if err := s.uploads.Consume(ctx, session.ID); err != nil {
+		return nil, err
+	}
 	return form, nil
+}
+
+func hashUploadToken(token string) string {
+	hash := sha256.Sum256([]byte(token))
+	return hex.EncodeToString(hash[:])
+}
+
+func registrationAttachmentIDs(params domain.CreateRegistrationFormParams) []uuid.UUID {
+	ids := make([]uuid.UUID, 0, 6)
+	for _, id := range []*uuid.UUID{params.DocumentReferral, params.DocumentEducationReport, params.DocumentPsychiatricReport, params.DocumentDiagnosis, params.DocumentSafetyPlan, params.DocumentIDCopy} {
+		if id != nil {
+			ids = append(ids, *id)
+		}
+	}
+	return ids
 }
 
 func (s *RegistrationFormService) ListRegistrationForms(ctx context.Context, params domain.ListRegistrationFormsParams) (*domain.ListResult[domain.RegistrationFormListItem], error) {

@@ -597,6 +597,18 @@ CREATE TABLE attachment_file (
 CREATE INDEX attachment_file_is_used_idx ON attachment_file(is_used);
 CREATE INDEX attachment_file_created_idx ON attachment_file(created);
 
+CREATE TABLE registration_upload_sessions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    token_hash VARCHAR(64) NOT NULL UNIQUE,
+    attachment_ids UUID[] NOT NULL DEFAULT '{}',
+    expires_at TIMESTAMPTZ NOT NULL,
+    submitted_at TIMESTAMPTZ NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX registration_upload_sessions_expires_at_idx
+    ON registration_upload_sessions(expires_at);
+
 -- Temporary file storage
 CREATE TABLE temporary_file (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

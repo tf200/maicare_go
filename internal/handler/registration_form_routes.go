@@ -9,6 +9,8 @@ func RegisterRegistrationFormRoutes(
 	requirePermission func(string) gin.HandlerFunc,
 ) {
 	// Public routes
+	rg.POST("/public/registration-upload-sessions", handler.StartUploadSession)
+	rg.POST("/public/registration-uploads/init", handler.InitRegistrationUpload)
 	rg.POST("/registration_forms", handler.CreateRegistrationForm)
 	rg.GET("/public/intake-options/:token", handler.GetPublicIntakeOptions)
 	rg.POST("/public/intake-options/:token/confirm", handler.SelectIntakeDate)

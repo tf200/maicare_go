@@ -22,6 +22,36 @@ func NewRegistrationFormHandler(service domain.RegistrationFormService) *Registr
 	return &RegistrationFormHandler{service: service}
 }
 
+func (h *RegistrationFormHandler) StartUploadSession(ctx *gin.Context) {
+	token, err := h.service.StartUploadSession(ctx.Request.Context())
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, httpapi.Fail("failed to start registration", ""))
+		return
+	}
+	ctx.JSON(http.StatusOK, httpapi.OK(gin.H{"registration_token": token}, "Registration started successfully"))
+}
+
+func (h *RegistrationFormHandler) InitRegistrationUpload(ctx *gin.Context) {
+	token := ctx.GetHeader("X-Registration-Token")
+	if token == "" {
+		ctx.JSON(http.StatusUnauthorized, httpapi.Fail("registration token is required", ""))
+		return
+	}
+	var req initAttachmentUploadRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, httpapi.Fail("invalid request body", err.Error()))
+		return
+	}
+	result, err := h.service.InitRegistrationUpload(ctx.Request.Context(), token, domain.InitAttachmentUploadParams{
+		Filename: req.Filename, ContentType: req.ContentType, Size: req.Size,
+	})
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, httpapi.Fail(err.Error(), ""))
+		return
+	}
+	ctx.JSON(http.StatusOK, httpapi.OK(result, "Upload initiated successfully"))
+}
+
 func (h *RegistrationFormHandler) CreateRegistrationForm(ctx *gin.Context) {
 	var req createRegistrationFormRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil && !errors.Is(err, io.EOF) {
@@ -29,7 +59,17 @@ func (h *RegistrationFormHandler) CreateRegistrationForm(ctx *gin.Context) {
 		return
 	}
 
-	result, err := h.service.CreateRegistrationForm(ctx.Request.Context(), toCreateRegistrationFormParams(req))
+	params, err := toCreateRegistrationFormParams(req)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, httpapi.Fail(err.Error(), ""))
+		return
+	}
+	params.RegistrationUploadToken = ctx.GetHeader("X-Registration-Token")
+	if params.RegistrationUploadToken == "" {
+		ctx.JSON(http.StatusUnauthorized, httpapi.Fail("registration token is required", ""))
+		return
+	}
+	result, err := h.service.CreateRegistrationForm(ctx.Request.Context(), params)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, httpapi.Fail("failed to create registration form", ""))
 		return
@@ -92,7 +132,13 @@ func (h *RegistrationFormHandler) UpdateRegistrationForm(ctx *gin.Context) {
 		return
 	}
 
-	result, err := h.service.UpdateRegistrationForm(ctx.Request.Context(), toUpdateRegistrationFormParams(id, req))
+	params, err := toUpdateRegistrationFormParams(id, req)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, httpapi.Fail(err.Error(), ""))
+		return
+	}
+
+	result, err := h.service.UpdateRegistrationForm(ctx.Request.Context(), params)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) || errors.Is(err, domain.ErrRegistrationFormNotFound) {
 			ctx.JSON(http.StatusNotFound, httpapi.Fail("registration form not found", ""))

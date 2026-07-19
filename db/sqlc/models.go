@@ -4139,6 +4139,15 @@ type RegistrationForm struct {
 	RejectionReason               *string            `json:"rejection_reason"`
 }
 
+type RegistrationUploadSession struct {
+	ID            uuid.UUID          `json:"id"`
+	TokenHash     string             `json:"token_hash"`
+	AttachmentIds []uuid.UUID        `json:"attachment_ids"`
+	ExpiresAt     pgtype.Timestamptz `json:"expires_at"`
+	SubmittedAt   pgtype.Timestamptz `json:"submitted_at"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+}
+
 type RiskAssessment struct {
 	ID                             uuid.UUID          `json:"id"`
 	ClientID                       uuid.UUID          `json:"client_id"`

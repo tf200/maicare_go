@@ -24,6 +24,7 @@ type Querier interface {
 	AddEventReminder(ctx context.Context, arg AddEventReminderParams) (AddEventReminderRow, error)
 	// Bulk-insert permission IDs into a role (idempotent).
 	AddPermissionsToRole(ctx context.Context, arg AddPermissionsToRoleParams) error
+	AddRegistrationUploadAttachment(ctx context.Context, arg AddRegistrationUploadAttachmentParams) error
 	// Bulk-insert explicit overrides for a user (idempotent by replacement flow).
 	AddUserPermissionOverrides(ctx context.Context, arg AddUserPermissionOverridesParams) error
 	ApplyLeaveBalanceDeduction(ctx context.Context, arg ApplyLeaveBalanceDeductionParams) (LeaveBalance, error)
@@ -43,6 +44,7 @@ type Querier interface {
 	CloneHandbookTemplateToDraft(ctx context.Context, arg CloneHandbookTemplateToDraftParams) (CloneHandbookTemplateToDraftRow, error)
 	CompleteEmployeeHandbookStep(ctx context.Context, arg CompleteEmployeeHandbookStepParams) (EmployeeHandbookStepProgress, error)
 	ConfirmIncident(ctx context.Context, arg ConfirmIncidentParams) (int64, error)
+	ConsumeRegistrationUploadSession(ctx context.Context, id uuid.UUID) error
 	ContractEndCount(ctx context.Context) (int64, error)
 	CountActiveGoalsByClientID(ctx context.Context, clientID uuid.UUID) (int64, error)
 	CountAllIncidents(ctx context.Context, arg CountAllIncidentsParams) (int64, error)
@@ -107,6 +109,7 @@ type Querier interface {
 	CreatePayment(ctx context.Context, arg CreatePaymentParams) (InvoicePaymentHistory, error)
 	CreateProgressReport(ctx context.Context, arg CreateProgressReportParams) (ProgressReport, error)
 	CreateRegistrationForm(ctx context.Context, arg CreateRegistrationFormParams) (RegistrationForm, error)
+	CreateRegistrationUploadSession(ctx context.Context, arg CreateRegistrationUploadSessionParams) (RegistrationUploadSession, error)
 	CreateReviewUpdatedClientGoal(ctx context.Context, arg CreateReviewUpdatedClientGoalParams) (ClientGoal, error)
 	// ---------- 1. ROLES ----------
 	// Insert a new role and return the created row.
@@ -157,6 +160,7 @@ type Querier interface {
 	GetActiveEmployeeHandbookByEmployeeID(ctx context.Context, employeeID uuid.UUID) (GetActiveEmployeeHandbookByEmployeeIDRow, error)
 	GetActiveHandbookTemplateByDepartment(ctx context.Context, departmentID uuid.UUID) (HandbookTemplate, error)
 	GetActiveLeavePolicyByType(ctx context.Context, leaveType LeaveRequestTypeEnum) (LeavePolicy, error)
+	GetActiveRegistrationUploadSession(ctx context.Context, tokenHash string) (RegistrationUploadSession, error)
 	GetAdminDashboardStatCards(ctx context.Context) (GetAdminDashboardStatCardsRow, error)
 	// Returns the ID of the admin role.
 	GetAdminRoleId(ctx context.Context) (uuid.UUID, error)
@@ -399,6 +403,7 @@ type Querier interface {
 	PublishHandbookTemplate(ctx context.Context, arg PublishHandbookTemplateParams) (HandbookTemplate, error)
 	PutClientInCare(ctx context.Context, arg PutClientInCareParams) (ClientDetail, error)
 	PutClientOutOfCare(ctx context.Context, arg PutClientOutOfCareParams) (ClientDetail, error)
+	RegistrationUploadSessionHasAttachments(ctx context.Context, arg RegistrationUploadSessionHasAttachmentsParams) (bool, error)
 	// Removes *all* permissions from the given role.
 	RemovePermissionsFromRole(ctx context.Context, roleID uuid.UUID) error
 	SearchEmployeesByNameOrEmail(ctx context.Context, search *string) ([]SearchEmployeesByNameOrEmailRow, error)
