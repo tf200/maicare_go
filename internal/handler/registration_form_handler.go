@@ -8,6 +8,7 @@ import (
 	"maicare_go/internal/domain"
 	"maicare_go/internal/httpapi"
 	"maicare_go/internal/middleware"
+	"maicare_go/pkg/conv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -231,7 +232,12 @@ func (h *RegistrationFormHandler) UpdateRegistrationFormStatus(ctx *gin.Context)
 		return
 	}
 
-	if err := h.service.UpdateRegistrationFormStatus(ctx.Request.Context(), toUpdateRegistrationFormStatusParams(id, req, payload.EmployeeID)); err != nil {
+	params, err := toUpdateRegistrationFormStatusParams(id, req, payload.EmployeeID)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, httpapi.Fail(err.Error(), ""))
+		return
+	}
+	if err := h.service.UpdateRegistrationFormStatus(ctx.Request.Context(), params); err != nil {
 		ctx.JSON(http.StatusInternalServerError, httpapi.Fail("failed to update registration form status", ""))
 		return
 	}
@@ -301,9 +307,15 @@ func (h *RegistrationFormHandler) SelectIntakeDate(ctx *gin.Context) {
 		return
 	}
 
+	selectedDate, err := conv.ParseDate(req.SelectedDate)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, httpapi.Fail("selected_date must use YYYY-MM-DD format", ""))
+		return
+	}
+
 	if err := h.service.SelectIntakeDate(ctx.Request.Context(), domain.SelectIntakeDateParams{
 		Token:        token,
-		SelectedDate: req.SelectedDate,
+		SelectedDate: selectedDate,
 	}); err != nil {
 		ctx.JSON(http.StatusBadRequest, httpapi.Fail(err.Error(), ""))
 		return

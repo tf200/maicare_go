@@ -178,7 +178,7 @@ type updateRegistrationFormRequest struct {
 	RiskOther                     *bool                               `json:"risk_other"`
 	RiskOtherDescription          *string                             `json:"risk_other_description"`
 	RiskAdditionalNotes           *string                             `json:"risk_additional_notes"`
-	ApplicationDate               *time.Time                          `json:"application_date"`
+	ApplicationDate               *string                             `json:"application_date"`
 	ReferrerSignature             *bool                               `json:"referrer_signature"`
 }
 
@@ -198,11 +198,11 @@ var supportedRegistrationDocumentTypes = map[string]bool{
 }
 
 type updateRegistrationFormStatusRequest struct {
-	Status                    string    `json:"status" binding:"required,oneof=pending processed rejected"`
-	IntakeAppointmentDate     time.Time `json:"intake_appointment_date"`
-	IntakeAppointmentLocation *string   `json:"intake_appointment_location"`
-	AddmissionType            *string   `json:"admission_type" binding:"omitempty,oneof=crisis_admission regular_placement"`
-	RejectionReason           *string   `json:"rejection_reason"`
+	Status                    string  `json:"status" binding:"required,oneof=pending processed rejected"`
+	IntakeAppointmentDate     *string `json:"intake_appointment_date"`
+	IntakeAppointmentLocation *string `json:"intake_appointment_location"`
+	AddmissionType            *string `json:"admission_type" binding:"omitempty,oneof=crisis_admission regular_placement"`
+	RejectionReason           *string `json:"rejection_reason"`
 }
 
 type processRegistrationFormRequest struct {
@@ -212,7 +212,7 @@ type processRegistrationFormRequest struct {
 }
 
 type selectIntakeDateRequest struct {
-	SelectedDate time.Time `json:"selected_date" binding:"required"`
+	SelectedDate string `json:"selected_date" binding:"required"`
 }
 
 // ========== Response DTOs ==========
@@ -477,7 +477,7 @@ func toPublicIntakeOptionsResponse(opts domain.PublicIntakeOptions) publicIntake
 }
 
 func toCreateRegistrationFormParams(req createRegistrationFormRequest) (domain.CreateRegistrationFormParams, error) {
-	clientDateOfBirth, err := parseRegistrationDate(req.ClientDateOfBirth)
+	clientDateOfBirth, err := parseDateField("client_date_of_birth", req.ClientDateOfBirth)
 	if err != nil {
 		return domain.CreateRegistrationFormParams{}, err
 	}
@@ -559,16 +559,20 @@ func toCreateRegistrationFormParams(req createRegistrationFormRequest) (domain.C
 		params.WorkCurrentPosition = req.Work.CurrentPosition
 		params.WorkCurrentlyEmployed = req.Work.CurrentlyEmployed
 		params.WorkAdditionalNotes = req.Work.AdditionalNotes
-		params.WorkStartDate, err = parseRegistrationDate(req.Work.StartDate)
+		params.WorkStartDate, err = parseDateField("work.start_date", req.Work.StartDate)
 		if err != nil {
-			return domain.CreateRegistrationFormParams{}, fmt.Errorf("work.start_date must use YYYY-MM-DD format")
+			return domain.CreateRegistrationFormParams{}, err
 		}
 	}
 	return params, nil
 }
 
 func toUpdateRegistrationFormParams(id uuid.UUID, req updateRegistrationFormRequest) (domain.UpdateRegistrationFormParams, error) {
-	clientDateOfBirth, err := parseRegistrationDate(req.ClientDateOfBirth)
+	clientDateOfBirth, err := parseDateField("client_date_of_birth", req.ClientDateOfBirth)
+	if err != nil {
+		return domain.UpdateRegistrationFormParams{}, err
+	}
+	applicationDate, err := parseDateField("application_date", req.ApplicationDate)
 	if err != nil {
 		return domain.UpdateRegistrationFormParams{}, err
 	}
@@ -622,7 +626,7 @@ func toUpdateRegistrationFormParams(id uuid.UUID, req updateRegistrationFormRequ
 		RiskOther:                     req.RiskOther,
 		RiskOtherDescription:          req.RiskOtherDescription,
 		RiskAdditionalNotes:           req.RiskAdditionalNotes,
-		ApplicationDate:               req.ApplicationDate,
+		ApplicationDate:               applicationDate,
 		ReferrerSignature:             req.ReferrerSignature,
 	}
 	if req.Education != nil {
@@ -641,21 +645,18 @@ func toUpdateRegistrationFormParams(id uuid.UUID, req updateRegistrationFormRequ
 		params.WorkCurrentPosition = req.Work.CurrentPosition
 		params.WorkCurrentlyEmployed = req.Work.CurrentlyEmployed
 		params.WorkAdditionalNotes = req.Work.AdditionalNotes
-		params.WorkStartDate, err = parseRegistrationDate(req.Work.StartDate)
+		params.WorkStartDate, err = parseDateField("work.start_date", req.Work.StartDate)
 		if err != nil {
-			return domain.UpdateRegistrationFormParams{}, fmt.Errorf("work.start_date must use YYYY-MM-DD format")
+			return domain.UpdateRegistrationFormParams{}, err
 		}
 	}
 	return params, nil
 }
 
-func parseRegistrationDate(value *string) (*time.Time, error) {
-	if value == nil || *value == "" {
-		return nil, nil
-	}
+func parseDateField(field string, value *string) (*time.Time, error) {
 	parsed, err := conv.ParseDatePtr(value)
 	if err != nil {
-		return nil, fmt.Errorf("client_date_of_birth must use YYYY-MM-DD format")
+		return nil, fmt.Errorf("%s must use YYYY-MM-DD format", field)
 	}
 	return parsed, nil
 }
@@ -678,7 +679,10 @@ func toListRegistrationFormsParams(req listRegistrationFormsRequest) domain.List
 	}
 }
 
-func toUpdateRegistrationFormStatusParams(id uuid.UUID, req updateRegistrationFormStatusRequest, employeeID uuid.UUID) domain.UpdateRegistrationFormStatusParams {
+func toUpdateRegistrationFormStatusParams(id uuid.UUID, req updateRegistrationFormStatusRequest, employeeID uuid.UUID) (domain.UpdateRegistrationFormStatusParams, error) {
+	if _, err := parseDateField("intake_appointment_date", req.IntakeAppointmentDate); err != nil {
+		return domain.UpdateRegistrationFormStatusParams{}, err
+	}
 	return domain.UpdateRegistrationFormStatusParams{
 		ID:                        id,
 		Status:                    req.Status,
@@ -686,5 +690,5 @@ func toUpdateRegistrationFormStatusParams(id uuid.UUID, req updateRegistrationFo
 		IntakeAppointmentLocation: req.IntakeAppointmentLocation,
 		AddmissionType:            req.AddmissionType,
 		RejectionReason:           req.RejectionReason,
-	}
+	}, nil
 }
