@@ -1,6 +1,6 @@
 
 LOCAL_DB_URL ?= postgresql://maicare:maicare@127.0.0.1:5432/maicare?sslmode=disable
-REMOTE_DEV_DB_URL ?= postgresql://maicare:maicare@167.86.75.250:5432/maicare?sslmode=disable
+REMOTE_DEV_DB_URL ?= postgresql://maicare:maicare@167.86.75.250:25432/maicare?sslmode=disable
 
 SEED_FLAGS_LOCAL ?=
 SEED_FLAGS_REMOTE ?= -organisations=1 -locations-per-org=1 -departments=1 -handbook-templates-per-department=1 -employee-handbook-assignments-per-department=0 -senders=3 -count=5 -other-intake-forms=0 -waiting-list-clients=2 -in-care-clients=1 -out-of-care-clients=0 -evaluations-per-in-care-client=1 -diagnoses-per-client=1 -medication-orders-per-client=1 -incidents-per-client=1 -invoices-per-client=0 -payments-per-invoice=0 -seed=42

@@ -8,5 +8,5 @@ func RegisterMaturityMatrixRoutes(
 	auth gin.HandlerFunc,
 	requirePermission func(string) gin.HandlerFunc,
 ) {
-	rg.GET("/maturity_matrix", auth, requirePermission("CARE_PLAN.VIEW"), handler.ListMaturityMatrix)
+	rg.GET("/maturity_matrix", auth, handler.ListMaturityMatrix)
 }
