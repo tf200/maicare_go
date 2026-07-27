@@ -552,6 +552,9 @@ func toCreateRegistrationFormParams(req createRegistrationFormRequest) (domain.C
 		params.EducationAdditionalNotes = req.Education.AdditionalNotes
 		params.EducationLevel = req.Education.Level
 	}
+	if params.EducationLevel == "" {
+		params.EducationLevel = "none"
+	}
 	if req.Work != nil {
 		params.WorkCurrentEmployer = req.Work.CurrentEmployer
 		params.WorkEmployerPhone = req.Work.EmployerPhone
@@ -635,8 +638,13 @@ func toUpdateRegistrationFormParams(id uuid.UUID, req updateRegistrationFormRequ
 		params.EducationMentorPhone = req.Education.MentorPhone
 		params.EducationMentorEmail = req.Education.MentorEmail
 		params.EducationCurrentlyEnrolled = req.Education.CurrentlyEnrolled
-		params.EducationAdditionalNotes = req.Education.AdditionalNotes
-		params.EducationLevel = req.Education.Level
+		if req.Education.Level != nil {
+			level := *req.Education.Level
+			if level == "" {
+				level = "none"
+			}
+			params.EducationLevel = &level
+		}
 	}
 	if req.Work != nil {
 		params.WorkCurrentEmployer = req.Work.CurrentEmployer

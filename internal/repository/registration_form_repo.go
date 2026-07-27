@@ -61,7 +61,7 @@ func (r *RegistrationFormRepository) CreateRegistrationForm(ctx context.Context,
 		EducationMentorEmail:          params.EducationMentorEmail,
 		EducationCurrentlyEnrolled:    params.EducationCurrentlyEnrolled,
 		EducationAdditionalNotes:      params.EducationAdditionalNotes,
-		EducationLevel:                db.EducationLevelEnum(params.EducationLevel),
+		EducationLevel:                db.EducationLevelEnum(defaultEducationLevel(params.EducationLevel)),
 		WorkCurrentEmployer:           params.WorkCurrentEmployer,
 		WorkEmployerPhone:             params.WorkEmployerPhone,
 		WorkEmployerEmail:             params.WorkEmployerEmail,
@@ -717,6 +717,13 @@ func randomString(n int) string {
 	b := make([]byte, n)
 	_, _ = rand.Read(b)
 	return base64.RawURLEncoding.EncodeToString(b)[:n]
+}
+
+func defaultEducationLevel(level string) string {
+	if level == "" {
+		return "none"
+	}
+	return level
 }
 
 var _ domain.RegistrationFormRepository = (*RegistrationFormRepository)(nil)
