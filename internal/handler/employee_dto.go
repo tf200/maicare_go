@@ -11,7 +11,6 @@ import (
 
 type createEmployeeRequest struct {
 	EmployeeNumber      *string    `json:"employee_number"`
-	EmploymentNumber    *string    `json:"employment_number"`
 	LocationID          *uuid.UUID `json:"location_id"`
 	FirstName           string     `json:"first_name" binding:"required"`
 	LastName            string     `json:"last_name" binding:"required"`
@@ -46,7 +45,6 @@ type updateEmployeeRequest struct {
 	DepartmentID        *uuid.UUID `json:"department_id"`
 	ManagerEmployeeID   *uuid.UUID `json:"manager_employee_id"`
 	EmployeeNumber      *string    `json:"employee_number"`
-	EmploymentNumber    *string    `json:"employment_number"`
 	PrivateEmailAddress *string    `json:"private_email_address"`
 	PrivatePhoneNumber  *string    `json:"private_phone_number"`
 	WorkPhoneNumber     *string    `json:"work_phone_number"`
@@ -148,7 +146,6 @@ type employeeDetailResponse struct {
 	City                string                `json:"city"`
 	Position            *string               `json:"position"`
 	EmployeeNumber      *string               `json:"employee_number"`
-	EmploymentNumber    *string               `json:"employment_number"`
 	PrivateEmailAddress *string               `json:"private_email_address"`
 	WorkEmailAddress    *string               `json:"work_email_address"`
 	PrivatePhoneNumber  *string               `json:"private_phone_number"`
@@ -228,7 +225,6 @@ type employeeProfileDetailsResponse struct {
 	ManagerFirstName    *string                         `json:"manager_first_name"`
 	ManagerLastName     *string                         `json:"manager_last_name"`
 	EmployeeNumber      *string                         `json:"employee_number"`
-	EmploymentNumber    *string                         `json:"employment_number"`
 	PrivateEmailAddress *string                         `json:"private_email_address"`
 	WorkEmailAddress    *string                         `json:"work_email_address"`
 	PrivatePhoneNumber  *string                         `json:"private_phone_number"`
@@ -380,7 +376,6 @@ func toCreateEmployeeParams(req createEmployeeRequest) domain.CreateEmployeePara
 		DepartmentID:        req.DepartmentID,
 		ManagerEmployeeID:   req.ManagerEmployeeID,
 		EmployeeNumber:      req.EmployeeNumber,
-		EmploymentNumber:    req.EmploymentNumber,
 		PrivateEmailAddress: req.PrivateEmailAddress,
 		WorkEmailAddress:    &req.WorkEmailAddress,
 		WorkPhoneNumber:     req.WorkPhoneNumber,
@@ -410,7 +405,6 @@ func toUpdateEmployeeParams(req updateEmployeeRequest) domain.UpdateEmployeePara
 		DepartmentID:        req.DepartmentID,
 		ManagerEmployeeID:   req.ManagerEmployeeID,
 		EmployeeNumber:      req.EmployeeNumber,
-		EmploymentNumber:    req.EmploymentNumber,
 		PrivateEmailAddress: req.PrivateEmailAddress,
 		PrivatePhoneNumber:  req.PrivatePhoneNumber,
 		WorkPhoneNumber:     req.WorkPhoneNumber,
@@ -534,7 +528,6 @@ func toEmployeeDetailResponse(emp *domain.EmployeeDetail) employeeDetailResponse
 		City:                emp.City,
 		Position:            emp.Position,
 		EmployeeNumber:      emp.EmployeeNumber,
-		EmploymentNumber:    emp.EmploymentNumber,
 		PrivateEmailAddress: emp.PrivateEmailAddress,
 		WorkEmailAddress:    emp.WorkEmailAddress,
 		PrivatePhoneNumber:  emp.PrivatePhoneNumber,
@@ -663,7 +656,6 @@ func toEmployeeProfileDetailsResponse(details *domain.EmployeeProfileDetails) em
 		ManagerFirstName:    details.ManagerFirstName,
 		ManagerLastName:     details.ManagerLastName,
 		EmployeeNumber:      details.EmployeeNumber,
-		EmploymentNumber:    details.EmploymentNumber,
 		PrivateEmailAddress: details.PrivateEmailAddress,
 		WorkEmailAddress:    details.WorkEmailAddress,
 		PrivatePhoneNumber:  details.PrivatePhoneNumber,

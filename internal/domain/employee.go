@@ -47,7 +47,6 @@ type EmployeeDetail struct {
 	City                string
 	Position            *string
 	EmployeeNumber      *string
-	EmploymentNumber    *string
 	PrivateEmailAddress *string
 	WorkEmailAddress    *string
 	PrivatePhoneNumber  *string
@@ -210,7 +209,6 @@ type EmployeeProfileDetails struct {
 	ManagerFirstName    *string
 	ManagerLastName     *string
 	EmployeeNumber      *string
-	EmploymentNumber    *string
 	PrivateEmailAddress *string
 	WorkEmailAddress    *string
 	PrivatePhoneNumber  *string
@@ -261,7 +259,6 @@ type CreateEmployeeParams struct {
 	DepartmentID        *uuid.UUID
 	ManagerEmployeeID   *uuid.UUID
 	EmployeeNumber      *string
-	EmploymentNumber    *string
 	PrivateEmailAddress *string
 	WorkEmailAddress    *string
 	WorkPhoneNumber     *string
@@ -287,7 +284,6 @@ type UpdateEmployeeParams struct {
 	DepartmentID        *uuid.UUID
 	ManagerEmployeeID   *uuid.UUID
 	EmployeeNumber      *string
-	EmploymentNumber    *string
 	PrivateEmailAddress *string
 	PrivatePhoneNumber  *string
 	WorkPhoneNumber     *string

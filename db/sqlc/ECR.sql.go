@@ -117,7 +117,6 @@ SELECT
     ep.position,
     d.name AS department_name,
     ep.employee_number,
-    ep.employment_number,
     ep.work_email_address,
     ep.contract_start_date,
     ep.contract_end_date,
@@ -138,7 +137,6 @@ type ListEmployeesByContractEndDateRow struct {
 	Position          *string                  `json:"position"`
 	DepartmentName    *string                  `json:"department_name"`
 	EmployeeNumber    *string                  `json:"employee_number"`
-	EmploymentNumber  *string                  `json:"employment_number"`
 	WorkEmailAddress  *string                  `json:"work_email_address"`
 	ContractStartDate pgtype.Date              `json:"contract_start_date"`
 	ContractEndDate   pgtype.Date              `json:"contract_end_date"`
@@ -162,7 +160,6 @@ func (q *Queries) ListEmployeesByContractEndDate(ctx context.Context) ([]ListEmp
 			&i.Position,
 			&i.DepartmentName,
 			&i.EmployeeNumber,
-			&i.EmploymentNumber,
 			&i.WorkEmailAddress,
 			&i.ContractStartDate,
 			&i.ContractEndDate,

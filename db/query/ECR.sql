@@ -55,7 +55,6 @@ SELECT
     ep.position,
     d.name AS department_name,
     ep.employee_number,
-    ep.employment_number,
     ep.work_email_address,
     ep.contract_start_date,
     ep.contract_end_date,

@@ -3658,7 +3658,6 @@ type EmployeeProfile struct {
 	City                string                   `json:"city"`
 	Position            *string                  `json:"position"`
 	EmployeeNumber      *string                  `json:"employee_number"`
-	EmploymentNumber    *string                  `json:"employment_number"`
 	PrivateEmailAddress *string                  `json:"private_email_address"`
 	WorkEmailAddress    *string                  `json:"work_email_address"`
 	PrivatePhoneNumber  *string                  `json:"private_phone_number"`

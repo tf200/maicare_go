@@ -13,7 +13,6 @@ INSERT INTO employee_profile (
     department_id,
     manager_employee_id,
     employee_number,
-    employment_number,
     private_email_address,
     work_email_address,
     work_phone_number,
@@ -30,7 +29,7 @@ INSERT INTO employee_profile (
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
     $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
-    $21, $22, $23, $24, $25, $26, $27
+    $21, $22, $23, $24, $25, $26
 ) RETURNING *;
 
 -- name: ListEmployeeProfile :many
@@ -157,7 +156,6 @@ SET
     department_id = COALESCE(sqlc.narg('department_id'), department_id),
     manager_employee_id = COALESCE(sqlc.narg('manager_employee_id'), manager_employee_id),
     employee_number = COALESCE(sqlc.narg('employee_number'), employee_number),
-    employment_number = COALESCE(sqlc.narg('employment_number'), employment_number),
     private_email_address = COALESCE(sqlc.narg('private_email_address'), private_email_address),
     work_email_address = COALESCE(sqlc.narg('work_email_address'), work_email_address),
     private_phone_number = COALESCE(sqlc.narg('private_phone_number'), private_phone_number),

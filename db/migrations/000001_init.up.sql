@@ -654,7 +654,6 @@ CREATE TABLE employee_profile (
     city TEXT NOT NULL,
     position VARCHAR(100) NULL,
     employee_number VARCHAR(50) NULL,
-    employment_number VARCHAR(50) NULL,
     private_email_address VARCHAR(254) NULL,
     work_email_address VARCHAR(254) NULL,
     private_phone_number VARCHAR(100) NULL,

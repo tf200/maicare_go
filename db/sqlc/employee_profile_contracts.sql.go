@@ -21,7 +21,7 @@ SET
     contract_type = COALESCE($5, contract_type),
     contract_rate = COALESCE($6, contract_rate)
 WHERE id = $1
-RETURNING id, user_id, first_name, last_name, bsn, street, house_number, house_number_addition, postal_code, city, position, employee_number, employment_number, private_email_address, work_email_address, private_phone_number, work_phone_number, date_of_birth, home_telephone_number, created_at, gender, location_id, department_id, manager_employee_id, has_borrowed, out_of_service, is_archived, contract_hours, contract_end_date, contract_start_date, contract_type, contract_rate
+RETURNING id, user_id, first_name, last_name, bsn, street, house_number, house_number_addition, postal_code, city, position, employee_number, private_email_address, work_email_address, private_phone_number, work_phone_number, date_of_birth, home_telephone_number, created_at, gender, location_id, department_id, manager_employee_id, has_borrowed, out_of_service, is_archived, contract_hours, contract_end_date, contract_start_date, contract_type, contract_rate
 `
 
 type AddEmployeeContractDetailsParams struct {
@@ -56,7 +56,6 @@ func (q *Queries) AddEmployeeContractDetails(ctx context.Context, arg AddEmploye
 		&i.City,
 		&i.Position,
 		&i.EmployeeNumber,
-		&i.EmploymentNumber,
 		&i.PrivateEmailAddress,
 		&i.WorkEmailAddress,
 		&i.PrivatePhoneNumber,
@@ -117,7 +116,7 @@ UPDATE employee_profile
 SET
     contract_type = $2
 WHERE id = $1
-RETURNING id, user_id, first_name, last_name, bsn, street, house_number, house_number_addition, postal_code, city, position, employee_number, employment_number, private_email_address, work_email_address, private_phone_number, work_phone_number, date_of_birth, home_telephone_number, created_at, gender, location_id, department_id, manager_employee_id, has_borrowed, out_of_service, is_archived, contract_hours, contract_end_date, contract_start_date, contract_type, contract_rate
+RETURNING id, user_id, first_name, last_name, bsn, street, house_number, house_number_addition, postal_code, city, position, employee_number, private_email_address, work_email_address, private_phone_number, work_phone_number, date_of_birth, home_telephone_number, created_at, gender, location_id, department_id, manager_employee_id, has_borrowed, out_of_service, is_archived, contract_hours, contract_end_date, contract_start_date, contract_type, contract_rate
 `
 
 type UpdateEmployeeIsSubcontractorParams struct {
@@ -141,7 +140,6 @@ func (q *Queries) UpdateEmployeeIsSubcontractor(ctx context.Context, arg UpdateE
 		&i.City,
 		&i.Position,
 		&i.EmployeeNumber,
-		&i.EmploymentNumber,
 		&i.PrivateEmailAddress,
 		&i.WorkEmailAddress,
 		&i.PrivatePhoneNumber,

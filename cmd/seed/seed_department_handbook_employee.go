@@ -275,7 +275,6 @@ func (s *Seeder) createSeedCoordinatorProfileForDepartment(
 	contractHours := 36.0
 	contractRate := 58.0
 	employeeNumber := fmt.Sprintf("EMP-%06d", gofakeit.Number(1, 999999))
-	employmentNumber := fmt.Sprintf("CONT-%06d", gofakeit.Number(1, 999999))
 	workEmail := email
 	privateEmail := strings.ToLower(gofakeit.Email())
 	workPhone := fakePhone()
@@ -302,7 +301,6 @@ func (s *Seeder) createSeedCoordinatorProfileForDepartment(
 		DepartmentID:        &departmentID,
 		ManagerEmployeeID:   managerEmployeeID,
 		EmployeeNumber:      &employeeNumber,
-		EmploymentNumber:    &employmentNumber,
 		PrivateEmailAddress: &privateEmail,
 		WorkEmailAddress:    &workEmail,
 		WorkPhoneNumber:     &workPhone,

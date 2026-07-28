@@ -142,7 +142,6 @@ func seedEmployeeProfiles(ctx context.Context, store *db.Store, user *db.CustomU
 	position := positions[0]
 	department := departments[0]
 	employeeNumber := fmt.Sprintf("EMP%05d", 1)
-	employmentNumber := fmt.Sprintf("EMPL%06d", 1000)
 	privateEmail := gofakeit.Email()
 	authPhone := gofakeit.Phone()
 	privatePhone := gofakeit.Phone()
@@ -172,7 +171,6 @@ func seedEmployeeProfiles(ctx context.Context, store *db.Store, user *db.CustomU
 		Position:            &position,
 		DepartmentID:        &departmentID,
 		EmployeeNumber:      &employeeNumber,
-		EmploymentNumber:    &employmentNumber,
 		PrivateEmailAddress: &privateEmail,
 		WorkEmailAddress:    &user.Email,
 		WorkPhoneNumber:     &authPhone,
