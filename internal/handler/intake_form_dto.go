@@ -74,9 +74,6 @@ type updateIntakeConclusionRequest struct {
 	IntakeConclusionNotes *string `json:"intake_conclusion_notes"`
 }
 
-type promoteIntakeToClientRequest struct {
-	IntakeFormID uuid.UUID `json:"intake_form_id" binding:"required,uuid"`
-}
 
 // ==================== Response DTOs ====================
 

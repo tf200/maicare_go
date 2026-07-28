@@ -266,7 +266,6 @@ func (h *IntakeFormHandler) UpdateIntakeConclusion(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "Intake Form ID"
-// @Param request body promoteIntakeToClientRequest true "Promote Intake To Client Request"
 // @Success 200 {object} httpapi.Envelope[promoteIntakeToClientResponse]
 // @Router /intake_forms/{id}/promote [post]
 func (h *IntakeFormHandler) PromoteIntakeToClient(ctx *gin.Context) {
@@ -276,14 +275,14 @@ func (h *IntakeFormHandler) PromoteIntakeToClient(ctx *gin.Context) {
 		return
 	}
 
-	var req promoteIntakeToClientRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, httpapi.Fail("invalid request body", err.Error()))
+	id, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, httpapi.Fail("invalid intake form ID", err.Error()))
 		return
 	}
 
 	result, err := h.service.PromoteIntakeToClient(ctx.Request.Context(), domain.PromoteIntakeToClientParams{
-		IntakeFormID: req.IntakeFormID,
+		IntakeFormID: id,
 		EmployeeID:   payload.EmployeeID,
 	})
 	if err != nil {
