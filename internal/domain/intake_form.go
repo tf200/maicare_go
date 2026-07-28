@@ -188,10 +188,10 @@ type ReplaceIntakeFormGoalsParams struct {
 }
 
 type IntakeFormGoalItem struct {
-	TopicID       uuid.UUID
-	CurrentLevel  int32
-	ProposedGoals []IntakeAssessmentGoal
-	Notes         *string
+	TopicID       uuid.UUID              `json:"topic_id"`
+	CurrentLevel  int32                  `json:"current_level"`
+	ProposedGoals []IntakeAssessmentGoal `json:"proposed_goals"`
+	Notes         *string                `json:"notes"`
 }
 
 type GenerateIntakeGoalsParams struct {
