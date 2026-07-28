@@ -1,6 +1,10 @@
 package handler
 
-import "github.com/gin-gonic/gin"
+import (
+	"maicare_go/internal/domain"
+
+	"github.com/gin-gonic/gin"
+)
 
 func RegisterRegistrationFormRoutes(
 	rg *gin.RouterGroup,
@@ -16,12 +20,12 @@ func RegisterRegistrationFormRoutes(
 	rg.POST("/public/intake-options/:token/confirm", handler.SelectIntakeDate)
 
 	// Protected routes
-	rg.GET("/registration_forms", auth, requirePermission("REGISTRATION_FORM.VIEW"), handler.ListRegistrationForms)
-	rg.GET("/registration_forms/counts", auth, requirePermission("REGISTRATION_FORM.VIEW"), handler.GetRegistrationFormCounts)
-	rg.GET("/registration_forms/:id", auth, requirePermission("REGISTRATION_FORM.VIEW"), handler.GetRegistrationForm)
-	rg.PUT("/registration_forms/:id", auth, requirePermission("REGISTRATION_FORM.UPDATE"), handler.UpdateRegistrationForm)
-	rg.PUT("/registration_forms/:id/documents", auth, requirePermission("REGISTRATION_FORM.UPDATE"), handler.ReplaceRegistrationFormDocument)
-	rg.DELETE("/registration_forms/:id", auth, requirePermission("REGISTRATION_FORM.DELETE"), handler.DeleteRegistrationForm)
-	rg.POST("/registration_forms/:id/status", auth, requirePermission("REGISTRATION_FORM.UPDATE"), handler.UpdateRegistrationFormStatus)
-	rg.POST("/registration_forms/:id/process", auth, requirePermission("REGISTRATION_FORM.UPDATE"), handler.ProcessRegistrationForm)
+	rg.GET("/registration_forms", auth, requirePermission(domain.PermRegistrationFormView.String()), handler.ListRegistrationForms)
+	rg.GET("/registration_forms/counts", auth, requirePermission(domain.PermRegistrationFormView.String()), handler.GetRegistrationFormCounts)
+	rg.GET("/registration_forms/:id", auth, requirePermission(domain.PermRegistrationFormView.String()), handler.GetRegistrationForm)
+	rg.PUT("/registration_forms/:id", auth, requirePermission(domain.PermRegistrationFormUpdate.String()), handler.UpdateRegistrationForm)
+	rg.PUT("/registration_forms/:id/documents", auth, requirePermission(domain.PermRegistrationFormUpdate.String()), handler.ReplaceRegistrationFormDocument)
+	rg.DELETE("/registration_forms/:id", auth, requirePermission(domain.PermRegistrationFormDelete.String()), handler.DeleteRegistrationForm)
+	rg.POST("/registration_forms/:id/status", auth, requirePermission(domain.PermRegistrationFormUpdate.String()), handler.UpdateRegistrationFormStatus)
+	rg.POST("/registration_forms/:id/process", auth, requirePermission(domain.PermRegistrationFormUpdate.String()), handler.ProcessRegistrationForm)
 }
