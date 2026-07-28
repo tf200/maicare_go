@@ -26,6 +26,7 @@ func main() {
 	coordinatorCount := flag.Int("coordinators", -1, "number of coordinators to seed (defaults to in-care-clients + out-of-care-clients)")
 	senderCount := flag.Int("senders", 12, "number of senders to seed")
 	count := flag.Int("count", 25, "number of registration forms to seed")
+	unprocessedRegistrationForms := flag.Int("unprocessed-registration-forms", 10, "number of unprocessed (pending/rejected) registration forms to seed")
 	otherIntakeForms := flag.Int("other-intake-forms", 10, "number of non-suitable intake forms to seed without promoting to clients")
 	waitingListClients := flag.Int("waiting-list-clients", 12, "number of waiting list clients to seed via intake promotion flow")
 	inCareClients := flag.Int("in-care-clients", 6, "number of in-care clients to seed via waiting-list to in-care promotion flow")
@@ -93,8 +94,8 @@ func main() {
 	seeder := newSeeder(store)
 
 	startedAt := time.Now()
-	fmt.Printf("[seed] start organisations=%d locations_per_org=%d departments=%d handbook_templates_per_department=%d employee_handbook_assignments_per_department=%d coordinators=%d senders=%d registration_forms=%d other_intake_forms=%d waiting_list_clients=%d in_care_clients=%d out_of_care_clients=%d evaluations_per_in_care_client=%d diagnoses_per_client=%d medication_orders_per_client=%d incidents_per_client=%d invoices_per_client=%d payments_per_invoice=%d timeout=%s\n",
-		*organisationCount, *locationsPerOrg, *departmentCount, *handbookTemplatesPerDepartment, *employeeHandbookAssignmentsPerDepartment, resolvedCoordinatorCount, *senderCount, *count, *otherIntakeForms, *waitingListClients, *inCareClients, *outOfCareClients, *evaluationsPerInCareClient, *diagnosesPerClient, *medicationOrdersPerClient, *incidentsPerClient, *invoicesPerClient, *paymentsPerInvoice, (*seedTimeout).String())
+	fmt.Printf("[seed] start organisations=%d locations_per_org=%d departments=%d handbook_templates_per_department=%d employee_handbook_assignments_per_department=%d coordinators=%d senders=%d registration_forms=%d unprocessed_registration_forms=%d other_intake_forms=%d waiting_list_clients=%d in_care_clients=%d out_of_care_clients=%d evaluations_per_in_care_client=%d diagnoses_per_client=%d medication_orders_per_client=%d incidents_per_client=%d invoices_per_client=%d payments_per_invoice=%d timeout=%s\n",
+		*organisationCount, *locationsPerOrg, *departmentCount, *handbookTemplatesPerDepartment, *employeeHandbookAssignmentsPerDepartment, resolvedCoordinatorCount, *senderCount, *count, *unprocessedRegistrationForms, *otherIntakeForms, *waitingListClients, *inCareClients, *outOfCareClients, *evaluationsPerInCareClient, *diagnosesPerClient, *medicationOrdersPerClient, *incidentsPerClient, *invoicesPerClient, *paymentsPerInvoice, (*seedTimeout).String())
 	if err := seeder.SeedOrganisations(ctx, *organisationCount); err != nil {
 		log.Fatalf("seeding organisations failed: %v", err)
 	}
@@ -143,6 +144,10 @@ func main() {
 		log.Fatalf("seeding non-suitable intake forms failed: %v", err)
 	}
 
+	if err := seeder.SeedUnprocessedRegistrationForms(ctx, *unprocessedRegistrationForms); err != nil {
+		log.Fatalf("seeding unprocessed registration forms failed: %v", err)
+	}
+
 	if err := seeder.SeedGoalEvaluationsForInCareClients(ctx, *evaluationsPerInCareClient); err != nil {
 		log.Fatalf("seeding goal evaluations for in-care clients failed: %v", err)
 	}
@@ -159,7 +164,7 @@ func main() {
 		log.Fatalf("seeding invoices and payments failed: %v", err)
 	}
 
-	fmt.Printf("Seeded %d organisations, %d locations, %d departments, %d handbook templates, %d handbook assignments, %d coordinators, %d senders, %d registration forms, %d intake forms, %d total clients, %d waiting list clients, %d in-care clients, %d out-of-care clients, %d goal evaluations, %d diagnoses, %d medication orders, %d incidents, %d invoices, %d payments in %s\n",
+	fmt.Printf("Seeded %d organisations, %d locations, %d departments, %d handbook templates, %d handbook assignments, %d coordinators, %d senders, %d registration forms (%d unprocessed), %d intake forms, %d total clients, %d waiting list clients, %d in-care clients, %d out-of-care clients, %d goal evaluations, %d diagnoses, %d medication orders, %d incidents, %d invoices, %d payments in %s\n",
 		len(seeder.data.OrganisationIDs),
 		len(seeder.data.LocationIDs),
 		len(seeder.data.DepartmentIDs),
@@ -168,6 +173,7 @@ func main() {
 		len(seeder.data.CoordinatorIDs),
 		len(seeder.data.SenderIDs),
 		len(seeder.data.RegistrationFormIDs),
+		len(seeder.data.UnprocessedRegistrationFormIDs),
 		len(seeder.data.IntakeFormIDs),
 		len(seeder.data.ClientIDs),
 		len(seeder.data.ClientIDs)-len(seeder.data.InCareClientIDs)-len(seeder.data.OutOfCareClientIDs),

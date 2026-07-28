@@ -344,6 +344,60 @@ func (s *Seeder) SeedOtherIntakeForms(ctx context.Context, count int) error {
 	return nil
 }
 
+func (s *Seeder) SeedUnprocessedRegistrationForms(ctx context.Context, count int) error {
+	if count <= 0 {
+		return nil
+	}
+
+	rejectionReasons := []string{
+		"Incomplete application details provided by referrer",
+		"Client care requirements exceed available facility scope",
+		"Client address is outside of current service region",
+		"Duplicate registration application submitted",
+		"Referral declined due to current capacity constraints",
+	}
+
+	for i := 0; i < count; i++ {
+		if (i+1)%10 == 0 || i == 0 || i+1 == count {
+			fmt.Printf("[seed] unprocessed registration forms: %d/%d\n", i+1, count)
+		}
+
+		params := randomRegistrationFormParams(len(s.data.RegistrationFormIDs) + 1)
+		created, err := s.store.CreateRegistrationForm(ctx, params)
+		if err != nil {
+			return fmt.Errorf("create unprocessed registration form %d: %w", i+1, err)
+		}
+
+		// ~25% of unprocessed registration forms are marked as rejected; the rest stay pending
+		if chance(0.25) {
+			reason := oneOf(rejectionReasons)
+			var reviewerID *uuid.UUID
+			if len(s.data.CoordinatorIDs) > 0 {
+				id := oneOf(s.data.CoordinatorIDs)
+				reviewerID = &id
+			} else if len(s.data.EmployeeIDs) > 0 {
+				id := oneOf(s.data.EmployeeIDs)
+				reviewerID = &id
+			}
+
+			_, err = s.store.UpdateRegistrationFormStatus(ctx, db.UpdateRegistrationFormStatusParams{
+				ID:                    created.ID,
+				FormStatus:            db.FormStatusEnumRejected,
+				ProcessedByEmployeeID: reviewerID,
+				RejectionReason:       &reason,
+			})
+			if err != nil {
+				return fmt.Errorf("reject registration form %d: %w", i+1, err)
+			}
+		}
+
+		s.data.RegistrationFormIDs = append(s.data.RegistrationFormIDs, created.ID)
+		s.data.UnprocessedRegistrationFormIDs = append(s.data.UnprocessedRegistrationFormIDs, created.ID)
+	}
+
+	return nil
+}
+
 func otherIntakeConclusionNote(conclusion db.IntakeConclusionEnum) string {
 	switch conclusion {
 	case db.IntakeConclusionEnumUnsuitable:

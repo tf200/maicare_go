@@ -19,19 +19,21 @@ The script currently seeds the following, in this order:
 7. `sender`
 8. `registration_form`
 9. `intake_forms` + `intake_topic_assessments` (suitable only)
-10. `client_details` (promoted to **On Waiting List**)
-11. `client_details` promoted to **In Care** with:
+10. `other_intake_forms` (non-suitable intake forms from processed registration forms)
+11. `unprocessed_registration_forms` (registration forms left as `pending` or `rejected`)
+12. `client_details` (promoted to **On Waiting List**)
+13. `client_details` promoted to **In Care** with:
    - care dates (`placed_in_care_at`, `care_start_date`)
    - coordinator assignment from pre-seeded coordinator pool
    - approved active contract (`contract`)
-12. `client_details` promoted to **Out Of Care** with:
+14. `client_details` promoted to **Out Of Care** with:
    - full intake + waiting-list + in-care history
    - seeded evaluations before discharge
    - discharge data (`discharge_date`, `discharge_reason`, `final_evaluation`)
    - status history transition to `out_of_care`
-13. `client_goal_evaluations` + `client_goal_evaluation_items` for active in-care clients
-14. `client_diagnosis` + `client_medication_order` for seeded clients
-15. `invoice` + `invoice_line` + `invoice_payment_history` for in-care clients via invoice service logic:
+15. `client_goal_evaluations` + `client_goal_evaluation_items` for active in-care clients
+16. `client_diagnosis` + `client_medication_order` for seeded clients
+17. `invoice` + `invoice_line` + `invoice_payment_history` for in-care clients via invoice service logic:
    - seeds billable `calendar_events` appointments per in-care client in 4-week windows
    - calls `GenerateInvoice` (auto logic) to create invoices from approved contracts
    - calls `CreatePayment` to create completed payments and trigger invoice status transitions
@@ -42,7 +44,7 @@ This order is intentional and should be kept for FK safety when future tables ar
 
 - A `Seeder` struct wraps the `db.Store` and a `SeedData` cache.
 - `SeedData` stores created IDs so later seed steps can reuse earlier records.
-- Each table has its own method (for example `SeedOrganisations`, `SeedLocations`, `SeedSenders`, `SeedRegistrationForms`).
+- Each table has its own method (for example `SeedOrganisations`, `SeedLocations`, `SeedSenders`, `SeedRegistrationForms`, `SeedUnprocessedRegistrationForms`).
 - Random values are generated with helper functions (`fakePhone`, `fakePostalCodeNL`, `randomDate`, etc.).
 
 ## Run the Seeder
@@ -56,7 +58,7 @@ make seed
 ### Direct run
 
 ```bash
-go run ./cmd/seed -organisations 6 -locations-per-org 2 -senders 12 -count 25
+go run ./cmd/seed -organisations 6 -locations-per-org 2 -senders 12 -count 25 -unprocessed-registration-forms 10
 ```
 
 Example with waiting list clients:
@@ -99,6 +101,8 @@ go run ./cmd/seed -in-care-clients 8 -invoices-per-client 2 -payments-per-invoic
 - `-coordinators`: number of coordinators to seed (default: `in-care-clients + out-of-care-clients`)
 - `-senders`: number of senders to create (default: `12`)
 - `-count`: number of registration forms to create (default: `25`)
+- `-unprocessed-registration-forms`: number of unprocessed (`pending`/`rejected`) registration forms to seed (default: `10`)
+- `-other-intake-forms`: number of non-suitable intake forms to seed without promoting to clients (default: `10`)
 - `-waiting-list-clients`: number of clients to create through intake->client promotion flow (default: `12`)
 - `-in-care-clients`: number of clients to create and promote to in-care pattern (default: `6`)
 - `-out-of-care-clients`: number of clients to create and promote through in-care to out-of-care (default: `4`)
