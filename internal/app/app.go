@@ -96,7 +96,10 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 	pdfService := pkgpdf.NewPdfService(bucketClient)
 	incidentPDFGenerator := adapters.NewIncidentPDFGeneratorAdapter(pdfService)
 	pdfSvc := adapters.NewPDFServiceAdapter(pdfService)
-	aiService := adapters.NewAIServiceStub()
+	aiService, err := adapters.NewAIService(cfg.OpenRouterAPIKey, cfg.OpenRouterModel)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize ai service: %w", err)
+	}
 
 	notificationSvc, handlers := wireServicesAndHandlers(store, appLogger, tokenMaker, taskQueue, storage, incidentPDFGenerator, pdfSvc, aiService, hub, ticketManager, &cfg)
 
@@ -303,7 +306,7 @@ type appHandlers struct {
 	invoice          *handler.InvoiceHandler
 }
 
-func wireServicesAndHandlers(store *db.Store, logger domain.Logger, tokenMaker domain.TokenMaker, taskQueue domain.TaskQueue, storage domain.Storage, incidentPDFGenerator domain.IncidentPDFGenerator, pdfService domain.PDFService, aiService *adapters.AIServiceStub, hub *ws.Hub, ticketManager *ws.TicketManager, cfg *config.Config) (domain.NotificationService, appHandlers) {
+func wireServicesAndHandlers(store *db.Store, logger domain.Logger, tokenMaker domain.TokenMaker, taskQueue domain.TaskQueue, storage domain.Storage, incidentPDFGenerator domain.IncidentPDFGenerator, pdfService domain.PDFService, aiService *adapters.AIService, hub *ws.Hub, ticketManager *ws.TicketManager, cfg *config.Config) (domain.NotificationService, appHandlers) {
 	authRepo := repository.NewAuthRepository(store)
 	attachmentRepo := repository.NewAttachmentRepository(store)
 	clientRepo := repository.NewClientRepository(store)
