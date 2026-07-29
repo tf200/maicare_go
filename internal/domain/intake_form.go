@@ -13,6 +13,7 @@ var (
 	ErrIntakeFormNotFound                     = errors.New("intake form not found")
 	ErrIntakeGoalsUpdateBlockedByActiveClient = errors.New("intake goals cannot be updated when an active client exists for this intake form")
 	ErrIntakeFormUpdateBlockedByActiveClient  = errors.New("intake form cannot be updated when an active client exists for this intake form")
+	ErrIntakeFormDeleteBlockedByActiveClient  = errors.New("intake form cannot be deleted when an active client exists for this intake form")
 	ErrIntakeFormUpdateConflict               = errors.New("intake form was updated by another request")
 	ErrNoIntakeFormFieldsToUpdate             = errors.New("no intake form fields provided for update")
 	ErrInvalidIntakeFormClearField            = errors.New("invalid intake form clear field")
@@ -55,6 +56,7 @@ type IntakeFormListItem struct {
 	ClientBsnNumber         string
 	IntakeStatus            db.IntakeConclusionEnum
 	GoalAssessmentDone      bool
+	HasClient               bool
 	CareType                db.IntakeCareTypeEnum
 	AssignedLocationID      *uuid.UUID
 	AssignedLocationAddress *AssignedLocationAddress
@@ -248,6 +250,7 @@ type IntakeFormRepository interface {
 	CreateEmergencyContact(ctx context.Context, params db.CreateEmemrgencyContactParams) (db.ClientEmergencyContact, error)
 	CreateIntakeTopicAssessmentsBatch(ctx context.Context, params db.CreateIntakeTopicAssessmentsBatchParams) ([]db.CreateIntakeTopicAssessmentsBatchRow, error)
 	DeleteIntakeTopicAssessmentsByIntakeForm(ctx context.Context, intakeFormID uuid.UUID) error
+	DeleteIntakeForm(ctx context.Context, id uuid.UUID) error
 	ExecTx(ctx context.Context, fn func(*db.Queries) error) error
 }
 
@@ -262,4 +265,5 @@ type IntakeFormService interface {
 	GenerateIntakeGoals(ctx context.Context, params GenerateIntakeGoalsParams) (*GenerateIntakeGoalsResult, error)
 	UpdateIntakeConclusion(ctx context.Context, id uuid.UUID, params UpdateIntakeConclusionParams) (*IntakeFormConclusion, error)
 	PromoteIntakeToClient(ctx context.Context, params PromoteIntakeToClientParams) (*PromoteIntakeToClientResult, error)
+	DeleteIntakeForm(ctx context.Context, id uuid.UUID) error
 }

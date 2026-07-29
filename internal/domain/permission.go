@@ -208,6 +208,14 @@ const (
 	PermRegistrationFormView   PermissionKey = "REGISTRATION_FORM.VIEW"
 )
 
+// Intake form Permissions
+const (
+	PermIntakeFormDelete PermissionKey = "REGISTRATION_FORM.DELETE"
+	PermIntakeFormUpdate PermissionKey = "INTAKE_FORM.UPDATE"
+	PermIntakeFormView   PermissionKey = "INTAKE_FORM.VIEW"
+	PermIntakeFormCreate PermissionKey = "INTAKE_FORM.CREATE"
+)
+
 // Roles Permissions
 const (
 	PermRolesCreate PermissionKey = "ROLES.CREATE"

@@ -338,6 +338,22 @@ func (s *intakeFormService) PromoteIntakeToClient(ctx context.Context, params do
 	return result, nil
 }
 
+func (s *intakeFormService) DeleteIntakeForm(ctx context.Context, id uuid.UUID) error {
+	err := s.repo.DeleteIntakeForm(ctx, id)
+	if err != nil {
+		if s.logger != nil {
+			s.logger.LogError(ctx, "IntakeFormService.DeleteIntakeForm", "failed to delete intake form", err, zap.String("intake_form_id", id.String()))
+		}
+		return err
+	}
+
+	if s.logger != nil {
+		s.logger.LogInfo(ctx, "IntakeFormService.DeleteIntakeForm", "intake form deleted successfully", zap.String("intake_form_id", id.String()))
+	}
+
+	return nil
+}
+
 // Helper functions
 
 func buildRiskContext(registrationForm db.GetRegistrationFormRow, intakeForm db.IntakeForm) string {

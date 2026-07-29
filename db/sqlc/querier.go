@@ -137,6 +137,7 @@ type Querier interface {
 	DeleteEmployeeExperience(ctx context.Context, id uuid.UUID) (EmployeeExperience, error)
 	DeleteHandbookStepByID(ctx context.Context, id uuid.UUID) error
 	DeleteIncident(ctx context.Context, id uuid.UUID) error
+	DeleteIntakeForm(ctx context.Context, id uuid.UUID) error
 	DeleteIntakeTopicAssessmentsByIntakeForm(ctx context.Context, intakeFormID uuid.UUID) error
 	DeleteIntakeTopicsAssessment(ctx context.Context, id uuid.UUID) error
 	DeleteInvoice(ctx context.Context, id uuid.UUID) error

@@ -183,6 +183,16 @@ func (q *Queries) CreateSeedIntakeForm(ctx context.Context, arg CreateSeedIntake
 	return i, err
 }
 
+const deleteIntakeForm = `-- name: DeleteIntakeForm :exec
+DELETE FROM intake_forms
+WHERE id = $1
+`
+
+func (q *Queries) DeleteIntakeForm(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.Exec(ctx, deleteIntakeForm, id)
+	return err
+}
+
 const getIntakeForm = `-- name: GetIntakeForm :one
 SELECT id, registration_form_id, date_of_intake, care_type, intake_participants, family_situation, psychological_state, self_sufficiency, sender_id, assigned_location_id, risk_assessment, intake_conclusion, intake_conclusion_notes, evaluation_intervals_weeks, signature, created_at, updated_at FROM intake_forms
 WHERE id = $1
@@ -387,6 +397,11 @@ SELECT
         FROM intake_topic_assessments ita
         WHERE ita.intake_form_id = i.id
     ) AS goal_assessment_done,
+    EXISTS (
+        SELECT 1
+        FROM client_details cd
+        WHERE cd.intake_form_id = i.id
+    ) AS has_client,
     COUNT(*) OVER() AS total_count
 FROM intake_forms i
 JOIN registration_form r ON i.registration_form_id = r.id
@@ -431,6 +446,7 @@ type ListIntakeFormsRow struct {
 	AssignedLocationPostalCode          *string              `json:"assigned_location_postal_code"`
 	AssignedLocationCity                *string              `json:"assigned_location_city"`
 	GoalAssessmentDone                  bool                 `json:"goal_assessment_done"`
+	HasClient                           bool                 `json:"has_client"`
 	TotalCount                          int64                `json:"total_count"`
 }
 
@@ -466,6 +482,7 @@ func (q *Queries) ListIntakeForms(ctx context.Context, arg ListIntakeFormsParams
 			&i.AssignedLocationPostalCode,
 			&i.AssignedLocationCity,
 			&i.GoalAssessmentDone,
+			&i.HasClient,
 			&i.TotalCount,
 		); err != nil {
 			return nil, err

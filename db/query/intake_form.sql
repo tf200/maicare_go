@@ -82,6 +82,11 @@ SELECT
         FROM intake_topic_assessments ita
         WHERE ita.intake_form_id = i.id
     ) AS goal_assessment_done,
+    EXISTS (
+        SELECT 1
+        FROM client_details cd
+        WHERE cd.intake_form_id = i.id
+    ) AS has_client,
     COUNT(*) OVER() AS total_count
 FROM intake_forms i
 JOIN registration_form r ON i.registration_form_id = r.id
@@ -200,3 +205,9 @@ SET
     updated_at = NOW()
 WHERE id = @id
 RETURNING *;
+
+
+-- name: DeleteIntakeForm :exec
+DELETE FROM intake_forms
+WHERE id = $1;
+

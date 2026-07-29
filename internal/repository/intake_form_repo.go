@@ -608,6 +608,32 @@ func (r *IntakeFormRepository) DeleteIntakeTopicAssessmentsByIntakeForm(ctx cont
 	return r.store.DeleteIntakeTopicAssessmentsByIntakeForm(ctx, intakeFormID)
 }
 
+func (r *IntakeFormRepository) DeleteIntakeForm(ctx context.Context, id uuid.UUID) error {
+	return r.store.ExecTx(ctx, func(q *db.Queries) error {
+		_, err := q.LockIntakeFormByID(ctx, id)
+		if err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				return domain.ErrIntakeFormNotFound
+			}
+			return fmt.Errorf("failed to lock intake form: %w", err)
+		}
+
+		hasClient, err := q.HasActiveClientByIntakeFormID(ctx, &id)
+		if err != nil {
+			return fmt.Errorf("failed to check client for intake form: %w", err)
+		}
+		if hasClient {
+			return domain.ErrIntakeFormDeleteBlockedByActiveClient
+		}
+
+		if err := q.DeleteIntakeForm(ctx, id); err != nil {
+			return fmt.Errorf("failed to delete intake form: %w", err)
+		}
+
+		return nil
+	})
+}
+
 // Helper functions
 
 func toDomainIntakeForm(row db.IntakeForm) *domain.IntakeForm {
@@ -652,6 +678,7 @@ func toDomainIntakeFormListItem(row db.ListIntakeFormsRow) domain.IntakeFormList
 		ClientBsnNumber:         row.ClientBsnNumber,
 		IntakeStatus:            row.IntakeConclusion,
 		GoalAssessmentDone:      row.GoalAssessmentDone,
+		HasClient:               row.HasClient,
 		CareType:                row.CareType,
 		AssignedLocationID:      row.AssignedLocationID,
 		AssignedLocationAddress: address,

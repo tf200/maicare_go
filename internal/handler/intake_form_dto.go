@@ -149,6 +149,7 @@ type intakeFormListItemResponse struct {
 	ClientBsnNumber         string                           `json:"client_bsn_number"`
 	IntakeStatus            db.IntakeConclusionEnum          `json:"intake_status"`
 	GoalAssessmentDone      bool                             `json:"goal_assessment_done"`
+	HasClient               bool                             `json:"has_client"`
 	CareType                db.IntakeCareTypeEnum            `json:"care_type"`
 	AssignedLocationID      *uuid.UUID                       `json:"assigned_location_id"`
 	AssignedLocationAddress *assignedLocationAddressResponse `json:"assigned_location_address"`
@@ -257,6 +258,7 @@ func toIntakeFormListItemResponse(item domain.IntakeFormListItem) intakeFormList
 		ClientBsnNumber:         item.ClientBsnNumber,
 		IntakeStatus:            item.IntakeStatus,
 		GoalAssessmentDone:      item.GoalAssessmentDone,
+		HasClient:               item.HasClient,
 		CareType:                item.CareType,
 		AssignedLocationID:      item.AssignedLocationID,
 		AssignedLocationAddress: toAssignedLocationAddressResponse(item.AssignedLocationAddress),

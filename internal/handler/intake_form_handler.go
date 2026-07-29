@@ -292,3 +292,37 @@ func (h *IntakeFormHandler) PromoteIntakeToClient(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, httpapi.OK(toPromoteIntakeToClientResponse(result), "Intake promoted to client successfully"))
 }
+
+// DeleteIntakeForm deletes an intake form by ID.
+// @Summary Delete an intake form
+// @Tags intake_forms
+// @Produce json
+// @Param id path string true "Intake Form ID"
+// @Success 200 {object} httpapi.Envelope[string]
+// @Failure 400 {object} httpapi.Envelope[string]
+// @Failure 404 {object} httpapi.Envelope[string]
+// @Failure 409 {object} httpapi.Envelope[string]
+// @Failure 500 {object} httpapi.Envelope[string]
+// @Router /intake_forms/{id} [delete]
+func (h *IntakeFormHandler) DeleteIntakeForm(ctx *gin.Context) {
+	id, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, httpapi.Fail("invalid intake form ID", err.Error()))
+		return
+	}
+
+	err = h.service.DeleteIntakeForm(ctx.Request.Context(), id)
+	if err != nil {
+		switch err {
+		case domain.ErrIntakeFormNotFound:
+			ctx.JSON(http.StatusNotFound, httpapi.Fail("intake form not found", err.Error()))
+		case domain.ErrIntakeFormDeleteBlockedByActiveClient:
+			ctx.JSON(http.StatusConflict, httpapi.Fail("intake form delete blocked by active client", err.Error()))
+		default:
+			ctx.JSON(http.StatusInternalServerError, httpapi.Fail("failed to delete intake form", err.Error()))
+		}
+		return
+	}
+
+	ctx.JSON(http.StatusOK, httpapi.OK("Intake form deleted successfully", "Intake form deleted successfully"))
+}
