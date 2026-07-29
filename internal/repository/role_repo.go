@@ -48,10 +48,8 @@ func (r *RoleRepository) ListAllPermissions(ctx context.Context) ([]domain.Syste
 		perms[i] = domain.SystemPermission{
 			ID:          row.ID,
 			Name:        row.Name,
-			Resource:    row.Resource,
 			DisplayName: row.DisplayName,
 			Description: row.Description,
-			SortOrder:   row.SortOrder,
 			GroupKey:    row.GroupKey,
 			SectionKey:  row.SectionKey,
 		}
@@ -71,7 +69,6 @@ func (r *RoleRepository) ListAllRolePermissions(ctx context.Context, roleID uuid
 			RoleID:         roleID,
 			PermissionID:   row.PermissionID,
 			PermissionName: row.PermissionName,
-			Resource:       row.Resource,
 		}
 	}
 	return perms, nil
@@ -119,7 +116,6 @@ func (r *RoleRepository) ListInheritedUserPermissions(ctx context.Context, userI
 		perms[i] = domain.UserPermission{
 			PermissionID:   row.PermissionID,
 			PermissionName: row.PermissionName,
-			Resource:       row.Resource,
 		}
 	}
 	return perms, nil
@@ -136,7 +132,6 @@ func (r *RoleRepository) ListUserPermissionOverrides(ctx context.Context, userID
 		overrides[i] = domain.UserPermissionOverride{
 			PermissionID:   row.PermissionID,
 			PermissionName: row.PermissionName,
-			Resource:       row.Resource,
 			Effect:         string(row.Effect),
 		}
 	}
@@ -154,7 +149,6 @@ func (r *RoleRepository) ListEffectiveUserPermissions(ctx context.Context, userI
 		perms[i] = domain.UserPermission{
 			PermissionID:   row.PermissionID,
 			PermissionName: row.PermissionName,
-			Resource:       row.Resource,
 		}
 	}
 	return perms, nil

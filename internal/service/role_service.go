@@ -137,9 +137,8 @@ func (s *RoleService) ListUserRolesAndPermissions(ctx context.Context, employeeI
 	inheritedList := make([]domain.PermissionInfo, 0, len(inherited))
 	for _, perm := range inherited {
 		inheritedList = append(inheritedList, domain.PermissionInfo{
-			ID:       perm.PermissionID,
-			Name:     perm.PermissionName,
-			Resource: perm.Resource,
+			ID:   perm.PermissionID,
+			Name: perm.PermissionName,
 		})
 	}
 
@@ -147,9 +146,8 @@ func (s *RoleService) ListUserRolesAndPermissions(ctx context.Context, employeeI
 	denyOverrides := make([]domain.PermissionOverrideInfo, 0)
 	for _, override := range overrides {
 		item := domain.PermissionOverrideInfo{
-			ID:       override.PermissionID,
-			Name:     override.PermissionName,
-			Resource: override.Resource,
+			ID:   override.PermissionID,
+			Name: override.PermissionName,
 		}
 		if override.Effect == "allow" {
 			allowOverrides = append(allowOverrides, item)
@@ -161,9 +159,8 @@ func (s *RoleService) ListUserRolesAndPermissions(ctx context.Context, employeeI
 	effectiveList := make([]domain.PermissionInfo, 0, len(effective))
 	for _, perm := range effective {
 		effectiveList = append(effectiveList, domain.PermissionInfo{
-			ID:       perm.PermissionID,
-			Name:     perm.PermissionName,
-			Resource: perm.Resource,
+			ID:   perm.PermissionID,
+			Name: perm.PermissionName,
 		})
 	}
 

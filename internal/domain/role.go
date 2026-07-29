@@ -19,20 +19,17 @@ type Role struct {
 type SystemPermission struct {
 	ID          uuid.UUID
 	Name        string
-	Resource    string
 	DisplayName string
 	Description *string
-	SortOrder   int32
 	GroupKey    string
 	SectionKey  string
 }
 
 // RolePermission represents a permission assigned to a role
 type RolePermission struct {
-	RoleID       uuid.UUID
-	PermissionID uuid.UUID
+	RoleID         uuid.UUID
+	PermissionID   uuid.UUID
 	PermissionName string
-	Resource       string
 }
 
 // UserRole represents a role assigned to a user
@@ -43,16 +40,14 @@ type UserRole struct {
 
 // UserPermission represents a permission associated with a user
 type UserPermission struct {
-	PermissionID uuid.UUID
+	PermissionID   uuid.UUID
 	PermissionName string
-	Resource       string
 }
 
 // UserPermissionOverride represents a permission override for a user
 type UserPermissionOverride struct {
-	PermissionID uuid.UUID
+	PermissionID   uuid.UUID
 	PermissionName string
-	Resource       string
 	Effect         string // "allow" or "deny"
 }
 
@@ -64,16 +59,14 @@ type RoleInfo struct {
 
 // PermissionInfo is a minimal permission representation
 type PermissionInfo struct {
-	ID       uuid.UUID
-	Name     string
-	Resource string
+	ID   uuid.UUID
+	Name string
 }
 
 // PermissionOverrideInfo is a minimal permission override representation
 type PermissionOverrideInfo struct {
-	ID       uuid.UUID
-	Name     string
-	Resource string
+	ID   uuid.UUID
+	Name string
 }
 
 // PermissionSection groups permissions by section

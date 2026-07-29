@@ -212,9 +212,9 @@ func (q *Queries) GetUserRoles(ctx context.Context, userID uuid.UUID) ([]GetUser
 
 const listAllPermissions = `-- name: ListAllPermissions :many
 
-SELECT id, name, resource, method, group_key, section_key, display_name, description, sort_order
+SELECT id, name, group_key, section_key, display_name, description
 FROM permissions
-ORDER BY group_key, section_key, sort_order, name
+ORDER BY group_key, section_key, name
 `
 
 // ---------- 2. PERMISSIONS ----------
@@ -231,13 +231,10 @@ func (q *Queries) ListAllPermissions(ctx context.Context) ([]Permission, error) 
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
-			&i.Resource,
-			&i.Method,
 			&i.GroupKey,
 			&i.SectionKey,
 			&i.DisplayName,
 			&i.Description,
-			&i.SortOrder,
 		); err != nil {
 			return nil, err
 		}
@@ -252,8 +249,7 @@ func (q *Queries) ListAllPermissions(ctx context.Context) ([]Permission, error) 
 const listAllRolePermissions = `-- name: ListAllRolePermissions :many
 
 SELECT p.id   AS permission_id,
-       p.name AS permission_name,
-       p.resource
+       p.name AS permission_name
 FROM role_permissions rp
 JOIN permissions p ON p.id = rp.permission_id
 WHERE rp.role_id = $1
@@ -263,7 +259,6 @@ ORDER BY p.id
 type ListAllRolePermissionsRow struct {
 	PermissionID   uuid.UUID `json:"permission_id"`
 	PermissionName string    `json:"permission_name"`
-	Resource       string    `json:"resource"`
 }
 
 // ---------- 3. ROLE-PERMISSION MAPPING ----------
@@ -277,7 +272,7 @@ func (q *Queries) ListAllRolePermissions(ctx context.Context, roleID uuid.UUID) 
 	items := []ListAllRolePermissionsRow{}
 	for rows.Next() {
 		var i ListAllRolePermissionsRow
-		if err := rows.Scan(&i.PermissionID, &i.PermissionName, &i.Resource); err != nil {
+		if err := rows.Scan(&i.PermissionID, &i.PermissionName); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -316,8 +311,7 @@ effective_permissions AS (
       AND effect = 'deny'
 )
 SELECT p.id AS permission_id,
-       p.name AS permission_name,
-       p.resource
+       p.name AS permission_name
 FROM effective_permissions ep
 JOIN permissions p ON p.id = ep.permission_id
 ORDER BY p.id
@@ -326,7 +320,6 @@ ORDER BY p.id
 type ListEffectiveUserPermissionsRow struct {
 	PermissionID   uuid.UUID `json:"permission_id"`
 	PermissionName string    `json:"permission_name"`
-	Resource       string    `json:"resource"`
 }
 
 // Returns effective permissions after applying role inheritance and overrides.
@@ -339,7 +332,7 @@ func (q *Queries) ListEffectiveUserPermissions(ctx context.Context, userID uuid.
 	items := []ListEffectiveUserPermissionsRow{}
 	for rows.Next() {
 		var i ListEffectiveUserPermissionsRow
-		if err := rows.Scan(&i.PermissionID, &i.PermissionName, &i.Resource); err != nil {
+		if err := rows.Scan(&i.PermissionID, &i.PermissionName); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -353,8 +346,7 @@ func (q *Queries) ListEffectiveUserPermissions(ctx context.Context, userID uuid.
 const listInheritedUserPermissions = `-- name: ListInheritedUserPermissions :many
 
 SELECT p.id   AS permission_id,
-       p.name AS permission_name,
-       p.resource
+       p.name AS permission_name
 FROM user_roles ur
 JOIN role_permissions rp ON rp.role_id = ur.role_id
 JOIN permissions p ON p.id = rp.permission_id
@@ -365,7 +357,6 @@ ORDER BY p.id
 type ListInheritedUserPermissionsRow struct {
 	PermissionID   uuid.UUID `json:"permission_id"`
 	PermissionName string    `json:"permission_name"`
-	Resource       string    `json:"resource"`
 }
 
 // ---------- 5. USER-PERMISSION OVERRIDES ----------
@@ -379,7 +370,7 @@ func (q *Queries) ListInheritedUserPermissions(ctx context.Context, userID uuid.
 	items := []ListInheritedUserPermissionsRow{}
 	for rows.Next() {
 		var i ListInheritedUserPermissionsRow
-		if err := rows.Scan(&i.PermissionID, &i.PermissionName, &i.Resource); err != nil {
+		if err := rows.Scan(&i.PermissionID, &i.PermissionName); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -443,7 +434,6 @@ func (q *Queries) ListRoles(ctx context.Context) ([]ListRolesRow, error) {
 const listUserPermissionOverrides = `-- name: ListUserPermissionOverrides :many
 SELECT upo.permission_id,
        p.name AS permission_name,
-       p.resource,
        upo.effect
 FROM user_permission_overrides upo
 JOIN permissions p ON p.id = upo.permission_id
@@ -454,7 +444,6 @@ ORDER BY p.id
 type ListUserPermissionOverridesRow struct {
 	PermissionID   uuid.UUID                `json:"permission_id"`
 	PermissionName string                   `json:"permission_name"`
-	Resource       string                   `json:"resource"`
 	Effect         PermissionOverrideEffect `json:"effect"`
 }
 
@@ -468,12 +457,7 @@ func (q *Queries) ListUserPermissionOverrides(ctx context.Context, userID uuid.U
 	items := []ListUserPermissionOverridesRow{}
 	for rows.Next() {
 		var i ListUserPermissionOverridesRow
-		if err := rows.Scan(
-			&i.PermissionID,
-			&i.PermissionName,
-			&i.Resource,
-			&i.Effect,
-		); err != nil {
+		if err := rows.Scan(&i.PermissionID, &i.PermissionName, &i.Effect); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

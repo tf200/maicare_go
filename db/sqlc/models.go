@@ -4024,13 +4024,10 @@ type Organisation struct {
 type Permission struct {
 	ID          uuid.UUID `json:"id"`
 	Name        string    `json:"name"`
-	Resource    string    `json:"resource"`
-	Method      string    `json:"method"`
 	GroupKey    string    `json:"group_key"`
 	SectionKey  string    `json:"section_key"`
 	DisplayName string    `json:"display_name"`
 	Description *string   `json:"description"`
-	SortOrder   int32     `json:"sort_order"`
 }
 
 type ProgressReport struct {

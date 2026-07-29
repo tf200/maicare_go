@@ -319,10 +319,8 @@ SELECT
     ep.last_name,
     (
         SELECT COALESCE(json_agg(json_build_object(
-            'id',       p.id,
-            'name',     p.name,
-            'resource', p.resource,
-            'method',   p.method
+            'id',   p.id,
+            'name', p.name
         )), '[]'::json)
         FROM effective_permissions ep2
         JOIN permissions p ON p.id = ep2.permission_id

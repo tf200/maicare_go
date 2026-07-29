@@ -452,7 +452,7 @@ func (c rolePermissionChecker) HasPermission(ctx context.Context, userID uuid.UU
 		return false, err
 	}
 	for _, perm := range perms {
-		if perm.PermissionName == permission || perm.Resource == permission {
+		if perm.PermissionName == permission {
 			return true, nil
 		}
 	}

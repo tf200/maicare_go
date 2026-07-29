@@ -1,5 +1,9 @@
 package domain
 
+import (
+	"strings"
+)
+
 // PermissionKey represents a system permission string key (e.g. "CLIENT.VIEW").
 type PermissionKey string
 
@@ -267,3 +271,328 @@ const (
 	PermAuditLogView PermissionKey = "AUDIT.LOG.VIEW"
 	PermReportsView  PermissionKey = "REPORTS.VIEW"
 )
+
+// PermissionDefinition defines metadata for a system permission
+type PermissionDefinition struct {
+	Key         PermissionKey
+	GroupKey    string
+	SectionKey  string
+	DisplayName string
+	Description string
+}
+
+// RoleSeedDefinition defines a initial role seed with its permissions
+type RoleSeedDefinition struct {
+	Name        string
+	Description string
+	Permissions []PermissionKey
+}
+
+// AllPermissionKeys is the complete registry of system permission keys
+var AllPermissionKeys = []PermissionKey{
+	PermAppointmentCreate,
+	PermAppointmentDelete,
+	PermAppointmentUpdate,
+	PermAppointmentView,
+	PermAppointmentViewAll,
+	PermAppointmentWorkApprovalUpdate,
+
+	PermAppointmentCardDelete,
+	PermAppointmentCardUpdate,
+	PermAppointmentCardView,
+	PermAppointmentCardGenerateDocument,
+
+	PermClientCreate,
+	PermClientDelete,
+	PermClientUpdate,
+	PermClientView,
+	PermClientStatusUpdate,
+
+	PermClientCarePlanCreate,
+	PermClientCarePlanDelete,
+	PermClientCarePlanUpdate,
+	PermClientCarePlanView,
+
+	PermClientDocumentsView,
+	PermClientDocumentsUpload,
+	PermClientDocumentsDelete,
+
+	PermClientIncidentCreate,
+	PermClientIncidentDelete,
+	PermClientIncidentUpdate,
+	PermClientIncidentView,
+	PermClientIncidentConfirm,
+
+	PermClientDiagnosisCreate,
+	PermClientDiagnosisDelete,
+	PermClientDiagnosisUpdate,
+	PermClientDiagnosisView,
+
+	PermClientMedicationCreate,
+	PermClientMedicationDelete,
+	PermClientMedicationUpdate,
+	PermClientMedicationView,
+
+	PermClientEmergencyContactCreate,
+	PermClientEmergencyContactDelete,
+	PermClientEmergencyContactUpdate,
+	PermClientEmergencyContactView,
+
+	PermClientInvolvedEmployeeCreate,
+	PermClientInvolvedEmployeeDelete,
+	PermClientInvolvedEmployeeUpdate,
+	PermClientInvolvedEmployeeView,
+
+	PermClientProgressReportCreate,
+	PermClientProgressReportDelete,
+	PermClientProgressReportUpdate,
+	PermClientProgressReportView,
+
+	PermClientAIProgressReportGenerate,
+	PermClientAIProgressReportConfirm,
+	PermClientAIProgressReportView,
+
+	PermContractCreate,
+	PermContractDelete,
+	PermContractUpdate,
+	PermContractView,
+
+	PermContractTypeCreate,
+	PermContractTypeDelete,
+	PermContractTypeView,
+
+	PermDashboardView,
+
+	PermEmployeeCreate,
+	PermEmployeeDelete,
+	PermEmployeeUpdate,
+	PermEmployeeView,
+
+	PermEmployeeWorkingHoursView,
+	PermEmployeeContractView,
+	PermEmployeeContractUpdate,
+
+	PermFinanceView,
+
+	PermInvoiceCreate,
+	PermInvoiceDelete,
+	PermInvoiceUpdate,
+	PermInvoiceView,
+
+	PermInvoicePaymentCreate,
+	PermInvoicePaymentDelete,
+	PermInvoicePaymentUpdate,
+	PermInvoicePaymentView,
+
+	PermHandbookSelfView,
+	PermHandbookSelfUpdate,
+
+	PermHandbookDepartmentView,
+	PermHandbookDepartmentCreate,
+
+	PermHandbookTemplateView,
+	PermHandbookTemplateCreate,
+	PermHandbookTemplateUpdate,
+	PermHandbookTemplatePublish,
+
+	PermHandbookStepView,
+	PermHandbookStepCreate,
+	PermHandbookStepUpdate,
+	PermHandbookStepDelete,
+
+	PermHandbookAssign,
+	PermHandbookEligibleEmployees,
+
+	PermIncidentView,
+
+	PermLateArrivalCreate,
+	PermLateArrivalCreateAll,
+	PermLateArrivalView,
+	PermLateArrivalViewAll,
+
+	PermLeaveRequestCreate,
+	PermLeaveRequestUpdate,
+	PermLeaveRequestUpdateAll,
+	PermLeaveRequestDecide,
+	PermLeaveRequestView,
+	PermLeaveRequestViewAll,
+
+	PermLeaveBalanceView,
+	PermLeaveBalanceViewAll,
+	PermLeaveBalanceAdjust,
+
+	PermLocationCreate,
+	PermLocationDelete,
+	PermLocationUpdate,
+	PermLocationView,
+
+	PermOrganisationCreate,
+	PermOrganisationDelete,
+	PermOrganisationUpdate,
+	PermOrganisationView,
+
+	PermPermissionsCreate,
+	PermPermissionsDelete,
+	PermPermissionsUpdate,
+	PermPermissionsView,
+	PermPermissionsGrant,
+
+	PermProfileView,
+
+	PermRegistrationFormDelete,
+	PermRegistrationFormUpdate,
+	PermRegistrationFormView,
+
+	PermIntakeFormUpdate,
+	PermIntakeFormView,
+	PermIntakeFormCreate,
+
+	PermRolesCreate,
+	PermRolesDelete,
+	PermRolesUpdate,
+	PermRolesView,
+	PermRolesAssign,
+
+	PermScheduleCreate,
+	PermScheduleDelete,
+	PermScheduleUpdate,
+	PermScheduleView,
+
+	PermScheduleSwapRequest,
+	PermScheduleSwapRespond,
+	PermScheduleSwapApprove,
+	PermScheduleSwapView,
+
+	PermShiftCreate,
+	PermShiftDelete,
+	PermShiftUpdate,
+	PermShiftView,
+
+	PermSenderCreate,
+	PermSenderUpdate,
+	PermSenderView,
+
+	PermSettingsView,
+
+	PermSettingsDepartmentView,
+	PermSettingsDepartmentCreate,
+	PermSettingsDepartmentUpdate,
+
+	PermSettingsOrgProfileView,
+	PermSettingsOrgProfileUpdate,
+
+	PermAuditLogView,
+	PermReportsView,
+}
+
+// AllPermissionDefinitions returns all permission definitions with derived metadata
+func AllPermissionDefinitions() []PermissionDefinition {
+	defs := make([]PermissionDefinition, len(AllPermissionKeys))
+	for i, key := range AllPermissionKeys {
+		defs[i] = GetPermissionDefinition(key)
+	}
+	return defs
+}
+
+// GetPermissionDefinition derives metadata for a permission key
+func GetPermissionDefinition(key PermissionKey) PermissionDefinition {
+	s := string(key)
+	parts := splitKeyParts(s)
+
+	groupKey := "general"
+	if len(parts) > 0 {
+		groupKey = strings.ToLower(parts[0])
+	}
+
+	sectionKey := "general"
+	if len(parts) > 2 {
+		sectionKey = strings.ToLower(strings.Join(parts[1:len(parts)-1], "_"))
+	}
+
+	displayName := deriveDisplayName(parts)
+
+	return PermissionDefinition{
+		Key:         key,
+		GroupKey:    groupKey,
+		SectionKey:  sectionKey,
+		DisplayName: displayName,
+	}
+}
+
+func splitKeyParts(name string) []string {
+	rawParts := strings.Split(strings.TrimSpace(name), ".")
+	parts := make([]string, 0, len(rawParts))
+	for _, part := range rawParts {
+		if trimmed := strings.TrimSpace(part); trimmed != "" {
+			parts = append(parts, trimmed)
+		}
+	}
+	return parts
+}
+
+func deriveDisplayName(parts []string) string {
+	if len(parts) == 0 {
+		return ""
+	}
+	if len(parts) == 1 {
+		return humanizeWord(parts[0])
+	}
+	action := humanizeWord(parts[len(parts)-1])
+	contextParts := parts[:len(parts)-1]
+	if len(contextParts) > 1 {
+		contextParts = contextParts[1:]
+	}
+	ctxStr := humanizeWord(strings.Join(contextParts, " "))
+	if ctxStr == "" {
+		return action
+	}
+	return action + " " + ctxStr
+}
+
+func humanizeWord(val string) string {
+	val = strings.ReplaceAll(val, "_", " ")
+	words := strings.Fields(strings.ToLower(val))
+	for i, w := range words {
+		if len(w) > 0 {
+			words[i] = strings.ToUpper(w[:1]) + w[1:]
+		}
+	}
+	return strings.Join(words, " ")
+}
+
+// DefaultRoleSeeds returns the default system roles to seed
+func DefaultRoleSeeds() []RoleSeedDefinition {
+	return []RoleSeedDefinition{
+		{
+			Name:        "admin",
+			Description: "Full administrative access",
+			Permissions: AllPermissionKeys,
+		},
+		{
+			Name:        "coordinator",
+			Description: "Coordinator role for operational management",
+			Permissions: []PermissionKey{
+				PermAppointmentCreate, PermAppointmentDelete, PermAppointmentUpdate, PermAppointmentView,
+				PermAppointmentCardDelete, PermAppointmentCardUpdate, PermAppointmentCardView, PermAppointmentCardGenerateDocument,
+				PermClientView, PermClientUpdate, PermClientStatusUpdate,
+				PermClientCarePlanCreate, PermClientCarePlanDelete, PermClientCarePlanUpdate, PermClientCarePlanView,
+				PermClientIncidentCreate, PermClientIncidentDelete, PermClientIncidentUpdate, PermClientIncidentView,
+				PermClientDiagnosisCreate, PermClientDiagnosisDelete, PermClientDiagnosisUpdate, PermClientDiagnosisView,
+				PermClientMedicationCreate, PermClientMedicationDelete, PermClientMedicationUpdate, PermClientMedicationView,
+				PermClientEmergencyContactCreate, PermClientEmergencyContactDelete, PermClientEmergencyContactUpdate, PermClientEmergencyContactView,
+				PermClientInvolvedEmployeeView,
+				PermClientProgressReportCreate, PermClientProgressReportDelete, PermClientProgressReportUpdate, PermClientProgressReportView,
+				PermClientAIProgressReportGenerate, PermClientAIProgressReportConfirm, PermClientAIProgressReportView,
+				PermClientDocumentsView, PermClientDocumentsUpload, PermClientDocumentsDelete,
+				PermHandbookSelfView, PermHandbookSelfUpdate, PermHandbookDepartmentView, PermHandbookDepartmentCreate,
+				PermHandbookTemplateView, PermHandbookTemplateCreate, PermHandbookTemplateUpdate, PermHandbookTemplatePublish,
+				PermHandbookStepView, PermHandbookStepCreate, PermHandbookStepUpdate, PermHandbookStepDelete, PermHandbookAssign,
+				PermScheduleSwapRequest, PermScheduleSwapRespond, PermScheduleSwapView, PermScheduleSwapApprove,
+				PermLeaveRequestCreate, PermLeaveRequestUpdate, PermLeaveRequestUpdateAll, PermLeaveRequestDecide, PermLeaveRequestView, PermLeaveRequestViewAll,
+				PermLeaveBalanceView, PermLeaveBalanceViewAll, PermLeaveBalanceAdjust,
+				PermLateArrivalCreate, PermLateArrivalCreateAll, PermLateArrivalView, PermLateArrivalViewAll,
+				PermSenderCreate, PermShiftView,
+			},
+		},
+	}
+}

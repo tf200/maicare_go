@@ -48,15 +48,14 @@ ORDER BY r.id;
 /* Returns every permission ordered by id. */
 SELECT *
 FROM permissions
-ORDER BY group_key, section_key, sort_order, name;
+ORDER BY group_key, section_key, name;
 
 /* ---------- 3. ROLE-PERMISSION MAPPING ---------- */
 
 -- name: ListAllRolePermissions :many
 /* Returns all permissions attached to a single role. */
 SELECT p.id   AS permission_id,
-       p.name AS permission_name,
-       p.resource
+       p.name AS permission_name
 FROM role_permissions rp
 JOIN permissions p ON p.id = rp.permission_id
 WHERE rp.role_id = $1
@@ -93,8 +92,7 @@ ON CONFLICT (user_id) DO UPDATE SET role_id = $2;
 -- name: ListInheritedUserPermissions :many
 /* Returns permissions inherited from the user's assigned role. */
 SELECT p.id   AS permission_id,
-       p.name AS permission_name,
-       p.resource
+       p.name AS permission_name
 FROM user_roles ur
 JOIN role_permissions rp ON rp.role_id = ur.role_id
 JOIN permissions p ON p.id = rp.permission_id
@@ -105,7 +103,6 @@ ORDER BY p.id;
 /* Returns explicit allow/deny overrides configured for a user. */
 SELECT upo.permission_id,
        p.name AS permission_name,
-       p.resource,
        upo.effect
 FROM user_permission_overrides upo
 JOIN permissions p ON p.id = upo.permission_id
@@ -141,8 +138,7 @@ effective_permissions AS (
       AND effect = 'deny'
 )
 SELECT p.id AS permission_id,
-       p.name AS permission_name,
-       p.resource
+       p.name AS permission_name
 FROM effective_permissions ep
 JOIN permissions p ON p.id = ep.permission_id
 ORDER BY p.id;

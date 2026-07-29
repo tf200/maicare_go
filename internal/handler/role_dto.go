@@ -37,12 +37,10 @@ type roleResponse struct {
 }
 
 type systemPermissionResponse struct {
-	PermissionID       uuid.UUID `json:"permission_id"`
-	PermissionName     string    `json:"permission_name"`
-	PermissionResource string    `json:"permission_resource"`
-	DisplayName        string    `json:"display_name"`
-	Description        *string   `json:"description"`
-	SortOrder          int32     `json:"sort_order"`
+	PermissionID   uuid.UUID `json:"permission_id"`
+	PermissionName string    `json:"permission_name"`
+	DisplayName    string    `json:"display_name"`
+	Description    *string   `json:"description"`
 }
 
 type permissionSectionResponse struct {
@@ -58,10 +56,9 @@ type permissionGroupResponse struct {
 }
 
 type rolePermissionResponse struct {
-	RoleID             uuid.UUID `json:"role_id"`
-	PermissionID       uuid.UUID `json:"permission_id"`
-	PermissionName     string    `json:"permission_name"`
-	PermissionResource string    `json:"permission_resource"`
+	RoleID         uuid.UUID `json:"role_id"`
+	PermissionID   uuid.UUID `json:"permission_id"`
+	PermissionName string    `json:"permission_name"`
 }
 
 type assignRoleToEmployeeResponse struct {
@@ -75,23 +72,21 @@ type roleInfoResponse struct {
 }
 
 type permissionInfoResponse struct {
-	ID       uuid.UUID `json:"id"`
-	Name     string    `json:"name"`
-	Resource string    `json:"resource"`
+	ID   uuid.UUID `json:"id"`
+	Name string    `json:"name"`
 }
 
 type permissionOverrideInfoResponse struct {
-	ID       uuid.UUID `json:"id"`
-	Name     string    `json:"name"`
-	Resource string    `json:"resource"`
+	ID   uuid.UUID `json:"id"`
+	Name string    `json:"name"`
 }
 
 type userRolesAndPermissionsResponse struct {
-	Role                 *roleInfoResponse              `json:"role"`
-	InheritedPermissions []permissionInfoResponse       `json:"inherited_permissions"`
+	Role                 *roleInfoResponse                `json:"role"`
+	InheritedPermissions []permissionInfoResponse         `json:"inherited_permissions"`
 	OverrideAllows       []permissionOverrideInfoResponse `json:"override_allows"`
 	OverrideDenies       []permissionOverrideInfoResponse `json:"override_denies"`
-	EffectivePermissions []permissionInfoResponse       `json:"effective_permissions"`
+	EffectivePermissions []permissionInfoResponse         `json:"effective_permissions"`
 }
 
 type replaceUserPermissionOverridesResponse struct {
@@ -125,12 +120,10 @@ func toRoleResponse(role domain.Role) roleResponse {
 
 func toSystemPermissionResponse(perm domain.SystemPermission) systemPermissionResponse {
 	return systemPermissionResponse{
-		PermissionID:       perm.ID,
-		PermissionName:     perm.Name,
-		PermissionResource: perm.Resource,
-		DisplayName:        perm.DisplayName,
-		Description:        perm.Description,
-		SortOrder:          perm.SortOrder,
+		PermissionID:   perm.ID,
+		PermissionName: perm.Name,
+		DisplayName:    perm.DisplayName,
+		Description:    perm.Description,
 	}
 }
 
@@ -156,10 +149,9 @@ func toPermissionGroupResponse(group domain.PermissionGroup) permissionGroupResp
 
 func toRolePermissionResponse(rp domain.RolePermission) rolePermissionResponse {
 	return rolePermissionResponse{
-		RoleID:             rp.RoleID,
-		PermissionID:       rp.PermissionID,
-		PermissionName:     rp.PermissionName,
-		PermissionResource: rp.Resource,
+		RoleID:         rp.RoleID,
+		PermissionID:   rp.PermissionID,
+		PermissionName: rp.PermissionName,
 	}
 }
 
@@ -175,36 +167,32 @@ func toUserRolesAndPermissionsResponse(data *domain.UserRolesAndPermissions) use
 	inherited := make([]permissionInfoResponse, len(data.InheritedPermissions))
 	for i, perm := range data.InheritedPermissions {
 		inherited[i] = permissionInfoResponse{
-			ID:       perm.ID,
-			Name:     perm.Name,
-			Resource: perm.Resource,
+			ID:   perm.ID,
+			Name: perm.Name,
 		}
 	}
 
 	allowOverrides := make([]permissionOverrideInfoResponse, len(data.OverrideAllows))
 	for i, perm := range data.OverrideAllows {
 		allowOverrides[i] = permissionOverrideInfoResponse{
-			ID:       perm.ID,
-			Name:     perm.Name,
-			Resource: perm.Resource,
+			ID:   perm.ID,
+			Name: perm.Name,
 		}
 	}
 
 	denyOverrides := make([]permissionOverrideInfoResponse, len(data.OverrideDenies))
 	for i, perm := range data.OverrideDenies {
 		denyOverrides[i] = permissionOverrideInfoResponse{
-			ID:       perm.ID,
-			Name:     perm.Name,
-			Resource: perm.Resource,
+			ID:   perm.ID,
+			Name: perm.Name,
 		}
 	}
 
 	effective := make([]permissionInfoResponse, len(data.EffectivePermissions))
 	for i, perm := range data.EffectivePermissions {
 		effective[i] = permissionInfoResponse{
-			ID:       perm.ID,
-			Name:     perm.Name,
-			Resource: perm.Resource,
+			ID:   perm.ID,
+			Name: perm.Name,
 		}
 	}
 
