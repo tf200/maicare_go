@@ -1,4 +1,5 @@
 
+INFISICAL_ENV ?= local
 LOCAL_DB_URL ?= postgresql://maicare:maicare@127.0.0.1:5432/maicare?sslmode=disable
 REMOTE_DEV_DB_URL ?= postgresql://maicare:maicare@167.86.75.250:25432/maicare?sslmode=disable
 
@@ -62,8 +63,20 @@ sqlc:
 test:
 	go test -v -cover ./...
 
+docker-up:
+	@infisical export --env=$(INFISICAL_ENV) --format=dotenv > .env 2>/dev/null || \
+	(echo "⚠️ Infisical unreachable / offline. Falling back to local app.env" && cp app.env .env)
+	docker compose up -d --build
+
+docker-down:
+	docker compose down
+
+env-sync:
+	@echo "Syncing secrets from Infisical ($(INFISICAL_ENV)) into app.env..."
+	infisical export --env=$(INFISICAL_ENV) --format=dotenv > app.env
+
 server:
-	go run main.go
+	@infisical run --env=$(INFISICAL_ENV) -- go run main.go 2>/dev/null || go run main.go
 
 mockdb:
 	mockgen -package mockdb -destination=db/mock/store.go github.com/rokunisan/chat_app/db/sqlc Store
@@ -100,4 +113,4 @@ mocks:
 	go generate ./...
 
 
-.PHONY: db-local db-remote seed-local seed-remote migrate-up-local migrate-up-remote migrate-down-local migrate-down-remote migrate-force-local migrate-force-remote roles-sync-local roles-sync-remote admin-local admin-remote migrate-up migrate-down migrate-force migrateup migratedown migrateforce migrateup-local migratedown-local migrateforce-local migrateup-remote migratedown-remote migrateforce-remote sqlc test server mockdb swagger roles admin seed push update-proto generate-grpc lint mocks
+.PHONY: db-local db-remote seed-local seed-remote migrate-up-local migrate-up-remote migrate-down-local migrate-down-remote migrate-force-local migrate-force-remote roles-sync-local roles-sync-remote admin-local admin-remote migrate-up migrate-down migrate-force migrateup migratedown migrateforce migrateup-local migratedown-local migrateforce-local migrateup-remote migratedown-remote migrateforce-remote sqlc test server mockdb swagger roles admin seed push update-proto generate-grpc lint mocks docker-up docker-down env-sync
