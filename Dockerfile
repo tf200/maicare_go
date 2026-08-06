@@ -82,7 +82,6 @@ COPY --from=builder /opt/ortools/lib /opt/ortools/lib
 ENV LD_LIBRARY_PATH=/opt/ortools/lib
 
 COPY db/migrations /app/db/migrations
-COPY roles /app/roles
 
 # Expose the desired port
 EXPOSE 8080
