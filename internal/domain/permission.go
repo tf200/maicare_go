@@ -29,6 +29,11 @@ const (
 	PermAppointmentCardGenerateDocument PermissionKey = "APPOINTMENT_CARD.GENERATE_DOCUMENT"
 )
 
+// Care Coordination Permissions
+const (
+	PermCareCoordinationView PermissionKey = "CARE_COORDINATION.VIEW"
+)
+
 // Client Permissions
 const (
 	PermClientCreate       PermissionKey = "CLIENT.CREATE"
@@ -214,7 +219,7 @@ const (
 
 // Intake form Permissions
 const (
-	PermIntakeFormDelete PermissionKey = "REGISTRATION_FORM.DELETE"
+	PermIntakeFormDelete PermissionKey = "INTAKE_FORM.DELETE"
 	PermIntakeFormUpdate PermissionKey = "INTAKE_FORM.UPDATE"
 	PermIntakeFormView   PermissionKey = "INTAKE_FORM.VIEW"
 	PermIntakeFormCreate PermissionKey = "INTAKE_FORM.CREATE"
@@ -250,6 +255,7 @@ const (
 // Sender Permissions
 const (
 	PermSenderCreate PermissionKey = "SENDER.CREATE"
+	PermSenderDelete PermissionKey = "SENDER.DELETE"
 	PermSenderUpdate PermissionKey = "SENDER.UPDATE"
 	PermSenderView   PermissionKey = "SENDER.VIEW"
 )
@@ -301,6 +307,8 @@ var AllPermissionKeys = []PermissionKey{
 	PermAppointmentCardUpdate,
 	PermAppointmentCardView,
 	PermAppointmentCardGenerateDocument,
+
+	PermCareCoordinationView,
 
 	PermClientCreate,
 	PermClientDelete,
@@ -443,9 +451,10 @@ var AllPermissionKeys = []PermissionKey{
 	PermRegistrationFormUpdate,
 	PermRegistrationFormView,
 
+	PermIntakeFormCreate,
+	PermIntakeFormDelete,
 	PermIntakeFormUpdate,
 	PermIntakeFormView,
-	PermIntakeFormCreate,
 
 	PermRolesCreate,
 	PermRolesDelete,
@@ -469,6 +478,7 @@ var AllPermissionKeys = []PermissionKey{
 	PermShiftView,
 
 	PermSenderCreate,
+	PermSenderDelete,
 	PermSenderUpdate,
 	PermSenderView,
 
@@ -591,7 +601,7 @@ func DefaultRoleSeeds() []RoleSeedDefinition {
 				PermLeaveRequestCreate, PermLeaveRequestUpdate, PermLeaveRequestUpdateAll, PermLeaveRequestDecide, PermLeaveRequestView, PermLeaveRequestViewAll,
 				PermLeaveBalanceView, PermLeaveBalanceViewAll, PermLeaveBalanceAdjust,
 				PermLateArrivalCreate, PermLateArrivalCreateAll, PermLateArrivalView, PermLateArrivalViewAll,
-				PermSenderCreate, PermShiftView,
+				PermSenderCreate, PermShiftView, PermCareCoordinationView,
 			},
 		},
 	}
