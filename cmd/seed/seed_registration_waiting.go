@@ -194,15 +194,15 @@ func (s *Seeder) SeedWaitingListClients(ctx context.Context, count int) error {
 				return fmt.Errorf("create client goals from intake: %w", err)
 			}
 
-			if registrationForm.Guardian1FirstName != "" {
+			if registrationForm.Guardian1FirstName != nil && *registrationForm.Guardian1FirstName != "" {
 				relationStatus := db.RelationStatusEnumPrimaryRelationship
 				if _, err := q.CreateEmemrgencyContact(ctx, db.CreateEmemrgencyContactParams{
 					ClientID:         client.ID,
-					FirstName:        &registrationForm.Guardian1FirstName,
-					LastName:         &registrationForm.Guardian1LastName,
-					Email:            &registrationForm.Guardian1Email,
-					PhoneNumber:      &registrationForm.Guardian1PhoneNumber,
-					Relationship:     &registrationForm.Guardian1Relationship,
+					FirstName:        registrationForm.Guardian1FirstName,
+					LastName:         registrationForm.Guardian1LastName,
+					Email:            registrationForm.Guardian1Email,
+					PhoneNumber:      registrationForm.Guardian1PhoneNumber,
+					Relationship:     registrationForm.Guardian1Relationship,
 					RelationStatus:   &relationStatus,
 					MedicalReports:   true,
 					IncidentsReports: true,
@@ -212,15 +212,15 @@ func (s *Seeder) SeedWaitingListClients(ctx context.Context, count int) error {
 				}
 			}
 
-			if registrationForm.Guardian2FirstName != "" {
+			if registrationForm.Guardian2FirstName != nil && *registrationForm.Guardian2FirstName != "" {
 				relationStatus := db.RelationStatusEnumSecondaryRelationship
 				if _, err := q.CreateEmemrgencyContact(ctx, db.CreateEmemrgencyContactParams{
 					ClientID:         client.ID,
-					FirstName:        &registrationForm.Guardian2FirstName,
-					LastName:         &registrationForm.Guardian2LastName,
-					Email:            &registrationForm.Guardian2Email,
-					PhoneNumber:      &registrationForm.Guardian2PhoneNumber,
-					Relationship:     &registrationForm.Guardian2Relationship,
+					FirstName:        registrationForm.Guardian2FirstName,
+					LastName:         registrationForm.Guardian2LastName,
+					Email:            registrationForm.Guardian2Email,
+					PhoneNumber:      registrationForm.Guardian2PhoneNumber,
+					Relationship:     registrationForm.Guardian2Relationship,
 					RelationStatus:   &relationStatus,
 					MedicalReports:   false,
 					IncidentsReports: true,
@@ -419,18 +419,23 @@ func randomRegistrationFormParams(index int) db.CreateRegistrationFormParams {
 	lastName := gofakeit.LastName()
 	refFirst := gofakeit.FirstName()
 	refLast := gofakeit.LastName()
-	guardian1First := gofakeit.FirstName()
-	guardian1Last := gofakeit.LastName()
-	guardian2First := gofakeit.FirstName()
-	guardian2Last := gofakeit.LastName()
+	refJobTitle := stringPtr(gofakeit.JobTitle())
+	guardian1First := stringPtr(gofakeit.FirstName())
+	guardian1Last := stringPtr(gofakeit.LastName())
+	guardian1Rel := stringPtr(oneOf([]string{"Mother", "Father", "Guardian", "Sibling", "Aunt", "Uncle"}))
+	guardian1Phone := stringPtr(fakePhone())
+	guardian1Email := stringPtr(gofakeit.Email())
+	guardian2First := stringPtr(gofakeit.FirstName())
+	guardian2Last := stringPtr(gofakeit.LastName())
+	guardian2Rel := stringPtr(oneOf([]string{"Mother", "Father", "Guardian", "Sibling", "Aunt", "Uncle"}))
+	guardian2Phone := stringPtr(fakePhone())
+	guardian2Email := stringPtr(gofakeit.Email())
 
 	clientDOB := randomDate(2000, 2012)
 	applicationDate := randomDate(2024, 2026)
 
 	clientEmail := gofakeit.Email()
 	referrerEmail := gofakeit.Email()
-	guardian1Email := gofakeit.Email()
-	guardian2Email := gofakeit.Email()
 
 	clientGoals := randomGoals()
 	educationEnrolled := gofakeit.Bool()
@@ -491,18 +496,18 @@ func randomRegistrationFormParams(index int) db.CreateRegistrationFormParams {
 		ReferrerFirstName:             refFirst,
 		ReferrerLastName:              refLast,
 		ReferrerOrganization:          gofakeit.Company(),
-		ReferrerJobTitle:              gofakeit.JobTitle(),
+		ReferrerJobTitle:              refJobTitle,
 		ReferrerPhoneNumber:           fakePhone(),
 		ReferrerEmail:                 referrerEmail,
 		Guardian1FirstName:            guardian1First,
 		Guardian1LastName:             guardian1Last,
-		Guardian1Relationship:         oneOf([]string{"Mother", "Father", "Guardian", "Sibling", "Aunt", "Uncle"}),
-		Guardian1PhoneNumber:          fakePhone(),
+		Guardian1Relationship:         guardian1Rel,
+		Guardian1PhoneNumber:          guardian1Phone,
 		Guardian1Email:                guardian1Email,
 		Guardian2FirstName:            guardian2First,
 		Guardian2LastName:             guardian2Last,
-		Guardian2Relationship:         oneOf([]string{"Mother", "Father", "Guardian", "Sibling", "Aunt", "Uncle"}),
-		Guardian2PhoneNumber:          fakePhone(),
+		Guardian2Relationship:         guardian2Rel,
+		Guardian2PhoneNumber:          guardian2Phone,
 		Guardian2Email:                guardian2Email,
 		EducationInstitution:          educationInstitution,
 		EducationMentorName:           educationMentorName,

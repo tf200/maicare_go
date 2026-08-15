@@ -198,11 +198,11 @@ func (s *RegistrationFormService) ProcessRegistrationForm(ctx context.Context, p
 	if form.ReferrerEmail != "" {
 		recipients = append(recipients, form.ReferrerEmail)
 	}
-	if form.Guardian1Email != "" {
-		recipients = append(recipients, form.Guardian1Email)
+	if form.Guardian1Email != nil && *form.Guardian1Email != "" {
+		recipients = append(recipients, *form.Guardian1Email)
 	}
-	if form.Guardian2Email != "" {
-		recipients = append(recipients, form.Guardian2Email)
+	if form.Guardian2Email != nil && *form.Guardian2Email != "" {
+		recipients = append(recipients, *form.Guardian2Email)
 	}
 
 	// Construct link

@@ -31,19 +31,19 @@ type createRegistrationFormRequest struct {
 	ReferrerFirstName             string                        `json:"referrer_first_name" binding:"required"`
 	ReferrerLastName              string                        `json:"referrer_last_name" binding:"required"`
 	ReferrerOrganization          string                        `json:"referrer_organization" binding:"required"`
-	ReferrerJobTitle              string                        `json:"referrer_job_title" binding:"required"`
+	ReferrerJobTitle              *string                       `json:"referrer_job_title"`
 	ReferrerPhoneNumber           string                        `json:"referrer_phone_number" binding:"required"`
 	ReferrerEmail                 string                        `json:"referrer_email" binding:"required,email"`
-	Guardian1FirstName            string                        `json:"guardian1_first_name" binding:"required"`
-	Guardian1LastName             string                        `json:"guardian1_last_name" binding:"required"`
-	Guardian1Relationship         string                        `json:"guardian1_relationship" binding:"required"`
-	Guardian1PhoneNumber          string                        `json:"guardian1_phone_number" binding:"required"`
-	Guardian1Email                string                        `json:"guardian1_email" binding:"required,email"`
-	Guardian2FirstName            string                        `json:"guardian2_first_name" binding:"required"`
-	Guardian2LastName             string                        `json:"guardian2_last_name" binding:"required"`
-	Guardian2Relationship         string                        `json:"guardian2_relationship" binding:"required"`
-	Guardian2PhoneNumber          string                        `json:"guardian2_phone_number" binding:"required"`
-	Guardian2Email                string                        `json:"guardian2_email" binding:"required,email"`
+	Guardian1FirstName            *string                       `json:"guardian1_first_name"`
+	Guardian1LastName             *string                       `json:"guardian1_last_name"`
+	Guardian1Relationship         *string                       `json:"guardian1_relationship"`
+	Guardian1PhoneNumber          *string                       `json:"guardian1_phone_number"`
+	Guardian1Email                *string                       `json:"guardian1_email" binding:"omitempty,email"`
+	Guardian2FirstName            *string                       `json:"guardian2_first_name"`
+	Guardian2LastName             *string                       `json:"guardian2_last_name"`
+	Guardian2Relationship         *string                       `json:"guardian2_relationship"`
+	Guardian2PhoneNumber          *string                       `json:"guardian2_phone_number"`
+	Guardian2Email                *string                       `json:"guardian2_email" binding:"omitempty,email"`
 	Education                     *registrationEducationRequest `json:"education"`
 	Work                          *registrationWorkRequest      `json:"work"`
 	CareProtectedLiving           *bool                         `json:"care_protected_living"`
@@ -235,19 +235,19 @@ type registrationFormResponse struct {
 	ReferrerFirstName             string                        `json:"referrer_first_name"`
 	ReferrerLastName              string                        `json:"referrer_last_name"`
 	ReferrerOrganization          string                        `json:"referrer_organization"`
-	ReferrerJobTitle              string                        `json:"referrer_job_title"`
+	ReferrerJobTitle              *string                       `json:"referrer_job_title"`
 	ReferrerPhoneNumber           string                        `json:"referrer_phone_number"`
 	ReferrerEmail                 string                        `json:"referrer_email"`
-	Guardian1FirstName            string                        `json:"guardian1_first_name"`
-	Guardian1LastName             string                        `json:"guardian1_last_name"`
-	Guardian1Relationship         string                        `json:"guardian1_relationship"`
-	Guardian1PhoneNumber          string                        `json:"guardian1_phone_number"`
-	Guardian1Email                string                        `json:"guardian1_email"`
-	Guardian2FirstName            string                        `json:"guardian2_first_name"`
-	Guardian2LastName             string                        `json:"guardian2_last_name"`
-	Guardian2Relationship         string                        `json:"guardian2_relationship"`
-	Guardian2PhoneNumber          string                        `json:"guardian2_phone_number"`
-	Guardian2Email                string                        `json:"guardian2_email"`
+	Guardian1FirstName            *string                       `json:"guardian1_first_name"`
+	Guardian1LastName             *string                       `json:"guardian1_last_name"`
+	Guardian1Relationship         *string                       `json:"guardian1_relationship"`
+	Guardian1PhoneNumber          *string                       `json:"guardian1_phone_number"`
+	Guardian1Email                *string                       `json:"guardian1_email"`
+	Guardian2FirstName            *string                       `json:"guardian2_first_name"`
+	Guardian2LastName             *string                       `json:"guardian2_last_name"`
+	Guardian2Relationship         *string                       `json:"guardian2_relationship"`
+	Guardian2PhoneNumber          *string                       `json:"guardian2_phone_number"`
+	Guardian2Email                *string                       `json:"guardian2_email"`
 	Education                     registrationEducationResponse `json:"education"`
 	Work                          workResponse                  `json:"work"`
 	CareProtectedLiving           *bool                         `json:"care_protected_living"`

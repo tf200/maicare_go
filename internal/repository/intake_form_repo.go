@@ -502,14 +502,14 @@ func (r *IntakeFormRepository) PromoteIntakeToClient(ctx context.Context, params
 		emergencyContactsCreated := 0
 
 		// Guardian 1
-		if regForm.Guardian1FirstName != "" {
+		if regForm.Guardian1FirstName != nil && *regForm.Guardian1FirstName != "" {
 			_, err := q.CreateEmemrgencyContact(ctx, db.CreateEmemrgencyContactParams{
 				ClientID:         createdClient.ID,
-				FirstName:        &regForm.Guardian1FirstName,
-				LastName:         &regForm.Guardian1LastName,
-				Relationship:     &regForm.Guardian1Relationship,
-				PhoneNumber:      &regForm.Guardian1PhoneNumber,
-				Email:            &regForm.Guardian1Email,
+				FirstName:        regForm.Guardian1FirstName,
+				LastName:         regForm.Guardian1LastName,
+				Relationship:     regForm.Guardian1Relationship,
+				PhoneNumber:      regForm.Guardian1PhoneNumber,
+				Email:            regForm.Guardian1Email,
 				MedicalReports:   true,
 				IncidentsReports: true,
 				GoalsReports:     true,
@@ -520,14 +520,14 @@ func (r *IntakeFormRepository) PromoteIntakeToClient(ctx context.Context, params
 		}
 
 		// Guardian 2
-		if regForm.Guardian2FirstName != "" {
+		if regForm.Guardian2FirstName != nil && *regForm.Guardian2FirstName != "" {
 			_, err := q.CreateEmemrgencyContact(ctx, db.CreateEmemrgencyContactParams{
 				ClientID:         createdClient.ID,
-				FirstName:        &regForm.Guardian2FirstName,
-				LastName:         &regForm.Guardian2LastName,
-				Relationship:     &regForm.Guardian2Relationship,
-				PhoneNumber:      &regForm.Guardian2PhoneNumber,
-				Email:            &regForm.Guardian2Email,
+				FirstName:        regForm.Guardian2FirstName,
+				LastName:         regForm.Guardian2LastName,
+				Relationship:     regForm.Guardian2Relationship,
+				PhoneNumber:      regForm.Guardian2PhoneNumber,
+				Email:            regForm.Guardian2Email,
 				MedicalReports:   true,
 				IncidentsReports: true,
 				GoalsReports:     true,

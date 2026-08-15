@@ -52,19 +52,19 @@ type RegistrationForm struct {
 	ReferrerFirstName             string     `json:"referrer_first_name"`
 	ReferrerLastName              string     `json:"referrer_last_name"`
 	ReferrerOrganization          string     `json:"referrer_organization"`
-	ReferrerJobTitle              string     `json:"referrer_job_title"`
+	ReferrerJobTitle              *string    `json:"referrer_job_title"`
 	ReferrerPhoneNumber           string     `json:"referrer_phone_number"`
 	ReferrerEmail                 string     `json:"referrer_email"`
-	Guardian1FirstName            string     `json:"guardian1_first_name"`
-	Guardian1LastName             string     `json:"guardian1_last_name"`
-	Guardian1Relationship         string     `json:"guardian1_relationship"`
-	Guardian1PhoneNumber          string     `json:"guardian1_phone_number"`
-	Guardian1Email                string     `json:"guardian1_email"`
-	Guardian2FirstName            string     `json:"guardian2_first_name"`
-	Guardian2LastName             string     `json:"guardian2_last_name"`
-	Guardian2Relationship         string     `json:"guardian2_relationship"`
-	Guardian2PhoneNumber          string     `json:"guardian2_phone_number"`
-	Guardian2Email                string     `json:"guardian2_email"`
+	Guardian1FirstName            *string    `json:"guardian1_first_name"`
+	Guardian1LastName             *string    `json:"guardian1_last_name"`
+	Guardian1Relationship         *string    `json:"guardian1_relationship"`
+	Guardian1PhoneNumber          *string    `json:"guardian1_phone_number"`
+	Guardian1Email                *string    `json:"guardian1_email"`
+	Guardian2FirstName            *string    `json:"guardian2_first_name"`
+	Guardian2LastName             *string    `json:"guardian2_last_name"`
+	Guardian2Relationship         *string    `json:"guardian2_relationship"`
+	Guardian2PhoneNumber          *string    `json:"guardian2_phone_number"`
+	Guardian2Email                *string    `json:"guardian2_email"`
 	EducationInstitution          *string    `json:"education_institution"`
 	EducationMentorName           *string    `json:"education_mentor_name"`
 	EducationMentorPhone          *string    `json:"education_mentor_phone"`
@@ -165,19 +165,19 @@ type CreateRegistrationFormParams struct {
 	ReferrerFirstName             string
 	ReferrerLastName              string
 	ReferrerOrganization          string
-	ReferrerJobTitle              string
+	ReferrerJobTitle              *string
 	ReferrerPhoneNumber           string
 	ReferrerEmail                 string
-	Guardian1FirstName            string
-	Guardian1LastName             string
-	Guardian1Relationship         string
-	Guardian1PhoneNumber          string
-	Guardian1Email                string
-	Guardian2FirstName            string
-	Guardian2LastName             string
-	Guardian2Relationship         string
-	Guardian2PhoneNumber          string
-	Guardian2Email                string
+	Guardian1FirstName            *string
+	Guardian1LastName             *string
+	Guardian1Relationship         *string
+	Guardian1PhoneNumber          *string
+	Guardian1Email                *string
+	Guardian2FirstName            *string
+	Guardian2LastName             *string
+	Guardian2Relationship         *string
+	Guardian2PhoneNumber          *string
+	Guardian2Email                *string
 	EducationInstitution          *string
 	EducationMentorName           *string
 	EducationMentorPhone          *string
