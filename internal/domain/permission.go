@@ -116,6 +116,13 @@ const (
 	PermEmployeeContractUpdate   PermissionKey = "EMPLOYEE.CONTRACT.UPDATE"
 )
 
+// Evaluation Permissions
+const (
+	PermEvaluationCreate PermissionKey = "EVALUATION.CREATE"
+	PermEvaluationDelete PermissionKey = "EVALUATION.DELETE"
+	PermEvaluationView   PermissionKey = "EVALUATION.VIEW"
+)
+
 // Finance & Invoice Permissions
 const (
 	PermFinanceView PermissionKey = "FINANCE.VIEW"
@@ -380,6 +387,10 @@ var AllPermissionKeys = []PermissionKey{
 	PermEmployeeContractView,
 	PermEmployeeContractUpdate,
 
+	PermEvaluationCreate,
+	PermEvaluationDelete,
+	PermEvaluationView,
+
 	PermFinanceView,
 
 	PermInvoiceCreate,
@@ -602,6 +613,7 @@ func DefaultRoleSeeds() []RoleSeedDefinition {
 				PermLeaveBalanceView, PermLeaveBalanceViewAll, PermLeaveBalanceAdjust,
 				PermLateArrivalCreate, PermLateArrivalCreateAll, PermLateArrivalView, PermLateArrivalViewAll,
 				PermSenderCreate, PermShiftView, PermCareCoordinationView,
+				PermEvaluationCreate, PermEvaluationDelete, PermEvaluationView,
 			},
 		},
 	}
