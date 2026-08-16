@@ -2622,6 +2622,48 @@ func (ns NullPermissionOverrideEffect) Value() (driver.Value, error) {
 	return string(ns.PermissionOverrideEffect), nil
 }
 
+type PermissionScopeEnum string
+
+const (
+	PermissionScopeEnumAssigned PermissionScopeEnum = "assigned"
+	PermissionScopeEnumAll      PermissionScopeEnum = "all"
+)
+
+func (e *PermissionScopeEnum) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = PermissionScopeEnum(s)
+	case string:
+		*e = PermissionScopeEnum(s)
+	default:
+		return fmt.Errorf("unsupported scan type for PermissionScopeEnum: %T", src)
+	}
+	return nil
+}
+
+type NullPermissionScopeEnum struct {
+	PermissionScopeEnum PermissionScopeEnum `json:"permission_scope_enum"`
+	Valid               bool                `json:"valid"` // Valid is true if PermissionScopeEnum is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullPermissionScopeEnum) Scan(value interface{}) error {
+	if value == nil {
+		ns.PermissionScopeEnum, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.PermissionScopeEnum.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullPermissionScopeEnum) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.PermissionScopeEnum), nil
+}
+
 type PhysicalInjuryEnum string
 
 const (
@@ -4028,6 +4070,7 @@ type Permission struct {
 	SectionKey  string    `json:"section_key"`
 	DisplayName string    `json:"display_name"`
 	Description *string   `json:"description"`
+	IsScoped    bool      `json:"is_scoped"`
 }
 
 type ProgressReport struct {
@@ -4198,8 +4241,9 @@ type Role struct {
 }
 
 type RolePermission struct {
-	RoleID       uuid.UUID `json:"role_id"`
-	PermissionID uuid.UUID `json:"permission_id"`
+	RoleID       uuid.UUID            `json:"role_id"`
+	PermissionID uuid.UUID            `json:"permission_id"`
+	Scope        *PermissionScopeEnum `json:"scope"`
 }
 
 type Room struct {

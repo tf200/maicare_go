@@ -95,6 +95,8 @@ DROP TABLE IF EXISTS employee_handbook_assignment_history CASCADE;
 -- ==========================================
 DROP FUNCTION IF EXISTS get_client_id_from_intake_form(UUID) CASCADE;
 DROP FUNCTION IF EXISTS apply_client_rls(TEXT, TEXT) CASCADE;
+DROP FUNCTION IF EXISTS validate_permission_grant_scopes() CASCADE;
+DROP FUNCTION IF EXISTS validate_role_permission_scope() CASCADE;
 DROP FUNCTION IF EXISTS get_client_id_from_registration_form(UUID) CASCADE;
 DROP FUNCTION IF EXISTS get_client_id_from_invoice(UUID) CASCADE;
 DROP FUNCTION IF EXISTS get_client_id_from_contract(UUID) CASCADE;
@@ -121,6 +123,7 @@ DROP SEQUENCE IF EXISTS client_filenumber_seq;
 -- ==========================================
 -- TYPES (ENUMS)
 -- ==========================================
+DROP TYPE IF EXISTS permission_scope_enum CASCADE;
 DROP TYPE IF EXISTS reminder_channel_enum CASCADE;
 DROP TYPE IF EXISTS attendee_response_enum CASCADE;
 DROP TYPE IF EXISTS calendar_event_work_approval_status_enum CASCADE;

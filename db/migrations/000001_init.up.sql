@@ -478,6 +478,8 @@ CREATE TABLE roles (
     description TEXT NULL
 );
 
+CREATE TYPE permission_scope_enum AS ENUM ('assigned', 'all');
+
 -- System permissions
 CREATE TABLE permissions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -485,7 +487,8 @@ CREATE TABLE permissions (
     group_key VARCHAR(100) NOT NULL DEFAULT 'general',
     section_key VARCHAR(100) NOT NULL DEFAULT 'general',
     display_name VARCHAR(255) NOT NULL DEFAULT '',
-    description TEXT NULL
+    description TEXT NULL,
+    is_scoped BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE TYPE permission_override_effect AS ENUM ('allow', 'deny');
@@ -494,10 +497,68 @@ CREATE TYPE permission_override_effect AS ENUM ('allow', 'deny');
 CREATE TABLE role_permissions (
     role_id UUID NOT NULL,
     permission_id UUID NOT NULL,
+    scope permission_scope_enum NULL,
     PRIMARY KEY (role_id, permission_id),
     FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE,
     FOREIGN KEY (permission_id) REFERENCES permissions(id) ON DELETE CASCADE
 );
+
+CREATE OR REPLACE FUNCTION validate_role_permission_scope()
+RETURNS TRIGGER AS $$
+DECLARE
+    permission_is_scoped BOOLEAN;
+BEGIN
+    SELECT is_scoped
+    INTO permission_is_scoped
+    FROM permissions
+    WHERE id = NEW.permission_id;
+
+    IF NOT FOUND THEN
+        RETURN NEW;
+    END IF;
+
+    IF permission_is_scoped AND NEW.scope IS NULL THEN
+        RAISE EXCEPTION 'scope is required for scoped permission %', NEW.permission_id;
+    END IF;
+
+    IF NOT permission_is_scoped AND NEW.scope IS NOT NULL THEN
+        RAISE EXCEPTION 'scope must be NULL for unscoped permission %', NEW.permission_id;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE CONSTRAINT TRIGGER role_permissions_validate_scope
+AFTER INSERT OR UPDATE ON role_permissions
+DEFERRABLE INITIALLY DEFERRED
+FOR EACH ROW
+EXECUTE FUNCTION validate_role_permission_scope();
+
+CREATE OR REPLACE FUNCTION validate_permission_grant_scopes()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM role_permissions rp
+        WHERE rp.permission_id = NEW.id
+          AND (
+              (NEW.is_scoped AND rp.scope IS NULL)
+              OR (NOT NEW.is_scoped AND rp.scope IS NOT NULL)
+          )
+    ) THEN
+        RAISE EXCEPTION 'existing grants have invalid scope for permission %', NEW.id;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE CONSTRAINT TRIGGER permissions_validate_grant_scopes
+AFTER INSERT OR UPDATE ON permissions
+DEFERRABLE INITIALLY DEFERRED
+FOR EACH ROW
+EXECUTE FUNCTION validate_permission_grant_scopes();
 
 -- User authentication data
 CREATE TABLE custom_user (

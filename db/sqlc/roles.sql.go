@@ -212,7 +212,7 @@ func (q *Queries) GetUserRoles(ctx context.Context, userID uuid.UUID) ([]GetUser
 
 const listAllPermissions = `-- name: ListAllPermissions :many
 
-SELECT id, name, group_key, section_key, display_name, description
+SELECT id, name, group_key, section_key, display_name, description, is_scoped
 FROM permissions
 ORDER BY group_key, section_key, name
 `
@@ -235,6 +235,7 @@ func (q *Queries) ListAllPermissions(ctx context.Context) ([]Permission, error) 
 			&i.SectionKey,
 			&i.DisplayName,
 			&i.Description,
+			&i.IsScoped,
 		); err != nil {
 			return nil, err
 		}
