@@ -1,6 +1,10 @@
 package handler
 
-import "github.com/gin-gonic/gin"
+import (
+	"maicare_go/internal/domain"
+
+	"github.com/gin-gonic/gin"
+)
 
 func RegisterRoleRoutes(
 	rg *gin.RouterGroup,
@@ -8,13 +12,13 @@ func RegisterRoleRoutes(
 	auth gin.HandlerFunc,
 	requirePermission func(string) gin.HandlerFunc,
 ) {
-	rg.GET("/roles", auth, requirePermission("ROLES.VIEW"), handler.ListRoles)
-	rg.POST("/roles", auth, requirePermission("ROLES.CREATE"), handler.CreateRole)
-	rg.GET("/roles/:role_id/permissions", auth, requirePermission("PERMISSIONS.VIEW"), handler.ListAllRolePermissions)
-	rg.POST("/roles/:role_id/permissions", auth, requirePermission("PERMISSIONS.CREATE"), handler.AddPermissionsToRole)
-	rg.GET("/permissions", auth, requirePermission("PERMISSIONS.VIEW"), handler.ListAllPermissions)
+	rg.GET("/roles", auth, requirePermission(domain.PermRolesView.String()), handler.ListRoles)
+	rg.POST("/roles", auth, requirePermission(domain.PermRolesCreate.String()), handler.CreateRole)
+	rg.GET("/roles/:role_id/permissions", auth, requirePermission(domain.PermPermissionsView.String()), handler.ListAllRolePermissions)
+	rg.POST("/roles/:role_id/permissions", auth, requirePermission(domain.PermPermissionsCreate.String()), handler.AddPermissionsToRole)
+	rg.GET("/permissions", auth, requirePermission(domain.PermPermissionsView.String()), handler.ListAllPermissions)
 
-	rg.POST("/employees/:id/roles", auth, requirePermission("ROLES.ASSIGN"), handler.AssignRoleToEmployee)
-	rg.GET("/employees/:id/roles_permissions", auth, requirePermission("PERMISSIONS.VIEW"), handler.ListUserRolesAndPermissions)
-	rg.POST("/employees/:id/permissions", auth, requirePermission("PERMISSIONS.GRANT"), handler.ReplaceUserPermissionOverrides)
+	rg.POST("/employees/:id/roles", auth, requirePermission(domain.PermRolesAssign.String()), handler.AssignRoleToEmployee)
+	rg.GET("/employees/:id/roles_permissions", auth, requirePermission(domain.PermPermissionsView.String()), handler.ListUserRolesAndPermissions)
+	rg.POST("/employees/:id/permissions", auth, requirePermission(domain.PermPermissionsGrant.String()), handler.ReplaceUserPermissionOverrides)
 }
