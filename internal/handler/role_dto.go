@@ -17,11 +17,6 @@ type assignRoleToEmployeeRequest struct {
 	RoleID uuid.UUID `json:"role_id" binding:"required"`
 }
 
-type replaceUserPermissionOverridesRequest struct {
-	AllowPermissionIDs []uuid.UUID `json:"allow_permission_ids"`
-	DenyPermissionIDs  []uuid.UUID `json:"deny_permission_ids"`
-}
-
 type permissionGrantRequest struct {
 	PermissionID uuid.UUID               `json:"permission_id" binding:"required"`
 	Scope        *domain.PermissionScope `json:"scope"`
@@ -84,23 +79,9 @@ type permissionInfoResponse struct {
 	Name string    `json:"name"`
 }
 
-type permissionOverrideInfoResponse struct {
-	ID   uuid.UUID `json:"id"`
-	Name string    `json:"name"`
-}
-
 type userRolesAndPermissionsResponse struct {
-	Role                 *roleInfoResponse                `json:"role"`
-	InheritedPermissions []permissionInfoResponse         `json:"inherited_permissions"`
-	OverrideAllows       []permissionOverrideInfoResponse `json:"override_allows"`
-	OverrideDenies       []permissionOverrideInfoResponse `json:"override_denies"`
-	EffectivePermissions []permissionInfoResponse         `json:"effective_permissions"`
-}
-
-type replaceUserPermissionOverridesResponse struct {
-	EmployeeID         uuid.UUID   `json:"employee_id"`
-	AllowPermissionIDs []uuid.UUID `json:"allow_permission_ids"`
-	DenyPermissionIDs  []uuid.UUID `json:"deny_permission_ids"`
+	Role                 *roleInfoResponse        `json:"role"`
+	EffectivePermissions []permissionInfoResponse `json:"effective_permissions"`
 }
 
 type replaceRolePermissionsResponse struct {
@@ -175,30 +156,6 @@ func toUserRolesAndPermissionsResponse(data *domain.UserRolesAndPermissions) use
 		}
 	}
 
-	inherited := make([]permissionInfoResponse, len(data.InheritedPermissions))
-	for i, perm := range data.InheritedPermissions {
-		inherited[i] = permissionInfoResponse{
-			ID:   perm.ID,
-			Name: perm.Name,
-		}
-	}
-
-	allowOverrides := make([]permissionOverrideInfoResponse, len(data.OverrideAllows))
-	for i, perm := range data.OverrideAllows {
-		allowOverrides[i] = permissionOverrideInfoResponse{
-			ID:   perm.ID,
-			Name: perm.Name,
-		}
-	}
-
-	denyOverrides := make([]permissionOverrideInfoResponse, len(data.OverrideDenies))
-	for i, perm := range data.OverrideDenies {
-		denyOverrides[i] = permissionOverrideInfoResponse{
-			ID:   perm.ID,
-			Name: perm.Name,
-		}
-	}
-
 	effective := make([]permissionInfoResponse, len(data.EffectivePermissions))
 	for i, perm := range data.EffectivePermissions {
 		effective[i] = permissionInfoResponse{
@@ -209,9 +166,6 @@ func toUserRolesAndPermissionsResponse(data *domain.UserRolesAndPermissions) use
 
 	return userRolesAndPermissionsResponse{
 		Role:                 role,
-		InheritedPermissions: inherited,
-		OverrideAllows:       allowOverrides,
-		OverrideDenies:       denyOverrides,
 		EffectivePermissions: effective,
 	}
 }
@@ -234,14 +188,6 @@ func toCreateRoleParams(req createRoleRequest) domain.CreateRoleParams {
 func toAssignRoleToEmployeeParams(req assignRoleToEmployeeRequest) domain.AssignRoleToEmployeeParams {
 	return domain.AssignRoleToEmployeeParams{
 		RoleID: req.RoleID,
-	}
-}
-
-func toReplaceUserPermissionOverridesParams(employeeID uuid.UUID, req replaceUserPermissionOverridesRequest) domain.ReplaceUserPermissionOverridesParams {
-	return domain.ReplaceUserPermissionOverridesParams{
-		EmployeeID:         employeeID,
-		AllowPermissionIDs: req.AllowPermissionIDs,
-		DenyPermissionIDs:  req.DenyPermissionIDs,
 	}
 }
 

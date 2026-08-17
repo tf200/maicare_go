@@ -18,6 +18,9 @@ type rolePermissionRepoStub struct {
 	replaceErr   error
 	replaceCalls int
 	replaced     []domain.PermissionGrant
+	userID       uuid.UUID
+	roles        []domain.UserRole
+	effective    []domain.UserPermission
 }
 
 func (s *rolePermissionRepoStub) ListAllPermissions(context.Context) ([]domain.SystemPermission, error) {
@@ -28,6 +31,18 @@ func (s *rolePermissionRepoStub) ReplaceRolePermissions(_ context.Context, _ uui
 	s.replaceCalls++
 	s.replaced = permissions
 	return s.replaceErr
+}
+
+func (s *rolePermissionRepoStub) GetUserIDByEmployeeID(context.Context, uuid.UUID) (uuid.UUID, error) {
+	return s.userID, nil
+}
+
+func (s *rolePermissionRepoStub) GetUserRoles(context.Context, uuid.UUID) ([]domain.UserRole, error) {
+	return s.roles, nil
+}
+
+func (s *rolePermissionRepoStub) ListEffectiveUserPermissions(context.Context, uuid.UUID) ([]domain.UserPermission, error) {
+	return s.effective, nil
 }
 
 type noopLogger struct{}
@@ -119,5 +134,30 @@ func TestReplaceRolePermissionsReturnsRepositoryFailure(t *testing.T) {
 	}
 	if repo.replaceCalls != 1 {
 		t.Fatalf("expected one atomic replacement call, got %d", repo.replaceCalls)
+	}
+}
+
+func TestListUserRolesAndPermissionsReturnsRolePermissions(t *testing.T) {
+	userID := uuid.New()
+	roleID := uuid.New()
+	permissionID := uuid.New()
+	repo := &rolePermissionRepoStub{
+		userID: userID,
+		roles:  []domain.UserRole{{ID: roleID, Name: "coordinator"}},
+		effective: []domain.UserPermission{{
+			PermissionID: permissionID, PermissionName: "CLIENT.VIEW",
+		}},
+	}
+	service := NewRoleService(repo, noopLogger{})
+
+	result, err := service.ListUserRolesAndPermissions(context.Background(), uuid.New())
+	if err != nil {
+		t.Fatalf("ListUserRolesAndPermissions() error = %v", err)
+	}
+	if result.Role == nil || result.Role.ID != roleID {
+		t.Fatalf("role = %#v, want role %s", result.Role, roleID)
+	}
+	if len(result.EffectivePermissions) != 1 || result.EffectivePermissions[0].ID != permissionID {
+		t.Fatalf("effective permissions = %#v", result.EffectivePermissions)
 	}
 }

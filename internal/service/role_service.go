@@ -116,44 +116,10 @@ func (s *RoleService) ListUserRolesAndPermissions(ctx context.Context, employeeI
 		return nil, fmt.Errorf("failed to get user roles: %w", err)
 	}
 
-	inherited, err := s.repo.ListInheritedUserPermissions(ctx, userID)
-	if err != nil {
-		s.logger.LogError(ctx, "ListUserRolesAndPermissions", "Failed to list inherited user permissions", err)
-		return nil, fmt.Errorf("failed to list inherited user permissions: %w", err)
-	}
-
-	overrides, err := s.repo.ListUserPermissionOverrides(ctx, userID)
-	if err != nil {
-		s.logger.LogError(ctx, "ListUserRolesAndPermissions", "Failed to list user permission overrides", err)
-		return nil, fmt.Errorf("failed to list user permission overrides: %w", err)
-	}
-
 	effective, err := s.repo.ListEffectiveUserPermissions(ctx, userID)
 	if err != nil {
 		s.logger.LogError(ctx, "ListUserRolesAndPermissions", "Failed to list effective user permissions", err)
 		return nil, fmt.Errorf("failed to list effective user permissions: %w", err)
-	}
-
-	inheritedList := make([]domain.PermissionInfo, 0, len(inherited))
-	for _, perm := range inherited {
-		inheritedList = append(inheritedList, domain.PermissionInfo{
-			ID:   perm.PermissionID,
-			Name: perm.PermissionName,
-		})
-	}
-
-	allowOverrides := make([]domain.PermissionOverrideInfo, 0)
-	denyOverrides := make([]domain.PermissionOverrideInfo, 0)
-	for _, override := range overrides {
-		item := domain.PermissionOverrideInfo{
-			ID:   override.PermissionID,
-			Name: override.PermissionName,
-		}
-		if override.Effect == "allow" {
-			allowOverrides = append(allowOverrides, item)
-		} else {
-			denyOverrides = append(denyOverrides, item)
-		}
 	}
 
 	effectiveList := make([]domain.PermissionInfo, 0, len(effective))
@@ -174,44 +140,8 @@ func (s *RoleService) ListUserRolesAndPermissions(ctx context.Context, employeeI
 
 	return &domain.UserRolesAndPermissions{
 		Role:                 roleInfo,
-		InheritedPermissions: inheritedList,
-		OverrideAllows:       allowOverrides,
-		OverrideDenies:       denyOverrides,
 		EffectivePermissions: effectiveList,
 	}, nil
-}
-
-func (s *RoleService) ReplaceUserPermissionOverrides(ctx context.Context, params domain.ReplaceUserPermissionOverridesParams) error {
-	if hasPermissionOverlap(params.AllowPermissionIDs, params.DenyPermissionIDs) {
-		return fmt.Errorf("allow and deny permission ids cannot overlap")
-	}
-
-	userID, err := s.repo.GetUserIDByEmployeeID(ctx, params.EmployeeID)
-	if err != nil {
-		s.logger.LogError(ctx, "ReplaceUserPermissionOverrides", "Failed to get user ID by employee ID", err)
-		return fmt.Errorf("failed to get user ID: %w", err)
-	}
-
-	if err := s.repo.DeleteUserPermissionOverrides(ctx, userID); err != nil {
-		s.logger.LogError(ctx, "ReplaceUserPermissionOverrides", "Failed to delete user permission overrides", err)
-		return fmt.Errorf("failed to replace user permission overrides: %w", err)
-	}
-
-	if len(params.AllowPermissionIDs) > 0 {
-		if err := s.repo.AddUserPermissionOverrides(ctx, userID, params.AllowPermissionIDs, "allow"); err != nil {
-			s.logger.LogError(ctx, "ReplaceUserPermissionOverrides", "Failed to add allow permission overrides", err)
-			return fmt.Errorf("failed to replace user permission overrides: %w", err)
-		}
-	}
-
-	if len(params.DenyPermissionIDs) > 0 {
-		if err := s.repo.AddUserPermissionOverrides(ctx, userID, params.DenyPermissionIDs, "deny"); err != nil {
-			s.logger.LogError(ctx, "ReplaceUserPermissionOverrides", "Failed to add deny permission overrides", err)
-			return fmt.Errorf("failed to replace user permission overrides: %w", err)
-		}
-	}
-
-	return nil
 }
 
 func (s *RoleService) ReplaceRolePermissions(ctx context.Context, params domain.ReplaceRolePermissionsParams) error {
@@ -299,23 +229,4 @@ func humanizePermissionKey(value string) string {
 		return res[:len(res)-1]
 	}
 	return res
-}
-
-func hasPermissionOverlap(allowIDs []uuid.UUID, denyIDs []uuid.UUID) bool {
-	if len(allowIDs) == 0 || len(denyIDs) == 0 {
-		return false
-	}
-
-	allowSet := make(map[uuid.UUID]struct{}, len(allowIDs))
-	for _, id := range allowIDs {
-		allowSet[id] = struct{}{}
-	}
-
-	for _, id := range denyIDs {
-		if _, exists := allowSet[id]; exists {
-			return true
-		}
-	}
-
-	return false
 }

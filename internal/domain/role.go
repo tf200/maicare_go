@@ -50,13 +50,6 @@ type UserPermission struct {
 	PermissionName string
 }
 
-// UserPermissionOverride represents a permission override for a user
-type UserPermissionOverride struct {
-	PermissionID   uuid.UUID
-	PermissionName string
-	Effect         string // "allow" or "deny"
-}
-
 // RoleInfo is a minimal role representation
 type RoleInfo struct {
 	ID   uuid.UUID
@@ -65,12 +58,6 @@ type RoleInfo struct {
 
 // PermissionInfo is a minimal permission representation
 type PermissionInfo struct {
-	ID   uuid.UUID
-	Name string
-}
-
-// PermissionOverrideInfo is a minimal permission override representation
-type PermissionOverrideInfo struct {
 	ID   uuid.UUID
 	Name string
 }
@@ -92,9 +79,6 @@ type PermissionGroup struct {
 // UserRolesAndPermissions aggregates a user's roles and permissions
 type UserRolesAndPermissions struct {
 	Role                 *RoleInfo
-	InheritedPermissions []PermissionInfo
-	OverrideAllows       []PermissionOverrideInfo
-	OverrideDenies       []PermissionOverrideInfo
 	EffectivePermissions []PermissionInfo
 }
 
@@ -107,13 +91,6 @@ type CreateRoleParams struct {
 // AssignRoleToEmployeeParams parameters for assigning a role
 type AssignRoleToEmployeeParams struct {
 	RoleID uuid.UUID
-}
-
-// ReplaceUserPermissionOverridesParams parameters for replacing permission overrides
-type ReplaceUserPermissionOverridesParams struct {
-	EmployeeID         uuid.UUID
-	AllowPermissionIDs []uuid.UUID
-	DenyPermissionIDs  []uuid.UUID
 }
 
 // PermissionGrant represents one permission and its optional scope on a role.
@@ -136,11 +113,7 @@ type RoleRepository interface {
 	GetUserIDByEmployeeID(ctx context.Context, employeeID uuid.UUID) (uuid.UUID, error)
 	AssignRoleToUser(ctx context.Context, userID uuid.UUID, roleID uuid.UUID) error
 	GetUserRoles(ctx context.Context, userID uuid.UUID) ([]UserRole, error)
-	ListInheritedUserPermissions(ctx context.Context, userID uuid.UUID) ([]UserPermission, error)
-	ListUserPermissionOverrides(ctx context.Context, userID uuid.UUID) ([]UserPermissionOverride, error)
 	ListEffectiveUserPermissions(ctx context.Context, userID uuid.UUID) ([]UserPermission, error)
-	DeleteUserPermissionOverrides(ctx context.Context, userID uuid.UUID) error
-	AddUserPermissionOverrides(ctx context.Context, userID uuid.UUID, permissionIDs []uuid.UUID, effect string) error
 	ReplaceRolePermissions(ctx context.Context, roleID uuid.UUID, permissions []PermissionGrant) error
 	CreateRole(ctx context.Context, params CreateRoleParams) (*Role, error)
 }
@@ -152,7 +125,6 @@ type RoleService interface {
 	ListAllRolePermissions(ctx context.Context, roleID uuid.UUID) ([]RolePermission, error)
 	AssignRoleToEmployee(ctx context.Context, employeeID uuid.UUID, params AssignRoleToEmployeeParams) error
 	ListUserRolesAndPermissions(ctx context.Context, employeeID uuid.UUID) (*UserRolesAndPermissions, error)
-	ReplaceUserPermissionOverrides(ctx context.Context, params ReplaceUserPermissionOverridesParams) error
 	ReplaceRolePermissions(ctx context.Context, params ReplaceRolePermissionsParams) error
 	CreateRole(ctx context.Context, params CreateRoleParams) (*Role, error)
 }

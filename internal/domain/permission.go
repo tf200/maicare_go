@@ -205,7 +205,6 @@ const (
 	PermPermissionsDelete PermissionKey = "PERMISSIONS.DELETE"
 	PermPermissionsUpdate PermissionKey = "PERMISSIONS.UPDATE"
 	PermPermissionsView   PermissionKey = "PERMISSIONS.VIEW"
-	PermPermissionsGrant  PermissionKey = "PERMISSIONS.GRANT"
 )
 
 // Profile Permissions
@@ -462,7 +461,6 @@ var AllPermissionKeys = []PermissionKey{
 	PermPermissionsDelete,
 	PermPermissionsUpdate,
 	PermPermissionsView,
-	PermPermissionsGrant,
 
 	PermProfileView,
 

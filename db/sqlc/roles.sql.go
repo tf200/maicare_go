@@ -28,26 +28,6 @@ func (q *Queries) AddPermissionToRole(ctx context.Context, arg AddPermissionToRo
 	return err
 }
 
-const addUserPermissionOverrides = `-- name: AddUserPermissionOverrides :exec
-INSERT INTO user_permission_overrides (user_id, permission_id, effect)
-SELECT $1,
-       unnest($2::uuid[]),
-       $3
-ON CONFLICT (user_id, permission_id) DO UPDATE SET effect = EXCLUDED.effect
-`
-
-type AddUserPermissionOverridesParams struct {
-	UserID        uuid.UUID                `json:"user_id"`
-	PermissionIds []uuid.UUID              `json:"permission_ids"`
-	Effect        PermissionOverrideEffect `json:"effect"`
-}
-
-// Bulk-insert explicit overrides for a user (idempotent by replacement flow).
-func (q *Queries) AddUserPermissionOverrides(ctx context.Context, arg AddUserPermissionOverridesParams) error {
-	_, err := q.db.Exec(ctx, addUserPermissionOverrides, arg.UserID, arg.PermissionIds, arg.Effect)
-	return err
-}
-
 const assignRoleToUser = `-- name: AssignRoleToUser :exec
 INSERT INTO user_roles (user_id, role_id)
 VALUES ($1, $2)
@@ -66,37 +46,13 @@ func (q *Queries) AssignRoleToUser(ctx context.Context, arg AssignRoleToUserPara
 
 const checkUserPermission = `-- name: CheckUserPermission :one
 
-WITH inherited_permissions AS (
-    SELECT rp.permission_id
-    FROM user_roles ur
-    JOIN role_permissions rp ON rp.role_id = ur.role_id
-    WHERE ur.user_id = $1
-),
-allowed_overrides AS (
-    SELECT permission_id
-    FROM user_permission_overrides
-    WHERE user_id = $1
-      AND effect = 'allow'
-),
-base_permissions AS (
-    SELECT permission_id FROM inherited_permissions
-    UNION
-    SELECT permission_id FROM allowed_overrides
-),
-effective_permissions AS (
-    SELECT permission_id
-    FROM base_permissions
-    EXCEPT
-    SELECT permission_id
-    FROM user_permission_overrides
-    WHERE user_id = $1
-      AND effect = 'deny'
-)
 SELECT EXISTS (
     SELECT 1
-    FROM effective_permissions ep
-    JOIN permissions p ON p.id = ep.permission_id
-    WHERE p.name = $2
+    FROM user_roles ur
+    JOIN role_permissions rp ON rp.role_id = ur.role_id
+    JOIN permissions p ON p.id = rp.permission_id
+    WHERE ur.user_id = $1
+      AND p.name = $2
 ) AS has_permission
 `
 
@@ -106,7 +62,7 @@ type CheckUserPermissionParams struct {
 }
 
 // ---------- 6. CHECK UTILITIES ----------
-// Returns true/false whether the user has the named permission.
+// Returns whether the user's assigned role grants the named permission.
 func (q *Queries) CheckUserPermission(ctx context.Context, arg CheckUserPermissionParams) (bool, error) {
 	row := q.db.QueryRow(ctx, checkUserPermission, arg.UserID, arg.Name)
 	var has_permission bool
@@ -148,17 +104,6 @@ func (q *Queries) CreateRole(ctx context.Context, arg CreateRoleParams) (Role, e
 	var i Role
 	err := row.Scan(&i.ID, &i.Name, &i.Description)
 	return i, err
-}
-
-const deleteUserPermissionOverrides = `-- name: DeleteUserPermissionOverrides :exec
-DELETE FROM user_permission_overrides
-WHERE user_id = $1
-`
-
-// Removes all explicit overrides for the given user.
-func (q *Queries) DeleteUserPermissionOverrides(ctx context.Context, userID uuid.UUID) error {
-	_, err := q.db.Exec(ctx, deleteUserPermissionOverrides, userID)
-	return err
 }
 
 const getAdminRoleId = `-- name: GetAdminRoleId :one
@@ -294,36 +239,13 @@ func (q *Queries) ListAllRolePermissions(ctx context.Context, roleID uuid.UUID) 
 }
 
 const listEffectiveUserPermissions = `-- name: ListEffectiveUserPermissions :many
-WITH inherited_permissions AS (
-    SELECT rp.permission_id
-    FROM user_roles ur
-    JOIN role_permissions rp ON rp.role_id = ur.role_id
-    WHERE ur.user_id = $1
-),
-allowed_overrides AS (
-    SELECT permission_id
-    FROM user_permission_overrides
-    WHERE user_id = $1
-      AND effect = 'allow'
-),
-base_permissions AS (
-    SELECT permission_id FROM inherited_permissions
-    UNION
-    SELECT permission_id FROM allowed_overrides
-),
-effective_permissions AS (
-    SELECT permission_id
-    FROM base_permissions
-    EXCEPT
-    SELECT permission_id
-    FROM user_permission_overrides
-    WHERE user_id = $1
-      AND effect = 'deny'
-)
+
 SELECT p.id AS permission_id,
        p.name AS permission_name
-FROM effective_permissions ep
-JOIN permissions p ON p.id = ep.permission_id
+FROM user_roles ur
+JOIN role_permissions rp ON rp.role_id = ur.role_id
+JOIN permissions p ON p.id = rp.permission_id
+WHERE ur.user_id = $1
 ORDER BY p.id
 `
 
@@ -332,7 +254,8 @@ type ListEffectiveUserPermissionsRow struct {
 	PermissionName string    `json:"permission_name"`
 }
 
-// Returns effective permissions after applying role inheritance and overrides.
+// ---------- 5. USER PERMISSIONS ----------
+// Returns permissions granted by the user's assigned role.
 func (q *Queries) ListEffectiveUserPermissions(ctx context.Context, userID uuid.UUID) ([]ListEffectiveUserPermissionsRow, error) {
 	rows, err := q.db.Query(ctx, listEffectiveUserPermissions, userID)
 	if err != nil {
@@ -342,44 +265,6 @@ func (q *Queries) ListEffectiveUserPermissions(ctx context.Context, userID uuid.
 	items := []ListEffectiveUserPermissionsRow{}
 	for rows.Next() {
 		var i ListEffectiveUserPermissionsRow
-		if err := rows.Scan(&i.PermissionID, &i.PermissionName); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const listInheritedUserPermissions = `-- name: ListInheritedUserPermissions :many
-
-SELECT p.id   AS permission_id,
-       p.name AS permission_name
-FROM user_roles ur
-JOIN role_permissions rp ON rp.role_id = ur.role_id
-JOIN permissions p ON p.id = rp.permission_id
-WHERE ur.user_id = $1
-ORDER BY p.id
-`
-
-type ListInheritedUserPermissionsRow struct {
-	PermissionID   uuid.UUID `json:"permission_id"`
-	PermissionName string    `json:"permission_name"`
-}
-
-// ---------- 5. USER-PERMISSION OVERRIDES ----------
-// Returns permissions inherited from the user's assigned role.
-func (q *Queries) ListInheritedUserPermissions(ctx context.Context, userID uuid.UUID) ([]ListInheritedUserPermissionsRow, error) {
-	rows, err := q.db.Query(ctx, listInheritedUserPermissions, userID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []ListInheritedUserPermissionsRow{}
-	for rows.Next() {
-		var i ListInheritedUserPermissionsRow
 		if err := rows.Scan(&i.PermissionID, &i.PermissionName); err != nil {
 			return nil, err
 		}
@@ -431,43 +316,6 @@ func (q *Queries) ListRoles(ctx context.Context) ([]ListRolesRow, error) {
 			&i.PermissionCount,
 			&i.EmployeeCount,
 		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const listUserPermissionOverrides = `-- name: ListUserPermissionOverrides :many
-SELECT upo.permission_id,
-       p.name AS permission_name,
-       upo.effect
-FROM user_permission_overrides upo
-JOIN permissions p ON p.id = upo.permission_id
-WHERE upo.user_id = $1
-ORDER BY p.id
-`
-
-type ListUserPermissionOverridesRow struct {
-	PermissionID   uuid.UUID                `json:"permission_id"`
-	PermissionName string                   `json:"permission_name"`
-	Effect         PermissionOverrideEffect `json:"effect"`
-}
-
-// Returns explicit allow/deny overrides configured for a user.
-func (q *Queries) ListUserPermissionOverrides(ctx context.Context, userID uuid.UUID) ([]ListUserPermissionOverridesRow, error) {
-	rows, err := q.db.Query(ctx, listUserPermissionOverrides, userID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []ListUserPermissionOverridesRow{}
-	for rows.Next() {
-		var i ListUserPermissionOverridesRow
-		if err := rows.Scan(&i.PermissionID, &i.PermissionName, &i.Effect); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

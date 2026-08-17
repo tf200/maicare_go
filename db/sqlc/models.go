@@ -2580,48 +2580,6 @@ func (ns NullPaymentStatusEnum) Value() (driver.Value, error) {
 	return string(ns.PaymentStatusEnum), nil
 }
 
-type PermissionOverrideEffect string
-
-const (
-	PermissionOverrideEffectAllow PermissionOverrideEffect = "allow"
-	PermissionOverrideEffectDeny  PermissionOverrideEffect = "deny"
-)
-
-func (e *PermissionOverrideEffect) Scan(src interface{}) error {
-	switch s := src.(type) {
-	case []byte:
-		*e = PermissionOverrideEffect(s)
-	case string:
-		*e = PermissionOverrideEffect(s)
-	default:
-		return fmt.Errorf("unsupported scan type for PermissionOverrideEffect: %T", src)
-	}
-	return nil
-}
-
-type NullPermissionOverrideEffect struct {
-	PermissionOverrideEffect PermissionOverrideEffect `json:"permission_override_effect"`
-	Valid                    bool                     `json:"valid"` // Valid is true if PermissionOverrideEffect is not NULL
-}
-
-// Scan implements the Scanner interface.
-func (ns *NullPermissionOverrideEffect) Scan(value interface{}) error {
-	if value == nil {
-		ns.PermissionOverrideEffect, ns.Valid = "", false
-		return nil
-	}
-	ns.Valid = true
-	return ns.PermissionOverrideEffect.Scan(value)
-}
-
-// Value implements the driver Valuer interface.
-func (ns NullPermissionOverrideEffect) Value() (driver.Value, error) {
-	if !ns.Valid {
-		return nil, nil
-	}
-	return string(ns.PermissionOverrideEffect), nil
-}
-
 type PermissionScopeEnum string
 
 const (
@@ -4343,12 +4301,6 @@ type Topic struct {
 	ID               uuid.UUID `json:"id"`
 	TopicName        string    `json:"topic_name"`
 	LevelDescription []byte    `json:"level_description"`
-}
-
-type UserPermissionOverride struct {
-	UserID       uuid.UUID                `json:"user_id"`
-	PermissionID uuid.UUID                `json:"permission_id"`
-	Effect       PermissionOverrideEffect `json:"effect"`
 }
 
 type UserRole struct {

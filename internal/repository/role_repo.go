@@ -111,39 +111,6 @@ func (r *RoleRepository) GetUserRoles(ctx context.Context, userID uuid.UUID) ([]
 	return roles, nil
 }
 
-func (r *RoleRepository) ListInheritedUserPermissions(ctx context.Context, userID uuid.UUID) ([]domain.UserPermission, error) {
-	rows, err := r.store.ListInheritedUserPermissions(ctx, userID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to list inherited user permissions: %w", err)
-	}
-
-	perms := make([]domain.UserPermission, len(rows))
-	for i, row := range rows {
-		perms[i] = domain.UserPermission{
-			PermissionID:   row.PermissionID,
-			PermissionName: row.PermissionName,
-		}
-	}
-	return perms, nil
-}
-
-func (r *RoleRepository) ListUserPermissionOverrides(ctx context.Context, userID uuid.UUID) ([]domain.UserPermissionOverride, error) {
-	rows, err := r.store.ListUserPermissionOverrides(ctx, userID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to list user permission overrides: %w", err)
-	}
-
-	overrides := make([]domain.UserPermissionOverride, len(rows))
-	for i, row := range rows {
-		overrides[i] = domain.UserPermissionOverride{
-			PermissionID:   row.PermissionID,
-			PermissionName: row.PermissionName,
-			Effect:         string(row.Effect),
-		}
-	}
-	return overrides, nil
-}
-
 func (r *RoleRepository) ListEffectiveUserPermissions(ctx context.Context, userID uuid.UUID) ([]domain.UserPermission, error) {
 	rows, err := r.store.ListEffectiveUserPermissions(ctx, userID)
 	if err != nil {
@@ -158,28 +125,6 @@ func (r *RoleRepository) ListEffectiveUserPermissions(ctx context.Context, userI
 		}
 	}
 	return perms, nil
-}
-
-func (r *RoleRepository) DeleteUserPermissionOverrides(ctx context.Context, userID uuid.UUID) error {
-	return r.store.DeleteUserPermissionOverrides(ctx, userID)
-}
-
-func (r *RoleRepository) AddUserPermissionOverrides(ctx context.Context, userID uuid.UUID, permissionIDs []uuid.UUID, effect string) error {
-	var eff db.PermissionOverrideEffect
-	switch effect {
-	case "allow":
-		eff = db.PermissionOverrideEffectAllow
-	case "deny":
-		eff = db.PermissionOverrideEffectDeny
-	default:
-		return fmt.Errorf("invalid permission override effect: %s", effect)
-	}
-
-	return r.store.AddUserPermissionOverrides(ctx, db.AddUserPermissionOverridesParams{
-		UserID:        userID,
-		PermissionIds: permissionIDs,
-		Effect:        eff,
-	})
 }
 
 func (r *RoleRepository) ReplaceRolePermissions(ctx context.Context, roleID uuid.UUID, permissions []domain.PermissionGrant) error {

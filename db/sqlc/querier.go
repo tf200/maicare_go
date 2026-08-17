@@ -25,8 +25,6 @@ type Querier interface {
 	// Insert one permission grant while replacing a role's grants transactionally.
 	AddPermissionToRole(ctx context.Context, arg AddPermissionToRoleParams) error
 	AddRegistrationUploadAttachment(ctx context.Context, arg AddRegistrationUploadAttachmentParams) error
-	// Bulk-insert explicit overrides for a user (idempotent by replacement flow).
-	AddUserPermissionOverrides(ctx context.Context, arg AddUserPermissionOverridesParams) error
 	ApplyLeaveBalanceDeduction(ctx context.Context, arg ApplyLeaveBalanceDeductionParams) (LeaveBalance, error)
 	ApplyLeaveBalanceTotalAdjustment(ctx context.Context, arg ApplyLeaveBalanceTotalAdjustmentParams) (LeaveBalance, error)
 	ApproveOrRejectClientLocationTransfer(ctx context.Context, arg ApproveOrRejectClientLocationTransferParams) error
@@ -39,7 +37,7 @@ type Querier interface {
 	CancelClientGoalByID(ctx context.Context, arg CancelClientGoalByIDParams) (ClientGoal, error)
 	CheckAllShiftsExist(ctx context.Context, arg CheckAllShiftsExistParams) (bool, error)
 	// ---------- 6. CHECK UTILITIES ----------
-	// Returns true/false whether the user has the named permission.
+	// Returns whether the user's assigned role grants the named permission.
 	CheckUserPermission(ctx context.Context, arg CheckUserPermissionParams) (bool, error)
 	CloneHandbookTemplateToDraft(ctx context.Context, arg CloneHandbookTemplateToDraftParams) (CloneHandbookTemplateToDraftRow, error)
 	CompleteEmployeeHandbookStep(ctx context.Context, arg CompleteEmployeeHandbookStepParams) (EmployeeHandbookStepProgress, error)
@@ -152,8 +150,6 @@ type Querier interface {
 	DeleteSender(ctx context.Context, id uuid.UUID) error
 	DeleteSession(ctx context.Context, id uuid.UUID) error
 	DeleteShift(ctx context.Context, id uuid.UUID) error
-	// Removes all explicit overrides for the given user.
-	DeleteUserPermissionOverrides(ctx context.Context, userID uuid.UUID) error
 	DischargeOverview(ctx context.Context, arg DischargeOverviewParams) ([]DischargeOverviewRow, error)
 	Enable2Fa(ctx context.Context, arg Enable2FaParams) (int64, error)
 	EnsureLeaveBalanceForYear(ctx context.Context, arg EnsureLeaveBalanceForYearParams) error
@@ -205,7 +201,7 @@ type Querier interface {
 	GetEmployeeHandbookByID(ctx context.Context, id uuid.UUID) (EmployeeHandbook, error)
 	GetEmployeeHandbookDetailsByID(ctx context.Context, id uuid.UUID) (GetEmployeeHandbookDetailsByIDRow, error)
 	GetEmployeeProfileByID(ctx context.Context, id uuid.UUID) (GetEmployeeProfileByIDRow, error)
-	GetEmployeeProfileByUserID(ctx context.Context, id uuid.UUID) (GetEmployeeProfileByUserIDRow, error)
+	GetEmployeeProfileByUserID(ctx context.Context, userID uuid.UUID) (GetEmployeeProfileByUserIDRow, error)
 	GetEmployeeSchedules(ctx context.Context, arg GetEmployeeSchedulesParams) ([]GetEmployeeSchedulesRow, error)
 	GetGlobalOrganisationCounts(ctx context.Context) (GetGlobalOrganisationCountsRow, error)
 	GetGoalEvaluationByID(ctx context.Context, id uuid.UUID) (GetGoalEvaluationByIDRow, error)
@@ -310,7 +306,8 @@ type Querier interface {
 	ListDepartments(ctx context.Context) ([]ListDepartmentsRow, error)
 	ListDueScheduledOutOfCareMissingFinalEvaluation(ctx context.Context) ([]uuid.UUID, error)
 	ListEducations(ctx context.Context, employeeID uuid.UUID) ([]EmployeeEducation, error)
-	// Returns effective permissions after applying role inheritance and overrides.
+	// ---------- 5. USER PERMISSIONS ----------
+	// Returns permissions granted by the user's assigned role.
 	ListEffectiveUserPermissions(ctx context.Context, userID uuid.UUID) ([]ListEffectiveUserPermissionsRow, error)
 	ListEligibleEmployeesForHandbookAssignment(ctx context.Context, arg ListEligibleEmployeesForHandbookAssignmentParams) ([]ListEligibleEmployeesForHandbookAssignmentRow, error)
 	ListEmergencyContacts(ctx context.Context, arg ListEmergencyContactsParams) ([]ListEmergencyContactsRow, error)
@@ -332,9 +329,6 @@ type Querier interface {
 	ListInCareClients(ctx context.Context, arg ListInCareClientsParams) ([]ListInCareClientsRow, error)
 	ListIncidentReportRecipientEmails(ctx context.Context, clientID uuid.UUID) ([]*string, error)
 	ListIncidents(ctx context.Context, arg ListIncidentsParams) ([]ListIncidentsRow, error)
-	// ---------- 5. USER-PERMISSION OVERRIDES ----------
-	// Returns permissions inherited from the user's assigned role.
-	ListInheritedUserPermissions(ctx context.Context, userID uuid.UUID) ([]ListInheritedUserPermissionsRow, error)
 	ListIntakeForms(ctx context.Context, arg ListIntakeFormsParams) ([]ListIntakeFormsRow, error)
 	ListIntakeTopicsAssessmentsByIntake(ctx context.Context, arg ListIntakeTopicsAssessmentsByIntakeParams) ([]ListIntakeTopicsAssessmentsByIntakeRow, error)
 	ListInvoiceLinesByInvoice(ctx context.Context, invoiceID uuid.UUID) ([]InvoiceLine, error)
@@ -381,8 +375,6 @@ type Querier interface {
 	ListUpcomingAppointments(ctx context.Context, organizerEmployeeID uuid.UUID) ([]ListUpcomingAppointmentsRow, error)
 	ListUpcomingEvaluationsForCoordinator(ctx context.Context, arg ListUpcomingEvaluationsForCoordinatorParams) ([]ListUpcomingEvaluationsForCoordinatorRow, error)
 	ListUserIDsByEmployeeIDs(ctx context.Context, dollar_1 []uuid.UUID) ([]uuid.UUID, error)
-	// Returns explicit allow/deny overrides configured for a user.
-	ListUserPermissionOverrides(ctx context.Context, userID uuid.UUID) ([]ListUserPermissionOverridesRow, error)
 	ListVisibleMasterEvents(ctx context.Context, arg ListVisibleMasterEventsParams) ([]CalendarEvent, error)
 	ListWaitingListClients(ctx context.Context, arg ListWaitingListClientsParams) ([]ListWaitingListClientsRow, error)
 	// ==========================================

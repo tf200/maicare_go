@@ -2,7 +2,7 @@
 
 Last updated: 2026-08-17
 
-Status: Phase 3 completed; Phase 4 not started
+Status: Phase 4 completed; Phase 5 not started
 
 ## Purpose
 
@@ -106,14 +106,13 @@ Defined in `db/migrations/000001_init.up.sql`:
 - `roles` at approximately lines 475-479
 - `permissions` at approximately lines 482-489
 - `role_permissions` at approximately lines 493-500
-- `user_permission_overrides` at approximately lines 520-528
-- `user_roles` at approximately lines 531-536
+- `user_roles` follows `custom_user`
 
 Current limitations:
 
-- `role_permissions` contains only `role_id` and `permission_id`.
-- Permissions do not indicate whether scope applies.
-- User permission overrides have no scope.
+- `role_permissions` stores scope per grant.
+- Permissions declare whether scope applies.
+- Roles are the sole source of user permissions; direct per-user overrides are not supported.
 - `user_roles.user_id` is the primary key, so one user can currently have only one role.
 - Effective-permission queries return only permission ID and name.
 
@@ -155,10 +154,9 @@ Relevant files:
 
 Current limitations:
 
-- Role-permission requests accept only arrays of permission UUIDs.
-- Responses do not expose scope.
-- Replacing role permissions uses delete followed by insert without one transaction.
-- Replacing user overrides also uses multiple operations without one transaction.
+- Role-permission requests and responses include grant scope.
+- Replacing role permissions is transactional.
+- Direct user permission mutation has been removed.
 - The role synchronization command is additive and does not remove obsolete grants.
 
 ### Current RLS
@@ -186,7 +184,7 @@ Current problems:
 - Coordinator inserts are not restricted by assignment.
 - Policies use hard-coded role names instead of permissions.
 - Custom future roles cannot participate correctly.
-- User permission overrides do not affect RLS.
+- Role grants are the sole permission source for future RLS policies.
 - Different data categories cannot require different permissions.
 - RLS is enabled but not forced.
 - Runtime PostgreSQL ownership and `BYPASSRLS` behavior are not defined in migrations.
@@ -236,7 +234,7 @@ Status: `[-]` Partially resolved; remaining decisions are required by later phas
 - [ ] Confirm how an assignment ends; the current table has `start_date` but no `end_date`.
 - [ ] Confirm whether `all` means all clients globally or all clients in the actor's organization.
 - [ ] Confirm whether users will remain limited to one role or may receive multiple roles later.
-- [ ] Confirm scoped behavior for direct per-user `allow` overrides.
+- [x] Confirm that direct per-user permission overrides are not supported.
 - [ ] Confirm behavior for background workers and trusted system operations.
 - [x] Confirm whether `CLIENT.CREATE` is unscoped initially, because a client does not have an assignment before creation.
 
@@ -246,8 +244,7 @@ Recommended decisions:
 - Treat `all` as all clients inside the user's organization, not all organizations.
 - Treat any active assignment as `assigned`; permissions determine which client data categories are accessible.
 - Add an optional assignment end date.
-- Require `assigned` or `all` for scoped per-user allow overrides.
-- Keep deny overrides unscoped because deny removes the permission entirely.
+- Keep roles as the sole source of permissions and scope.
 - Treat `CLIENT.CREATE` as unscoped until an organization-aware creation rule is designed.
 - Design for multiple roles before enabling them; do not accidentally combine a permission from one role with an unrelated broader scope from another role.
 
@@ -443,11 +440,11 @@ Acceptance criteria:
 - [x] Replacement is atomic.
 - [x] API reads return exactly what was saved.
 
-## Phase 4: Add Scope To User Permission Overrides
+## Phase 4: Remove Legacy User Permission Overrides
 
-Status: `[ ]` Not started
+Status: `[x]` Completed and verified on 2026-08-17
 
-Goal: prevent direct user allowances from becoming unintended unrestricted access.
+Goal: make role grants the sole source of user permissions and eliminate the legacy bypass path.
 
 Affected files:
 
@@ -459,28 +456,21 @@ Affected files:
 - `internal/handler/role_dto.go`
 - Generated files under `db/sqlc/`
 
-Target rules:
-
-- `deny` removes the permission and uses `scope = NULL`.
-- Allowing an unscoped permission requires `scope = NULL`.
-- Allowing a scoped permission requires `assigned` or `all`.
-- Explicit deny wins over role inheritance and explicit allow.
-
 Checklist:
 
-- [ ] Add nullable `scope` to `user_permission_overrides`.
-- [ ] Add database-level validation for effect, permission type, and scope.
-- [ ] Update override request and response DTOs.
-- [ ] Update domain and repository models.
-- [ ] Make override replacement one transaction.
-- [ ] Reject overlapping allow and deny entries.
-- [ ] Add precedence tests.
+- [x] Remove `user_permission_overrides` and its effect enum from the schema.
+- [x] Remove override SQL, generated models, domain models, and repository/service methods.
+- [x] Remove the direct user-permission mutation endpoint and DTOs.
+- [x] Remove the obsolete `PERMISSIONS.GRANT` permission.
+- [x] Resolve effective permissions exclusively from the assigned role.
+- [x] Remove override fields from role-management responses.
+- [x] Update employee-profile permission aggregation to use role grants only.
 
 Acceptance criteria:
 
-- [ ] A scoped user allowance cannot be stored without a scope.
-- [ ] A deny always removes effective access.
-- [ ] Failed replacement preserves the previous overrides.
+- [x] No database or API path can store a direct user permission.
+- [x] Middleware and employee-profile permissions come only from role grants.
+- [x] Permission changes are managed through role grants and role assignment.
 
 ## Phase 5: Resolve Effective Permissions And Scope
 
@@ -510,19 +500,18 @@ Expected result shape:
 
 Rules:
 
-- Deny overrides win.
 - Unscoped effective permissions return `scope = NULL`.
 - Missing scope on a scoped grant results in no usable grant.
 - If multiple roles are introduced, scope combination must be explicit and tested. Never combine a permission from one role with `all` scope from an unrelated role that does not grant that permission.
 
 Checklist:
 
-- [ ] Update inherited permission queries to include scope.
+- [ ] Update role-derived permission queries to include scope.
 - [ ] Update effective permission queries to include scope.
 - [ ] Update direct permission checks.
 - [ ] Avoid loading all permissions merely to check one key where possible.
 - [ ] Keep role and scope data out of JWT claims.
-- [ ] Add effective-permission tests for role grants and user overrides.
+- [ ] Add effective-permission tests for role grants.
 
 Acceptance criteria:
 
@@ -612,7 +601,7 @@ can_access_client(client_id, permission_name)
 1. Authenticated database request identity exists.
 2. User is active.
 3. Employee is active where applicable.
-4. User has the requested permission after overrides.
+4. The user's assigned role has the requested permission.
 5. The permission is scoped.
 6. `all` satisfies the organizational boundary.
 7. `assigned` has an active assignment for the client.
@@ -884,7 +873,6 @@ Required controls:
 
 - Record role assignment and removal.
 - Record role-permission and scope changes.
-- Record user override changes.
 - Record assignment start and end.
 - Record sensitive client-data reads where required by the audit policy.
 - Record sensitive writes and actor identity.
@@ -924,8 +912,7 @@ Minimum authorization actors:
 - Coordinator with `assigned`
 - Assigned employee without the requested permission
 - Unassigned employee with an `assigned` permission
-- User with explicit allow
-- User with explicit deny
+- User whose role lacks the requested permission
 - Inactive user
 - Inactive employee
 - Missing request identity
@@ -998,13 +985,12 @@ Complete this tracker before converting each table. Add rows as tables are disco
 2. Enforcing RLS before centralizing transaction identity could hide valid data or break endpoints.
 3. Defaulting existing scoped grants to `all` could overgrant access and violate least privilege.
 4. Defaulting existing scoped grants to `assigned` could unexpectedly remove legitimate access. Existing assignments and role intent must be reviewed during migration.
-5. Direct per-user allow overrides can overgrant unless they receive explicit scope.
-6. Assignment-management permissions can become a privilege-escalation path if users can assign themselves or others without strict checks.
-7. Deep client ownership lookups can cause RLS recursion or poor query performance.
-8. Multiple roles can cause accidental scope widening if grants and scopes are combined incorrectly.
-9. Background jobs can fail or bypass controls if no explicit service-actor model exists.
-10. Public registration and intake flows need separate treatment from authenticated client records.
-11. RLS does not replace auditing, route permissions, field-level response controls, encryption, session controls, or operational access reviews.
+5. Assignment-management permissions can become a privilege-escalation path if users can assign themselves or others without strict checks.
+6. Deep client ownership lookups can cause RLS recursion or poor query performance.
+7. Multiple roles can cause accidental scope widening if grants and scopes are combined incorrectly.
+8. Background jobs can fail or bypass controls if no explicit service-actor model exists.
+9. Public registration and intake flows need separate treatment from authenticated client records.
+10. RLS does not replace auditing, route permissions, field-level response controls, encryption, session controls, or operational access reviews.
 
 ## Decision Log
 
@@ -1012,6 +998,7 @@ Record finalized decisions here. Do not silently change an earlier decision; add
 
 | Date | Decision | Reason | Status |
 |---|---|---|---|
+| 2026-08-17 | Roles are the sole source of user permissions; direct per-user overrides are removed. | The override model is legacy and would create a second authorization path that can bypass role scope policy. | Confirmed |
 | 2026-08-17 | Replace a role's permission grants through one repository transaction after validating the complete request. | Invalid IDs or scopes must not remove valid existing grants. | Confirmed |
 | 2026-08-16 | Use the name `scope`, not `client_scope`, throughout the design. | Scope may be generalized and the chosen API terminology is simpler. | Confirmed |
 | 2026-08-16 | Scope belongs to each role-permission grant. | Different client-data categories may require different reach under least privilege. | Confirmed |
@@ -1024,12 +1011,34 @@ Record finalized decisions here. Do not silently change an earlier decision; add
 | 2026-08-16 | Seed scoped administrator grants as `all` and scoped coordinator grants as `assigned`. | These values match the current role responsibilities while avoiding role-name checks in the future RLS design. | Confirmed |
 | TBD | Exact meaning and lifetime of an active assignment. | Needed for `assigned` scope. | Open |
 | TBD | Organizational boundary for `all`. | Needed to prevent cross-organization access. | Open |
-| TBD | Scoped user-allow override behavior. | Needed before Phase 4. | Open |
 | TBD | Background worker authorization model. | Needed before strict RLS enforcement. | Open |
 
 ## Progress Log
 
 Add the newest entry first.
+
+### 2026-08-17 - Phase 4 legacy user overrides removed
+
+Status: Completed and verified
+
+Changes:
+
+- Removed the `user_permission_overrides` table and `permission_override_effect` enum from the initial migration.
+- Removed all override queries, generated sqlc models, domain types, repository/service methods, DTOs, and the direct user-permission endpoint.
+- Removed the obsolete `PERMISSIONS.GRANT` registry entry.
+- Simplified effective permission checks and employee-profile permission aggregation to use role grants only.
+- Removed override fields from the employee role-and-permission response.
+
+Verification:
+
+- `sqlc generate` completed successfully.
+- `go test ./...` completed successfully.
+- A fresh migration verified that the override table and enum are absent.
+- Role-granted permissions remained available and permissions absent from the role remained denied.
+
+Next action:
+
+- Begin Phase 5 by returning each role-derived permission's scope and using a direct scoped permission check in middleware.
 
 ### 2026-08-17 - Phase 3 role-permission management completed
 
@@ -1055,7 +1064,7 @@ Verification:
 
 Next action:
 
-- Begin Phase 4 by defining and implementing scope behavior for direct user permission overrides.
+- Phase 4 superseded the earlier override design by removing direct user permissions entirely.
 
 ### 2026-08-16 - Phase 2 client permission classification completed
 

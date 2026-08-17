@@ -61,3 +61,26 @@ func TestReplaceRolePermissionsReturnsInternalServerErrorForUnexpectedFailure(t 
 		t.Fatalf("status = %d, want %d", response.Code, http.StatusInternalServerError)
 	}
 }
+
+func TestRoleRoutesDoNotExposeDirectUserPermissionMutation(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	router := gin.New()
+	RegisterRoleRoutes(
+		&router.RouterGroup,
+		NewRoleHandler(roleServiceStub{}),
+		func(ctx *gin.Context) { ctx.Next() },
+		func(string) gin.HandlerFunc { return func(ctx *gin.Context) { ctx.Next() } },
+	)
+
+	request := httptest.NewRequest(
+		http.MethodPost,
+		"/employees/00000000-0000-0000-0000-000000000001/permissions",
+		nil,
+	)
+	response := httptest.NewRecorder()
+	router.ServeHTTP(response, request)
+
+	if response.Code != http.StatusNotFound {
+		t.Fatalf("status = %d, want %d", response.Code, http.StatusNotFound)
+	}
+}

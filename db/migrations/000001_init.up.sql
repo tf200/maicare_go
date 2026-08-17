@@ -491,8 +491,6 @@ CREATE TABLE permissions (
     is_scoped BOOLEAN NOT NULL DEFAULT FALSE
 );
 
-CREATE TYPE permission_override_effect AS ENUM ('allow', 'deny');
-
 -- Role-to-Permission mapping (template)
 CREATE TABLE role_permissions (
     role_id UUID NOT NULL,
@@ -577,16 +575,6 @@ CREATE TABLE custom_user (
 
 CREATE INDEX custom_user_email_idx ON custom_user(email);
 CREATE INDEX custom_user_id_idx ON custom_user(id);
-
--- Explicit per-user permission exceptions layered on top of role inheritance
-CREATE TABLE user_permission_overrides (
-    user_id UUID NOT NULL,
-    permission_id UUID NOT NULL,
-    effect permission_override_effect NOT NULL,
-    PRIMARY KEY (user_id, permission_id),
-    FOREIGN KEY (user_id) REFERENCES custom_user(id) ON DELETE CASCADE,
-    FOREIGN KEY (permission_id) REFERENCES permissions(id) ON DELETE CASCADE
-);
 
 -- Track which role templates were given to a user
 CREATE TABLE user_roles (

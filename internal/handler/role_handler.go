@@ -110,31 +110,6 @@ func (h *RoleHandler) ListUserRolesAndPermissions(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, httpapi.OK(toUserRolesAndPermissionsResponse(result), "User roles and permissions retrieved successfully"))
 }
 
-func (h *RoleHandler) ReplaceUserPermissionOverrides(ctx *gin.Context) {
-	employeeID, err := uuid.Parse(ctx.Param("id"))
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, httpapi.Fail("invalid employee_id parameter", ""))
-		return
-	}
-
-	var req replaceUserPermissionOverridesRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, httpapi.Fail(err.Error(), ""))
-		return
-	}
-
-	if err := h.service.ReplaceUserPermissionOverrides(ctx.Request.Context(), toReplaceUserPermissionOverridesParams(employeeID, req)); err != nil {
-		ctx.JSON(http.StatusInternalServerError, httpapi.Fail("failed to replace user permission overrides", ""))
-		return
-	}
-
-	ctx.JSON(http.StatusOK, httpapi.OK(replaceUserPermissionOverridesResponse{
-		EmployeeID:         employeeID,
-		AllowPermissionIDs: req.AllowPermissionIDs,
-		DenyPermissionIDs:  req.DenyPermissionIDs,
-	}, "User permission overrides replaced successfully"))
-}
-
 func (h *RoleHandler) CreateRole(ctx *gin.Context) {
 	var req createRoleRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {

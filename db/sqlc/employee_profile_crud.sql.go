@@ -283,32 +283,6 @@ func (q *Queries) GetEmployeeProfileByID(ctx context.Context, id uuid.UUID) (Get
 }
 
 const getEmployeeProfileByUserID = `-- name: GetEmployeeProfileByUserID :one
-WITH inherited_permissions AS (
-    SELECT rp.permission_id
-    FROM user_roles ur
-    JOIN role_permissions rp ON rp.role_id = ur.role_id
-    WHERE ur.user_id = $1
-),
-allowed_overrides AS (
-    SELECT permission_id
-    FROM user_permission_overrides
-    WHERE user_id = $1
-      AND effect = 'allow'
-),
-base_permissions AS (
-    SELECT permission_id FROM inherited_permissions
-    UNION
-    SELECT permission_id FROM allowed_overrides
-),
-effective_permissions AS (
-    SELECT permission_id
-    FROM base_permissions
-    EXCEPT
-    SELECT permission_id
-    FROM user_permission_overrides
-    WHERE user_id = $1
-      AND effect = 'deny'
-)
 SELECT
     cu.id           AS user_id,
     cu.email        AS email,
@@ -319,11 +293,13 @@ SELECT
     ep.last_name,
     (
         SELECT COALESCE(json_agg(json_build_object(
-            'id',   p.id,
-            'name', p.name
+			'id',   p.id,
+			'name', p.name
         )), '[]'::json)
-        FROM effective_permissions ep2
-        JOIN permissions p ON p.id = ep2.permission_id
+		FROM user_roles ur
+		JOIN role_permissions rp ON rp.role_id = ur.role_id
+		JOIN permissions p ON p.id = rp.permission_id
+		WHERE ur.user_id = $1
     )::json AS permissions
 FROM custom_user cu
 JOIN employee_profile ep ON ep.user_id = cu.id
@@ -341,8 +317,8 @@ type GetEmployeeProfileByUserIDRow struct {
 	Permissions      []byte             `json:"permissions"`
 }
 
-func (q *Queries) GetEmployeeProfileByUserID(ctx context.Context, id uuid.UUID) (GetEmployeeProfileByUserIDRow, error) {
-	row := q.db.QueryRow(ctx, getEmployeeProfileByUserID, id)
+func (q *Queries) GetEmployeeProfileByUserID(ctx context.Context, userID uuid.UUID) (GetEmployeeProfileByUserIDRow, error) {
+	row := q.db.QueryRow(ctx, getEmployeeProfileByUserID, userID)
 	var i GetEmployeeProfileByUserIDRow
 	err := row.Scan(
 		&i.UserID,
