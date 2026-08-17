@@ -306,6 +306,10 @@ const (
 	PermissionScopeAll      PermissionScope = "all"
 )
 
+func (s PermissionScope) IsValid() bool {
+	return s == PermissionScopeAssigned || s == PermissionScopeAll
+}
+
 // AllPermissionKeys is the complete registry of system permission keys
 var AllPermissionKeys = []PermissionKey{
 	PermAppointmentCreate,

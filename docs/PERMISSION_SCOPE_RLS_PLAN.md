@@ -1,8 +1,8 @@
 # Permission Scope and Row-Level Security Plan
 
-Last updated: 2026-08-16
+Last updated: 2026-08-17
 
-Status: Phase 2 completed; Phase 3 not started
+Status: Phase 3 completed; Phase 4 not started
 
 ## Purpose
 
@@ -376,7 +376,7 @@ Acceptance criteria:
 
 ## Phase 3: Update Role-Permission Management
 
-Status: `[ ]` Not started
+Status: `[x]` Completed and verified on 2026-08-17
 
 Goal: allow administrators to assign a permission and optional scope to a role.
 
@@ -422,25 +422,26 @@ Target response fields:
 
 Checklist:
 
-- [ ] Add a domain scope type with strict values.
-- [ ] Replace permission-ID-only mutation models with permission grant models.
-- [ ] Return `is_scoped` and `scope` from role detail APIs.
-- [ ] Update sqlc role-permission queries to read and write scope.
-- [ ] Validate unknown scope values as client errors.
-- [ ] Validate missing scope on scoped permissions.
-- [ ] Validate non-null scope on unscoped permissions.
-- [ ] Make role-permission replacement one transaction.
-- [ ] Validate all requested permission IDs before replacing existing grants.
-- [ ] Preserve the old grants if replacement fails.
-- [ ] Regenerate sqlc code.
-- [ ] Update API documentation or frontend contract if maintained elsewhere.
+- [x] Add a domain scope type with strict values.
+- [x] Replace permission-ID-only mutation models with permission grant models.
+- [x] Return `is_scoped` and `scope` from role detail APIs.
+- [x] Return `is_scoped` from the permission catalog API.
+- [x] Update sqlc role-permission queries to read and write scope.
+- [x] Validate unknown scope values as client errors.
+- [x] Validate missing scope on scoped permissions.
+- [x] Validate non-null scope on unscoped permissions.
+- [x] Reject unknown and duplicate permission IDs before replacement.
+- [x] Make role-permission replacement one transaction.
+- [x] Preserve the old grants if replacement fails.
+- [x] Regenerate sqlc code.
+- [x] Update the API contract in this plan.
 
 Acceptance criteria:
 
-- [ ] A role can contain mixed `assigned`, `all`, and unscoped grants.
-- [ ] Invalid combinations return a clear 4xx response.
-- [ ] Replacement is atomic.
-- [ ] API reads return exactly what was saved.
+- [x] A role can contain mixed `assigned`, `all`, and unscoped grants.
+- [x] Invalid combinations return a clear 4xx response.
+- [x] Replacement is atomic.
+- [x] API reads return exactly what was saved.
 
 ## Phase 4: Add Scope To User Permission Overrides
 
@@ -1011,6 +1012,7 @@ Record finalized decisions here. Do not silently change an earlier decision; add
 
 | Date | Decision | Reason | Status |
 |---|---|---|---|
+| 2026-08-17 | Replace a role's permission grants through one repository transaction after validating the complete request. | Invalid IDs or scopes must not remove valid existing grants. | Confirmed |
 | 2026-08-16 | Use the name `scope`, not `client_scope`, throughout the design. | Scope may be generalized and the chosen API terminology is simpler. | Confirmed |
 | 2026-08-16 | Scope belongs to each role-permission grant. | Different client-data categories may require different reach under least privilege. | Confirmed |
 | 2026-08-16 | Initial scope values are `assigned` and `all`; unscoped permissions use `NULL`. | Supports current administrator/coordinator needs without premature scope types. | Confirmed |
@@ -1028,6 +1030,32 @@ Record finalized decisions here. Do not silently change an earlier decision; add
 ## Progress Log
 
 Add the newest entry first.
+
+### 2026-08-17 - Phase 3 role-permission management completed
+
+Status: Completed and verified
+
+Changes:
+
+- Replaced the permission-ID-only role mutation contract with permission grants containing `permission_id` and nullable `scope`.
+- Added strict `assigned` and `all` scope validation in the role service.
+- Reject unknown IDs, duplicate IDs, missing scopes on scoped permissions, and scopes on unscoped permissions before modifying grants.
+- Return `is_scoped` in the permission catalog and return both `is_scoped` and `scope` for role grants.
+- Replaced separate delete and bulk-insert repository calls with one transaction-owned replacement operation.
+- Updated SQL and regenerated sqlc code to read and write role grant scopes.
+- Added service validation/delegation tests and handler 400/500 mapping tests.
+
+Verification:
+
+- `sqlc generate` completed successfully.
+- Focused domain, repository, service, and handler tests passed.
+- A fresh migration completed on disposable PostgreSQL 16.
+- Mixed `assigned` and unscoped grants were inserted and read back with matching metadata.
+- A replacement containing a missing scope failed at the deferred database constraint and rolled back to the original two grants.
+
+Next action:
+
+- Begin Phase 4 by defining and implementing scope behavior for direct user permission overrides.
 
 ### 2026-08-16 - Phase 2 client permission classification completed
 

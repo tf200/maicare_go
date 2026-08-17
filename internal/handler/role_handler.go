@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
 
 	"maicare_go/internal/domain"
@@ -150,26 +151,30 @@ func (h *RoleHandler) CreateRole(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, httpapi.OK(toCreateRoleResponse(role), "Role created successfully"))
 }
 
-func (h *RoleHandler) AddPermissionsToRole(ctx *gin.Context) {
+func (h *RoleHandler) ReplaceRolePermissions(ctx *gin.Context) {
 	roleID, err := uuid.Parse(ctx.Param("role_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, httpapi.Fail("invalid role_id parameter", ""))
 		return
 	}
 
-	var req addPermissionsToRoleRequest
+	var req replaceRolePermissionsRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, httpapi.Fail(err.Error(), ""))
 		return
 	}
 
-	if err := h.service.AddPermissionsToRole(ctx.Request.Context(), toAddPermissionsToRoleParams(roleID, req)); err != nil {
+	if err := h.service.ReplaceRolePermissions(ctx.Request.Context(), toReplaceRolePermissionsParams(roleID, req)); err != nil {
+		if errors.Is(err, domain.ErrInvalidRolePermissions) {
+			ctx.JSON(http.StatusBadRequest, httpapi.Fail(err.Error(), ""))
+			return
+		}
 		ctx.JSON(http.StatusInternalServerError, httpapi.Fail("failed to replace permissions for role", ""))
 		return
 	}
 
-	ctx.JSON(http.StatusOK, httpapi.OK(addPermissionsToRoleResponse{
-		RoleID:        roleID,
-		PermissionIDs: req.PermissionIDs,
+	ctx.JSON(http.StatusOK, httpapi.OK(replaceRolePermissionsResponse{
+		RoleID:      roleID,
+		Permissions: req.Permissions,
 	}, "Role permissions replaced successfully"))
 }

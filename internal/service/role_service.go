@@ -214,17 +214,45 @@ func (s *RoleService) ReplaceUserPermissionOverrides(ctx context.Context, params
 	return nil
 }
 
-func (s *RoleService) AddPermissionsToRole(ctx context.Context, params domain.AddPermissionsToRoleParams) error {
-	if err := s.repo.RemovePermissionsFromRole(ctx, params.RoleID); err != nil {
-		s.logger.LogError(ctx, "AddPermissionsToRole", "Failed to remove permissions from role", err)
-		return fmt.Errorf("failed to add permissions to role: %w", err)
+func (s *RoleService) ReplaceRolePermissions(ctx context.Context, params domain.ReplaceRolePermissionsParams) error {
+	permissions, err := s.repo.ListAllPermissions(ctx)
+	if err != nil {
+		s.logger.LogError(ctx, "ReplaceRolePermissions", "Failed to list permissions", err)
+		return fmt.Errorf("failed to replace role permissions: %w", err)
 	}
 
-	if err := s.repo.AddPermissionsToRole(ctx, params.RoleID, params.PermissionIDs); err != nil {
-		s.logger.LogError(ctx, "AddPermissionsToRole", "Failed to add permissions to role", err)
-		return fmt.Errorf("failed to add permissions to role: %w", err)
+	byID := make(map[uuid.UUID]domain.SystemPermission, len(permissions))
+	for _, permission := range permissions {
+		byID[permission.ID] = permission
 	}
 
+	seen := make(map[uuid.UUID]struct{}, len(params.Permissions))
+	for _, grant := range params.Permissions {
+		permission, exists := byID[grant.PermissionID]
+		if !exists {
+			return fmt.Errorf("%w: unknown permission_id %s", domain.ErrInvalidRolePermissions, grant.PermissionID)
+		}
+		if _, exists := seen[grant.PermissionID]; exists {
+			return fmt.Errorf("%w: duplicate permission_id %s", domain.ErrInvalidRolePermissions, grant.PermissionID)
+		}
+		seen[grant.PermissionID] = struct{}{}
+
+		if permission.IsScoped {
+			if grant.Scope == nil {
+				return fmt.Errorf("%w: scope is required for permission %s", domain.ErrInvalidRolePermissions, permission.Name)
+			}
+			if !grant.Scope.IsValid() {
+				return fmt.Errorf("%w: invalid scope %q for permission %s", domain.ErrInvalidRolePermissions, *grant.Scope, permission.Name)
+			}
+		} else if grant.Scope != nil {
+			return fmt.Errorf("%w: scope must be null for permission %s", domain.ErrInvalidRolePermissions, permission.Name)
+		}
+	}
+
+	if err := s.repo.ReplaceRolePermissions(ctx, params.RoleID, params.Permissions); err != nil {
+		s.logger.LogError(ctx, "ReplaceRolePermissions", "Failed to replace permissions for role", err)
+		return fmt.Errorf("failed to replace role permissions: %w", err)
+	}
 	return nil
 }
 

@@ -11,20 +11,20 @@ import (
 	"github.com/google/uuid"
 )
 
-const addPermissionsToRole = `-- name: AddPermissionsToRole :exec
-INSERT INTO role_permissions (role_id, permission_id)
-SELECT $1, unnest($2::uuid[])
-ON CONFLICT (role_id, permission_id) DO NOTHING
+const addPermissionToRole = `-- name: AddPermissionToRole :exec
+INSERT INTO role_permissions (role_id, permission_id, scope)
+VALUES ($1, $2, $3)
 `
 
-type AddPermissionsToRoleParams struct {
-	RoleID        uuid.UUID   `json:"role_id"`
-	PermissionIds []uuid.UUID `json:"permission_ids"`
+type AddPermissionToRoleParams struct {
+	RoleID       uuid.UUID            `json:"role_id"`
+	PermissionID uuid.UUID            `json:"permission_id"`
+	Scope        *PermissionScopeEnum `json:"scope"`
 }
 
-// Bulk-insert permission IDs into a role (idempotent).
-func (q *Queries) AddPermissionsToRole(ctx context.Context, arg AddPermissionsToRoleParams) error {
-	_, err := q.db.Exec(ctx, addPermissionsToRole, arg.RoleID, arg.PermissionIds)
+// Insert one permission grant while replacing a role's grants transactionally.
+func (q *Queries) AddPermissionToRole(ctx context.Context, arg AddPermissionToRoleParams) error {
+	_, err := q.db.Exec(ctx, addPermissionToRole, arg.RoleID, arg.PermissionID, arg.Scope)
 	return err
 }
 
@@ -250,7 +250,9 @@ func (q *Queries) ListAllPermissions(ctx context.Context) ([]Permission, error) 
 const listAllRolePermissions = `-- name: ListAllRolePermissions :many
 
 SELECT p.id   AS permission_id,
-       p.name AS permission_name
+       p.name AS permission_name,
+       p.is_scoped,
+       rp.scope
 FROM role_permissions rp
 JOIN permissions p ON p.id = rp.permission_id
 WHERE rp.role_id = $1
@@ -258,8 +260,10 @@ ORDER BY p.id
 `
 
 type ListAllRolePermissionsRow struct {
-	PermissionID   uuid.UUID `json:"permission_id"`
-	PermissionName string    `json:"permission_name"`
+	PermissionID   uuid.UUID            `json:"permission_id"`
+	PermissionName string               `json:"permission_name"`
+	IsScoped       bool                 `json:"is_scoped"`
+	Scope          *PermissionScopeEnum `json:"scope"`
 }
 
 // ---------- 3. ROLE-PERMISSION MAPPING ----------
@@ -273,7 +277,12 @@ func (q *Queries) ListAllRolePermissions(ctx context.Context, roleID uuid.UUID) 
 	items := []ListAllRolePermissionsRow{}
 	for rows.Next() {
 		var i ListAllRolePermissionsRow
-		if err := rows.Scan(&i.PermissionID, &i.PermissionName); err != nil {
+		if err := rows.Scan(
+			&i.PermissionID,
+			&i.PermissionName,
+			&i.IsScoped,
+			&i.Scope,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

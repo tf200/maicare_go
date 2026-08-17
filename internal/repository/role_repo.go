@@ -52,6 +52,7 @@ func (r *RoleRepository) ListAllPermissions(ctx context.Context) ([]domain.Syste
 			Description: row.Description,
 			GroupKey:    row.GroupKey,
 			SectionKey:  row.SectionKey,
+			IsScoped:    row.IsScoped,
 		}
 	}
 	return perms, nil
@@ -69,6 +70,11 @@ func (r *RoleRepository) ListAllRolePermissions(ctx context.Context, roleID uuid
 			RoleID:         roleID,
 			PermissionID:   row.PermissionID,
 			PermissionName: row.PermissionName,
+			IsScoped:       row.IsScoped,
+		}
+		if row.Scope != nil {
+			scope := domain.PermissionScope(*row.Scope)
+			perms[i].Scope = &scope
 		}
 	}
 	return perms, nil
@@ -176,14 +182,28 @@ func (r *RoleRepository) AddUserPermissionOverrides(ctx context.Context, userID 
 	})
 }
 
-func (r *RoleRepository) RemovePermissionsFromRole(ctx context.Context, roleID uuid.UUID) error {
-	return r.store.RemovePermissionsFromRole(ctx, roleID)
-}
+func (r *RoleRepository) ReplaceRolePermissions(ctx context.Context, roleID uuid.UUID, permissions []domain.PermissionGrant) error {
+	return r.store.ExecTx(ctx, func(q *db.Queries) error {
+		if err := q.RemovePermissionsFromRole(ctx, roleID); err != nil {
+			return fmt.Errorf("remove role permissions: %w", err)
+		}
 
-func (r *RoleRepository) AddPermissionsToRole(ctx context.Context, roleID uuid.UUID, permissionIDs []uuid.UUID) error {
-	return r.store.AddPermissionsToRole(ctx, db.AddPermissionsToRoleParams{
-		RoleID:        roleID,
-		PermissionIds: permissionIDs,
+		for _, permission := range permissions {
+			var scope *db.PermissionScopeEnum
+			if permission.Scope != nil {
+				value := db.PermissionScopeEnum(*permission.Scope)
+				scope = &value
+			}
+			if err := q.AddPermissionToRole(ctx, db.AddPermissionToRoleParams{
+				RoleID:       roleID,
+				PermissionID: permission.PermissionID,
+				Scope:        scope,
+			}); err != nil {
+				return fmt.Errorf("add role permission: %w", err)
+			}
+		}
+
+		return nil
 	})
 }
 

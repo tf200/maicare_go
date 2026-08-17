@@ -55,18 +55,19 @@ ORDER BY group_key, section_key, name;
 -- name: ListAllRolePermissions :many
 /* Returns all permissions attached to a single role. */
 SELECT p.id   AS permission_id,
-       p.name AS permission_name
+       p.name AS permission_name,
+       p.is_scoped,
+       rp.scope
 FROM role_permissions rp
 JOIN permissions p ON p.id = rp.permission_id
 WHERE rp.role_id = $1
 ORDER BY p.id;
 
 
--- name: AddPermissionsToRole :exec
-/* Bulk-insert permission IDs into a role (idempotent). */
-INSERT INTO role_permissions (role_id, permission_id)
-SELECT sqlc.arg('role_id'), unnest(sqlc.arg('permission_ids')::uuid[])
-ON CONFLICT (role_id, permission_id) DO NOTHING;
+-- name: AddPermissionToRole :exec
+/* Insert one permission grant while replacing a role's grants transactionally. */
+INSERT INTO role_permissions (role_id, permission_id, scope)
+VALUES (sqlc.arg('role_id'), sqlc.arg('permission_id'), sqlc.narg('scope'));
 
 -- name: RemovePermissionsFromRole :exec
 /* Removes *all* permissions from the given role. */

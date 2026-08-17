@@ -22,8 +22,13 @@ type replaceUserPermissionOverridesRequest struct {
 	DenyPermissionIDs  []uuid.UUID `json:"deny_permission_ids"`
 }
 
-type addPermissionsToRoleRequest struct {
-	PermissionIDs []uuid.UUID `json:"permission_ids" binding:"required"`
+type permissionGrantRequest struct {
+	PermissionID uuid.UUID               `json:"permission_id" binding:"required"`
+	Scope        *domain.PermissionScope `json:"scope"`
+}
+
+type replaceRolePermissionsRequest struct {
+	Permissions []permissionGrantRequest `json:"permissions" binding:"required"`
 }
 
 // Response DTOs
@@ -41,6 +46,7 @@ type systemPermissionResponse struct {
 	PermissionName string    `json:"permission_name"`
 	DisplayName    string    `json:"display_name"`
 	Description    *string   `json:"description"`
+	IsScoped       bool      `json:"is_scoped"`
 }
 
 type permissionSectionResponse struct {
@@ -56,9 +62,11 @@ type permissionGroupResponse struct {
 }
 
 type rolePermissionResponse struct {
-	RoleID         uuid.UUID `json:"role_id"`
-	PermissionID   uuid.UUID `json:"permission_id"`
-	PermissionName string    `json:"permission_name"`
+	RoleID         uuid.UUID               `json:"role_id"`
+	PermissionID   uuid.UUID               `json:"permission_id"`
+	PermissionName string                  `json:"permission_name"`
+	IsScoped       bool                    `json:"is_scoped"`
+	Scope          *domain.PermissionScope `json:"scope"`
 }
 
 type assignRoleToEmployeeResponse struct {
@@ -95,9 +103,9 @@ type replaceUserPermissionOverridesResponse struct {
 	DenyPermissionIDs  []uuid.UUID `json:"deny_permission_ids"`
 }
 
-type addPermissionsToRoleResponse struct {
-	RoleID        uuid.UUID   `json:"role_id"`
-	PermissionIDs []uuid.UUID `json:"permission_ids"`
+type replaceRolePermissionsResponse struct {
+	RoleID      uuid.UUID                `json:"role_id"`
+	Permissions []permissionGrantRequest `json:"permissions"`
 }
 
 type createRoleResponse struct {
@@ -124,6 +132,7 @@ func toSystemPermissionResponse(perm domain.SystemPermission) systemPermissionRe
 		PermissionName: perm.Name,
 		DisplayName:    perm.DisplayName,
 		Description:    perm.Description,
+		IsScoped:       perm.IsScoped,
 	}
 }
 
@@ -152,6 +161,8 @@ func toRolePermissionResponse(rp domain.RolePermission) rolePermissionResponse {
 		RoleID:         rp.RoleID,
 		PermissionID:   rp.PermissionID,
 		PermissionName: rp.PermissionName,
+		IsScoped:       rp.IsScoped,
+		Scope:          rp.Scope,
 	}
 }
 
@@ -234,9 +245,13 @@ func toReplaceUserPermissionOverridesParams(employeeID uuid.UUID, req replaceUse
 	}
 }
 
-func toAddPermissionsToRoleParams(roleID uuid.UUID, req addPermissionsToRoleRequest) domain.AddPermissionsToRoleParams {
-	return domain.AddPermissionsToRoleParams{
-		RoleID:        roleID,
-		PermissionIDs: req.PermissionIDs,
+func toReplaceRolePermissionsParams(roleID uuid.UUID, req replaceRolePermissionsRequest) domain.ReplaceRolePermissionsParams {
+	permissions := make([]domain.PermissionGrant, len(req.Permissions))
+	for i, permission := range req.Permissions {
+		permissions[i] = domain.PermissionGrant{
+			PermissionID: permission.PermissionID,
+			Scope:        permission.Scope,
+		}
 	}
+	return domain.ReplaceRolePermissionsParams{RoleID: roleID, Permissions: permissions}
 }

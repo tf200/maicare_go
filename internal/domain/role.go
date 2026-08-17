@@ -2,9 +2,12 @@ package domain
 
 import (
 	"context"
+	"errors"
 
 	"github.com/google/uuid"
 )
+
+var ErrInvalidRolePermissions = errors.New("invalid role permissions")
 
 // Role represents a system role with metadata
 type Role struct {
@@ -23,6 +26,7 @@ type SystemPermission struct {
 	Description *string
 	GroupKey    string
 	SectionKey  string
+	IsScoped    bool
 }
 
 // RolePermission represents a permission assigned to a role
@@ -30,6 +34,8 @@ type RolePermission struct {
 	RoleID         uuid.UUID
 	PermissionID   uuid.UUID
 	PermissionName string
+	IsScoped       bool
+	Scope          *PermissionScope
 }
 
 // UserRole represents a role assigned to a user
@@ -110,10 +116,16 @@ type ReplaceUserPermissionOverridesParams struct {
 	DenyPermissionIDs  []uuid.UUID
 }
 
-// AddPermissionsToRoleParams parameters for adding permissions to a role
-type AddPermissionsToRoleParams struct {
-	RoleID        uuid.UUID
-	PermissionIDs []uuid.UUID
+// PermissionGrant represents one permission and its optional scope on a role.
+type PermissionGrant struct {
+	PermissionID uuid.UUID
+	Scope        *PermissionScope
+}
+
+// ReplaceRolePermissionsParams parameters for replacing a role's permission grants
+type ReplaceRolePermissionsParams struct {
+	RoleID      uuid.UUID
+	Permissions []PermissionGrant
 }
 
 // RoleRepository defines role and permission persistence operations
@@ -129,8 +141,7 @@ type RoleRepository interface {
 	ListEffectiveUserPermissions(ctx context.Context, userID uuid.UUID) ([]UserPermission, error)
 	DeleteUserPermissionOverrides(ctx context.Context, userID uuid.UUID) error
 	AddUserPermissionOverrides(ctx context.Context, userID uuid.UUID, permissionIDs []uuid.UUID, effect string) error
-	RemovePermissionsFromRole(ctx context.Context, roleID uuid.UUID) error
-	AddPermissionsToRole(ctx context.Context, roleID uuid.UUID, permissionIDs []uuid.UUID) error
+	ReplaceRolePermissions(ctx context.Context, roleID uuid.UUID, permissions []PermissionGrant) error
 	CreateRole(ctx context.Context, params CreateRoleParams) (*Role, error)
 }
 
@@ -142,6 +153,6 @@ type RoleService interface {
 	AssignRoleToEmployee(ctx context.Context, employeeID uuid.UUID, params AssignRoleToEmployeeParams) error
 	ListUserRolesAndPermissions(ctx context.Context, employeeID uuid.UUID) (*UserRolesAndPermissions, error)
 	ReplaceUserPermissionOverrides(ctx context.Context, params ReplaceUserPermissionOverridesParams) error
-	AddPermissionsToRole(ctx context.Context, params AddPermissionsToRoleParams) error
+	ReplaceRolePermissions(ctx context.Context, params ReplaceRolePermissionsParams) error
 	CreateRole(ctx context.Context, params CreateRoleParams) (*Role, error)
 }

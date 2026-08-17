@@ -22,8 +22,8 @@ type Querier interface {
 	AddEventEmployeeAttendee(ctx context.Context, arg AddEventEmployeeAttendeeParams) error
 	AddEventEmployeeAttendeesBatch(ctx context.Context, arg AddEventEmployeeAttendeesBatchParams) error
 	AddEventReminder(ctx context.Context, arg AddEventReminderParams) (AddEventReminderRow, error)
-	// Bulk-insert permission IDs into a role (idempotent).
-	AddPermissionsToRole(ctx context.Context, arg AddPermissionsToRoleParams) error
+	// Insert one permission grant while replacing a role's grants transactionally.
+	AddPermissionToRole(ctx context.Context, arg AddPermissionToRoleParams) error
 	AddRegistrationUploadAttachment(ctx context.Context, arg AddRegistrationUploadAttachmentParams) error
 	// Bulk-insert explicit overrides for a user (idempotent by replacement flow).
 	AddUserPermissionOverrides(ctx context.Context, arg AddUserPermissionOverridesParams) error

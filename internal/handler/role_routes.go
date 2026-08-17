@@ -15,7 +15,7 @@ func RegisterRoleRoutes(
 	rg.GET("/roles", auth, requirePermission(domain.PermRolesView.String()), handler.ListRoles)
 	rg.POST("/roles", auth, requirePermission(domain.PermRolesCreate.String()), handler.CreateRole)
 	rg.GET("/roles/:role_id/permissions", auth, requirePermission(domain.PermPermissionsView.String()), handler.ListAllRolePermissions)
-	rg.POST("/roles/:role_id/permissions", auth, requirePermission(domain.PermPermissionsCreate.String()), handler.AddPermissionsToRole)
+	rg.POST("/roles/:role_id/permissions", auth, requirePermission(domain.PermPermissionsCreate.String()), handler.ReplaceRolePermissions)
 	rg.GET("/permissions", auth, requirePermission(domain.PermPermissionsView.String()), handler.ListAllPermissions)
 
 	rg.POST("/employees/:id/roles", auth, requirePermission(domain.PermRolesAssign.String()), handler.AssignRoleToEmployee)
