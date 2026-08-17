@@ -85,6 +85,9 @@ const (
 	PermClientAIProgressReportGenerate PermissionKey = "CLIENT.AI_PROGRESS_REPORT.GENERATE"
 	PermClientAIProgressReportConfirm  PermissionKey = "CLIENT.AI_PROGRESS_REPORT.CONFIRM"
 	PermClientAIProgressReportView     PermissionKey = "CLIENT.AI_PROGRESS_REPORT.VIEW"
+
+	PermClientEvaluationCreate PermissionKey = "CLIENT.EVALUATION.CREATE"
+	PermClientEvaluationView   PermissionKey = "CLIENT.EVALUATION.VIEW"
 )
 
 // Contract Permissions
@@ -114,13 +117,6 @@ const (
 	PermEmployeeWorkingHoursView PermissionKey = "EMPLOYEE.WORKING_HOURS.VIEW"
 	PermEmployeeContractView     PermissionKey = "EMPLOYEE.CONTRACT.VIEW"
 	PermEmployeeContractUpdate   PermissionKey = "EMPLOYEE.CONTRACT.UPDATE"
-)
-
-// Evaluation Permissions
-const (
-	PermEvaluationCreate PermissionKey = "EVALUATION.CREATE"
-	PermEvaluationDelete PermissionKey = "EVALUATION.DELETE"
-	PermEvaluationView   PermissionKey = "EVALUATION.VIEW"
 )
 
 // Finance & Invoice Permissions
@@ -292,6 +288,7 @@ type PermissionDefinition struct {
 	SectionKey  string
 	DisplayName string
 	Description string
+	IsScoped    bool
 }
 
 // RoleSeedDefinition defines a initial role seed with its permissions
@@ -299,7 +296,15 @@ type RoleSeedDefinition struct {
 	Name        string
 	Description string
 	Permissions []PermissionKey
+	Scope       PermissionScope
 }
+
+type PermissionScope string
+
+const (
+	PermissionScopeAssigned PermissionScope = "assigned"
+	PermissionScopeAll      PermissionScope = "all"
+)
 
 // AllPermissionKeys is the complete registry of system permission keys
 var AllPermissionKeys = []PermissionKey{
@@ -367,6 +372,9 @@ var AllPermissionKeys = []PermissionKey{
 	PermClientAIProgressReportConfirm,
 	PermClientAIProgressReportView,
 
+	PermClientEvaluationCreate,
+	PermClientEvaluationView,
+
 	PermContractCreate,
 	PermContractDelete,
 	PermContractUpdate,
@@ -386,10 +394,6 @@ var AllPermissionKeys = []PermissionKey{
 	PermEmployeeWorkingHoursView,
 	PermEmployeeContractView,
 	PermEmployeeContractUpdate,
-
-	PermEvaluationCreate,
-	PermEvaluationDelete,
-	PermEvaluationView,
 
 	PermFinanceView,
 
@@ -537,6 +541,7 @@ func GetPermissionDefinition(key PermissionKey) PermissionDefinition {
 		GroupKey:    groupKey,
 		SectionKey:  sectionKey,
 		DisplayName: displayName,
+		IsScoped:    strings.HasPrefix(s, "CLIENT.") && key != PermClientCreate,
 	}
 }
 
@@ -588,10 +593,12 @@ func DefaultRoleSeeds() []RoleSeedDefinition {
 			Name:        "admin",
 			Description: "Full administrative access",
 			Permissions: AllPermissionKeys,
+			Scope:       PermissionScopeAll,
 		},
 		{
 			Name:        "coordinator",
 			Description: "Coordinator role for operational management",
+			Scope:       PermissionScopeAssigned,
 			Permissions: []PermissionKey{
 				PermAppointmentCreate, PermAppointmentDelete, PermAppointmentUpdate, PermAppointmentView,
 				PermAppointmentCardDelete, PermAppointmentCardUpdate, PermAppointmentCardView, PermAppointmentCardGenerateDocument,
@@ -604,6 +611,7 @@ func DefaultRoleSeeds() []RoleSeedDefinition {
 				PermClientInvolvedEmployeeView,
 				PermClientProgressReportCreate, PermClientProgressReportDelete, PermClientProgressReportUpdate, PermClientProgressReportView,
 				PermClientAIProgressReportGenerate, PermClientAIProgressReportConfirm, PermClientAIProgressReportView,
+				PermClientEvaluationCreate, PermClientEvaluationView,
 				PermClientDocumentsView, PermClientDocumentsUpload, PermClientDocumentsDelete,
 				PermHandbookSelfView, PermHandbookSelfUpdate, PermHandbookDepartmentView, PermHandbookDepartmentCreate,
 				PermHandbookTemplateView, PermHandbookTemplateCreate, PermHandbookTemplateUpdate, PermHandbookTemplatePublish,
@@ -613,7 +621,6 @@ func DefaultRoleSeeds() []RoleSeedDefinition {
 				PermLeaveBalanceView, PermLeaveBalanceViewAll, PermLeaveBalanceAdjust,
 				PermLateArrivalCreate, PermLateArrivalCreateAll, PermLateArrivalView, PermLateArrivalViewAll,
 				PermSenderCreate, PermShiftView, PermCareCoordinationView,
-				PermEvaluationCreate, PermEvaluationDelete, PermEvaluationView,
 			},
 		},
 	}

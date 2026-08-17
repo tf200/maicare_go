@@ -2,7 +2,7 @@
 
 Last updated: 2026-08-16
 
-Status: Phase 1 completed; Phase 2 not started
+Status: Phase 2 completed; Phase 3 not started
 
 ## Purpose
 
@@ -238,7 +238,7 @@ Status: `[-]` Partially resolved; remaining decisions are required by later phas
 - [ ] Confirm whether users will remain limited to one role or may receive multiple roles later.
 - [ ] Confirm scoped behavior for direct per-user `allow` overrides.
 - [ ] Confirm behavior for background workers and trusted system operations.
-- [ ] Confirm whether `CLIENT.CREATE` is unscoped initially, because a client does not have an assignment before creation.
+- [x] Confirm whether `CLIENT.CREATE` is unscoped initially, because a client does not have an assignment before creation.
 
 Recommended decisions:
 
@@ -314,7 +314,7 @@ Acceptance criteria:
 
 ## Phase 2: Classify Permissions As Scoped Or Unscoped
 
-Status: `[ ]` Not started
+Status: `[x]` Completed and verified on 2026-08-16
 
 Goal: make permission metadata the source of truth for whether scope applies.
 
@@ -325,12 +325,12 @@ Affected files:
 - `db/query/roles.sql`
 - Generated files under `db/sqlc/`
 
-Initial classification principles:
+Implemented classification principles:
 
-- Permissions operating on an existing client's records are normally scoped.
-- General system permissions are unscoped.
-- Client creation is initially unscoped unless a clear target-client scope exists.
-- Medical, incident, document, financial, and basic client information are classified separately.
+- Every registered `CLIENT.*` permission operating on an existing client is scoped.
+- `CLIENT.CREATE` is the only unscoped `CLIENT.*` permission.
+- Permissions outside the `CLIENT.*` namespace remain unscoped until their resource area is reviewed.
+- Medical, incident, document, evaluation, and basic client information remain separately permissioned.
 
 Examples likely to be scoped:
 
@@ -344,7 +344,8 @@ Examples likely to be scoped:
 - `CLIENT.MEDICATION.*`
 - `CLIENT.EMERGENCY_CONTACT.*`
 - `CLIENT.PROGRESS_REPORT.*`
-- Relevant invoice and contract permissions after ownership is mapped
+- `CLIENT.EVALUATION.CREATE`
+- `CLIENT.EVALUATION.VIEW`
 
 Examples likely to remain unscoped:
 
@@ -356,18 +357,22 @@ Examples likely to remain unscoped:
 
 Checklist:
 
-- [ ] Extend permission metadata with `IsScoped`.
-- [ ] Review every permission in `internal/domain/permission.go`.
-- [ ] Produce a permission classification table in this document or a linked document.
-- [ ] Update `cmd/roles/main.go` to persist `is_scoped`.
-- [ ] Ensure permission synchronization updates changed metadata.
-- [ ] Verify every registered permission has an explicit classification.
+- [x] Extend permission metadata with `IsScoped`.
+- [x] Review every permission in `internal/domain/permission.go`.
+- [x] Classify all current `CLIENT.*` permissions using the documented namespace rule.
+- [x] Rename active evaluation permissions to `CLIENT.EVALUATION.CREATE` and `CLIENT.EVALUATION.VIEW`.
+- [x] Remove the unused `EVALUATION.DELETE` permission instead of creating an unused client equivalent.
+- [x] Update evaluation routes to require the dedicated evaluation permissions.
+- [x] Update `cmd/roles/main.go` to persist `is_scoped`.
+- [x] Assign `all` to scoped administrator grants and `assigned` to scoped coordinator grants.
+- [x] Ensure permission synchronization updates changed metadata and grant scopes.
+- [x] Add automated classification and evaluation-registration tests.
 
 Acceptance criteria:
 
-- [ ] No permission relies on an implicit scoped/unscoped default in Go metadata.
-- [ ] Sensitive client-data categories are separately classified.
-- [ ] The database and Go registry agree.
+- [x] Client permission classification follows one explicit registry rule with a tested `CLIENT.CREATE` exception.
+- [x] Sensitive client-data categories are separately classified.
+- [x] The database and Go registry agree.
 
 ## Phase 3: Update Role-Permission Management
 
@@ -1012,6 +1017,9 @@ Record finalized decisions here. Do not silently change an earlier decision; add
 | 2026-08-16 | Implement the work in small independently verified phases. | The authorization surface is large and high risk. | Confirmed |
 | 2026-08-16 | Modify `000001_init.up.sql` and its down migration directly. | The project is in early development, has no production database, and databases can be dropped and recreated. | Confirmed |
 | 2026-08-16 | Enforce permission/grant scope consistency with deferred constraint triggers. | Cross-table rules cannot use a normal check constraint; deferred validation permits atomic metadata and grant changes while rejecting invalid committed state. | Confirmed |
+| 2026-08-16 | Scope every registered `CLIENT.*` permission except `CLIENT.CREATE`. | Existing-client operations require row-level reach; client creation has no existing assignment to evaluate. | Confirmed |
+| 2026-08-16 | Rename active evaluation permissions to `CLIENT.EVALUATION.CREATE` and `CLIENT.EVALUATION.VIEW`, and remove the unused delete permission. | Evaluations belong to clients, and no evaluation delete route currently exists. | Confirmed |
+| 2026-08-16 | Seed scoped administrator grants as `all` and scoped coordinator grants as `assigned`. | These values match the current role responsibilities while avoiding role-name checks in the future RLS design. | Confirmed |
 | TBD | Exact meaning and lifetime of an active assignment. | Needed for `assigned` scope. | Open |
 | TBD | Organizational boundary for `all`. | Needed to prevent cross-organization access. | Open |
 | TBD | Scoped user-allow override behavior. | Needed before Phase 4. | Open |
@@ -1020,6 +1028,42 @@ Record finalized decisions here. Do not silently change an earlier decision; add
 ## Progress Log
 
 Add the newest entry first.
+
+### 2026-08-16 - Phase 2 client permission classification completed
+
+Status: Completed and verified
+
+Changes:
+
+- Added `IsScoped` to permission definitions in `internal/domain/permission.go`.
+- Classified every `CLIENT.*` permission as scoped except `CLIENT.CREATE`.
+- Replaced `EVALUATION.CREATE` and `EVALUATION.VIEW` with `CLIENT.EVALUATION.CREATE` and `CLIENT.EVALUATION.VIEW`.
+- Removed the unused `EVALUATION.DELETE` permission because no delete route exists.
+- Updated evaluation routes in `internal/handler/client_handler.go` to require dedicated evaluation permissions instead of broad `CLIENT.VIEW` and `CLIENT.UPDATE` permissions.
+- Added default role scope metadata: administrator uses `all`, coordinator uses `assigned`.
+- Updated `cmd/roles/main.go` to persist `permissions.is_scoped` and upsert role grant scopes.
+- Added `internal/domain/permission_test.go` for client classification and evaluation registry coverage.
+
+Verification:
+
+- `sqlc generate` completed successfully without unexpected generated changes.
+- `go test ./...` completed successfully.
+- A fresh migration and RBAC sync completed on disposable PostgreSQL 17.
+- The registry produced 42 `CLIENT.*` permissions: 41 scoped and one unscoped.
+- `CLIENT.CREATE` had `scope = NULL`.
+- Administrator client grants had `scope = all`.
+- Coordinator client grants had `scope = assigned`.
+- The database contained zero invalid role-permission scope combinations.
+- The database contained zero legacy `EVALUATION.*` permissions.
+- Running the RBAC sync a second time completed successfully and preserved valid scopes.
+
+Known transition state:
+
+- The role-management API still accepts permission IDs without scopes. Editing scoped role grants through that API is intentionally deferred to Phase 3 and may be rejected by the database constraints until Phase 3 is complete.
+
+Next action:
+
+- Begin Phase 3 by updating role-permission domain models, SQL, API requests/responses, and transactional replacement to support `scope`.
 
 ### 2026-08-16 - Phase 1 database representation completed
 

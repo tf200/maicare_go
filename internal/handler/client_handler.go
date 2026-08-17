@@ -40,13 +40,13 @@ func RegisterClientRoutes(
 		clientsGroup.GET("/:id/documents", auth, requirePermission("CLIENT.VIEW"), handler.ListClientDocuments)
 		clientsGroup.DELETE("/:id/documents/:doc_id", auth, requirePermission("CLIENT.VIEW"), handler.DeleteClientDocument)
 		clientsGroup.GET("/:id/missing_documents", auth, requirePermission("CLIENT.CREATE"), handler.GetMissingClientDocuments)
-		clientsGroup.GET("/:id/evaluations/bootstrap", auth, requirePermission("CLIENT.VIEW"), handler.GetGoalEvaluationBootstrap)
+		clientsGroup.GET("/:id/evaluations/bootstrap", auth, requirePermission(domain.PermClientEvaluationView.String()), handler.GetGoalEvaluationBootstrap)
 		clientsGroup.POST("/:id/goals", auth, requirePermission("CLIENT.UPDATE"), handler.CreateClientGoal)
 		clientsGroup.PATCH("/:id/goals/:goal_id", auth, requirePermission("CLIENT.UPDATE"), handler.UpdateClientGoal)
 		clientsGroup.GET("/:id/goals", auth, requirePermission("CLIENT.VIEW"), handler.GetClientGoalsForEvaluationPage)
-		clientsGroup.GET("/:id/goals/:goal_id/history", auth, requirePermission("CLIENT.VIEW"), handler.ListGoalEvaluationHistory)
-		clientsGroup.GET("/:id/evaluations/submitted", auth, requirePermission("CLIENT.VIEW"), handler.ListClientSubmittedEvaluations)
-		clientsGroup.POST("/:id/evaluations", auth, requirePermission("CLIENT.UPDATE"), handler.CreateGoalEvaluation)
+		clientsGroup.GET("/:id/goals/:goal_id/history", auth, requirePermission(domain.PermClientEvaluationView.String()), handler.ListGoalEvaluationHistory)
+		clientsGroup.GET("/:id/evaluations/submitted", auth, requirePermission(domain.PermClientEvaluationView.String()), handler.ListClientSubmittedEvaluations)
+		clientsGroup.POST("/:id/evaluations", auth, requirePermission(domain.PermClientEvaluationCreate.String()), handler.CreateGoalEvaluation)
 		clientsGroup.POST("/:id/location_transfer", auth, requirePermission("CLIENT.UPDATE"), handler.RequestLocationTransfer)
 		clientsGroup.POST("/location_transfer/approve_reject", auth, requirePermission("CLIENT.UPDATE"), handler.ApproveOrRejectLocationTransfer)
 		clientsGroup.GET("/location_transfer", auth, requirePermission("CLIENT.VIEW"), handler.ListLocationTransferRequests)
@@ -103,10 +103,10 @@ func RegisterEvaluationRoutes(
 ) {
 	evaluationsGroup := rg.Group("/evaluations")
 	{
-		evaluationsGroup.GET("/upcoming", auth, requirePermission("CLIENT.VIEW"), handler.ListUpcomingEvaluations)
-		evaluationsGroup.GET("/recent-submitted", auth, requirePermission("CLIENT.VIEW"), handler.ListRecentSubmittedEvaluations)
-		evaluationsGroup.GET("/recent-drafts", auth, requirePermission("CLIENT.VIEW"), handler.ListRecentDraftEvaluations)
-		evaluationsGroup.GET("/:evaluation_id", auth, requirePermission("CLIENT.VIEW"), handler.GetGoalEvaluation)
+		evaluationsGroup.GET("/upcoming", auth, requirePermission(domain.PermClientEvaluationView.String()), handler.ListUpcomingEvaluations)
+		evaluationsGroup.GET("/recent-submitted", auth, requirePermission(domain.PermClientEvaluationView.String()), handler.ListRecentSubmittedEvaluations)
+		evaluationsGroup.GET("/recent-drafts", auth, requirePermission(domain.PermClientEvaluationView.String()), handler.ListRecentDraftEvaluations)
+		evaluationsGroup.GET("/:evaluation_id", auth, requirePermission(domain.PermClientEvaluationView.String()), handler.GetGoalEvaluation)
 	}
 }
 

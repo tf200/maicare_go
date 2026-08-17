@@ -60,13 +60,14 @@ func main() {
 			_, err = tx.Exec(
 				context.Background(),
 				`INSERT INTO permissions
-					(name, group_key, section_key, display_name, description)
-				 VALUES ($1, $2, $3, $4, $5)`,
+					(name, group_key, section_key, display_name, description, is_scoped)
+				 VALUES ($1, $2, $3, $4, $5, $6)`,
 				permName,
 				perm.GroupKey,
 				perm.SectionKey,
 				perm.DisplayName,
 				desc,
+				perm.IsScoped,
 			)
 			if err != nil {
 				panic(err)
@@ -77,15 +78,17 @@ func main() {
 				context.Background(),
 				`UPDATE permissions
 				 SET group_key = $2,
-				     section_key = $3,
-				     display_name = $4,
-				     description = $5
-				 WHERE id = $1`,
+					     section_key = $3,
+					     display_name = $4,
+					     description = $5,
+					     is_scoped = $6
+					 WHERE id = $1`,
 				permissionID,
 				perm.GroupKey,
 				perm.SectionKey,
 				perm.DisplayName,
 				desc,
+				perm.IsScoped,
 			)
 			if err != nil {
 				panic(err)
@@ -140,7 +143,8 @@ func main() {
 		for _, permKey := range role.Permissions {
 			permName := string(permKey)
 			var permID uuid.UUID
-			err = tx.QueryRow(context.Background(), "SELECT id FROM permissions WHERE name=$1", permName).Scan(&permID)
+			var isScoped bool
+			err = tx.QueryRow(context.Background(), "SELECT id, is_scoped FROM permissions WHERE name=$1", permName).Scan(&permID, &isScoped)
 			if err != nil {
 				if err == pgx.ErrNoRows {
 					fmt.Printf("Warning: permission '%s' not found, skipping.\n", permName)
@@ -149,11 +153,23 @@ func main() {
 				panic(err)
 			}
 
+			var scope *string
+			if isScoped {
+				if role.Scope == "" {
+					panic(fmt.Sprintf("role %q has no default scope for scoped permission %q", role.Name, permName))
+				}
+				scopeValue := string(role.Scope)
+				scope = &scopeValue
+			}
+
 			_, err = tx.Exec(
 				context.Background(),
-				"INSERT INTO role_permissions (role_id, permission_id) VALUES ($1, $2) ON CONFLICT (role_id, permission_id) DO NOTHING",
+				`INSERT INTO role_permissions (role_id, permission_id, scope)
+				 VALUES ($1, $2, $3)
+				 ON CONFLICT (role_id, permission_id) DO UPDATE SET scope = EXCLUDED.scope`,
 				roleID,
 				permID,
+				scope,
 			)
 			if err != nil {
 				panic(err)
