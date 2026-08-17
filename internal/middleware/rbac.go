@@ -16,7 +16,7 @@ import (
 var ErrUnauthorizedRole = errors.New("role is not authorized to access this resource")
 
 type PermissionChecker interface {
-	HasPermission(ctx context.Context, userID uuid.UUID, permission string) (bool, error)
+	GetEffectivePermission(ctx context.Context, userID uuid.UUID, permission string) (*domain.UserPermission, error)
 	GetUserRoles(ctx context.Context, userID uuid.UUID) ([]string, error)
 }
 
@@ -40,7 +40,7 @@ func (m *RBACMiddleware) Require(permission string) gin.HandlerFunc {
 			return
 		}
 
-		hasPermission, err := m.checker.HasPermission(ctx.Request.Context(), payload.UserID, permission)
+		grant, err := m.checker.GetEffectivePermission(ctx.Request.Context(), payload.UserID, permission)
 		if err != nil {
 			if m.logger != nil {
 				m.logger.LogError(ctx.Request.Context(), "RBACMiddleware", "permission check failed", err,
@@ -52,7 +52,7 @@ func (m *RBACMiddleware) Require(permission string) gin.HandlerFunc {
 			return
 		}
 
-		if !hasPermission {
+		if grant == nil || grant.PermissionName != permission || !grant.IsUsable() {
 			if m.logger != nil {
 				m.logger.LogWarn(ctx.Request.Context(), "RBACMiddleware", "permission denied",
 					zap.String("permission", permission),
@@ -74,7 +74,8 @@ func (m *RBACMiddleware) Require(permission string) gin.HandlerFunc {
 			return
 		}
 
-		requestCtx := WithActorRoles(ctx.Request.Context(), roles)
+		requestCtx := WithEffectivePermission(ctx.Request.Context(), *grant)
+		requestCtx = WithActorRoles(requestCtx, roles)
 		ctx.Request = ctx.Request.WithContext(requestCtx)
 		ctx.Set(string(actorRolesKey), roles)
 

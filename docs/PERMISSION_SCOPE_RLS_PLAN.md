@@ -2,7 +2,7 @@
 
 Last updated: 2026-08-17
 
-Status: Phase 4 completed; Phase 5 not started
+Status: Phase 5 completed; Phase 6 not started
 
 ## Purpose
 
@@ -474,7 +474,7 @@ Acceptance criteria:
 
 ## Phase 5: Resolve Effective Permissions And Scope
 
-Status: `[ ]` Not started
+Status: `[x]` Completed and verified on 2026-08-17
 
 Goal: calculate the user's current effective permission grant and scope from database data.
 
@@ -483,6 +483,7 @@ Affected files:
 - `db/query/roles.sql`
 - `internal/domain/role.go`
 - `internal/repository/role_repo.go`
+- `internal/repository/handbook_repo.go`
 - `internal/service/role_service.go`
 - `internal/middleware/rbac.go`
 - `internal/app/app.go`
@@ -506,18 +507,18 @@ Rules:
 
 Checklist:
 
-- [ ] Update role-derived permission queries to include scope.
-- [ ] Update effective permission queries to include scope.
-- [ ] Update direct permission checks.
-- [ ] Avoid loading all permissions merely to check one key where possible.
-- [ ] Keep role and scope data out of JWT claims.
-- [ ] Add effective-permission tests for role grants.
+- [x] Update role-derived permission queries to include scope.
+- [x] Update effective permission queries to include scope.
+- [x] Update direct permission checks.
+- [x] Avoid loading all permissions merely to check one key where possible.
+- [x] Keep role and scope data out of JWT claims.
+- [x] Add effective-permission tests for role grants.
 
 Acceptance criteria:
 
-- [ ] HTTP middleware still returns a clear `403` when permission is absent.
-- [ ] Effective scope matches the specific grant that provides the permission.
-- [ ] Database changes to grants affect new requests without issuing a new JWT.
+- [x] HTTP middleware still returns a clear `403` when permission is absent.
+- [x] Effective scope matches the specific grant that provides the permission.
+- [x] Database changes to grants affect new requests without issuing a new JWT.
 
 ## Phase 6: Centralize Protected Database Execution
 
@@ -1016,6 +1017,30 @@ Record finalized decisions here. Do not silently change an earlier decision; add
 ## Progress Log
 
 Add the newest entry first.
+
+### 2026-08-17 - Phase 5 effective permission scopes resolved
+
+Status: Completed and verified
+
+Changes:
+
+- Effective permission lists now return `is_scoped` and the scope from the specific role grant.
+- Direct permission checks now fetch one usable grant instead of loading every permission into Go.
+- Scoped grants without a valid scope and unscoped grants with a scope fail closed.
+- Middleware stores the resolved effective permission in request context for later client-access enforcement.
+- Role context remains available temporarily for existing role-based RLS policies.
+- Handbook permission checks now use the same scoped grant resolver.
+
+Verification:
+
+- `sqlc generate` completed successfully.
+- `go test ./...` completed successfully.
+- Middleware tests cover missing grants, exact scope propagation, malformed scoped grants, and grant changes between requests using the same JWT identity.
+- A fresh PostgreSQL 16 migration returned `NULL` for an unscoped grant, returned `assigned` and then `all` after a grant update, denied an absent permission, and rolled back successfully.
+
+Next action:
+
+- Begin Phase 6 by centralizing protected database execution with transaction-local actor identity.
 
 ### 2026-08-17 - Phase 4 legacy user overrides removed
 

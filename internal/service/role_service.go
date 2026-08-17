@@ -125,8 +125,10 @@ func (s *RoleService) ListUserRolesAndPermissions(ctx context.Context, employeeI
 	effectiveList := make([]domain.PermissionInfo, 0, len(effective))
 	for _, perm := range effective {
 		effectiveList = append(effectiveList, domain.PermissionInfo{
-			ID:   perm.PermissionID,
-			Name: perm.PermissionName,
+			ID:       perm.PermissionID,
+			Name:     perm.PermissionName,
+			IsScoped: perm.IsScoped,
+			Scope:    perm.Scope,
 		})
 	}
 

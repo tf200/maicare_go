@@ -446,17 +446,8 @@ func corsMiddleware() gin.HandlerFunc {
 
 type rolePermissionChecker struct{ store *db.Store }
 
-func (c rolePermissionChecker) HasPermission(ctx context.Context, userID uuid.UUID, permission string) (bool, error) {
-	perms, err := repository.NewRoleRepository(c.store).ListEffectiveUserPermissions(ctx, userID)
-	if err != nil {
-		return false, err
-	}
-	for _, perm := range perms {
-		if perm.PermissionName == permission {
-			return true, nil
-		}
-	}
-	return false, nil
+func (c rolePermissionChecker) GetEffectivePermission(ctx context.Context, userID uuid.UUID, permission string) (*domain.UserPermission, error) {
+	return repository.NewRoleRepository(c.store).GetEffectiveUserPermission(ctx, userID, permission)
 }
 
 func (c rolePermissionChecker) GetUserRoles(ctx context.Context, userID uuid.UUID) ([]string, error) {

@@ -93,22 +93,30 @@ ON CONFLICT (user_id) DO UPDATE SET role_id = $2;
 -- name: ListEffectiveUserPermissions :many
 /* Returns permissions granted by the user's assigned role. */
 SELECT p.id AS permission_id,
-       p.name AS permission_name
+       p.name AS permission_name,
+       p.is_scoped,
+       rp.scope
 FROM user_roles ur
 JOIN role_permissions rp ON rp.role_id = ur.role_id
 JOIN permissions p ON p.id = rp.permission_id
 WHERE ur.user_id = $1
+  AND ((p.is_scoped AND rp.scope IS NOT NULL)
+       OR (NOT p.is_scoped AND rp.scope IS NULL))
 ORDER BY p.id;
 
 /* ---------- 6. CHECK UTILITIES ---------- */
 
--- name: CheckUserPermission :one
-/* Returns whether the user's assigned role grants the named permission. */
-SELECT EXISTS (
-    SELECT 1
-    FROM user_roles ur
-    JOIN role_permissions rp ON rp.role_id = ur.role_id
-    JOIN permissions p ON p.id = rp.permission_id
-    WHERE ur.user_id = $1
-      AND p.name = $2
-) AS has_permission;
+-- name: GetEffectiveUserPermission :one
+/* Returns the usable role grant for one named permission. */
+SELECT p.id AS permission_id,
+       p.name AS permission_name,
+       p.is_scoped,
+       rp.scope
+FROM user_roles ur
+JOIN role_permissions rp ON rp.role_id = ur.role_id
+JOIN permissions p ON p.id = rp.permission_id
+WHERE ur.user_id = $1
+  AND p.name = $2
+  AND ((p.is_scoped AND rp.scope IS NOT NULL)
+       OR (NOT p.is_scoped AND rp.scope IS NULL))
+LIMIT 1;

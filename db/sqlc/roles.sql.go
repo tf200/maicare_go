@@ -44,32 +44,6 @@ func (q *Queries) AssignRoleToUser(ctx context.Context, arg AssignRoleToUserPara
 	return err
 }
 
-const checkUserPermission = `-- name: CheckUserPermission :one
-
-SELECT EXISTS (
-    SELECT 1
-    FROM user_roles ur
-    JOIN role_permissions rp ON rp.role_id = ur.role_id
-    JOIN permissions p ON p.id = rp.permission_id
-    WHERE ur.user_id = $1
-      AND p.name = $2
-) AS has_permission
-`
-
-type CheckUserPermissionParams struct {
-	UserID uuid.UUID `json:"user_id"`
-	Name   string    `json:"name"`
-}
-
-// ---------- 6. CHECK UTILITIES ----------
-// Returns whether the user's assigned role grants the named permission.
-func (q *Queries) CheckUserPermission(ctx context.Context, arg CheckUserPermissionParams) (bool, error) {
-	row := q.db.QueryRow(ctx, checkUserPermission, arg.UserID, arg.Name)
-	var has_permission bool
-	err := row.Scan(&has_permission)
-	return has_permission, err
-}
-
 const createRole = `-- name: CreateRole :one
 /*
  *  RBAC – Role & Permission Management
@@ -118,6 +92,48 @@ func (q *Queries) GetAdminRoleId(ctx context.Context) (uuid.UUID, error) {
 	var id uuid.UUID
 	err := row.Scan(&id)
 	return id, err
+}
+
+const getEffectiveUserPermission = `-- name: GetEffectiveUserPermission :one
+
+SELECT p.id AS permission_id,
+       p.name AS permission_name,
+       p.is_scoped,
+       rp.scope
+FROM user_roles ur
+JOIN role_permissions rp ON rp.role_id = ur.role_id
+JOIN permissions p ON p.id = rp.permission_id
+WHERE ur.user_id = $1
+  AND p.name = $2
+  AND ((p.is_scoped AND rp.scope IS NOT NULL)
+       OR (NOT p.is_scoped AND rp.scope IS NULL))
+LIMIT 1
+`
+
+type GetEffectiveUserPermissionParams struct {
+	UserID uuid.UUID `json:"user_id"`
+	Name   string    `json:"name"`
+}
+
+type GetEffectiveUserPermissionRow struct {
+	PermissionID   uuid.UUID            `json:"permission_id"`
+	PermissionName string               `json:"permission_name"`
+	IsScoped       bool                 `json:"is_scoped"`
+	Scope          *PermissionScopeEnum `json:"scope"`
+}
+
+// ---------- 6. CHECK UTILITIES ----------
+// Returns the usable role grant for one named permission.
+func (q *Queries) GetEffectiveUserPermission(ctx context.Context, arg GetEffectiveUserPermissionParams) (GetEffectiveUserPermissionRow, error) {
+	row := q.db.QueryRow(ctx, getEffectiveUserPermission, arg.UserID, arg.Name)
+	var i GetEffectiveUserPermissionRow
+	err := row.Scan(
+		&i.PermissionID,
+		&i.PermissionName,
+		&i.IsScoped,
+		&i.Scope,
+	)
+	return i, err
 }
 
 const getUserRoles = `-- name: GetUserRoles :many
@@ -241,17 +257,23 @@ func (q *Queries) ListAllRolePermissions(ctx context.Context, roleID uuid.UUID) 
 const listEffectiveUserPermissions = `-- name: ListEffectiveUserPermissions :many
 
 SELECT p.id AS permission_id,
-       p.name AS permission_name
+       p.name AS permission_name,
+       p.is_scoped,
+       rp.scope
 FROM user_roles ur
 JOIN role_permissions rp ON rp.role_id = ur.role_id
 JOIN permissions p ON p.id = rp.permission_id
 WHERE ur.user_id = $1
+  AND ((p.is_scoped AND rp.scope IS NOT NULL)
+       OR (NOT p.is_scoped AND rp.scope IS NULL))
 ORDER BY p.id
 `
 
 type ListEffectiveUserPermissionsRow struct {
-	PermissionID   uuid.UUID `json:"permission_id"`
-	PermissionName string    `json:"permission_name"`
+	PermissionID   uuid.UUID            `json:"permission_id"`
+	PermissionName string               `json:"permission_name"`
+	IsScoped       bool                 `json:"is_scoped"`
+	Scope          *PermissionScopeEnum `json:"scope"`
 }
 
 // ---------- 5. USER PERMISSIONS ----------
@@ -265,7 +287,12 @@ func (q *Queries) ListEffectiveUserPermissions(ctx context.Context, userID uuid.
 	items := []ListEffectiveUserPermissionsRow{}
 	for rows.Next() {
 		var i ListEffectiveUserPermissionsRow
-		if err := rows.Scan(&i.PermissionID, &i.PermissionName); err != nil {
+		if err := rows.Scan(
+			&i.PermissionID,
+			&i.PermissionName,
+			&i.IsScoped,
+			&i.Scope,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

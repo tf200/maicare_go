@@ -141,11 +141,12 @@ func TestListUserRolesAndPermissionsReturnsRolePermissions(t *testing.T) {
 	userID := uuid.New()
 	roleID := uuid.New()
 	permissionID := uuid.New()
+	assigned := domain.PermissionScopeAssigned
 	repo := &rolePermissionRepoStub{
 		userID: userID,
 		roles:  []domain.UserRole{{ID: roleID, Name: "coordinator"}},
 		effective: []domain.UserPermission{{
-			PermissionID: permissionID, PermissionName: "CLIENT.VIEW",
+			PermissionID: permissionID, PermissionName: "CLIENT.VIEW", IsScoped: true, Scope: &assigned,
 		}},
 	}
 	service := NewRoleService(repo, noopLogger{})
@@ -159,5 +160,9 @@ func TestListUserRolesAndPermissionsReturnsRolePermissions(t *testing.T) {
 	}
 	if len(result.EffectivePermissions) != 1 || result.EffectivePermissions[0].ID != permissionID {
 		t.Fatalf("effective permissions = %#v", result.EffectivePermissions)
+	}
+	permission := result.EffectivePermissions[0]
+	if !permission.IsScoped || permission.Scope == nil || *permission.Scope != domain.PermissionScopeAssigned {
+		t.Fatalf("effective permission scope = %#v", permission)
 	}
 }

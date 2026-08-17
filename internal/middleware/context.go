@@ -17,14 +17,15 @@ const (
 type contextKey string
 
 const (
-	requestIDContextKey contextKey = "request_id"
-	authPayloadKey      contextKey = "authorization_payload"
-	actorRolesKey       contextKey = "actor_roles"
-	clientIPKey         contextKey = "client_ip"
-	userAgentKey        contextKey = "user_agent"
-	methodKey           contextKey = "method"
-	routeKey            contextKey = "route"
-	sessionIDKey        contextKey = "session_id"
+	requestIDContextKey    contextKey = "request_id"
+	authPayloadKey         contextKey = "authorization_payload"
+	actorRolesKey          contextKey = "actor_roles"
+	effectivePermissionKey contextKey = "effective_permission"
+	clientIPKey            contextKey = "client_ip"
+	userAgentKey           contextKey = "user_agent"
+	methodKey              contextKey = "method"
+	routeKey               contextKey = "route"
+	sessionIDKey           contextKey = "session_id"
 )
 
 // --- Request ID ---
@@ -63,6 +64,17 @@ func WithActorRoles(ctx context.Context, roles []string) context.Context {
 
 func ActorRolesFromContext(ctx context.Context) ([]string, bool) {
 	value, ok := ctx.Value(actorRolesKey).([]string)
+	return value, ok
+}
+
+// --- Effective Permission ---
+
+func WithEffectivePermission(ctx context.Context, permission domain.UserPermission) context.Context {
+	return context.WithValue(ctx, effectivePermissionKey, permission)
+}
+
+func EffectivePermissionFromContext(ctx context.Context) (domain.UserPermission, bool) {
+	value, ok := ctx.Value(effectivePermissionKey).(domain.UserPermission)
 	return value, ok
 }
 

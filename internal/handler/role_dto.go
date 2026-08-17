@@ -75,8 +75,10 @@ type roleInfoResponse struct {
 }
 
 type permissionInfoResponse struct {
-	ID   uuid.UUID `json:"id"`
-	Name string    `json:"name"`
+	ID       uuid.UUID               `json:"id"`
+	Name     string                  `json:"name"`
+	IsScoped bool                    `json:"is_scoped"`
+	Scope    *domain.PermissionScope `json:"scope"`
 }
 
 type userRolesAndPermissionsResponse struct {
@@ -159,8 +161,10 @@ func toUserRolesAndPermissionsResponse(data *domain.UserRolesAndPermissions) use
 	effective := make([]permissionInfoResponse, len(data.EffectivePermissions))
 	for i, perm := range data.EffectivePermissions {
 		effective[i] = permissionInfoResponse{
-			ID:   perm.ID,
-			Name: perm.Name,
+			ID:       perm.ID,
+			Name:     perm.Name,
+			IsScoped: perm.IsScoped,
+			Scope:    perm.Scope,
 		}
 	}
 

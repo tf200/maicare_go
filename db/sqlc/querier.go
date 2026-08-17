@@ -36,9 +36,6 @@ type Querier interface {
 	CancelCalendarEvent(ctx context.Context, id uuid.UUID) error
 	CancelClientGoalByID(ctx context.Context, arg CancelClientGoalByIDParams) (ClientGoal, error)
 	CheckAllShiftsExist(ctx context.Context, arg CheckAllShiftsExistParams) (bool, error)
-	// ---------- 6. CHECK UTILITIES ----------
-	// Returns whether the user's assigned role grants the named permission.
-	CheckUserPermission(ctx context.Context, arg CheckUserPermissionParams) (bool, error)
 	CloneHandbookTemplateToDraft(ctx context.Context, arg CloneHandbookTemplateToDraftParams) (CloneHandbookTemplateToDraftRow, error)
 	CompleteEmployeeHandbookStep(ctx context.Context, arg CompleteEmployeeHandbookStepParams) (EmployeeHandbookStepProgress, error)
 	ConfirmIncident(ctx context.Context, arg ConfirmIncidentParams) (int64, error)
@@ -195,6 +192,9 @@ type Querier interface {
 	GetDepartment(ctx context.Context, id uuid.UUID) (Department, error)
 	GetDepartmentByName(ctx context.Context, name string) (Department, error)
 	GetDraftGoalEvaluationByClientAndDate(ctx context.Context, arg GetDraftGoalEvaluationByClientAndDateParams) (ClientGoalEvaluation, error)
+	// ---------- 6. CHECK UTILITIES ----------
+	// Returns the usable role grant for one named permission.
+	GetEffectiveUserPermission(ctx context.Context, arg GetEffectiveUserPermissionParams) (GetEffectiveUserPermissionRow, error)
 	GetEmergencyContact(ctx context.Context, id uuid.UUID) (ClientEmergencyContact, error)
 	GetEmployeeContractDetails(ctx context.Context, id uuid.UUID) (GetEmployeeContractDetailsRow, error)
 	GetEmployeeCounts(ctx context.Context) (GetEmployeeCountsRow, error)

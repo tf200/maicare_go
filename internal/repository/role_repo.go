@@ -2,12 +2,14 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	db "maicare_go/db/sqlc"
 	"maicare_go/internal/domain"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 )
 
 type RoleRepository struct {
@@ -119,12 +121,44 @@ func (r *RoleRepository) ListEffectiveUserPermissions(ctx context.Context, userI
 
 	perms := make([]domain.UserPermission, len(rows))
 	for i, row := range rows {
+		var scope *domain.PermissionScope
+		if row.Scope != nil {
+			value := domain.PermissionScope(*row.Scope)
+			scope = &value
+		}
 		perms[i] = domain.UserPermission{
 			PermissionID:   row.PermissionID,
 			PermissionName: row.PermissionName,
+			IsScoped:       row.IsScoped,
+			Scope:          scope,
 		}
 	}
 	return perms, nil
+}
+
+func (r *RoleRepository) GetEffectiveUserPermission(ctx context.Context, userID uuid.UUID, permissionName string) (*domain.UserPermission, error) {
+	row, err := r.store.GetEffectiveUserPermission(ctx, db.GetEffectiveUserPermissionParams{
+		UserID: userID,
+		Name:   permissionName,
+	})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to get effective user permission: %w", err)
+	}
+
+	var scope *domain.PermissionScope
+	if row.Scope != nil {
+		value := domain.PermissionScope(*row.Scope)
+		scope = &value
+	}
+	return &domain.UserPermission{
+		PermissionID:   row.PermissionID,
+		PermissionName: row.PermissionName,
+		IsScoped:       row.IsScoped,
+		Scope:          scope,
+	}, nil
 }
 
 func (r *RoleRepository) ReplaceRolePermissions(ctx context.Context, roleID uuid.UUID, permissions []domain.PermissionGrant) error {

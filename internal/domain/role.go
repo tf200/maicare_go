@@ -48,6 +48,15 @@ type UserRole struct {
 type UserPermission struct {
 	PermissionID   uuid.UUID
 	PermissionName string
+	IsScoped       bool
+	Scope          *PermissionScope
+}
+
+func (p UserPermission) IsUsable() bool {
+	if !p.IsScoped {
+		return p.Scope == nil
+	}
+	return p.Scope != nil && p.Scope.IsValid()
 }
 
 // RoleInfo is a minimal role representation
@@ -58,8 +67,10 @@ type RoleInfo struct {
 
 // PermissionInfo is a minimal permission representation
 type PermissionInfo struct {
-	ID   uuid.UUID
-	Name string
+	ID       uuid.UUID
+	Name     string
+	IsScoped bool
+	Scope    *PermissionScope
 }
 
 // PermissionSection groups permissions by section
@@ -114,6 +125,7 @@ type RoleRepository interface {
 	AssignRoleToUser(ctx context.Context, userID uuid.UUID, roleID uuid.UUID) error
 	GetUserRoles(ctx context.Context, userID uuid.UUID) ([]UserRole, error)
 	ListEffectiveUserPermissions(ctx context.Context, userID uuid.UUID) ([]UserPermission, error)
+	GetEffectiveUserPermission(ctx context.Context, userID uuid.UUID, permissionName string) (*UserPermission, error)
 	ReplaceRolePermissions(ctx context.Context, roleID uuid.UUID, permissions []PermissionGrant) error
 	CreateRole(ctx context.Context, params CreateRoleParams) (*Role, error)
 }

@@ -449,10 +449,8 @@ func (r *HandbookRepository) GetUserIDByEmployeeID(ctx context.Context, employee
 }
 
 func (r *HandbookRepository) CheckUserPermission(ctx context.Context, userID uuid.UUID, permission string) (bool, error) {
-	return r.store.CheckUserPermission(ctx, db.CheckUserPermissionParams{
-		UserID: userID,
-		Name:   permission,
-	})
+	grant, err := NewRoleRepository(r.store).GetEffectiveUserPermission(ctx, userID, permission)
+	return grant != nil, err
 }
 
 func (r *HandbookRepository) GetEmployeeProfileByID(ctx context.Context, employeeID uuid.UUID) (*domain.HandbookEmployeeProfile, error) {
