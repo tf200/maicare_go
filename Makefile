@@ -1,5 +1,6 @@
 
 INFISICAL_ENV ?= local
+MIGRATION_VERSION ?= 2
 LOCAL_DB_URL ?= postgresql://maicare:maicare@127.0.0.1:5432/maicare?sslmode=disable
 REMOTE_DEV_DB_URL ?= postgresql://maicare:maicare@167.86.75.250:25432/maicare?sslmode=disable
 
@@ -16,10 +17,10 @@ seed-remote:
 	DB_SOURCE="$(REMOTE_DEV_DB_URL)" go run ./cmd/seed $(SEED_FLAGS_REMOTE)
 
 migrate-up-local:
-	migrate -path db/migrations -database "$(LOCAL_DB_URL)" -verbose up 1
+	migrate -path db/migrations -database "$(LOCAL_DB_URL)" -verbose up
 
 migrate-up-remote:
-	migrate -path db/migrations -database "$(REMOTE_DEV_DB_URL)" -verbose up 1
+	migrate -path db/migrations -database "$(REMOTE_DEV_DB_URL)" -verbose up
 
 migrate-down-local:
 	migrate -path db/migrations -database "$(LOCAL_DB_URL)" -verbose down 1
@@ -28,10 +29,10 @@ migrate-down-remote:
 	migrate -path db/migrations -database "$(REMOTE_DEV_DB_URL)" -verbose down 1
 
 migrate-force-local:
-	migrate -path db/migrations -database "$(LOCAL_DB_URL)" force 1
+	migrate -path db/migrations -database "$(LOCAL_DB_URL)" force $(MIGRATION_VERSION)
 
 migrate-force-remote:
-	migrate -path db/migrations -database "$(REMOTE_DEV_DB_URL)" force 1
+	migrate -path db/migrations -database "$(REMOTE_DEV_DB_URL)" force $(MIGRATION_VERSION)
 
 roles-sync-local:
 	DB_SOURCE="$(LOCAL_DB_URL)" go run cmd/roles/main.go

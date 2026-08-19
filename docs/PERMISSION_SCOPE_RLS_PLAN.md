@@ -2,7 +2,7 @@
 
 Last updated: 2026-08-19
 
-Status: Phase 6 completed; Phase 7 not started
+Status: Phase 7 completed; Phase 8 not started
 
 ## Purpose
 
@@ -49,7 +49,7 @@ A scope answers:
 Initial scope values:
 
 - `assigned`: only clients actively assigned to the employee
-- `all`: all clients within the applicable organizational boundary
+- `all`: all clients in the system
 - `NULL`: scope does not apply to this permission
 
 `NULL` must not mean `all`. A scoped permission with a missing scope must fail closed.
@@ -91,7 +91,7 @@ RLS is the final data-protection boundary. HTTP middleware improves API behavior
 8. Execute normal SQL without manually duplicating assignment filters.
 9. RLS resolves the effective permission and scope for the requested operation.
 10. For `assigned`, RLS verifies an active assignment for that client.
-11. For `all`, RLS allows the row within the mandatory organizational boundary.
+11. For `all`, RLS allows the row globally.
 12. Commit or roll back the transaction.
 13. Return only rows PostgreSQL allowed.
 
@@ -230,18 +230,18 @@ Status: `[-]` Partially resolved; remaining decisions are required by later phas
 
 - [x] Confirm whether `000001_init.up.sql` has been used in any deployed or shared database.
 - [x] Confirm whether implementation requires a new migration or may modify the initial migration.
-- [ ] Confirm whether `assigned` means any active `assigned_employee` record or only selected assignment types.
-- [ ] Confirm how an assignment ends; the current table has `start_date` but no `end_date`.
-- [ ] Confirm whether `all` means all clients globally or all clients in the actor's organization.
+- [x] Confirm whether `assigned` means any active `assigned_employee` record or only selected assignment types.
+- [x] Confirm how an assignment ends; the current table has `start_date` but no `end_date`.
+- [x] Confirm whether `all` means all clients globally or all clients in the actor's organization.
 - [ ] Confirm whether users will remain limited to one role or may receive multiple roles later.
 - [x] Confirm that direct per-user permission overrides are not supported.
-- [ ] Confirm behavior for background workers and trusted system operations.
+- [x] Confirm behavior for background workers and trusted system operations.
 - [x] Confirm whether `CLIENT.CREATE` is unscoped initially, because a client does not have an assignment before creation.
 
 Recommended decisions:
 
 - Create a new migration if any non-disposable database has run migration `000001`.
-- Treat `all` as all clients inside the user's organization, not all organizations.
+- Treat `all` as all clients globally.
 - Treat any active assignment as `assigned`; permissions determine which client data categories are accessible.
 - Add an optional assignment end date.
 - Keep roles as the sole source of permissions and scope.
@@ -577,7 +577,7 @@ Acceptance criteria:
 
 ## Phase 7: Add General Database Authorization Functions
 
-Status: `[ ]` Not started
+Status: `[x]` Completed and verified on 2026-08-19
 
 Goal: replace role-name-specific logic with permission-and-scope checks while leaving existing policies in place until the pilot phase.
 
@@ -604,7 +604,7 @@ can_access_client(client_id, permission_name)
 3. Employee is active where applicable.
 4. The user's assigned role has the requested permission.
 5. The permission is scoped.
-6. `all` satisfies the organizational boundary.
+6. `all` grants global client access.
 7. `assigned` has an active assignment for the client.
 8. Unknown or invalid state returns false.
 
@@ -620,20 +620,20 @@ Security requirements for `SECURITY DEFINER` functions:
 
 Checklist:
 
-- [ ] Implement identity getter functions.
-- [ ] Implement effective-permission lookup.
-- [ ] Implement scope lookup.
-- [ ] Implement active-assignment lookup.
-- [ ] Implement `can_access_client`.
-- [ ] Harden function ownership and execution grants.
-- [ ] Add direct SQL tests for every allow and deny path.
-- [ ] Confirm missing context returns false rather than raising an information-leaking error.
+- [x] Implement identity getter functions.
+- [x] Implement effective-permission lookup.
+- [x] Implement scope lookup.
+- [x] Implement active-assignment lookup.
+- [x] Implement `can_access_client`.
+- [x] Fix function search paths, schema-qualify objects, and revoke execution from `PUBLIC`; functions remain owned by the migration role until Phase 10 introduces separate database roles.
+- [x] Add direct SQL tests for every allow and deny path.
+- [x] Confirm missing context returns false rather than raising an information-leaking error.
 
 Acceptance criteria:
 
-- [ ] No helper checks a business role name such as `admin` or `coordinator`.
-- [ ] Permission and scope changes affect authorization immediately on the next transaction.
-- [ ] Invalid or missing context denies access.
+- [x] No helper checks a business role name such as `admin` or `coordinator`.
+- [x] Permission and scope changes affect authorization immediately on the next transaction.
+- [x] Invalid or missing context denies access.
 
 ## Phase 8: Convert `client_details` As The RLS Pilot
 
@@ -677,12 +677,12 @@ Checklist:
 - [ ] Verify missing permission behavior.
 - [ ] Verify missing identity behavior.
 - [ ] Verify explicit user deny behavior.
-- [ ] Verify organization boundary behavior once defined.
+- [ ] Verify global `all` behavior.
 
 Acceptance criteria:
 
 - [ ] An assigned coordinator sees only assigned clients.
-- [ ] An `all` grant sees all clients inside its permitted organization.
+- [ ] An `all` grant sees all clients in the system.
 - [ ] A user without `CLIENT.VIEW` sees no client rows.
 - [ ] The application runtime role cannot bypass the policy.
 - [ ] Existing client API behavior remains correct for authorized users.
@@ -1010,13 +1010,44 @@ Record finalized decisions here. Do not silently change an earlier decision; add
 | 2026-08-16 | Scope every registered `CLIENT.*` permission except `CLIENT.CREATE`. | Existing-client operations require row-level reach; client creation has no existing assignment to evaluate. | Confirmed |
 | 2026-08-16 | Rename active evaluation permissions to `CLIENT.EVALUATION.CREATE` and `CLIENT.EVALUATION.VIEW`, and remove the unused delete permission. | Evaluations belong to clients, and no evaluation delete route currently exists. | Confirmed |
 | 2026-08-16 | Seed scoped administrator grants as `all` and scoped coordinator grants as `assigned`. | These values match the current role responsibilities while avoiding role-name checks in the future RLS design. | Confirmed |
-| TBD | Exact meaning and lifetime of an active assignment. | Needed for `assigned` scope. | Open |
-| TBD | Organizational boundary for `all`. | Needed to prevent cross-organization access. | Open |
-| TBD | Background worker authorization model. | Needed before strict RLS enforcement. | Open |
+| 2026-08-19 | `assigned` means any started `assigned_employee` row; deleting the row ends the assignment. | The assignment table has no end date, and unassignment already removes the relationship. | Confirmed |
+| 2026-08-19 | `all` grants access to all clients in the system without an organizational boundary. | This is the required operational meaning of the broad scope. | Confirmed |
+| 2026-08-19 | User-triggered workers carry delegated actor identity; scheduled and public trusted operations use a validated persisted system actor. | Workers need explicit authorization identity without relying on table-owner bypass. | Confirmed |
 
 ## Progress Log
 
 Add the newest entry first.
+
+### 2026-08-19 - Phase 7 database authorization helpers added
+
+Status: Completed and verified
+
+Decisions:
+
+- `all` grants access to all clients in the system; no organization boundary applies.
+- `assigned` accepts any `assigned_employee` role after its `start_date`.
+- An assignment remains active while its row exists; unassigning an employee deletes that row.
+
+Changes:
+
+- Added fail-closed transaction identity getters for current user and employee UUIDs.
+- Added live role-grant lookup through `has_permission` and `get_permission_scope`.
+- Added assignment and client-access helpers without business role-name checks.
+- Required the configured user and employee identities to match active database records before client access.
+- Added fixed function search paths, schema-qualified references, restricted parallel execution, and revoked default `PUBLIC` execution.
+- Fixed system-actor startup validation to use the existing `is_archived` and `out_of_service` employee fields.
+- Updated normal migration targets to apply all pending migrations.
+
+Verification:
+
+- Applied migrations 1 and 2 to a clean PostgreSQL 16 database.
+- Rolled migration 2 down and reapplied it successfully.
+- Direct SQL integration tests cover missing and malformed context, absent grants, scoped and unscoped grants, future/current/deleted assignments, live scope changes, global `all`, inactive users, inactive employees, and mismatched identities.
+- `go test ./...` completed successfully.
+
+Next action:
+
+- Begin Phase 8 by replacing the role-name policies on `client_details` with operation-specific permission and scope policies.
 
 ### 2026-08-19 - Phase 6 protected execution centralized
 

@@ -41,7 +41,8 @@ func (store *Store) ValidateActorIdentity(ctx context.Context, actor ctxkeys.Act
 		WHERE cu.id = $1
 		  AND ep.id = $2
 		  AND cu.is_active
-		  AND ep.is_active
+		  AND NOT ep.is_archived
+		  AND NOT COALESCE(ep.out_of_service, false)
 	)`, actor.UserID, actor.EmployeeID).Scan(&valid)
 	if err != nil {
 		return err
