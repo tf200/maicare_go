@@ -2,9 +2,14 @@ package worker
 
 import (
 	"crypto/tls"
+	"fmt"
 	"log"
 	"time"
 
+	"maicare_go/internal/ctxkeys"
+	pkgasynq "maicare_go/pkg/asynq"
+
+	"github.com/goccy/go-json"
 	hibikenasynq "github.com/hibiken/asynq"
 )
 
@@ -15,9 +20,10 @@ const (
 
 type Scheduler struct {
 	Scheduler *hibikenasynq.Scheduler
+	actor     ctxkeys.ActorIdentity
 }
 
-func NewScheduler(redisHost, redisUser, redisPassword string, tlsConfig *tls.Config) *Scheduler {
+func NewScheduler(redisHost, redisUser, redisPassword string, tlsConfig *tls.Config, actor ctxkeys.ActorIdentity) *Scheduler {
 	scheduler := hibikenasynq.NewScheduler(
 		hibikenasynq.RedisClientOpt{
 			Addr:         redisHost,
@@ -31,11 +37,27 @@ func NewScheduler(redisHost, redisUser, redisPassword string, tlsConfig *tls.Con
 		nil,
 	)
 
-	return &Scheduler{Scheduler: scheduler}
+	return &Scheduler{Scheduler: scheduler, actor: actor}
+}
+
+func (s *Scheduler) task(taskType string) (*hibikenasynq.Task, error) {
+	if !s.actor.IsValid() {
+		return nil, fmt.Errorf("scheduled task %s requires a valid system actor", taskType)
+	}
+	payload, err := json.Marshal(pkgasynq.ScheduledWorkerPayload{Actor: pkgasynq.ActorPayload{
+		UserID: s.actor.UserID, EmployeeID: s.actor.EmployeeID,
+	}})
+	if err != nil {
+		return nil, err
+	}
+	return hibikenasynq.NewTask(taskType, payload), nil
 }
 
 func (s *Scheduler) ScheduleContractReminder() error {
-	task := hibikenasynq.NewTask(TypeContractReminder, nil)
+	task, err := s.task(TypeContractReminder)
+	if err != nil {
+		return err
+	}
 
 	entryID, err := s.Scheduler.Register("0 0 * * *", task)
 	if err != nil {
@@ -47,7 +69,10 @@ func (s *Scheduler) ScheduleContractReminder() error {
 }
 
 func (s *Scheduler) ScheduleClientCareStatusSync() error {
-	task := hibikenasynq.NewTask(TypeClientCareStatusSync, nil)
+	task, err := s.task(TypeClientCareStatusSync)
+	if err != nil {
+		return err
+	}
 
 	entryID, err := s.Scheduler.Register("0 * * * *", task)
 	if err != nil {

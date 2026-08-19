@@ -21,7 +21,7 @@ func NewIncidentRepository(store *db.Store) domain.IncidentRepository {
 func (r *incidentRepository) CreateIncident(ctx context.Context, params domain.CreateIncidentParams) (*domain.Incident, error) {
 	var incident db.CreateIncidentRow
 
-	err := r.store.ExecTx(ctx, func(q *db.Queries) error {
+	err := r.store.ExecActorTx(ctx, func(q *db.Queries) error {
 		var err error
 		incident, err = q.CreateIncident(ctx, db.CreateIncidentParams{
 			EmployeeID:              params.EmployeeID,
@@ -59,10 +59,15 @@ func (r *incidentRepository) CreateIncident(ctx context.Context, params domain.C
 }
 
 func (r *incidentRepository) ListIncidents(ctx context.Context, params domain.ListIncidentsParams) (*domain.ListIncidentsResult, error) {
-	rows, err := r.store.ListIncidents(ctx, db.ListIncidentsParams{
-		ClientID: params.ClientID,
-		Limit:    params.Limit,
-		Offset:   params.Offset,
+	var rows []db.ListIncidentsRow
+	err := r.store.ExecActorTx(ctx, func(q *db.Queries) error {
+		var err error
+		rows, err = q.ListIncidents(ctx, db.ListIncidentsParams{
+			ClientID: params.ClientID,
+			Limit:    params.Limit,
+			Offset:   params.Offset,
+		})
+		return err
 	})
 	if err != nil {
 		return nil, err
@@ -97,7 +102,12 @@ func (r *incidentRepository) ListIncidents(ctx context.Context, params domain.Li
 }
 
 func (r *incidentRepository) GetIncident(ctx context.Context, id uuid.UUID) (*domain.Incident, error) {
-	row, err := r.store.GetIncident(ctx, id)
+	var row db.GetIncidentRow
+	err := r.store.ExecActorTx(ctx, func(q *db.Queries) error {
+		var err error
+		row, err = q.GetIncident(ctx, id)
+		return err
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +118,7 @@ func (r *incidentRepository) GetIncident(ctx context.Context, id uuid.UUID) (*do
 func (r *incidentRepository) UpdateIncident(ctx context.Context, params domain.UpdateIncidentParams) (*domain.Incident, error) {
 	var incident db.Incident
 
-	err := r.store.ExecTx(ctx, func(q *db.Queries) error {
+	err := r.store.ExecActorTx(ctx, func(q *db.Queries) error {
 		var err error
 		incident, err = q.UpdateIncident(ctx, db.UpdateIncidentParams{
 			ID:                      params.ID,
@@ -146,21 +156,29 @@ func (r *incidentRepository) UpdateIncident(ctx context.Context, params domain.U
 }
 
 func (r *incidentRepository) DeleteIncident(ctx context.Context, id uuid.UUID) error {
-	return r.store.DeleteIncident(ctx, id)
+	return r.store.ExecActorTx(ctx, func(q *db.Queries) error {
+		return q.DeleteIncident(ctx, id)
+	})
 }
 
 func (r *incidentRepository) ConfirmIncident(ctx context.Context, id uuid.UUID, confirmedBy *uuid.UUID) (int64, error) {
-	return r.store.ConfirmIncident(ctx, db.ConfirmIncidentParams{
-		ID:          id,
-		ConfirmedBy: confirmedBy,
+	var affected int64
+	err := r.store.ExecActorTx(ctx, func(q *db.Queries) error {
+		var err error
+		affected, err = q.ConfirmIncident(ctx, db.ConfirmIncidentParams{
+			ID:          id,
+			ConfirmedBy: confirmedBy,
+		})
+		return err
 	})
+	return affected, err
 }
 
 func (r *incidentRepository) ListAllIncidents(ctx context.Context, params domain.ListAllIncidentsParams) (*domain.ListAllIncidentsResult, error) {
 	var items []db.ListAllIncidentsRow
 	var totalCount int64
 
-	err := r.store.ExecTx(ctx, func(q *db.Queries) error {
+	err := r.store.ExecActorTx(ctx, func(q *db.Queries) error {
 		var err error
 		items, err = q.ListAllIncidents(ctx, db.ListAllIncidentsParams{
 			Limit:       params.Limit,
@@ -213,7 +231,12 @@ func (r *incidentRepository) ListAllIncidents(ctx context.Context, params domain
 }
 
 func (r *incidentRepository) GetIncidentCounts(ctx context.Context) (*domain.IncidentCounts, error) {
-	row, err := r.store.GetIncidentCounts(ctx)
+	var row db.GetIncidentCountsRow
+	err := r.store.ExecActorTx(ctx, func(q *db.Queries) error {
+		var err error
+		row, err = q.GetIncidentCounts(ctx)
+		return err
+	})
 	if err != nil {
 		return nil, err
 	}

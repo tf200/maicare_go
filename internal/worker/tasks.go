@@ -7,6 +7,7 @@ import (
 	"time"
 
 	db "maicare_go/db/sqlc"
+	"maicare_go/internal/ctxkeys"
 	"maicare_go/internal/domain"
 	pkgasynq "maicare_go/pkg/asynq"
 	pkgemail "maicare_go/pkg/email"
@@ -109,8 +110,23 @@ func (processor *AsynqServer) ProcessIncidentConfirmedEmailTask(ctx context.Cont
 		log.Printf("Failed to unmarshal incident confirmed email task payload: %v", err)
 		return fmt.Errorf("json.Unmarshal failed: %v: %w", err, hibikenasynq.SkipRetry)
 	}
+	actor := ctxkeys.ActorIdentity{UserID: p.Actor.UserID, EmployeeID: p.Actor.EmployeeID}
+	if !actor.IsValid() {
+		return fmt.Errorf("incident confirmation task has invalid actor: %w", hibikenasynq.SkipRetry)
+	}
+	ctx = ctxkeys.WithActorIdentity(ctx, actor)
 
-	incident, err := processor.store.GetIncident(ctx, p.IncidentID)
+	var incident db.GetIncidentRow
+	var recipientsPtr []*string
+	err := processor.store.ExecActorTx(ctx, func(q *db.Queries) error {
+		var err error
+		incident, err = q.GetIncident(ctx, p.IncidentID)
+		if err != nil {
+			return err
+		}
+		recipientsPtr, err = q.ListIncidentReportRecipientEmails(ctx, incident.ClientID)
+		return err
+	})
 	if err != nil {
 		log.Printf("Failed to load incident %s: %v", p.IncidentID.String(), err)
 		return fmt.Errorf("failed to load incident: %w", err)
@@ -126,12 +142,6 @@ func (processor *AsynqServer) ProcessIncidentConfirmedEmailTask(ctx context.Cont
 		return nil
 	}
 
-	recipientsPtr, err := processor.store.ListIncidentReportRecipientEmails(ctx, incident.ClientID)
-	if err != nil {
-		log.Printf("Failed to resolve incident email recipients for client %s: %v", incident.ClientID.String(), err)
-		return fmt.Errorf("failed to resolve recipients: %w", err)
-	}
-
 	recipients := make([]string, 0, len(recipientsPtr))
 	for _, e := range recipientsPtr {
 		if e == nil || *e == "" {
@@ -141,7 +151,10 @@ func (processor *AsynqServer) ProcessIncidentConfirmedEmailTask(ctx context.Cont
 	}
 	if len(recipients) == 0 {
 		log.Printf("No incident report recipients for client %s; marking as sent", incident.ClientID.String())
-		_, _ = processor.store.MarkIncidentConfirmationEmailSent(ctx, incident.ID)
+		_ = processor.store.ExecActorTx(ctx, func(q *db.Queries) error {
+			_, err := q.MarkIncidentConfirmationEmailSent(ctx, incident.ID)
+			return err
+		})
 		return nil
 	}
 
@@ -216,7 +229,10 @@ func (processor *AsynqServer) ProcessIncidentConfirmedEmailTask(ctx context.Cont
 		return fmt.Errorf("failed to send incident email: %w", err)
 	}
 
-	_, err = processor.store.MarkIncidentConfirmationEmailSent(ctx, incident.ID)
+	err = processor.store.ExecActorTx(ctx, func(q *db.Queries) error {
+		_, err := q.MarkIncidentConfirmationEmailSent(ctx, incident.ID)
+		return err
+	})
 	if err != nil {
 		log.Printf("Failed to mark incident confirmation email sent for %s: %v", incident.ID.String(), err)
 		return fmt.Errorf("failed to mark email sent: %w", err)
@@ -295,7 +311,16 @@ func (processor *AsynqServer) ProcessProcessRegistrationFormEmailTask(ctx contex
 }
 
 func (c *AsynqServer) ProcessContractRemiderTask(ctx context.Context, t *hibikenasynq.Task) error {
-	contractsToBeReminded, err := c.store.ListContractsTobeReminded(ctx)
+	ctx, err := scheduledActorContext(ctx, t)
+	if err != nil {
+		return err
+	}
+	var contractsToBeReminded []db.ListContractsTobeRemindedRow
+	err = c.store.ExecActorTx(ctx, func(q *db.Queries) error {
+		var err error
+		contractsToBeReminded, err = q.ListContractsTobeReminded(ctx)
+		return err
+	})
 	if err != nil {
 		log.Printf("Failed to list contracts to be reminded: %v", err)
 		return fmt.Errorf("failed to list contracts to be reminded: %v: %w", err, hibikenasynq.SkipRetry)
@@ -309,9 +334,14 @@ func (c *AsynqServer) ProcessContractRemiderTask(ctx context.Context, t *hibiken
 	for _, contract := range contractsToBeReminded {
 		log.Printf("Processing reminder for contract ID: %d", contract.ID)
 
-		reminder, err := c.store.CreateContractReminder(ctx, db.CreateContractReminderParams{
-			ContractID:     contract.ID,
-			ReminderSentAt: pgtype.Timestamptz{Time: time.Now(), Valid: true},
+		var reminder db.ContractReminder
+		err := c.store.ExecActorTx(ctx, func(q *db.Queries) error {
+			var err error
+			reminder, err = q.CreateContractReminder(ctx, db.CreateContractReminderParams{
+				ContractID:     contract.ID,
+				ReminderSentAt: pgtype.Timestamptz{Time: time.Now(), Valid: true},
+			})
+			return err
 		})
 		if err != nil {
 			log.Printf("Failed to create contract reminder for contract ID %d: %v", contract.ID, err)
@@ -368,7 +398,16 @@ func (c *AsynqServer) ProcessContractRemiderTask(ctx context.Context, t *hibiken
 }
 
 func (c *AsynqServer) ProcessClientCareStatusSyncTask(ctx context.Context, t *hibikenasynq.Task) error {
-	activatedClientIDs, err := c.store.ActivateDueScheduledInCareClients(ctx)
+	ctx, err := scheduledActorContext(ctx, t)
+	if err != nil {
+		return err
+	}
+	var activatedClientIDs []uuid.UUID
+	err = c.store.ExecActorTx(ctx, func(q *db.Queries) error {
+		var err error
+		activatedClientIDs, err = q.ActivateDueScheduledInCareClients(ctx)
+		return err
+	})
 	if err != nil {
 		log.Printf("Failed to activate due scheduled-in-care clients: %v", err)
 		return fmt.Errorf("failed to activate due scheduled-in-care clients: %v: %w", err, hibikenasynq.SkipRetry)
@@ -381,7 +420,12 @@ func (c *AsynqServer) ProcessClientCareStatusSyncTask(ctx context.Context, t *hi
 
 	log.Printf("Activated %d scheduled_in_care clients", len(activatedClientIDs))
 
-	outOfCareClientIDs, err := c.store.ActivateDueScheduledOutOfCareClients(ctx)
+	var outOfCareClientIDs []uuid.UUID
+	err = c.store.ExecActorTx(ctx, func(q *db.Queries) error {
+		var err error
+		outOfCareClientIDs, err = q.ActivateDueScheduledOutOfCareClients(ctx)
+		return err
+	})
 	if err != nil {
 		log.Printf("Failed to activate due scheduled-out-of-care clients: %v", err)
 		return fmt.Errorf("failed to activate due scheduled-out-of-care clients: %v: %w", err, hibikenasynq.SkipRetry)
@@ -390,7 +434,12 @@ func (c *AsynqServer) ProcessClientCareStatusSyncTask(ctx context.Context, t *hi
 		log.Printf("Activated %d scheduled_out_of_care clients", len(outOfCareClientIDs))
 	}
 
-	missingFinalEvaluationClientIDs, err := c.store.ListDueScheduledOutOfCareMissingFinalEvaluation(ctx)
+	var missingFinalEvaluationClientIDs []uuid.UUID
+	err = c.store.ExecActorTx(ctx, func(q *db.Queries) error {
+		var err error
+		missingFinalEvaluationClientIDs, err = q.ListDueScheduledOutOfCareMissingFinalEvaluation(ctx)
+		return err
+	})
 	if err != nil {
 		log.Printf("Failed to list due scheduled-out-of-care clients missing final evaluation: %v", err)
 		return fmt.Errorf("failed to list due scheduled-out-of-care clients missing final evaluation: %v: %w", err, hibikenasynq.SkipRetry)
@@ -400,4 +449,16 @@ func (c *AsynqServer) ProcessClientCareStatusSyncTask(ctx context.Context, t *hi
 	}
 
 	return nil
+}
+
+func scheduledActorContext(ctx context.Context, task *hibikenasynq.Task) (context.Context, error) {
+	var payload pkgasynq.ScheduledWorkerPayload
+	if err := json.Unmarshal(task.Payload(), &payload); err != nil {
+		return nil, fmt.Errorf("invalid scheduled worker payload: %v: %w", err, hibikenasynq.SkipRetry)
+	}
+	actor := ctxkeys.ActorIdentity{UserID: payload.Actor.UserID, EmployeeID: payload.Actor.EmployeeID}
+	if !actor.IsValid() {
+		return nil, fmt.Errorf("scheduled worker requires valid system actor: %w", hibikenasynq.SkipRetry)
+	}
+	return ctxkeys.WithActorIdentity(ctx, actor), nil
 }

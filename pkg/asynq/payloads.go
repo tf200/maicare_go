@@ -62,7 +62,17 @@ type ProcessRegistrationFormEmailPayload struct {
 }
 
 type IncidentConfirmedEmailPayload struct {
-	IncidentID uuid.UUID `json:"incident_id"`
+	IncidentID uuid.UUID    `json:"incident_id"`
+	Actor      ActorPayload `json:"actor"`
+}
+
+type ActorPayload struct {
+	UserID     uuid.UUID `json:"user_id"`
+	EmployeeID uuid.UUID `json:"employee_id"`
+}
+
+type ScheduledWorkerPayload struct {
+	Actor ActorPayload `json:"actor"`
 }
 
 type NotificationPayload struct {

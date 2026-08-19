@@ -60,12 +60,21 @@ func (m *AuthMiddleware) Handle() gin.HandlerFunc {
 			return
 		}
 
-		if payload.TokenType != domain.AccessTokenType {
+		if payload == nil || payload.TokenType != domain.AccessTokenType {
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, httpapi.Fail(domain.ErrInvalidToken.Error(), ""))
+			return
+		}
+		actor := ctxkeys.ActorIdentity{
+			UserID:     payload.UserID,
+			EmployeeID: payload.EmployeeID,
+		}
+		if !actor.IsValid() {
 			ctx.AbortWithStatusJSON(http.StatusUnauthorized, httpapi.Fail(domain.ErrInvalidToken.Error(), ""))
 			return
 		}
 
 		requestCtx := WithAuthPayload(ctx.Request.Context(), payload)
+		requestCtx = ctxkeys.WithActorIdentity(requestCtx, actor)
 		requestCtx = ctxkeys.WithEmployeeID(requestCtx, payload.EmployeeID)
 		requestCtx = WithSessionID(requestCtx, payload.SessionID)
 		ctx.Request = ctx.Request.WithContext(requestCtx)

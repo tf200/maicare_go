@@ -146,7 +146,7 @@ func (s *EventService) CreateEvent(ctx context.Context, req *domain.CreateEventR
 		return nil, err
 	}
 
-	tx, err := s.store.ConnPool.Begin(ctx)
+	tx, err := s.store.BeginActorTx(ctx)
 	if err != nil {
 		s.logger.LogError(ctx, "CreateEvent", "Failed to begin transaction", err)
 		return nil, fmt.Errorf("failed to begin transaction: %w", err)
@@ -459,7 +459,7 @@ func (s *EventService) UpdateEvent(ctx context.Context, eventID uuid.UUID, req *
 		reminders = rems
 	}
 
-	tx, err := s.store.ConnPool.Begin(ctx)
+	tx, err := s.store.BeginActorTx(ctx)
 	if err != nil {
 		s.logger.LogError(ctx, "UpdateEvent", "Failed to begin transaction", err)
 		return nil, err
@@ -649,7 +649,7 @@ func (s *EventService) SetEventWorkApproval(ctx context.Context, eventID uuid.UU
 
 	targetEventID := eventID
 
-	tx, err := s.store.ConnPool.Begin(ctx)
+	tx, err := s.store.BeginActorTx(ctx)
 	if err != nil {
 		s.logger.LogError(ctx, "SetEventWorkApproval", "Failed to begin transaction", err)
 		return fmt.Errorf("failed to begin tx: %w", err)
@@ -775,23 +775,40 @@ func (s *EventService) ListWorkApprovalQueue(ctx context.Context, req *domain.Li
 		return &domain.ListWorkApprovalQueueResponse{Items: []domain.WorkApprovalQueueItem{}, Total: 0}, nil
 	}
 
-	oneOff, err := s.store.ListWorkApprovalQueueOneOffAppointmentsStartingInRange(ctx, db.ListWorkApprovalQueueOneOffAppointmentsStartingInRangeParams{
-		StartAt:     toPgTimestamptz(startAt),
-		EndAt:       toPgTimestamptz(effectiveEnd),
-		EmployeeIds: req.EmployeeIDs,
+	var oneOff []db.CalendarEvent
+	var masters []db.CalendarEvent
+	var exRows []db.CalendarEvent
+	err := s.store.ExecActorTx(ctx, func(q *db.Queries) error {
+		var err error
+		oneOff, err = q.ListWorkApprovalQueueOneOffAppointmentsStartingInRange(ctx, db.ListWorkApprovalQueueOneOffAppointmentsStartingInRangeParams{
+			StartAt:     toPgTimestamptz(startAt),
+			EndAt:       toPgTimestamptz(effectiveEnd),
+			EmployeeIds: req.EmployeeIDs,
+		})
+		if err != nil {
+			return err
+		}
+		masters, err = q.ListWorkApprovalQueueRecurringMastersStartingBeforeEnd(ctx, db.ListWorkApprovalQueueRecurringMastersStartingBeforeEndParams{
+			EndAt:       toPgTimestamptz(effectiveEnd),
+			EmployeeIds: req.EmployeeIDs,
+		})
+		if err != nil {
+			return err
+		}
+		seriesIDs := make([]uuid.UUID, 0, len(masters))
+		for _, master := range masters {
+			seriesIDs = append(seriesIDs, master.ID)
+		}
+		if len(seriesIDs) > 0 {
+			exRows, err = q.ListSeriesExceptionsStartingInRange(ctx, db.ListSeriesExceptionsStartingInRangeParams{
+				SeriesIds: seriesIDs, StartAt: toPgTimestamptz(startAt), EndAt: toPgTimestamptz(effectiveEnd), EmployeeIds: req.EmployeeIDs,
+			})
+		}
+		return err
 	})
 	if err != nil {
-		s.logger.LogError(ctx, "ListWorkApprovalQueue", "Failed to list one-off appointments", err)
-		return nil, fmt.Errorf("failed to list one-off appointments: %w", err)
-	}
-
-	masters, err := s.store.ListWorkApprovalQueueRecurringMastersStartingBeforeEnd(ctx, db.ListWorkApprovalQueueRecurringMastersStartingBeforeEndParams{
-		EndAt:       toPgTimestamptz(effectiveEnd),
-		EmployeeIds: req.EmployeeIDs,
-	})
-	if err != nil {
-		s.logger.LogError(ctx, "ListWorkApprovalQueue", "Failed to list recurring masters", err)
-		return nil, fmt.Errorf("failed to list recurring masters: %w", err)
+		s.logger.LogError(ctx, "ListWorkApprovalQueue", "Failed to list work approval events", err)
+		return nil, fmt.Errorf("failed to list work approval events: %w", err)
 	}
 
 	masterRows := make([]eventRow, 0, len(masters))
@@ -802,20 +819,8 @@ func (s *EventService) ListWorkApprovalQueue(ctx context.Context, req *domain.Li
 	}
 
 	exceptions := []eventRow{}
-	if len(seriesIDs) > 0 {
-		exRows, err := s.store.ListSeriesExceptionsStartingInRange(ctx, db.ListSeriesExceptionsStartingInRangeParams{
-			SeriesIds:   seriesIDs,
-			StartAt:     toPgTimestamptz(startAt),
-			EndAt:       toPgTimestamptz(effectiveEnd),
-			EmployeeIds: req.EmployeeIDs,
-		})
-		if err != nil {
-			s.logger.LogError(ctx, "ListWorkApprovalQueue", "Failed to list series exceptions", err)
-			return nil, fmt.Errorf("failed to list series exceptions: %w", err)
-		}
-		for _, ex := range exRows {
-			exceptions = append(exceptions, toEventRow(ex))
-		}
+	for _, ex := range exRows {
+		exceptions = append(exceptions, toEventRow(ex))
 	}
 
 	eventIDs := make([]uuid.UUID, 0, len(oneOff)+len(seriesIDs)+len(exceptions))
@@ -1077,7 +1082,9 @@ func (s *EventService) ListWorkApprovalQueue(ctx context.Context, req *domain.Li
 	}
 	clientNames := map[uuid.UUID]string{}
 	if len(clientIDs) > 0 {
-		rows, err := s.store.ListClientNamesByIDs(ctx, clientIDs)
+		rows, err := actorQuery(ctx, s.store, func(q *db.Queries) ([]db.ListClientNamesByIDsRow, error) {
+			return q.ListClientNamesByIDs(ctx, clientIDs)
+		})
 		if err != nil {
 			s.logger.LogError(ctx, "ListWorkApprovalQueue", "Failed to list client names", err)
 			return nil, fmt.Errorf("failed to list client names: %w", err)
@@ -1114,7 +1121,9 @@ func (s *EventService) ListWorkApprovalQueue(ctx context.Context, req *domain.Li
 // ─── Private helpers ──────────────────────────────────────
 
 func (s *EventService) getVisibleEventByID(ctx context.Context, eventID, employeeID uuid.UUID) (eventRow, error) {
-	e, err := s.store.GetVisibleEventByID(ctx, db.GetVisibleEventByIDParams{ID: eventID, EmployeeID: employeeID})
+	e, err := actorQuery(ctx, s.store, func(q *db.Queries) (db.CalendarEvent, error) {
+		return q.GetVisibleEventByID(ctx, db.GetVisibleEventByIDParams{ID: eventID, EmployeeID: employeeID})
+	})
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return eventRow{}, fmt.Errorf("event not found")
@@ -1125,10 +1134,12 @@ func (s *EventService) getVisibleEventByID(ctx context.Context, eventID, employe
 }
 
 func (s *EventService) listVisibleMasterEvents(ctx context.Context, employeeID uuid.UUID, startAt, endAt time.Time) ([]eventRow, error) {
-	rows, err := s.store.ListVisibleMasterEvents(ctx, db.ListVisibleMasterEventsParams{
-		EmployeeID: employeeID,
-		StartAt:    toPgTimestamptz(startAt),
-		EndAt:      toPgTimestamptz(endAt),
+	rows, err := actorQuery(ctx, s.store, func(q *db.Queries) ([]db.CalendarEvent, error) {
+		return q.ListVisibleMasterEvents(ctx, db.ListVisibleMasterEventsParams{
+			EmployeeID: employeeID,
+			StartAt:    toPgTimestamptz(startAt),
+			EndAt:      toPgTimestamptz(endAt),
+		})
 	})
 	if err != nil {
 		return nil, err
@@ -1156,13 +1167,23 @@ func (s *EventService) loadSeriesExceptions(ctx context.Context, seriesIDs []uui
 }
 
 func (s *EventService) loadAttendeesForEvents(ctx context.Context, eventIDs []uuid.UUID) (map[uuid.UUID][]uuid.UUID, map[uuid.UUID][]uuid.UUID, error) {
+	var employeeMap, clientMap map[uuid.UUID][]uuid.UUID
+	err := s.store.ExecActorTx(ctx, func(q *db.Queries) error {
+		var err error
+		employeeMap, clientMap, err = loadAttendeesWithQueries(ctx, q, eventIDs)
+		return err
+	})
+	return employeeMap, clientMap, err
+}
+
+func loadAttendeesWithQueries(ctx context.Context, q *db.Queries, eventIDs []uuid.UUID) (map[uuid.UUID][]uuid.UUID, map[uuid.UUID][]uuid.UUID, error) {
 	employeeMap := map[uuid.UUID][]uuid.UUID{}
 	clientMap := map[uuid.UUID][]uuid.UUID{}
 	if len(eventIDs) == 0 {
 		return employeeMap, clientMap, nil
 	}
 
-	rows, err := s.store.ListAttendeesByEventIDs(ctx, eventIDs)
+	rows, err := q.ListAttendeesByEventIDs(ctx, eventIDs)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -1179,7 +1200,11 @@ func (s *EventService) loadAttendeesForEvents(ctx context.Context, eventIDs []uu
 }
 
 func (s *EventService) loadRemindersForEvent(ctx context.Context, eventID uuid.UUID) ([]domain.ReminderResponse, error) {
-	rows, err := s.store.ListRemindersByEventID(ctx, eventID)
+	return loadRemindersWithQueries(ctx, s.store.Queries, eventID)
+}
+
+func loadRemindersWithQueries(ctx context.Context, q *db.Queries, eventID uuid.UUID) ([]domain.ReminderResponse, error) {
+	rows, err := q.ListRemindersByEventID(ctx, eventID)
 	if err != nil {
 		return nil, err
 	}
@@ -1251,7 +1276,7 @@ func (s *EventService) updateEventFuture(ctx context.Context, master eventRow, r
 		return nil, err
 	}
 
-	tx, err := s.store.ConnPool.Begin(ctx)
+	tx, err := s.store.BeginActorTx(ctx)
 	if err != nil {
 		s.logger.LogError(ctx, "updateEventFuture", "Failed to begin transaction", err)
 		return nil, err
@@ -1286,7 +1311,7 @@ func (s *EventService) updateEventFuture(ctx context.Context, master eventRow, r
 		return nil, err
 	}
 
-	attendeeEmployees, attendeeClients, err := s.loadAttendeesForEvents(ctx, []uuid.UUID{master.ID})
+	attendeeEmployees, attendeeClients, err := loadAttendeesWithQueries(ctx, qtx, []uuid.UUID{master.ID})
 	if err != nil {
 		s.logger.LogError(ctx, "updateEventFuture", "Failed to load master attendees", err)
 		return nil, err
@@ -1304,7 +1329,7 @@ func (s *EventService) updateEventFuture(ctx context.Context, master eventRow, r
 		return nil, err
 	}
 
-	reminders, err := s.loadRemindersForEvent(ctx, master.ID)
+	reminders, err := loadRemindersWithQueries(ctx, qtx, master.ID)
 	if err != nil {
 		s.logger.LogError(ctx, "updateEventFuture", "Failed to load master reminders", err)
 		return nil, err
@@ -1419,25 +1444,27 @@ func (s *EventService) upsertSingleOccurrenceOverride(ctx context.Context, maste
 	var finalClientIDs []uuid.UUID
 
 	if req.AttendeeEmployeeIDs != nil || req.AttendeeClientIDs != nil {
-		tx, err := s.store.ConnPool.Begin(ctx)
+		tx, err := s.store.BeginActorTx(ctx)
 		if err != nil {
 			s.logger.LogError(ctx, "upsertSingleOccurrenceOverride", "Failed to begin transaction", err)
 			return nil, err
 		}
 		defer tx.Rollback(ctx)
+		qtx := db.New(tx)
+		employeeMap, clientMap, err := loadAttendeesWithQueries(ctx, qtx, []uuid.UUID{master.ID})
+		if err != nil {
+			return nil, err
+		}
 		if req.AttendeeEmployeeIDs != nil {
 			finalEmployeeIDs = *req.AttendeeEmployeeIDs
 		} else {
-			empMap, _, _ := s.loadAttendeesForEvents(ctx, []uuid.UUID{master.ID})
-			finalEmployeeIDs = empMap[master.ID]
+			finalEmployeeIDs = employeeMap[master.ID]
 		}
 		if req.AttendeeClientIDs != nil {
 			finalClientIDs = *req.AttendeeClientIDs
 		} else {
-			_, cliMap, _ := s.loadAttendeesForEvents(ctx, []uuid.UUID{master.ID})
-			finalClientIDs = cliMap[master.ID]
+			finalClientIDs = clientMap[master.ID]
 		}
-		qtx := db.New(tx)
 		if err := upsertAttendees(ctx, qtx, override.ID, finalEmployeeIDs, finalClientIDs, false); err != nil {
 			s.logger.LogError(ctx, "upsertSingleOccurrenceOverride", "Failed to upsert attendees", err)
 			return nil, err

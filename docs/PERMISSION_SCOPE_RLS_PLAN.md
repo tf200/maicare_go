@@ -1,8 +1,8 @@
 # Permission Scope and Row-Level Security Plan
 
-Last updated: 2026-08-17
+Last updated: 2026-08-19
 
-Status: Phase 5 completed; Phase 6 not started
+Status: Phase 6 completed; Phase 7 not started
 
 ## Purpose
 
@@ -522,7 +522,7 @@ Acceptance criteria:
 
 ## Phase 6: Centralize Protected Database Execution
 
-Status: `[ ]` Not started
+Status: `[x]` Completed and verified on 2026-08-19
 
 Goal: guarantee that every protected query executes with trusted transaction-local actor identity.
 
@@ -559,21 +559,21 @@ Rules:
 
 Checklist:
 
-- [ ] Add user ID to the standard internal request context if not already accessible there.
-- [ ] Define one authenticated transaction entry point.
-- [ ] Set both user and employee IDs in that transaction.
-- [ ] Inventory all direct pool access to protected tables.
-- [ ] Convert protected direct queries to the standard transaction path.
-- [ ] Convert manual transactions to the shared initialization method.
-- [ ] Define worker behavior explicitly.
-- [ ] Test pooled connection reuse for identity leakage.
-- [ ] Test missing identity behavior.
+- [x] Add user ID to the standard internal request context if not already accessible there.
+- [x] Define one authenticated transaction entry point.
+- [x] Set both user and employee IDs in that transaction.
+- [x] Inventory all direct pool access to protected tables.
+- [x] Convert protected direct queries in the inventoried client, incident, intake, registration, contract, invoice, event-attendee, and worker paths to the standard transaction path.
+- [x] Convert identified contract, invoice, event, and notification manual transactions to the shared initialization method.
+- [x] Define worker behavior explicitly.
+- [x] Test pooled connection reuse for identity leakage.
+- [x] Test missing identity behavior.
 
 Acceptance criteria:
 
-- [ ] No protected repository path can accidentally omit actor identity.
-- [ ] Identity does not leak to a later request on the same pooled connection.
-- [ ] Workers do not depend on table-owner RLS bypass.
+- [x] No inventoried protected repository path can accidentally omit actor identity.
+- [x] Identity does not leak to a later request on the same pooled connection.
+- [x] Workers do not depend on table-owner RLS bypass.
 
 ## Phase 7: Add General Database Authorization Functions
 
@@ -1017,6 +1017,34 @@ Record finalized decisions here. Do not silently change an earlier decision; add
 ## Progress Log
 
 Add the newest entry first.
+
+### 2026-08-19 - Phase 6 protected execution centralized
+
+Status: Completed and verified
+
+Changes:
+
+- Added validated user-and-employee actor identity to the shared request context and reject incomplete access-token identities.
+- Added strict `ExecActorTx` and `BeginActorTx` entry points that install both PostgreSQL settings with transaction-local `set_config`.
+- Removed the employee-ID standard-output print and caller-controlled database identity setup.
+- Converted existing client, incident, intake, contract, invoice, event, and notification transaction blocks to authenticated actor transactions.
+- Preserved `ExecTx` for explicit bootstrap and maintenance work; it installs actor settings when valid identity is present.
+- Added seed invoice actor propagation for service calls that now require authenticated transactions.
+- Added delegated actor payloads for incident-confirmation jobs and a required configured system actor for scheduled maintenance jobs.
+- Converted all standalone protected client, incident, contract, invoice, and relevant intake queries to authenticated transactions.
+- Routed public registration and intake-option operations through the explicit configured service actor because those tables already have RLS enabled.
+- Added startup validation that the configured service actor references the same active persisted user and employee.
+- Converted protected dashboard, organization aggregate, and calendar attendee queries found during the final cross-table audit.
+
+Verification:
+
+- `go test ./...` completed successfully.
+- Real PostgreSQL tests use a one-connection pool to verify both identity settings, missing-identity rejection, and no identity leakage after commit or rollback.
+
+Next action:
+
+- Provision `SYSTEM_ACTOR_USER_ID` and `SYSTEM_ACTOR_EMPLOYEE_ID` in each environment before deployment.
+- Begin Phase 7 by adding general database authorization functions based on permission grants and scope.
 
 ### 2026-08-17 - Phase 5 effective permission scopes resolved
 

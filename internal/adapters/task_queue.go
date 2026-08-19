@@ -2,7 +2,9 @@ package adapters
 
 import (
 	"context"
+	"errors"
 
+	"maicare_go/internal/ctxkeys"
 	"maicare_go/internal/domain"
 	pkgasynq "maicare_go/pkg/asynq"
 
@@ -12,6 +14,8 @@ import (
 type TaskQueueAdapter struct {
 	client *pkgasynq.AsynqClient
 }
+
+var errMissingTaskActor = errors.New("task requires authenticated actor identity")
 
 func NewTaskQueueAdapter(client *pkgasynq.AsynqClient) domain.TaskQueue {
 	return &TaskQueueAdapter{client: client}
@@ -60,8 +64,15 @@ func (a *TaskQueueAdapter) EnqueueIncident(ctx context.Context, payload domain.I
 }
 
 func (a *TaskQueueAdapter) EnqueueIncidentConfirmedEmail(ctx context.Context, payload domain.IncidentConfirmedEmailTaskPayload, opts *domain.TaskEnqueueOptions) error {
+	actor, ok := ctxkeys.ActorIdentityFromContext(ctx)
+	if !ok {
+		return errMissingTaskActor
+	}
 	return a.client.EnqueueIncidentConfirmedEmail(ctx, pkgasynq.IncidentConfirmedEmailPayload{
 		IncidentID: payload.IncidentID,
+		Actor: pkgasynq.ActorPayload{
+			UserID: actor.UserID, EmployeeID: actor.EmployeeID,
+		},
 	}, toAsynqOptions(opts)...)
 }
 

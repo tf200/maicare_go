@@ -39,7 +39,9 @@ func (r *dashboardRepository) GetAdminDashboardStats(ctx context.Context) (*doma
 }
 
 func (r *dashboardRepository) getAdminDashboardStatCards(ctx context.Context) (*domain.AdminDashboardStats, error) {
-	row, err := r.store.GetAdminDashboardStatCards(ctx)
+	row, err := actorQuery(ctx, r.store, func(q *db.Queries) (db.GetAdminDashboardStatCardsRow, error) {
+		return q.GetAdminDashboardStatCards(ctx)
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +60,9 @@ func (r *dashboardRepository) getAdminDashboardStatCards(ctx context.Context) (*
 }
 
 func (r *dashboardRepository) listTopAdminActions(ctx context.Context, limit int32) ([]domain.AdminDashboardActionItem, error) {
-	rows, err := r.store.ListTopAdminActions(ctx, limit)
+	rows, err := actorQuery(ctx, r.store, func(q *db.Queries) ([]db.ListTopAdminActionsRow, error) {
+		return q.ListTopAdminActions(ctx, limit)
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +98,9 @@ func (r *dashboardRepository) listTopAdminActions(ctx context.Context, limit int
 }
 
 func (r *dashboardRepository) listRegistrationsToday(ctx context.Context, limit int32) ([]domain.AdminDashboardRegistrationTodayItem, error) {
-	rows, err := r.store.ListDashboardRegistrationsToday(ctx, limit)
+	rows, err := actorQuery(ctx, r.store, func(q *db.Queries) ([]db.ListDashboardRegistrationsTodayRow, error) {
+		return q.ListDashboardRegistrationsToday(ctx, limit)
+	})
 	if err != nil {
 		return nil, err
 	}

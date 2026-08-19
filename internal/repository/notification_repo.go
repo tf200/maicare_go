@@ -50,7 +50,7 @@ func (r *NotificationRepository) ListNotifications(ctx context.Context, userID u
 }
 
 func (r *NotificationRepository) MarkNotificationAsRead(ctx context.Context, notificationID uuid.UUID) (*domain.Notification, error) {
-	tx, err := r.store.ConnPool.Begin(ctx)
+	tx, err := r.store.BeginActorTx(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to begin transaction: %w", err)
 	}

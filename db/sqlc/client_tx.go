@@ -19,7 +19,7 @@ type CreateClientDetailsTxResult struct {
 func (store *Store) CreateClientDetailsTx(ctx context.Context, arg CreateClientDetailsTxParams) (CreateClientDetailsTxResult, error) {
 	var result CreateClientDetailsTxResult
 
-	err := store.ExecTx(ctx, func(q *Queries) error {
+	err := store.ExecActorTx(ctx, func(q *Queries) error {
 		// First check and update all attachments sequentially
 		for _, attachmentID := range arg.IdentityAttachments {
 			_, err := q.SetAttachmentAsUsedorUnused(ctx, SetAttachmentAsUsedorUnusedParams{
@@ -67,7 +67,7 @@ type AddClientDocumentsTxResults struct {
 func (store *Store) AddClientDocumentTx(ctx context.Context, arg AddClientDocumentTxParams) (AddClientDocumentTxResults, error) {
 	var result AddClientDocumentTxResults
 
-	err := store.ExecTx(ctx, func(q *Queries) error {
+	err := store.ExecActorTx(ctx, func(q *Queries) error {
 		var err error
 		result.Attachment, err = q.SetAttachmentAsUsedorUnused(ctx, SetAttachmentAsUsedorUnusedParams{
 			Uuid:   arg.AttachmentID,
@@ -95,7 +95,7 @@ func (store *Store) AddClientDocumentTx(ctx context.Context, arg AddClientDocume
 func (store *Store) AddClientDocumentsTx(ctx context.Context, arg AddClientDocumentsTxParams) (AddClientDocumentsTxResults, error) {
 	var result AddClientDocumentsTxResults
 
-	err := store.ExecTx(ctx, func(q *Queries) error {
+	err := store.ExecActorTx(ctx, func(q *Queries) error {
 		attachmentIDs := make([]uuid.UUID, 0, len(arg.Documents))
 		for _, doc := range arg.Documents {
 			attachmentIDs = append(attachmentIDs, doc.AttachmentID)
@@ -155,7 +155,7 @@ type DeleteClientDocumentResults struct {
 func (store *Store) DeleteClientDocumentTx(ctx context.Context, arg DeleteClientDocumentTxParams) (DeleteClientDocumentResults, error) {
 	var result DeleteClientDocumentResults
 
-	err := store.ExecTx(ctx, func(q *Queries) error {
+	err := store.ExecActorTx(ctx, func(q *Queries) error {
 		var err error
 		result.ClientDocument, err = q.DeleteClientDocument(ctx, DeleteClientDocumentParams{
 			ID:       arg.DocumentID,

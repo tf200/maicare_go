@@ -42,6 +42,8 @@ type Config struct {
 	MigrationsPath        string        `mapstructure:"MIGRATIONS_PATH"`
 	AdminEmail            string        `mapstructure:"ADMIN_EMAIL"`
 	AdminPassword         string        `mapstructure:"ADMIN_PASSWORD"`
+	SystemActorUserID     string        `mapstructure:"SYSTEM_ACTOR_USER_ID"`
+	SystemActorEmployeeID string        `mapstructure:"SYSTEM_ACTOR_EMPLOYEE_ID"`
 	WsAllowedOrigins      string        `mapstructure:"WS_ALLOWED_ORIGINS"`
 	WsTicketTTL           time.Duration `mapstructure:"WS_TICKET_TTL"`
 }
@@ -64,6 +66,7 @@ func Load(path string) (cfg Config, err error) {
 		"BREVO_SENDER_EMAIL", "BREVO_API_KEY", "ENVIRONMENT", "GRPC_URL",
 		"OPEN_ROUTER_API_KEY", "OPEN_ROUTER_MODEL",
 		"MIGRATIONS_PATH", "ADMIN_EMAIL", "ADMIN_PASSWORD",
+		"SYSTEM_ACTOR_USER_ID", "SYSTEM_ACTOR_EMPLOYEE_ID",
 		"WS_ALLOWED_ORIGINS", "WS_TICKET_TTL",
 	}
 
@@ -105,6 +108,8 @@ func validate(cfg *Config) error {
 		"ENVIRONMENT":              cfg.Environment,
 		"GRPC_URL":                 cfg.GrpcURL,
 		"MIGRATIONS_PATH":          cfg.MigrationsPath,
+		"SYSTEM_ACTOR_USER_ID":     cfg.SystemActorUserID,
+		"SYSTEM_ACTOR_EMPLOYEE_ID": cfg.SystemActorEmployeeID,
 	}
 
 	var missingVars []string

@@ -254,7 +254,9 @@ func invoiceFromGetRow(inv db.GetInvoiceRow) domain.Invoice {
 func (s *InvoiceService) generateInvoiceNumber(ctx context.Context) (string, int64, error) {
 	now := time.Now()
 	datePart := now.Format("20060102")
-	maxSeq, err := s.store.GetMaxInvoiceSequenceForDate(ctx, now)
+	maxSeq, err := actorQuery(ctx, s.store, func(q *db.Queries) (int64, error) {
+		return q.GetMaxInvoiceSequenceForDate(ctx, now)
+	})
 	if err != nil {
 		return "", 0, fmt.Errorf("failed to get max invoice sequence: %w", err)
 	}
@@ -272,7 +274,9 @@ func (s *InvoiceService) CreateInvoice(ctx context.Context, params domain.Create
 		return nil, nil, fmt.Errorf("lines must not be empty")
 	}
 
-	client, err := s.store.GetClientDetails(ctx, params.ClientID)
+	client, err := actorQuery(ctx, s.store, func(q *db.Queries) (db.GetClientDetailsRow, error) {
+		return q.GetClientDetails(ctx, params.ClientID)
+	})
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to load client details: %w", err)
 	}
@@ -286,17 +290,11 @@ func (s *InvoiceService) CreateInvoice(ctx context.Context, params domain.Create
 		return nil, nil, err
 	}
 
-	tx, err := s.store.ConnPool.Begin(ctx)
+	tx, err := s.store.BeginActorTx(ctx)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to begin transaction: %w", err)
 	}
 	defer tx.Rollback(ctx)
-	if employeeID != uuid.Nil {
-		_, err = tx.Exec(ctx, "SELECT set_config('myapp.current_employee_id', $1, true)", employeeID.String())
-		if err != nil {
-			return nil, nil, fmt.Errorf("failed to set current employee id: %w", err)
-		}
-	}
 	qtx := s.store.WithTx(tx)
 
 	billingTz := defaultBillingTimezone
@@ -420,13 +418,17 @@ func (s *InvoiceService) CreateInvoice(ctx context.Context, params domain.Create
 // ==================== Get Invoice By ID ====================
 
 func (s *InvoiceService) GetInvoiceByID(ctx context.Context, invoiceID uuid.UUID) (*domain.Invoice, []domain.InvoiceLine, float64, error) {
-	inv, err := s.store.GetInvoice(ctx, invoiceID)
+	inv, err := actorQuery(ctx, s.store, func(q *db.Queries) (db.GetInvoiceRow, error) {
+		return q.GetInvoice(ctx, invoiceID)
+	})
 	if err != nil {
 		s.logger.LogError(ctx, "InvoiceService.GetInvoiceByID", "failed to get invoice", err, zap.String("invoice_id", invoiceID.String()))
 		return nil, nil, 0, err
 	}
 
-	lines, err := s.store.ListInvoiceLinesByInvoice(ctx, invoiceID)
+	lines, err := actorQuery(ctx, s.store, func(q *db.Queries) ([]db.InvoiceLine, error) {
+		return q.ListInvoiceLinesByInvoice(ctx, invoiceID)
+	})
 	if err != nil {
 		return nil, nil, 0, fmt.Errorf("failed to list invoice lines: %w", err)
 	}
@@ -515,7 +517,9 @@ func (s *InvoiceService) ListInvoices(ctx context.Context, params domain.ListInv
 		Offset:          params.Offset,
 	}
 
-	invoices, err := s.store.ListInvoices(ctx, listParams)
+	invoices, err := actorQuery(ctx, s.store, func(q *db.Queries) ([]db.ListInvoicesRow, error) {
+		return q.ListInvoices(ctx, listParams)
+	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list invoices: %w", err)
 	}
@@ -551,17 +555,11 @@ func (s *InvoiceService) ListInvoices(ctx context.Context, params domain.ListInv
 // ==================== Update Invoice ====================
 
 func (s *InvoiceService) UpdateInvoice(ctx context.Context, invoiceID uuid.UUID, employeeID uuid.UUID, params domain.CreateInvoiceParams) (*domain.Invoice, error) {
-	tx, err := s.store.ConnPool.Begin(ctx)
+	tx, err := s.store.BeginActorTx(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to begin transaction: %w", err)
 	}
 	defer tx.Rollback(ctx)
-	if employeeID != uuid.Nil {
-		_, err = tx.Exec(ctx, "SELECT set_config('myapp.current_employee_id', $1, true)", employeeID.String())
-		if err != nil {
-			return nil, fmt.Errorf("failed to set current employee id: %w", err)
-		}
-	}
 	qtx := s.store.WithTx(tx)
 
 	inv, err := qtx.GetInvoice(ctx, invoiceID)
@@ -786,7 +784,9 @@ func (s *InvoiceService) UpdateInvoice(ctx context.Context, invoiceID uuid.UUID,
 // ==================== Delete Invoice ====================
 
 func (s *InvoiceService) DeleteInvoice(ctx context.Context, invoiceID uuid.UUID) error {
-	return s.store.DeleteInvoice(ctx, invoiceID)
+	return s.store.ExecActorTx(ctx, func(q *db.Queries) error {
+		return q.DeleteInvoice(ctx, invoiceID)
+	})
 }
 
 // ==================== Generate Invoice (Auto) ====================
@@ -811,10 +811,12 @@ func (s *InvoiceService) GenerateInvoice(ctx context.Context, params domain.Gene
 		billingCycle = defaultBillingCycle
 	}
 
-	senderIDs, err := s.store.ListClientSendersForPeriod(ctx, db.ListClientSendersForPeriodParams{
-		ClientID:    params.ClientID,
-		PeriodStart: pgtype.Timestamptz{Time: params.StartDate, Valid: true},
-		PeriodEnd:   pgtype.Timestamptz{Time: params.EndDate, Valid: true},
+	senderIDs, err := actorQuery(ctx, s.store, func(q *db.Queries) ([]uuid.UUID, error) {
+		return q.ListClientSendersForPeriod(ctx, db.ListClientSendersForPeriodParams{
+			ClientID:    params.ClientID,
+			PeriodStart: pgtype.Timestamptz{Time: params.StartDate, Valid: true},
+			PeriodEnd:   pgtype.Timestamptz{Time: params.EndDate, Valid: true},
+		})
 	})
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to list client senders for period: %w", err)
@@ -853,11 +855,13 @@ func (s *InvoiceService) generateInvoiceForTarget(ctx context.Context, p generat
 	var warningCount int64
 	warnings := []string{}
 
-	contracts, err := s.store.ListApprovedContractsForClientSenderInPeriod(ctx, db.ListApprovedContractsForClientSenderInPeriodParams{
-		ClientID:    p.ClientID,
-		SenderID:    p.SenderID,
-		PeriodStart: pgtype.Timestamptz{Time: p.PeriodStart, Valid: true},
-		PeriodEnd:   pgtype.Timestamptz{Time: p.PeriodEnd, Valid: true},
+	contracts, err := actorQuery(ctx, s.store, func(q *db.Queries) ([]db.ListApprovedContractsForClientSenderInPeriodRow, error) {
+		return q.ListApprovedContractsForClientSenderInPeriod(ctx, db.ListApprovedContractsForClientSenderInPeriodParams{
+			ClientID:    p.ClientID,
+			SenderID:    p.SenderID,
+			PeriodStart: pgtype.Timestamptz{Time: p.PeriodStart, Valid: true},
+			PeriodEnd:   pgtype.Timestamptz{Time: p.PeriodEnd, Valid: true},
+		})
 	})
 	if err != nil {
 		return nil, warningCount, fmt.Errorf("failed to list approved contracts: %w", err)
@@ -882,7 +886,7 @@ func (s *InvoiceService) generateInvoiceForTarget(ctx context.Context, p generat
 	issueDate := time.Now()
 	dueDate := issueDate.Add(30 * 24 * time.Hour)
 
-	tx, err := s.store.ConnPool.Begin(ctx)
+	tx, err := s.store.BeginActorTx(ctx)
 	if err != nil {
 		return nil, warningCount, fmt.Errorf("failed to begin transaction: %w", err)
 	}
@@ -1210,17 +1214,11 @@ func (s *InvoiceService) generateInvoiceForTarget(ctx context.Context, p generat
 // ==================== Credit Invoice ====================
 
 func (s *InvoiceService) CreditInvoice(ctx context.Context, invoiceID uuid.UUID, employeeID uuid.UUID) (*domain.CreditInvoiceResult, error) {
-	tx, err := s.store.ConnPool.Begin(ctx)
+	tx, err := s.store.BeginActorTx(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to begin transaction: %w", err)
 	}
 	defer tx.Rollback(ctx)
-	if employeeID != uuid.Nil {
-		_, err = tx.Exec(ctx, "SELECT set_config('myapp.current_employee_id', $1, true)", employeeID.String())
-		if err != nil {
-			return nil, fmt.Errorf("failed to set current employee id: %w", err)
-		}
-	}
 	qtx := s.store.WithTx(tx)
 
 	original, err := qtx.GetInvoice(ctx, invoiceID)
@@ -1361,7 +1359,9 @@ func (s *InvoiceService) CreditInvoice(ctx context.Context, invoiceID uuid.UUID,
 // ==================== Get Invoice Audit Logs ====================
 
 func (s *InvoiceService) GetInvoiceAuditLogs(ctx context.Context, invoiceID uuid.UUID) ([]domain.InvoiceAuditLog, error) {
-	logs, err := s.store.GetInvoiceAuditLogs(ctx, invoiceID)
+	logs, err := actorQuery(ctx, s.store, func(q *db.Queries) ([]db.GetInvoiceAuditLogsRow, error) {
+		return q.GetInvoiceAuditLogs(ctx, invoiceID)
+	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get invoice audit logs: %w", err)
 	}
@@ -1408,7 +1408,9 @@ func (s *InvoiceService) GetInvoiceTemplateItems(ctx context.Context) ([]domain.
 // ==================== Generate Invoice PDF ====================
 
 func (s *InvoiceService) GenerateInvoicePDF(ctx context.Context, invoiceID uuid.UUID) (*domain.GeneratePDFResult, error) {
-	inv, err := s.store.GetInvoice(ctx, invoiceID)
+	inv, err := actorQuery(ctx, s.store, func(q *db.Queries) (db.GetInvoiceRow, error) {
+		return q.GetInvoice(ctx, invoiceID)
+	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get invoice: %w", err)
 	}
@@ -1425,7 +1427,9 @@ func (s *InvoiceService) GenerateInvoicePDF(ctx context.Context, invoiceID uuid.
 		return &domain.GeneratePDFResult{FileURL: url}, nil
 	}
 
-	lines, err := s.store.ListInvoiceLinesByInvoice(ctx, invoiceID)
+	lines, err := actorQuery(ctx, s.store, func(q *db.Queries) ([]db.InvoiceLine, error) {
+		return q.ListInvoiceLinesByInvoice(ctx, invoiceID)
+	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list invoice lines: %w", err)
 	}
@@ -1502,7 +1506,7 @@ func (s *InvoiceService) GenerateInvoicePDF(ctx context.Context, invoiceID uuid.
 		name := fmt.Sprintf("invoice_%s.pdf", inv.InvoiceNumber)
 		tag := "invoice_pdf"
 
-		tx, err := s.store.ConnPool.Begin(ctx)
+		tx, err := s.store.BeginActorTx(ctx)
 		if err != nil {
 			return nil, fmt.Errorf("failed to begin transaction: %w", err)
 		}
@@ -1564,7 +1568,9 @@ func (s *InvoiceService) GenerateInvoicePDF(ctx context.Context, invoiceID uuid.
 // ==================== Send Invoice Reminder ====================
 
 func (s *InvoiceService) SendInvoiceReminder(ctx context.Context, invoiceID uuid.UUID) error {
-	senderID, err := s.store.GetInvoiceSenderID(ctx, invoiceID)
+	senderID, err := actorQuery(ctx, s.store, func(q *db.Queries) (uuid.UUID, error) {
+		return q.GetInvoiceSenderID(ctx, invoiceID)
+	})
 	if err != nil {
 		s.logger.LogError(ctx, "InvoiceService.SendInvoiceReminder", "failed to get sender ID for invoice", err, zap.String("invoice_id", invoiceID.String()))
 		return err
@@ -1601,7 +1607,9 @@ func (s *InvoiceService) calculatePaymentCompletionPercentage(ctx context.Contex
 	if totalAmount == 0 {
 		return 0
 	}
-	totalPaid, err := s.store.GetCompletedPaymentSum(ctx, invoiceID)
+	totalPaid, err := actorQuery(ctx, s.store, func(q *db.Queries) (float64, error) {
+		return q.GetCompletedPaymentSum(ctx, invoiceID)
+	})
 	if err != nil {
 		s.logger.LogError(ctx, "InvoiceService.calculatePaymentCompletionPercentage", "failed to get total completed payment", err, zap.String("invoice_id", invoiceID.String()))
 		return 0
@@ -1610,18 +1618,13 @@ func (s *InvoiceService) calculatePaymentCompletionPercentage(ctx context.Contex
 }
 
 func (s *InvoiceService) CreatePayment(ctx context.Context, invoiceID uuid.UUID, employeeID uuid.UUID, params domain.CreatePaymentParams) (*domain.CreatePaymentResult, error) {
-	tx, err := s.store.ConnPool.Begin(ctx)
+	tx, err := s.store.BeginActorTx(ctx)
 	if err != nil {
 		s.logger.LogError(ctx, "InvoiceService.CreatePayment", "failed to begin transaction", err, zap.String("invoice_id", invoiceID.String()))
 		return nil, fmt.Errorf("failed to begin transaction: %v", err)
 	}
 	defer tx.Rollback(ctx)
 
-	_, err = tx.Exec(ctx, "SELECT set_config('myapp.current_employee_id', $1, true)", employeeID.String())
-	if err != nil {
-		s.logger.LogError(ctx, "InvoiceService.CreatePayment", "failed to set current employee ID", err, zap.String("invoice_id", invoiceID.String()))
-		return nil, fmt.Errorf("failed to set current employee ID: %v", err)
-	}
 	qtx := s.store.WithTx(tx)
 
 	getInvoice, err := qtx.GetInvoice(ctx, invoiceID)
@@ -1698,7 +1701,9 @@ func (s *InvoiceService) CreatePayment(ctx context.Context, invoiceID uuid.UUID,
 }
 
 func (s *InvoiceService) ListPayments(ctx context.Context, invoiceID uuid.UUID) ([]domain.Payment, error) {
-	payments, err := s.store.ListPayments(ctx, invoiceID)
+	payments, err := actorQuery(ctx, s.store, func(q *db.Queries) ([]db.ListPaymentsRow, error) {
+		return q.ListPayments(ctx, invoiceID)
+	})
 	if err != nil {
 		s.logger.LogError(ctx, "InvoiceService.ListPayments", "failed to list payments", err, zap.String("invoice_id", invoiceID.String()))
 		return nil, fmt.Errorf("failed to list payments: %v", err)
@@ -1726,7 +1731,9 @@ func (s *InvoiceService) ListPayments(ctx context.Context, invoiceID uuid.UUID) 
 }
 
 func (s *InvoiceService) GetPaymentByID(ctx context.Context, paymentID uuid.UUID) (*domain.Payment, error) {
-	payment, err := s.store.GetPayment(ctx, paymentID)
+	payment, err := actorQuery(ctx, s.store, func(q *db.Queries) (db.GetPaymentRow, error) {
+		return q.GetPayment(ctx, paymentID)
+	})
 	if err != nil {
 		s.logger.LogError(ctx, "InvoiceService.GetPaymentByID", "failed to get payment by ID", err, zap.String("payment_id", paymentID.String()))
 		return nil, fmt.Errorf("failed to get payment by ID: %v", err)
@@ -1750,18 +1757,13 @@ func (s *InvoiceService) GetPaymentByID(ctx context.Context, paymentID uuid.UUID
 }
 
 func (s *InvoiceService) UpdatePayment(ctx context.Context, invoiceID uuid.UUID, paymentID uuid.UUID, employeeID uuid.UUID, params domain.UpdatePaymentParams) (*domain.UpdatePaymentResult, error) {
-	tx, err := s.store.ConnPool.Begin(ctx)
+	tx, err := s.store.BeginActorTx(ctx)
 	if err != nil {
 		s.logger.LogError(ctx, "InvoiceService.UpdatePayment", "failed to begin transaction", err, zap.String("payment_id", paymentID.String()))
 		return nil, fmt.Errorf("failed to begin transaction: %v", err)
 	}
 	defer tx.Rollback(ctx)
 
-	_, err = tx.Exec(ctx, "SELECT set_config('myapp.current_employee_id', $1, true)", employeeID.String())
-	if err != nil {
-		s.logger.LogError(ctx, "InvoiceService.UpdatePayment", "failed to set current employee ID", err, zap.String("payment_id", paymentID.String()))
-		return nil, fmt.Errorf("failed to set current employee ID: %v", err)
-	}
 	qtx := s.store.WithTx(tx)
 
 	currentPayment, err := qtx.GetPaymentWithInvoice(ctx, paymentID)
@@ -1852,17 +1854,12 @@ func (s *InvoiceService) UpdatePayment(ctx context.Context, invoiceID uuid.UUID,
 }
 
 func (s *InvoiceService) DeletePayment(ctx context.Context, invoiceID uuid.UUID, paymentID uuid.UUID, employeeID uuid.UUID) (*domain.DeletePaymentResult, error) {
-	tx, err := s.store.ConnPool.Begin(ctx)
+	tx, err := s.store.BeginActorTx(ctx)
 	if err != nil {
 		s.logger.LogError(ctx, "InvoiceService.DeletePayment", "failed to begin transaction", err, zap.String("payment_id", paymentID.String()))
 		return nil, fmt.Errorf("failed to begin transaction: %v", err)
 	}
 	defer tx.Rollback(ctx)
-	_, err = tx.Exec(ctx, "SELECT set_config('myapp.current_employee_id', $1, true)", employeeID.String())
-	if err != nil {
-		s.logger.LogError(ctx, "InvoiceService.DeletePayment", "failed to set current employee ID", err, zap.String("payment_id", paymentID.String()))
-		return nil, fmt.Errorf("failed to set current employee ID: %v", err)
-	}
 	qtx := s.store.WithTx(tx)
 
 	paymentToDelete, err := qtx.GetPaymentWithInvoice(ctx, paymentID)

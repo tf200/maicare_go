@@ -210,7 +210,9 @@ func (r *OrganizationRepository) GetShiftsByLocationID(ctx context.Context, loca
 }
 
 func (r *OrganizationRepository) GetOrganizationCounts(ctx context.Context, organizationID uuid.UUID) (*domain.OrganizationCounts, error) {
-	counts, err := r.store.GetOrganisationCounts(ctx, organizationID)
+	counts, err := actorQuery(ctx, r.store, func(q *db.Queries) (db.GetOrganisationCountsRow, error) {
+		return q.GetOrganisationCounts(ctx, organizationID)
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -225,7 +227,9 @@ func (r *OrganizationRepository) GetOrganizationCounts(ctx context.Context, orga
 }
 
 func (r *OrganizationRepository) GetGlobalOrganizationCounts(ctx context.Context) (*domain.GlobalOrganizationCounts, error) {
-	counts, err := r.store.GetGlobalOrganisationCounts(ctx)
+	counts, err := actorQuery(ctx, r.store, func(q *db.Queries) (db.GetGlobalOrganisationCountsRow, error) {
+		return q.GetGlobalOrganisationCounts(ctx)
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -271,11 +275,13 @@ func (r *OrganizationRepository) ListOrganizations(ctx context.Context, params d
 }
 
 func (r *OrganizationRepository) ListOrganizationLocations(ctx context.Context, params domain.ListOrganizationLocationsParams) (*domain.OrganizationLocationPage, error) {
-	rows, err := r.store.ListLocationsPaginated(ctx, db.ListLocationsPaginatedParams{
-		OrganisationID: params.OrganizationID,
-		Limit:          params.Limit,
-		Offset:         params.Offset,
-		Column4:        params.Search,
+	rows, err := actorQuery(ctx, r.store, func(q *db.Queries) ([]db.ListLocationsPaginatedRow, error) {
+		return q.ListLocationsPaginated(ctx, db.ListLocationsPaginatedParams{
+			OrganisationID: params.OrganizationID,
+			Limit:          params.Limit,
+			Offset:         params.Offset,
+			Column4:        params.Search,
+		})
 	})
 	if err != nil {
 		return nil, err
@@ -299,10 +305,12 @@ func (r *OrganizationRepository) ListOrganizationLocations(ctx context.Context, 
 }
 
 func (r *OrganizationRepository) ListAllLocations(ctx context.Context, params domain.ListAllLocationsParams) (*domain.OrganizationLocationPage, error) {
-	rows, err := r.store.ListAllLocationsPaginated(ctx, db.ListAllLocationsPaginatedParams{
-		Limit:   params.Limit,
-		Offset:  params.Offset,
-		Column3: params.Search,
+	rows, err := actorQuery(ctx, r.store, func(q *db.Queries) ([]db.ListAllLocationsPaginatedRow, error) {
+		return q.ListAllLocationsPaginated(ctx, db.ListAllLocationsPaginatedParams{
+			Limit:   params.Limit,
+			Offset:  params.Offset,
+			Column3: params.Search,
+		})
 	})
 	if err != nil {
 		return nil, err

@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 
 	db "maicare_go/db/sqlc"
+	"maicare_go/internal/ctxkeys"
 	"maicare_go/internal/domain"
 	"maicare_go/pkg/conv"
 
@@ -15,12 +16,14 @@ import (
 )
 
 type RegistrationFormRepository struct {
-	store *db.Store
+	store        *db.Store
+	serviceActor ctxkeys.ActorIdentity
 }
 
-func NewRegistrationFormRepository(store *db.Store) domain.RegistrationFormRepository {
+func NewRegistrationFormRepository(store *db.Store, serviceActor ctxkeys.ActorIdentity) domain.RegistrationFormRepository {
 	return &RegistrationFormRepository{
-		store: store,
+		store:        store,
+		serviceActor: serviceActor,
 	}
 }
 
@@ -97,7 +100,12 @@ func (r *RegistrationFormRepository) CreateRegistrationForm(ctx context.Context,
 		ReferrerSignature:             params.ReferrerSignature,
 	}
 
-	form, err := r.store.CreateRegistrationForm(ctx, arg)
+	var form db.RegistrationForm
+	err := r.store.ExecAsActor(ctx, r.serviceActor, func(q *db.Queries) error {
+		var err error
+		form, err = q.CreateRegistrationForm(ctx, arg)
+		return err
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -106,36 +114,41 @@ func (r *RegistrationFormRepository) CreateRegistrationForm(ctx context.Context,
 }
 
 func (r *RegistrationFormRepository) ListRegistrationForms(ctx context.Context, params domain.ListRegistrationFormsParams) (*domain.ListResult[domain.RegistrationFormListItem], error) {
-	rows, err := r.store.ListRegistrationForms(ctx, db.ListRegistrationFormsParams{
-		Limit:                  params.Limit,
-		Offset:                 params.Offset,
-		Status:                 db.NullFormStatusFromPtr(params.Status),
-		RiskAggressiveBehavior: params.RiskAggressiveBehavior,
-		RiskSuicidalSelfharm:   params.RiskSuicidalSelfharm,
-		RiskSubstanceAbuse:     params.RiskSubstanceAbuse,
-		RiskPsychiatricIssues:  params.RiskPsychiatricIssues,
-		RiskCriminalHistory:    params.RiskCriminalHistory,
-		RiskFlightBehavior:     params.RiskFlightBehavior,
-		RiskWeaponPossession:   params.RiskWeaponPossession,
-		RiskSexualBehavior:     params.RiskSexualBehavior,
-		RiskDayNightRhythm:     params.RiskDayNightRhythm,
-		RiskOther:              nil,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	totalCount, err := r.store.CountRegistrationForms(ctx, db.CountRegistrationFormsParams{
-		Status:                 db.NullFormStatusFromPtr(params.Status),
-		RiskAggressiveBehavior: params.RiskAggressiveBehavior,
-		RiskSuicidalSelfharm:   params.RiskSuicidalSelfharm,
-		RiskSubstanceAbuse:     params.RiskSubstanceAbuse,
-		RiskPsychiatricIssues:  params.RiskPsychiatricIssues,
-		RiskCriminalHistory:    params.RiskCriminalHistory,
-		RiskFlightBehavior:     params.RiskFlightBehavior,
-		RiskWeaponPossession:   params.RiskWeaponPossession,
-		RiskSexualBehavior:     params.RiskSexualBehavior,
-		RiskDayNightRhythm:     params.RiskDayNightRhythm,
+	var rows []db.ListRegistrationFormsRow
+	var totalCount int64
+	err := r.store.ExecActorTx(ctx, func(q *db.Queries) error {
+		var err error
+		rows, err = q.ListRegistrationForms(ctx, db.ListRegistrationFormsParams{
+			Limit:                  params.Limit,
+			Offset:                 params.Offset,
+			Status:                 db.NullFormStatusFromPtr(params.Status),
+			RiskAggressiveBehavior: params.RiskAggressiveBehavior,
+			RiskSuicidalSelfharm:   params.RiskSuicidalSelfharm,
+			RiskSubstanceAbuse:     params.RiskSubstanceAbuse,
+			RiskPsychiatricIssues:  params.RiskPsychiatricIssues,
+			RiskCriminalHistory:    params.RiskCriminalHistory,
+			RiskFlightBehavior:     params.RiskFlightBehavior,
+			RiskWeaponPossession:   params.RiskWeaponPossession,
+			RiskSexualBehavior:     params.RiskSexualBehavior,
+			RiskDayNightRhythm:     params.RiskDayNightRhythm,
+			RiskOther:              nil,
+		})
+		if err != nil {
+			return err
+		}
+		totalCount, err = q.CountRegistrationForms(ctx, db.CountRegistrationFormsParams{
+			Status:                 db.NullFormStatusFromPtr(params.Status),
+			RiskAggressiveBehavior: params.RiskAggressiveBehavior,
+			RiskSuicidalSelfharm:   params.RiskSuicidalSelfharm,
+			RiskSubstanceAbuse:     params.RiskSubstanceAbuse,
+			RiskPsychiatricIssues:  params.RiskPsychiatricIssues,
+			RiskCriminalHistory:    params.RiskCriminalHistory,
+			RiskFlightBehavior:     params.RiskFlightBehavior,
+			RiskWeaponPossession:   params.RiskWeaponPossession,
+			RiskSexualBehavior:     params.RiskSexualBehavior,
+			RiskDayNightRhythm:     params.RiskDayNightRhythm,
+		})
+		return err
 	})
 	if err != nil {
 		return nil, err
@@ -153,7 +166,9 @@ func (r *RegistrationFormRepository) ListRegistrationForms(ctx context.Context, 
 }
 
 func (r *RegistrationFormRepository) GetRegistrationFormCounts(ctx context.Context) (domain.RegistrationFormCounts, error) {
-	counts, err := r.store.GetRegistrationFormCounts(ctx)
+	counts, err := actorQuery(ctx, r.store, func(q *db.Queries) (db.GetRegistrationFormCountsRow, error) {
+		return q.GetRegistrationFormCounts(ctx)
+	})
 	if err != nil {
 		return domain.RegistrationFormCounts{}, err
 	}
@@ -166,7 +181,9 @@ func (r *RegistrationFormRepository) GetRegistrationFormCounts(ctx context.Conte
 }
 
 func (r *RegistrationFormRepository) GetRegistrationForm(ctx context.Context, id uuid.UUID) (*domain.RegistrationForm, error) {
-	row, err := r.store.GetRegistrationForm(ctx, id)
+	row, err := actorQuery(ctx, r.store, func(q *db.Queries) (db.GetRegistrationFormRow, error) {
+		return q.GetRegistrationForm(ctx, id)
+	})
 	if err != nil {
 		if isDBNotFound(err) {
 			return nil, domain.ErrRegistrationFormNotFound
@@ -286,7 +303,9 @@ func (r *RegistrationFormRepository) UpdateRegistrationForm(ctx context.Context,
 		ReferrerSignature:             params.ReferrerSignature,
 	}
 
-	form, err := r.store.UpdateRegistrationForm(ctx, arg)
+	form, err := actorQuery(ctx, r.store, func(q *db.Queries) (db.RegistrationForm, error) {
+		return q.UpdateRegistrationForm(ctx, arg)
+	})
 	if err != nil {
 		if isDBNotFound(err) {
 			return nil, domain.ErrRegistrationFormNotFound
@@ -298,10 +317,12 @@ func (r *RegistrationFormRepository) UpdateRegistrationForm(ctx context.Context,
 }
 
 func (r *RegistrationFormRepository) ReplaceRegistrationFormDocument(ctx context.Context, params domain.ReplaceRegistrationFormDocumentParams) (*domain.RegistrationForm, error) {
-	form, err := r.store.ReplaceRegistrationFormDocument(ctx, db.ReplaceRegistrationFormDocumentParams{
-		ID:           params.ID,
-		DocumentType: params.DocumentType,
-		FileID:       &params.FileID,
+	form, err := actorQuery(ctx, r.store, func(q *db.Queries) (db.RegistrationForm, error) {
+		return q.ReplaceRegistrationFormDocument(ctx, db.ReplaceRegistrationFormDocumentParams{
+			ID:           params.ID,
+			DocumentType: params.DocumentType,
+			FileID:       &params.FileID,
+		})
 	})
 	if err != nil {
 		if isDBNotFound(err) {
@@ -313,7 +334,9 @@ func (r *RegistrationFormRepository) ReplaceRegistrationFormDocument(ctx context
 }
 
 func (r *RegistrationFormRepository) DeleteRegistrationForm(ctx context.Context, id uuid.UUID) error {
-	err := r.store.DeleteRegistrationForm(ctx, id)
+	err := r.store.ExecActorTx(ctx, func(q *db.Queries) error {
+		return q.DeleteRegistrationForm(ctx, id)
+	})
 	if err != nil {
 		if isDBNotFound(err) {
 			return domain.ErrRegistrationFormNotFound
@@ -333,7 +356,9 @@ func (r *RegistrationFormRepository) UpdateRegistrationFormStatus(ctx context.Co
 		RejectionReason:           params.RejectionReason,
 	}
 
-	_, err := r.store.UpdateRegistrationFormStatus(ctx, arg)
+	_, err := actorQuery(ctx, r.store, func(q *db.Queries) (db.RegistrationForm, error) {
+		return q.UpdateRegistrationFormStatus(ctx, arg)
+	})
 	if err != nil {
 		if isDBNotFound(err) {
 			return domain.ErrRegistrationFormNotFound
@@ -362,7 +387,9 @@ func (r *RegistrationFormRepository) ProcessRegistrationForm(ctx context.Context
 		IntakeToken:               &token,
 	}
 
-	form, err := r.store.UpdateRegistrationFormStatus(ctx, arg)
+	form, err := actorQuery(ctx, r.store, func(q *db.Queries) (db.RegistrationForm, error) {
+		return q.UpdateRegistrationFormStatus(ctx, arg)
+	})
 	if err != nil {
 		if isDBNotFound(err) {
 			return nil, "", domain.ErrRegistrationFormNotFound
@@ -374,7 +401,12 @@ func (r *RegistrationFormRepository) ProcessRegistrationForm(ctx context.Context
 }
 
 func (r *RegistrationFormRepository) GetPublicIntakeOptions(ctx context.Context, token string) (*domain.PublicIntakeOptions, error) {
-	form, err := r.store.GetRegistrationFormByToken(ctx, &token)
+	var form db.RegistrationForm
+	err := r.store.ExecAsActor(ctx, r.serviceActor, func(q *db.Queries) error {
+		var err error
+		form, err = q.GetRegistrationFormByToken(ctx, &token)
+		return err
+	})
 	if err != nil {
 		if isDBNotFound(err) {
 			return nil, domain.ErrRegistrationFormNotFound
@@ -397,7 +429,12 @@ func (r *RegistrationFormRepository) GetPublicIntakeOptions(ctx context.Context,
 }
 
 func (r *RegistrationFormRepository) SelectIntakeDate(ctx context.Context, params domain.SelectIntakeDateParams) error {
-	form, err := r.store.GetRegistrationFormByToken(ctx, &params.Token)
+	var form db.RegistrationForm
+	err := r.store.ExecAsActor(ctx, r.serviceActor, func(q *db.Queries) error {
+		var err error
+		form, err = q.GetRegistrationFormByToken(ctx, &params.Token)
+		return err
+	})
 	if err != nil {
 		if isDBNotFound(err) {
 			return domain.ErrRegistrationFormNotFound
@@ -421,12 +458,10 @@ func (r *RegistrationFormRepository) SelectIntakeDate(ctx context.Context, param
 		IntakeAppointmentDatetime: pgtype.Timestamptz{Time: params.SelectedDate, Valid: true},
 	}
 
-	_, err = r.store.UpdateRegistrationFormIntakeDate(ctx, arg)
-	if err != nil {
+	return r.store.ExecAsActor(ctx, r.serviceActor, func(q *db.Queries) error {
+		_, err := q.UpdateRegistrationFormIntakeDate(ctx, arg)
 		return err
-	}
-
-	return nil
+	})
 }
 
 // Helper functions

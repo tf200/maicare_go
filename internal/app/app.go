@@ -16,6 +16,7 @@ import (
 	"maicare_go/docs"
 	"maicare_go/internal/adapters"
 	"maicare_go/internal/audit"
+	"maicare_go/internal/ctxkeys"
 	"maicare_go/internal/domain"
 	"maicare_go/internal/handler"
 	"maicare_go/internal/middleware"
@@ -64,6 +65,18 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 		return nil, err
 	}
 	store := db.NewStore(dbPool)
+	systemUserID, err := uuid.Parse(cfg.SystemActorUserID)
+	if err != nil {
+		return nil, fmt.Errorf("parse SYSTEM_ACTOR_USER_ID: %w", err)
+	}
+	systemEmployeeID, err := uuid.Parse(cfg.SystemActorEmployeeID)
+	if err != nil {
+		return nil, fmt.Errorf("parse SYSTEM_ACTOR_EMPLOYEE_ID: %w", err)
+	}
+	systemActor := ctxkeys.ActorIdentity{UserID: systemUserID, EmployeeID: systemEmployeeID}
+	if err := store.ValidateActorIdentity(ctx, systemActor); err != nil {
+		return nil, fmt.Errorf("validate system actor: %w", err)
+	}
 
 	appLogger, err := pkglogger.Setup(cfg.Environment)
 	if err != nil {
@@ -101,7 +114,7 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 		return nil, fmt.Errorf("failed to initialize ai service: %w", err)
 	}
 
-	notificationSvc, handlers := wireServicesAndHandlers(store, appLogger, tokenMaker, taskQueue, storage, incidentPDFGenerator, pdfSvc, aiService, hub, ticketManager, &cfg)
+	notificationSvc, handlers := wireServicesAndHandlers(store, appLogger, tokenMaker, taskQueue, storage, incidentPDFGenerator, pdfSvc, aiService, hub, ticketManager, &cfg, systemActor)
 
 	router := newRouter(cfg, appLogger, tokenMaker, store, handlers)
 
@@ -131,7 +144,7 @@ func New(ctx context.Context, cfg config.Config) (*App, error) {
 			Handler: router,
 		},
 		workerServer: worker.NewAsynqServer(cfg.RedisHost, "", cfg.RedisPassword, store, nil, brevoConf, workerBucket, notificationSvc, pdfService),
-		scheduler:    worker.NewScheduler(cfg.RedisHost, "", cfg.RedisPassword, nil),
+		scheduler:    worker.NewScheduler(cfg.RedisHost, "", cfg.RedisPassword, nil, systemActor),
 	}, nil
 }
 
@@ -306,7 +319,7 @@ type appHandlers struct {
 	invoice          *handler.InvoiceHandler
 }
 
-func wireServicesAndHandlers(store *db.Store, logger domain.Logger, tokenMaker domain.TokenMaker, taskQueue domain.TaskQueue, storage domain.Storage, incidentPDFGenerator domain.IncidentPDFGenerator, pdfService domain.PDFService, aiService *adapters.AIService, hub *ws.Hub, ticketManager *ws.TicketManager, cfg *config.Config) (domain.NotificationService, appHandlers) {
+func wireServicesAndHandlers(store *db.Store, logger domain.Logger, tokenMaker domain.TokenMaker, taskQueue domain.TaskQueue, storage domain.Storage, incidentPDFGenerator domain.IncidentPDFGenerator, pdfService domain.PDFService, aiService *adapters.AIService, hub *ws.Hub, ticketManager *ws.TicketManager, cfg *config.Config, systemActor ctxkeys.ActorIdentity) (domain.NotificationService, appHandlers) {
 	authRepo := repository.NewAuthRepository(store)
 	attachmentRepo := repository.NewAttachmentRepository(store)
 	clientRepo := repository.NewClientRepository(store)
@@ -321,7 +334,7 @@ func wireServicesAndHandlers(store *db.Store, logger domain.Logger, tokenMaker d
 	maturityRepo := repository.NewMaturityMatrixRepository(store)
 	notificationRepo := repository.NewNotificationRepository(store)
 	organizationRepo := repository.NewOrganizationRepository(store)
-	registrationRepo := repository.NewRegistrationFormRepository(store)
+	registrationRepo := repository.NewRegistrationFormRepository(store, systemActor)
 	registrationUploadsRepo := repository.NewRegistrationUploadSessionRepository(store)
 	roleRepo := repository.NewRoleRepository(store)
 	scheduleRepo := repository.NewScheduleRepository(store)

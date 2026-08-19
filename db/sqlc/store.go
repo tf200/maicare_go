@@ -3,7 +3,6 @@ package db
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"maicare_go/internal/ctxkeys"
 
@@ -28,36 +27,104 @@ func NewStore(connPool *pgxpool.Pool) *Store {
 
 type TxFn func(queries *Queries) error
 
-// ExecTx executes a function within a database transaction
+var ErrMissingActorIdentity = errors.New("authenticated database transaction requires actor identity")
+
+func (store *Store) ValidateActorIdentity(ctx context.Context, actor ctxkeys.ActorIdentity) error {
+	if !actor.IsValid() {
+		return ErrMissingActorIdentity
+	}
+	var valid bool
+	err := store.ConnPool.QueryRow(ctx, `SELECT EXISTS (
+		SELECT 1
+		FROM custom_user cu
+		JOIN employee_profile ep ON ep.user_id = cu.id
+		WHERE cu.id = $1
+		  AND ep.id = $2
+		  AND cu.is_active
+		  AND ep.is_active
+	)`, actor.UserID, actor.EmployeeID).Scan(&valid)
+	if err != nil {
+		return err
+	}
+	if !valid {
+		return errors.New("system actor must reference the same active user and employee")
+	}
+	return nil
+}
+
+// ExecTx executes a transaction and installs actor identity when one is present.
+// Bootstrap and maintenance callers without request identity remain supported.
 func (store *Store) ExecTx(ctx context.Context, fn TxFn) error {
+	return store.execTx(ctx, false, fn)
+}
+
+// ExecActorTx executes a transaction that requires authenticated actor identity.
+func (store *Store) ExecActorTx(ctx context.Context, fn TxFn) error {
+	return store.execTx(ctx, true, fn)
+}
+
+// ExecAsActor executes work as an explicitly selected service actor.
+func (store *Store) ExecAsActor(ctx context.Context, actor ctxkeys.ActorIdentity, fn TxFn) error {
+	if !actor.IsValid() {
+		return ErrMissingActorIdentity
+	}
+	return store.ExecActorTx(ctxkeys.WithActorIdentity(ctx, actor), fn)
+}
+
+// BeginActorTx starts a transaction initialized with authenticated actor identity.
+// Callers are responsible for commit or rollback.
+func (store *Store) BeginActorTx(ctx context.Context) (pgx.Tx, error) {
+	actor, ok := ctxkeys.ActorIdentityFromContext(ctx)
+	if !ok {
+		return nil, ErrMissingActorIdentity
+	}
+	tx, err := store.ConnPool.Begin(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if err := initializeActorTx(ctx, tx, actor); err != nil {
+		_ = tx.Rollback(ctx)
+		return nil, err
+	}
+	return tx, nil
+}
+
+func (store *Store) execTx(ctx context.Context, requireActor bool, fn TxFn) error {
 	tx, err := store.ConnPool.Begin(ctx)
 	if err != nil {
 		return err
 	}
 
-	employeeID := ctxkeys.EmployeeIDFromContext(ctx)
-	fmt.Printf("employeeID: %s\n", employeeID.String())
-
-	if employeeID != uuid.Nil {
-		_, err = tx.Exec(ctx, "SELECT set_config('myapp.current_employee_id', $1, true)", employeeID.String())
-		if err != nil {
-			if rbErr := tx.Rollback(ctx); rbErr != nil {
-				return rbErr
-			}
+	actor, hasActor := ctxkeys.ActorIdentityFromContext(ctx)
+	if requireActor && !hasActor {
+		_ = tx.Rollback(ctx)
+		return ErrMissingActorIdentity
+	}
+	if hasActor {
+		if err := initializeActorTx(ctx, tx, actor); err != nil {
+			_ = tx.Rollback(ctx)
 			return err
 		}
 	}
 
 	q := New(tx)
-	err = fn(q)
-	if err != nil {
-		if rbErr := tx.Rollback(ctx); rbErr != nil {
-			return rbErr
-		}
+	if err := fn(q); err != nil {
+		_ = tx.Rollback(ctx)
 		return err
 	}
 
 	return tx.Commit(ctx)
+}
+
+func initializeActorTx(ctx context.Context, tx pgx.Tx, actor ctxkeys.ActorIdentity) error {
+	if !actor.IsValid() {
+		return ErrMissingActorIdentity
+	}
+	_, err := tx.Exec(ctx, `SELECT
+		set_config('myapp.current_user_id', $1, true),
+		set_config('myapp.current_employee_id', $2, true)`,
+		actor.UserID.String(), actor.EmployeeID.String())
+	return err
 }
 
 type CreateEmployeeWithAccountTxParams struct {

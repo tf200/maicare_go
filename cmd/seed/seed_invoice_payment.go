@@ -7,6 +7,7 @@ import (
 	"time"
 
 	db "maicare_go/db/sqlc"
+	"maicare_go/internal/ctxkeys"
 	"maicare_go/internal/domain"
 
 	"github.com/brianvoe/gofakeit/v7"
@@ -31,6 +32,13 @@ func (s *Seeder) SeedInvoicesAndPaymentsForInCareClients(ctx context.Context, in
 		if err != nil {
 			return fmt.Errorf("pick payment employee for client %s: %w", clientID, err)
 		}
+		userID, err := s.store.GetUserIDByEmployeeID(ctx, employeeID)
+		if err != nil {
+			return fmt.Errorf("get user for payment employee %s: %w", employeeID, err)
+		}
+		actorCtx := ctxkeys.WithActorIdentity(ctx, ctxkeys.ActorIdentity{
+			UserID: userID, EmployeeID: employeeID,
+		})
 
 		generated := 0
 		maxAttempts := invoicesPerClient * 6
@@ -46,7 +54,7 @@ func (s *Seeder) SeedInvoicesAndPaymentsForInCareClients(ctx context.Context, in
 				return fmt.Errorf("seed billable appointments for client %s: %w", clientID, err)
 			}
 
-			generatedInvoice, _, err := s.invoiceService.GenerateInvoice(ctx, domain.GenerateInvoiceParams{
+			generatedInvoice, _, err := s.invoiceService.GenerateInvoice(actorCtx, domain.GenerateInvoiceParams{
 				ClientID:        clientID,
 				StartDate:       periodStart,
 				EndDate:         periodEnd,
@@ -65,7 +73,7 @@ func (s *Seeder) SeedInvoicesAndPaymentsForInCareClients(ctx context.Context, in
 				continue
 			}
 
-			if err := s.seedPaymentsForInvoice(ctx, generatedInvoice.ID, generatedInvoice.GrossTotal, maxPaymentsPerInvoice, employeeID); err != nil {
+			if err := s.seedPaymentsForInvoice(actorCtx, generatedInvoice.ID, generatedInvoice.GrossTotal, maxPaymentsPerInvoice, employeeID); err != nil {
 				return fmt.Errorf("seed payments for invoice %s: %w", generatedInvoice.ID, err)
 			}
 		}

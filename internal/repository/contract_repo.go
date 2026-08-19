@@ -61,24 +61,26 @@ func (r *ContractRepository) CreateContract(ctx context.Context, params domain.C
 		vat = &defaultVAT
 	}
 
-	contract, err := r.store.CreateContract(ctx, db.CreateContractParams{
-		TypeID:          params.TypeID,
-		Status:          db.ContractStatusEnumDraft,
-		StartDate:       conv.PgTimestamptzFromTime(params.StartDate),
-		EndDate:         conv.PgTimestamptzFromTime(params.EndDate),
-		ReminderPeriod:  reminderPeriod,
-		Vat:             vat,
-		Price:           params.Price,
-		PriceTimeUnit:   db.PriceTimeUnitEnum(params.PriceTimeUnit),
-		Hours:           params.Hours,
-		HoursType:       db.NullHoursTypeFromPtr(params.HoursType),
-		CareName:        params.CareName,
-		CareType:        db.CareTypeEnum(params.CareType),
-		ClientID:        params.ClientID,
-		SenderID:        params.SenderID,
-		AttachmentIds:   params.AttachmentIds,
-		FinancingAct:    db.FinancingActEnum(params.FinancingAct),
-		FinancingOption: db.FinancingOptionEnum(params.FinancingOption),
+	contract, err := actorQuery(ctx, r.store, func(q *db.Queries) (db.Contract, error) {
+		return q.CreateContract(ctx, db.CreateContractParams{
+			TypeID:          params.TypeID,
+			Status:          db.ContractStatusEnumDraft,
+			StartDate:       conv.PgTimestamptzFromTime(params.StartDate),
+			EndDate:         conv.PgTimestamptzFromTime(params.EndDate),
+			ReminderPeriod:  reminderPeriod,
+			Vat:             vat,
+			Price:           params.Price,
+			PriceTimeUnit:   db.PriceTimeUnitEnum(params.PriceTimeUnit),
+			Hours:           params.Hours,
+			HoursType:       db.NullHoursTypeFromPtr(params.HoursType),
+			CareName:        params.CareName,
+			CareType:        db.CareTypeEnum(params.CareType),
+			ClientID:        params.ClientID,
+			SenderID:        params.SenderID,
+			AttachmentIds:   params.AttachmentIds,
+			FinancingAct:    db.FinancingActEnum(params.FinancingAct),
+			FinancingOption: db.FinancingOptionEnum(params.FinancingOption),
+		})
 	})
 	if err != nil {
 		return nil, err
@@ -87,23 +89,21 @@ func (r *ContractRepository) CreateContract(ctx context.Context, params domain.C
 }
 
 func (r *ContractRepository) GetContractByID(ctx context.Context, contractID uuid.UUID) (*domain.ContractDetail, error) {
-	row, err := r.store.GetClientContract(ctx, contractID)
+	row, err := actorQuery(ctx, r.store, func(q *db.Queries) (db.GetClientContractRow, error) {
+		return q.GetClientContract(ctx, contractID)
+	})
 	if err != nil {
 		return nil, err
 	}
 	return toDomainContractDetail(row), nil
 }
 
-func (r *ContractRepository) UpdateContract(ctx context.Context, params domain.UpdateContractParams, employeeID uuid.UUID) (*domain.Contract, error) {
-	tx, err := r.store.ConnPool.Begin(ctx)
+func (r *ContractRepository) UpdateContract(ctx context.Context, params domain.UpdateContractParams, _ uuid.UUID) (*domain.Contract, error) {
+	tx, err := r.store.BeginActorTx(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to begin transaction: %w", err)
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
-
-	if _, err := tx.Exec(ctx, "SET LOCAL myapp.current_employee_id = $1", employeeID); err != nil {
-		return nil, fmt.Errorf("failed to set current employee ID: %w", err)
-	}
 
 	qtx := r.store.WithTx(tx)
 
@@ -212,16 +212,12 @@ func (r *ContractRepository) UpdateContract(ctx context.Context, params domain.U
 	return toDomainContract(contract), nil
 }
 
-func (r *ContractRepository) UpdateContractStatus(ctx context.Context, params domain.UpdateContractStatusParams, employeeID uuid.UUID) (*domain.Contract, error) {
-	tx, err := r.store.ConnPool.Begin(ctx)
+func (r *ContractRepository) UpdateContractStatus(ctx context.Context, params domain.UpdateContractStatusParams, _ uuid.UUID) (*domain.Contract, error) {
+	tx, err := r.store.BeginActorTx(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to begin transaction: %w", err)
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
-
-	if _, err := tx.Exec(ctx, "SET LOCAL myapp.current_employee_id = $1", employeeID); err != nil {
-		return nil, fmt.Errorf("failed to set current employee ID: %w", err)
-	}
 
 	qtx := r.store.WithTx(tx)
 
@@ -241,10 +237,12 @@ func (r *ContractRepository) UpdateContractStatus(ctx context.Context, params do
 }
 
 func (r *ContractRepository) ListClientContracts(ctx context.Context, params domain.ListClientContractsParams) ([]domain.ClientContractListItem, int64, error) {
-	rows, err := r.store.ListClientContracts(ctx, db.ListClientContractsParams{
-		ClientID: params.ClientID,
-		Limit:    params.Limit,
-		Offset:   params.Offset,
+	rows, err := actorQuery(ctx, r.store, func(q *db.Queries) ([]db.ListClientContractsRow, error) {
+		return q.ListClientContracts(ctx, db.ListClientContractsParams{
+			ClientID: params.ClientID,
+			Limit:    params.Limit,
+			Offset:   params.Offset,
+		})
 	})
 	if err != nil {
 		return nil, 0, err
@@ -271,59 +269,61 @@ func (r *ContractRepository) ListClientContracts(ctx context.Context, params dom
 }
 
 func (r *ContractRepository) ListContracts(ctx context.Context, params domain.ListContractsParams) ([]domain.ContractListItem, int64, error) {
-	rows, err := r.store.ListContracts(ctx, db.ListContractsParams{
-		Limit:  params.Limit,
-		Offset: params.Offset,
-		Search: params.Search,
-		EndDateFrom: func() pgtype.Timestamptz {
-			if params.EndDateFrom == nil {
-				return pgtype.Timestamptz{Valid: false}
-			}
-			return conv.PgTimestamptzFromTime(*params.EndDateFrom)
-		}(),
-		EndDateTo: func() pgtype.Timestamptz {
-			if params.EndDateTo == nil {
-				return pgtype.Timestamptz{Valid: false}
-			}
-			return conv.PgTimestamptzFromTime(*params.EndDateTo)
-		}(),
-		Status: func() []db.ContractStatusEnum {
-			if len(params.Status) == 0 {
-				return nil
-			}
-			result := make([]db.ContractStatusEnum, len(params.Status))
-			for i, s := range params.Status {
-				result[i] = db.ContractStatusEnum(s)
-			}
-			return result
-		}(),
-		CareType: func() []db.CareTypeEnum {
-			if len(params.CareType) == 0 {
-				return nil
-			}
-			result := make([]db.CareTypeEnum, len(params.CareType))
-			for i, ct := range params.CareType {
-				result[i] = db.CareTypeEnum(ct)
-			}
-			return result
-		}(),
-		FinancingAct: func() []db.FinancingActEnum {
-			if len(params.FinancingAct) == 0 {
-				return nil
-			}
-			result := make([]db.FinancingActEnum, len(params.FinancingAct))
-			for i, fa := range params.FinancingAct {
-				result[i] = db.FinancingActEnum(fa)
-			}
-			return result
-		}(),
-		FinancingOption: func() *db.FinancingOptionEnum {
-			if params.FinancingOption == nil {
-				return nil
-			}
-			value := db.FinancingOptionEnum(*params.FinancingOption)
-			return &value
-		}(),
+	rows, err := actorQuery(ctx, r.store, func(q *db.Queries) ([]db.ListContractsRow, error) {
+		return q.ListContracts(ctx, db.ListContractsParams{
+			Limit:  params.Limit,
+			Offset: params.Offset,
+			Search: params.Search,
+			EndDateFrom: func() pgtype.Timestamptz {
+				if params.EndDateFrom == nil {
+					return pgtype.Timestamptz{Valid: false}
+				}
+				return conv.PgTimestamptzFromTime(*params.EndDateFrom)
+			}(),
+			EndDateTo: func() pgtype.Timestamptz {
+				if params.EndDateTo == nil {
+					return pgtype.Timestamptz{Valid: false}
+				}
+				return conv.PgTimestamptzFromTime(*params.EndDateTo)
+			}(),
+			Status: func() []db.ContractStatusEnum {
+				if len(params.Status) == 0 {
+					return nil
+				}
+				result := make([]db.ContractStatusEnum, len(params.Status))
+				for i, s := range params.Status {
+					result[i] = db.ContractStatusEnum(s)
+				}
+				return result
+			}(),
+			CareType: func() []db.CareTypeEnum {
+				if len(params.CareType) == 0 {
+					return nil
+				}
+				result := make([]db.CareTypeEnum, len(params.CareType))
+				for i, ct := range params.CareType {
+					result[i] = db.CareTypeEnum(ct)
+				}
+				return result
+			}(),
+			FinancingAct: func() []db.FinancingActEnum {
+				if len(params.FinancingAct) == 0 {
+					return nil
+				}
+				result := make([]db.FinancingActEnum, len(params.FinancingAct))
+				for i, fa := range params.FinancingAct {
+					result[i] = db.FinancingActEnum(fa)
+				}
+				return result
+			}(),
+			FinancingOption: func() *db.FinancingOptionEnum {
+				if params.FinancingOption == nil {
+					return nil
+				}
+				value := db.FinancingOptionEnum(*params.FinancingOption)
+				return &value
+			}(),
+		})
 	})
 	if err != nil {
 		return nil, 0, err
