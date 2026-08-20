@@ -13,15 +13,21 @@ import (
 )
 
 const createAiGeneratedReport = `-- name: CreateAiGeneratedReport :one
+WITH new_report AS (
+    SELECT public.begin_ai_report_creation($1) AS id
+)
 INSERT INTO ai_generated_reports (
+        id,
         client_id,
         report_text,
         start_date,
         end_date
 
-    ) VALUES (
-        $1, $2, $3, $4
-    ) RETURNING id, report_text, client_id, start_date, end_date, created_at
+    ) SELECT
+        new_report.id, $1, $2, $3, $4
+    FROM new_report
+    WHERE new_report.id IS NOT NULL
+    RETURNING id, report_text, client_id, start_date, end_date, created_at
 `
 
 type CreateAiGeneratedReportParams struct {
@@ -51,7 +57,11 @@ func (q *Queries) CreateAiGeneratedReport(ctx context.Context, arg CreateAiGener
 }
 
 const createProgressReport = `-- name: CreateProgressReport :one
+WITH new_report AS (
+    SELECT public.begin_progress_report_creation($1) AS id
+)
 INSERT INTO progress_report (
+        id,
         client_id,
         employee_id,
         title,
@@ -59,9 +69,11 @@ INSERT INTO progress_report (
         report_text,
         type,
         emotional_state
-    ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7
-    ) RETURNING id, client_id, date, title, report_text, employee_id, type, emotional_state, created_at
+    ) SELECT
+        new_report.id, $1, $2, $3, $4, $5, $6, $7
+    FROM new_report
+    WHERE new_report.id IS NOT NULL
+    RETURNING id, client_id, date, title, report_text, employee_id, type, emotional_state, created_at
 `
 
 type CreateProgressReportParams struct {

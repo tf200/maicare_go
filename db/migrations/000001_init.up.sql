@@ -2196,6 +2196,7 @@ CREATE TABLE progress_report (
 CREATE INDEX progress_report_client_id_idx ON progress_report(client_id);
 CREATE INDEX progress_report_author_id_idx ON progress_report(employee_id);
 CREATE INDEX progress_report_created_idx ON progress_report(created_at DESC);
+CREATE INDEX progress_report_client_date_idx ON progress_report(client_id, date DESC);
 
 -- AI generated reports
 CREATE TABLE ai_generated_reports (
@@ -2206,6 +2207,8 @@ CREATE TABLE ai_generated_reports (
     end_date DATE NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE INDEX ai_generated_reports_client_created_idx ON ai_generated_reports(client_id, created_at DESC);
 
 -- ==========================================
 -- SCHEDULING & APPOINTMENTS
@@ -2981,6 +2984,18 @@ CREATE TABLE public.rls_client_creation_context (
 
 REVOKE ALL ON TABLE public.rls_client_creation_context FROM PUBLIC;
 
+CREATE TABLE public.rls_report_creation_context (
+    backend_pid INTEGER NOT NULL,
+    transaction_id XID8 NOT NULL,
+    report_kind TEXT NOT NULL CHECK (report_kind IN ('progress', 'ai')),
+    report_id UUID NOT NULL,
+    user_id UUID NOT NULL,
+    employee_id UUID NOT NULL,
+    PRIMARY KEY (backend_pid, transaction_id, report_kind, report_id)
+);
+
+REVOKE ALL ON TABLE public.rls_report_creation_context FROM PUBLIC;
+
 CREATE OR REPLACE FUNCTION public.begin_client_creation()
 RETURNS UUID
 LANGUAGE plpgsql
@@ -3026,6 +3041,108 @@ AS $$
         ),
         FALSE
     );
+$$;
+
+CREATE OR REPLACE FUNCTION public.begin_progress_report_creation(client_id UUID)
+RETURNS UUID
+LANGUAGE plpgsql
+VOLATILE
+SECURITY DEFINER
+PARALLEL UNSAFE
+SET search_path = pg_catalog, public
+AS $$
+DECLARE
+    new_report_id UUID;
+BEGIN
+    IF NOT public.can_access_client($1, 'CLIENT.PROGRESS_REPORT.CREATE') THEN
+        RETURN NULL;
+    END IF;
+
+    DELETE FROM public.rls_report_creation_context
+    WHERE backend_pid = pg_backend_pid()
+      AND report_kind = 'progress';
+
+    new_report_id := gen_random_uuid();
+    INSERT INTO public.rls_report_creation_context (
+        backend_pid, transaction_id, report_kind, report_id, user_id, employee_id
+    ) VALUES (
+        pg_backend_pid(), pg_current_xact_id(), 'progress', new_report_id,
+        public.get_current_user_id(), public.get_current_employee_id()
+    );
+
+    RETURN new_report_id;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.can_read_created_progress_report(report_id UUID)
+RETURNS BOOLEAN
+LANGUAGE sql
+VOLATILE
+SECURITY DEFINER
+PARALLEL UNSAFE
+SET search_path = pg_catalog, public
+AS $$
+    SELECT COALESCE(EXISTS (
+        SELECT 1
+        FROM public.rls_report_creation_context AS context
+        WHERE context.backend_pid = pg_backend_pid()
+          AND context.transaction_id = pg_current_xact_id_if_assigned()
+          AND context.report_kind = 'progress'
+          AND context.report_id = $1
+          AND context.user_id = public.get_current_user_id()
+          AND context.employee_id = public.get_current_employee_id()
+    ), FALSE);
+$$;
+
+CREATE OR REPLACE FUNCTION public.begin_ai_report_creation(client_id UUID)
+RETURNS UUID
+LANGUAGE plpgsql
+VOLATILE
+SECURITY DEFINER
+PARALLEL UNSAFE
+SET search_path = pg_catalog, public
+AS $$
+DECLARE
+    new_report_id UUID;
+BEGIN
+    IF NOT public.can_access_client($1, 'CLIENT.AI_PROGRESS_REPORT.CONFIRM') THEN
+        RETURN NULL;
+    END IF;
+
+    DELETE FROM public.rls_report_creation_context
+    WHERE backend_pid = pg_backend_pid()
+      AND report_kind = 'ai';
+
+    new_report_id := gen_random_uuid();
+    INSERT INTO public.rls_report_creation_context (
+        backend_pid, transaction_id, report_kind, report_id, user_id, employee_id
+    ) VALUES (
+        pg_backend_pid(), pg_current_xact_id(), 'ai', new_report_id,
+        public.get_current_user_id(), public.get_current_employee_id()
+    );
+
+    RETURN new_report_id;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.can_read_created_ai_report(report_id UUID)
+RETURNS BOOLEAN
+LANGUAGE sql
+VOLATILE
+SECURITY DEFINER
+PARALLEL UNSAFE
+SET search_path = pg_catalog, public
+AS $$
+    SELECT COALESCE(EXISTS (
+        SELECT 1
+        FROM public.rls_report_creation_context AS context
+        WHERE context.backend_pid = pg_backend_pid()
+          AND context.transaction_id = pg_current_xact_id_if_assigned()
+          AND context.report_kind = 'ai'
+          AND context.report_id = $1
+          AND context.user_id = public.get_current_user_id()
+          AND context.employee_id = public.get_current_employee_id()
+    ), FALSE);
 $$;
 
 CREATE OR REPLACE FUNCTION public.get_permission_scope(permission_name TEXT)
@@ -3174,6 +3291,10 @@ REVOKE ALL ON FUNCTION public.is_assigned_to_client(UUID) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.can_access_client(UUID, TEXT) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.begin_client_creation() FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.can_read_created_client(UUID) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.begin_progress_report_creation(UUID) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.can_read_created_progress_report(UUID) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.begin_ai_report_creation(UUID) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.can_read_created_ai_report(UUID) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.get_authorized_client_related_emails(UUID) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.get_authorized_incident_recipient_emails(UUID) FROM PUBLIC;
 
@@ -3349,8 +3470,45 @@ CREATE POLICY client_emergency_contact_delete ON public.client_emergency_contact
     FOR DELETE
     USING (public.can_access_client(client_id, 'CLIENT.EMERGENCY_CONTACT.DELETE'));
 
+ALTER TABLE public.progress_report ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.progress_report FORCE ROW LEVEL SECURITY;
+
+CREATE POLICY progress_report_select ON public.progress_report
+    FOR SELECT
+    USING (
+        public.can_access_client(client_id, 'CLIENT.PROGRESS_REPORT.VIEW')
+        OR public.can_access_client(client_id, 'CLIENT.AI_PROGRESS_REPORT.GENERATE')
+        OR public.can_read_created_progress_report(id)
+    );
+
+CREATE POLICY progress_report_insert ON public.progress_report
+    FOR INSERT
+    WITH CHECK (public.can_access_client(client_id, 'CLIENT.PROGRESS_REPORT.CREATE'));
+
+CREATE POLICY progress_report_update ON public.progress_report
+    FOR UPDATE
+    USING (public.can_access_client(client_id, 'CLIENT.PROGRESS_REPORT.UPDATE'))
+    WITH CHECK (public.can_access_client(client_id, 'CLIENT.PROGRESS_REPORT.UPDATE'));
+
+CREATE POLICY progress_report_delete ON public.progress_report
+    FOR DELETE
+    USING (public.can_access_client(client_id, 'CLIENT.PROGRESS_REPORT.DELETE'));
+
+ALTER TABLE public.ai_generated_reports ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.ai_generated_reports FORCE ROW LEVEL SECURITY;
+
+CREATE POLICY ai_generated_reports_select ON public.ai_generated_reports
+    FOR SELECT
+    USING (
+        public.can_access_client(client_id, 'CLIENT.AI_PROGRESS_REPORT.VIEW')
+        OR public.can_read_created_ai_report(id)
+    );
+
+CREATE POLICY ai_generated_reports_insert ON public.ai_generated_reports
+    FOR INSERT
+    WITH CHECK (public.can_access_client(client_id, 'CLIENT.AI_PROGRESS_REPORT.CONFIRM'));
+
 -- Apply legacy RLS to related tables until they are converted in Phase 9.
-SELECT apply_client_rls('progress_report');
 SELECT apply_client_rls('incident');
 SELECT apply_client_rls('client_documents');
 SELECT apply_client_rls('client_status_history');
@@ -3365,7 +3523,6 @@ SELECT apply_client_rls('client_location_transfer');
 	SELECT apply_client_rls('billed_calendar_event');
 	SELECT apply_client_rls('invoice_payment_history', 'get_client_id_from_invoice(invoice_id)');
 	SELECT apply_client_rls('assignment');
-	SELECT apply_client_rls('ai_generated_reports');
 	SELECT apply_client_rls('calendar_event_attendees');
 SELECT apply_client_rls('appointment_card');
 SELECT apply_client_rls('collaboration_agreement');

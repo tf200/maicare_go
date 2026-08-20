@@ -2,7 +2,7 @@
 
 Last updated: 2026-08-20
 
-Status: Phase 9 in progress; Group A completed
+Status: Phase 9 in progress; Groups A and B completed
 
 ## Purpose
 
@@ -690,7 +690,7 @@ Acceptance criteria:
 
 ## Phase 9: Convert Related Tables In Controlled Groups
 
-Status: `[~]` In progress; Group A completed
+Status: `[~]` In progress; Groups A and B completed
 
 Goal: apply permission-specific RLS to all client-owned information without one high-risk migration.
 
@@ -731,9 +731,13 @@ Likely tables and files:
 
 Permissions include `CLIENT.PROGRESS_REPORT.*` and `CLIENT.AI_PROGRESS_REPORT.*`.
 
-- [ ] Map operations.
-- [ ] Implement policies.
-- [ ] Test read, create, update, delete, generate, and confirm flows.
+- [x] Map operations.
+- [x] Implement policies.
+- [x] Test read, create, update, delete, generate, and confirm flows.
+
+AI generation reads progress-report source text under `CLIENT.AI_PROGRESS_REPORT.GENERATE` but does not persist an AI report. Confirmation is the only AI-report insert and uses `CLIENT.AI_PROGRESS_REPORT.CONFIRM`. AI reports have no update or delete operation or permission, so no such policies exist. Report text is sensitive care data; mutation audit coverage remains part of the later auditing phase.
+
+Progress-report UPDATE and DELETE also require VIEW visibility for the target row because PostgreSQL applies SELECT policies while locating mutation targets. CREATE and AI confirmation remain independently usable through transaction-bound creation contexts. Report authorship remains caller-supplied existing business behavior and requires a separate field-level authorization decision rather than an implicit RLS change.
 
 ### Group C: Medical Data
 
@@ -974,13 +978,13 @@ Complete this tracker before converting each table. Add rows as tables are disco
 | Table | Client reference | Select permission | Insert permission | Update permission | Delete permission | Status |
 |---|---|---|---|---|---|---|
 | `client_details` | `id` | `CLIENT.VIEW` | `CLIENT.CREATE` | `CLIENT.UPDATE` | `CLIENT.DELETE` | Phase 8 completed |
-| `progress_report` | `client_id` | `CLIENT.PROGRESS_REPORT.VIEW` | `CLIENT.PROGRESS_REPORT.CREATE` | `CLIENT.PROGRESS_REPORT.UPDATE` | `CLIENT.PROGRESS_REPORT.DELETE` | Pending review |
+| `progress_report` | `client_id` | `CLIENT.PROGRESS_REPORT.VIEW` or source read through `CLIENT.AI_PROGRESS_REPORT.GENERATE` | `CLIENT.PROGRESS_REPORT.CREATE` | `CLIENT.PROGRESS_REPORT.UPDATE` | `CLIENT.PROGRESS_REPORT.DELETE` | Phase 9 Group B completed |
 | `client_diagnosis` | `client_id` | `CLIENT.DIAGNOSIS.VIEW` | `CLIENT.DIAGNOSIS.CREATE` | `CLIENT.DIAGNOSIS.UPDATE` | `CLIENT.DIAGNOSIS.DELETE` | Pending review |
 | `client_medication_order` | `client_id` | `CLIENT.MEDICATION.VIEW` | `CLIENT.MEDICATION.CREATE` | `CLIENT.MEDICATION.UPDATE` | `CLIENT.MEDICATION.DELETE` | Pending review |
 | `client_emergency_contact` | `client_id` | `CLIENT.EMERGENCY_CONTACT.VIEW` | `CLIENT.EMERGENCY_CONTACT.CREATE` | `CLIENT.EMERGENCY_CONTACT.UPDATE` | `CLIENT.EMERGENCY_CONTACT.DELETE` | Phase 9 Group A completed |
 | `assigned_employee` | `client_id` | `CLIENT.INVOLVED_EMPLOYEE.VIEW` | `CLIENT.INVOLVED_EMPLOYEE.CREATE` (`all` only) | `CLIENT.INVOLVED_EMPLOYEE.UPDATE` (`all` only) | `CLIENT.INVOLVED_EMPLOYEE.DELETE` (`all` only) | Phase 9 Group A completed |
 | `incident` | `client_id` | `CLIENT.INCIDENT.VIEW` | `CLIENT.INCIDENT.CREATE` | `CLIENT.INCIDENT.UPDATE` | `CLIENT.INCIDENT.DELETE` | Pending review |
-| `ai_generated_reports` | `client_id` | `CLIENT.AI_PROGRESS_REPORT.VIEW` | `CLIENT.AI_PROGRESS_REPORT.CONFIRM` or dedicated permission | To decide | To decide | Decision required |
+| `ai_generated_reports` | `client_id` | `CLIENT.AI_PROGRESS_REPORT.VIEW` | `CLIENT.AI_PROGRESS_REPORT.CONFIRM` | No operation or permission | No operation or permission | Phase 9 Group B completed |
 | `client_documents` | `client_id` | `CLIENT.DOCUMENTS.VIEW` | `CLIENT.DOCUMENTS.UPLOAD` | To decide | `CLIENT.DOCUMENTS.DELETE` | Pending review |
 
 ## Known Risks
@@ -1018,10 +1022,35 @@ Record finalized decisions here. Do not silently change an earlier decision; add
 | 2026-08-19 | User-triggered workers carry delegated actor identity; scheduled and public trusted operations use a validated persisted system actor. | Workers need explicit authorization identity without relying on table-owner bypass. | Confirmed |
 | 2026-08-20 | Restrict assignment create, update, and delete to `all` scope while allowing scoped assignment reads. | `assigned_employee` determines `assigned` access, so allowing assigned-scope mutation would permit self-granted client access. | Confirmed |
 | 2026-08-20 | Own assignment lookup and narrow recipient-email functions with a no-login `BYPASSRLS` policy-owner role. | This permits forced RLS on authorization-source and contact tables without recursive policies or broadening direct row visibility. | Confirmed |
+| 2026-08-20 | Let `CLIENT.AI_PROGRESS_REPORT.GENERATE` read scoped progress-report source rows without granting AI-report persistence or visibility. | Generation processes progress text but does not write or read `ai_generated_reports`; confirmation and AI history use separate permissions. | Confirmed |
+| 2026-08-20 | Give `ai_generated_reports` only VIEW and CONFIRM/insert policies. | There are no AI report update/delete operations or registered permissions, so inventing mutation authority would overgrant access. | Confirmed |
 
 ## Progress Log
 
 Add the newest entry first.
+
+### 2026-08-20 - Phase 9 Group B report RLS completed
+
+Status: Completed and verified
+
+Changes:
+
+- Replaced role-name policies on `progress_report` and `ai_generated_reports` with forced permission-and-scope RLS.
+- Mapped progress-report CRUD to its dedicated permissions and allowed generate-only actors to read scoped source reports.
+- Mapped AI-report reads to VIEW and confirmation inserts to CONFIRM, with no update or delete policies.
+- Added client/date and client/creation-time indexes for report list and generation queries.
+- Classified progress and AI report text as sensitive care data.
+- Preserved independent CREATE and CONFIRM permissions by restricting `RETURNING` visibility to owner-generated report UUIDs in the same actor transaction.
+
+Verification:
+
+- Applied the initial migration to a clean PostgreSQL 16 database.
+- Tested through a temporary `NOSUPERUSER NOBYPASSRLS` non-owner runtime role.
+- Verified isolated VIEW/UPDATE/DELETE permissions, assigned/all progress CRUD, cross-client movement denial, generate-only source reads, create/confirm without VIEW, scoped AI confirmation, unforgeable creation context, absent AI mutation authority, missing identity/permission denial, forced-policy catalog state, and failed `row_security=off` bypasses.
+
+Next action:
+
+- Convert Phase 9 Group C medical data.
 
 ### 2026-08-20 - Phase 9 Group A client network RLS completed
 

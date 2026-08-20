@@ -4198,6 +4198,15 @@ type RlsClientCreationContext struct {
 	ClientID      uuid.UUID     `json:"client_id"`
 }
 
+type RlsReportCreationContext struct {
+	BackendPid    int32         `json:"backend_pid"`
+	TransactionID pgtype.Uint64 `json:"transaction_id"`
+	ReportKind    string        `json:"report_kind"`
+	ReportID      uuid.UUID     `json:"report_id"`
+	UserID        uuid.UUID     `json:"user_id"`
+	EmployeeID    uuid.UUID     `json:"employee_id"`
+}
+
 type Role struct {
 	ID          uuid.UUID `json:"id"`
 	Name        string    `json:"name"`
