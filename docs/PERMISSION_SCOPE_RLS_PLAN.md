@@ -1,8 +1,8 @@
 # Permission Scope and Row-Level Security Plan
 
-Last updated: 2026-08-19
+Last updated: 2026-08-20
 
-Status: Phase 8 completed; Phase 9 not started
+Status: Phase 9 in progress; Group A completed
 
 ## Purpose
 
@@ -690,7 +690,7 @@ Acceptance criteria:
 
 ## Phase 9: Convert Related Tables In Controlled Groups
 
-Status: `[ ]` Not started
+Status: `[~]` In progress; Group A completed
 
 Goal: apply permission-specific RLS to all client-owned information without one high-risk migration.
 
@@ -714,10 +714,12 @@ Likely tables and files:
 
 Permissions include `CLIENT.INVOLVED_EMPLOYEE.*` and `CLIENT.EMERGENCY_CONTACT.*`.
 
-- [ ] Map operations.
-- [ ] Implement policies.
-- [ ] Test assignment-management edge cases.
-- [ ] Prevent users from granting themselves access through assignment changes.
+- [x] Map operations.
+- [x] Implement policies.
+- [x] Test assignment-management edge cases.
+- [x] Prevent users from granting themselves access through assignment changes.
+
+Assignment reads use normal `assigned`/`all` scope. Assignment create, update, and delete require the corresponding `CLIENT.INVOLVED_EMPLOYEE.*` permission with `all` scope because assignment rows are themselves authorization inputs. Emergency contacts contain sensitive personal contact and disclosure-preference data; assignment rows are security-sensitive access-control metadata. Mutation audit coverage remains part of the later auditing phase.
 
 ### Group B: Progress Reports And AI Reports
 
@@ -975,8 +977,8 @@ Complete this tracker before converting each table. Add rows as tables are disco
 | `progress_report` | `client_id` | `CLIENT.PROGRESS_REPORT.VIEW` | `CLIENT.PROGRESS_REPORT.CREATE` | `CLIENT.PROGRESS_REPORT.UPDATE` | `CLIENT.PROGRESS_REPORT.DELETE` | Pending review |
 | `client_diagnosis` | `client_id` | `CLIENT.DIAGNOSIS.VIEW` | `CLIENT.DIAGNOSIS.CREATE` | `CLIENT.DIAGNOSIS.UPDATE` | `CLIENT.DIAGNOSIS.DELETE` | Pending review |
 | `client_medication_order` | `client_id` | `CLIENT.MEDICATION.VIEW` | `CLIENT.MEDICATION.CREATE` | `CLIENT.MEDICATION.UPDATE` | `CLIENT.MEDICATION.DELETE` | Pending review |
-| `client_emergency_contact` | `client_id` | `CLIENT.EMERGENCY_CONTACT.VIEW` | `CLIENT.EMERGENCY_CONTACT.CREATE` | `CLIENT.EMERGENCY_CONTACT.UPDATE` | `CLIENT.EMERGENCY_CONTACT.DELETE` | Pending review |
-| `assigned_employee` | `client_id` | `CLIENT.INVOLVED_EMPLOYEE.VIEW` | `CLIENT.INVOLVED_EMPLOYEE.CREATE` | `CLIENT.INVOLVED_EMPLOYEE.UPDATE` | `CLIENT.INVOLVED_EMPLOYEE.DELETE` | Pending review |
+| `client_emergency_contact` | `client_id` | `CLIENT.EMERGENCY_CONTACT.VIEW` | `CLIENT.EMERGENCY_CONTACT.CREATE` | `CLIENT.EMERGENCY_CONTACT.UPDATE` | `CLIENT.EMERGENCY_CONTACT.DELETE` | Phase 9 Group A completed |
+| `assigned_employee` | `client_id` | `CLIENT.INVOLVED_EMPLOYEE.VIEW` | `CLIENT.INVOLVED_EMPLOYEE.CREATE` (`all` only) | `CLIENT.INVOLVED_EMPLOYEE.UPDATE` (`all` only) | `CLIENT.INVOLVED_EMPLOYEE.DELETE` (`all` only) | Phase 9 Group A completed |
 | `incident` | `client_id` | `CLIENT.INCIDENT.VIEW` | `CLIENT.INCIDENT.CREATE` | `CLIENT.INCIDENT.UPDATE` | `CLIENT.INCIDENT.DELETE` | Pending review |
 | `ai_generated_reports` | `client_id` | `CLIENT.AI_PROGRESS_REPORT.VIEW` | `CLIENT.AI_PROGRESS_REPORT.CONFIRM` or dedicated permission | To decide | To decide | Decision required |
 | `client_documents` | `client_id` | `CLIENT.DOCUMENTS.VIEW` | `CLIENT.DOCUMENTS.UPLOAD` | To decide | `CLIENT.DOCUMENTS.DELETE` | Pending review |
@@ -1014,10 +1016,36 @@ Record finalized decisions here. Do not silently change an earlier decision; add
 | 2026-08-19 | `assigned` means any started `assigned_employee` row; deleting the row ends the assignment. | The assignment table has no end date, and unassignment already removes the relationship. | Confirmed |
 | 2026-08-19 | `all` grants access to all clients in the system without an organizational boundary. | This is the required operational meaning of the broad scope. | Confirmed |
 | 2026-08-19 | User-triggered workers carry delegated actor identity; scheduled and public trusted operations use a validated persisted system actor. | Workers need explicit authorization identity without relying on table-owner bypass. | Confirmed |
+| 2026-08-20 | Restrict assignment create, update, and delete to `all` scope while allowing scoped assignment reads. | `assigned_employee` determines `assigned` access, so allowing assigned-scope mutation would permit self-granted client access. | Confirmed |
+| 2026-08-20 | Own assignment lookup and narrow recipient-email functions with a no-login `BYPASSRLS` policy-owner role. | This permits forced RLS on authorization-source and contact tables without recursive policies or broadening direct row visibility. | Confirmed |
 
 ## Progress Log
 
 Add the newest entry first.
+
+### 2026-08-20 - Phase 9 Group A client network RLS completed
+
+Status: Completed and verified
+
+Changes:
+
+- Replaced role-name policies on `assigned_employee` and `client_emergency_contact` with operation-specific permission policies.
+- Restricted assignment mutation to `all` scope to prevent self-assignment and assignment-rewrite privilege escalation.
+- Applied normal `assigned`/`all` client scope to assignment reads and emergency-contact CRUD.
+- Preserved intake promotion by allowing emergency-contact creation and readback only for the owner-generated client UUID in the current transaction.
+- Added narrow permission-checking functions for general related-email and incident-recipient flows so those operations do not grant direct emergency-contact visibility.
+- Forced RLS on both Group A tables and isolated assignment lookup behind a no-login policy-owner role to avoid recursive assignment policies.
+- Classified emergency contacts as sensitive personal/disclosure data and assignments as security-sensitive access-control metadata.
+
+Verification:
+
+- Applied and rolled back the initial migration on a clean PostgreSQL 16 database.
+- Tested through a temporary `NOSUPERUSER NOBYPASSRLS` non-owner runtime role.
+- Verified assigned and global visibility, missing identity and permission denial, scoped emergency-contact CRUD, cross-client update denial, safe new-client contact creation/readback, assignment mutation denial for assigned scope, assignment mutation for all scope, and permission-specific recipient-email access.
+
+Next action:
+
+- Convert Phase 9 Group B progress reports and AI-generated reports.
 
 ### 2026-08-19 - Phase 8 client RLS pilot completed
 

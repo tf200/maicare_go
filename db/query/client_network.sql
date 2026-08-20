@@ -185,27 +185,10 @@ RETURNING *;
 
 
 -- name: GetClientRelatedEmails :many
-WITH employee_emails AS (
-    SELECT ed.work_email_address AS employee_email
-    FROM assigned_employee ae
-    JOIN employee_profile ed ON ae.employee_id = ed.id
-    WHERE ae.client_id = $1
-),
-emergency_contact_emails AS (
-    SELECT cec.email AS contact_email
-    FROM client_emergency_contact cec
-    WHERE cec.client_id = $1
-)
-SELECT employee_email FROM employee_emails
-UNION
-SELECT contact_email FROM emergency_contact_emails;
+SELECT authorized.email::TEXT AS email
+FROM public.get_authorized_client_related_emails($1) AS authorized(email);
 
 
 -- name: ListIncidentReportRecipientEmails :many
-SELECT cec.email
-FROM client_emergency_contact cec
-WHERE cec.client_id = $1
-  AND cec.incidents_reports = TRUE
-  AND cec.is_verified = TRUE
-  AND cec.email IS NOT NULL
-ORDER BY cec.created_at ASC;
+SELECT authorized.email::TEXT AS email
+FROM public.get_authorized_incident_recipient_emails($1) AS authorized(email);

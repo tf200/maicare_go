@@ -3090,6 +3090,82 @@ AS $$
     );
 $$;
 
+DO $$
+DECLARE
+    policy_owner_name TEXT := 'maicare_rls_policy_owner_' || (
+        SELECT oid::TEXT FROM pg_catalog.pg_database WHERE datname = current_database()
+    );
+BEGIN
+    EXECUTE format('CREATE ROLE %I NOLOGIN BYPASSRLS', policy_owner_name);
+    EXECUTE format('GRANT %I TO %I', policy_owner_name, current_user);
+    EXECUTE format('ALTER FUNCTION public.is_assigned_to_client(UUID) OWNER TO %I', policy_owner_name);
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.get_authorized_client_related_emails(client_id UUID)
+RETURNS TABLE (email TEXT)
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+PARALLEL RESTRICTED
+SET search_path = pg_catalog, public
+AS $$
+    SELECT ep.work_email_address::TEXT
+    FROM public.assigned_employee AS ae
+    JOIN public.employee_profile AS ep ON ep.id = ae.employee_id
+    WHERE ae.client_id = $1
+      AND ep.work_email_address IS NOT NULL
+      AND ep.work_email_address <> ''
+      AND public.can_access_client($1, 'CLIENT.VIEW')
+    UNION
+    SELECT cec.email::TEXT
+    FROM public.client_emergency_contact AS cec
+    WHERE cec.client_id = $1
+      AND cec.email IS NOT NULL
+      AND cec.email <> ''
+      AND public.can_access_client($1, 'CLIENT.VIEW');
+$$;
+
+CREATE OR REPLACE FUNCTION public.get_authorized_incident_recipient_emails(client_id UUID)
+RETURNS TABLE (email TEXT)
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+PARALLEL RESTRICTED
+SET search_path = pg_catalog, public
+AS $$
+    SELECT cec.email::TEXT
+    FROM public.client_emergency_contact AS cec
+    WHERE cec.client_id = $1
+      AND cec.incidents_reports
+      AND cec.is_verified
+      AND cec.email IS NOT NULL
+      AND public.can_access_client($1, 'CLIENT.INCIDENT.CONFIRM')
+    ORDER BY cec.created_at ASC;
+$$;
+
+DO $$
+DECLARE
+    policy_owner_name TEXT := 'maicare_rls_policy_owner_' || (
+        SELECT oid::TEXT FROM pg_catalog.pg_database WHERE datname = current_database()
+    );
+BEGIN
+    EXECUTE format('ALTER FUNCTION public.get_authorized_client_related_emails(UUID) OWNER TO %I', policy_owner_name);
+    EXECUTE format('ALTER FUNCTION public.get_authorized_incident_recipient_emails(UUID) OWNER TO %I', policy_owner_name);
+    EXECUTE format(
+        'GRANT SELECT ON public.assigned_employee, public.employee_profile, public.client_emergency_contact TO %I',
+        policy_owner_name
+    );
+    EXECUTE format('GRANT EXECUTE ON FUNCTION public.get_current_employee_id() TO %I', policy_owner_name);
+    EXECUTE format('GRANT EXECUTE ON FUNCTION public.can_access_client(UUID, TEXT) TO %I', policy_owner_name);
+    EXECUTE format('REVOKE %I FROM %I', policy_owner_name, current_user);
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.is_assigned_to_client(UUID) TO CURRENT_USER;
+GRANT EXECUTE ON FUNCTION public.get_authorized_client_related_emails(UUID) TO CURRENT_USER;
+GRANT EXECUTE ON FUNCTION public.get_authorized_incident_recipient_emails(UUID) TO CURRENT_USER;
+
 REVOKE ALL ON FUNCTION public.get_current_user_id() FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.get_current_employee_id() FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.has_permission(TEXT) FROM PUBLIC;
@@ -3098,6 +3174,8 @@ REVOKE ALL ON FUNCTION public.is_assigned_to_client(UUID) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.can_access_client(UUID, TEXT) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.begin_client_creation() FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.can_read_created_client(UUID) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.get_authorized_client_related_emails(UUID) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.get_authorized_incident_recipient_emails(UUID) FROM PUBLIC;
 
 GRANT EXECUTE ON FUNCTION public.get_current_user_id() TO CURRENT_USER;
 GRANT EXECUTE ON FUNCTION public.get_current_employee_id() TO CURRENT_USER;
@@ -3209,6 +3287,68 @@ CREATE POLICY client_details_delete ON public.client_details
     FOR DELETE
     USING (public.can_access_client(id, 'CLIENT.DELETE'));
 
+-- Assignment rows are authorization inputs, so assigned-scope actors may read
+-- them but only all-scope actors may change them.
+ALTER TABLE public.assigned_employee ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.assigned_employee FORCE ROW LEVEL SECURITY;
+
+CREATE POLICY assigned_employee_select ON public.assigned_employee
+    FOR SELECT
+    USING (public.can_access_client(client_id, 'CLIENT.INVOLVED_EMPLOYEE.VIEW'));
+
+CREATE POLICY assigned_employee_insert ON public.assigned_employee
+    FOR INSERT
+    WITH CHECK (
+        public.has_permission('CLIENT.INVOLVED_EMPLOYEE.CREATE')
+        AND public.get_permission_scope('CLIENT.INVOLVED_EMPLOYEE.CREATE') = 'all'
+    );
+
+CREATE POLICY assigned_employee_update ON public.assigned_employee
+    FOR UPDATE
+    USING (
+        public.has_permission('CLIENT.INVOLVED_EMPLOYEE.UPDATE')
+        AND public.get_permission_scope('CLIENT.INVOLVED_EMPLOYEE.UPDATE') = 'all'
+    )
+    WITH CHECK (
+        public.has_permission('CLIENT.INVOLVED_EMPLOYEE.UPDATE')
+        AND public.get_permission_scope('CLIENT.INVOLVED_EMPLOYEE.UPDATE') = 'all'
+    );
+
+CREATE POLICY assigned_employee_delete ON public.assigned_employee
+    FOR DELETE
+    USING (
+        public.has_permission('CLIENT.INVOLVED_EMPLOYEE.DELETE')
+        AND public.get_permission_scope('CLIENT.INVOLVED_EMPLOYEE.DELETE') = 'all'
+    );
+
+ALTER TABLE public.client_emergency_contact ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.client_emergency_contact FORCE ROW LEVEL SECURITY;
+
+CREATE POLICY client_emergency_contact_select ON public.client_emergency_contact
+    FOR SELECT
+    USING (
+        public.can_access_client(client_id, 'CLIENT.EMERGENCY_CONTACT.VIEW')
+        OR public.can_read_created_client(client_id)
+    );
+
+CREATE POLICY client_emergency_contact_insert ON public.client_emergency_contact
+    FOR INSERT
+    WITH CHECK (
+        public.can_access_client(client_id, 'CLIENT.EMERGENCY_CONTACT.CREATE')
+        OR (
+            public.can_read_created_client(client_id)
+        )
+    );
+
+CREATE POLICY client_emergency_contact_update ON public.client_emergency_contact
+    FOR UPDATE
+    USING (public.can_access_client(client_id, 'CLIENT.EMERGENCY_CONTACT.UPDATE'))
+    WITH CHECK (public.can_access_client(client_id, 'CLIENT.EMERGENCY_CONTACT.UPDATE'));
+
+CREATE POLICY client_emergency_contact_delete ON public.client_emergency_contact
+    FOR DELETE
+    USING (public.can_access_client(client_id, 'CLIENT.EMERGENCY_CONTACT.DELETE'));
+
 -- Apply legacy RLS to related tables until they are converted in Phase 9.
 SELECT apply_client_rls('progress_report');
 SELECT apply_client_rls('incident');
@@ -3216,7 +3356,6 @@ SELECT apply_client_rls('client_documents');
 SELECT apply_client_rls('client_status_history');
 SELECT apply_client_rls('client_diagnosis');
 SELECT apply_client_rls('client_medication_order');
-SELECT apply_client_rls('client_emergency_contact');
 SELECT apply_client_rls('client_location_transfer');
 	SELECT apply_client_rls('contract');
 	SELECT apply_client_rls('invoice');
@@ -3226,7 +3365,6 @@ SELECT apply_client_rls('client_location_transfer');
 	SELECT apply_client_rls('billed_calendar_event');
 	SELECT apply_client_rls('invoice_payment_history', 'get_client_id_from_invoice(invoice_id)');
 	SELECT apply_client_rls('assignment');
-	SELECT apply_client_rls('assigned_employee');
 	SELECT apply_client_rls('ai_generated_reports');
 	SELECT apply_client_rls('calendar_event_attendees');
 SELECT apply_client_rls('appointment_card');

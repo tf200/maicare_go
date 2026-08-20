@@ -117,14 +117,14 @@ func (processor *AsynqServer) ProcessIncidentConfirmedEmailTask(ctx context.Cont
 	ctx = ctxkeys.WithActorIdentity(ctx, actor)
 
 	var incident db.GetIncidentRow
-	var recipientsPtr []*string
+	var recipients []string
 	err := processor.store.ExecActorTx(ctx, func(q *db.Queries) error {
 		var err error
 		incident, err = q.GetIncident(ctx, p.IncidentID)
 		if err != nil {
 			return err
 		}
-		recipientsPtr, err = q.ListIncidentReportRecipientEmails(ctx, incident.ClientID)
+		recipients, err = q.ListIncidentReportRecipientEmails(ctx, incident.ClientID)
 		return err
 	})
 	if err != nil {
@@ -142,13 +142,6 @@ func (processor *AsynqServer) ProcessIncidentConfirmedEmailTask(ctx context.Cont
 		return nil
 	}
 
-	recipients := make([]string, 0, len(recipientsPtr))
-	for _, e := range recipientsPtr {
-		if e == nil || *e == "" {
-			continue
-		}
-		recipients = append(recipients, *e)
-	}
 	if len(recipients) == 0 {
 		log.Printf("No incident report recipients for client %s; marking as sent", incident.ClientID.String())
 		_ = processor.store.ExecActorTx(ctx, func(q *db.Queries) error {

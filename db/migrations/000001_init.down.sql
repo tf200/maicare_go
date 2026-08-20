@@ -111,6 +111,8 @@ DROP FUNCTION IF EXISTS ensure_client_has_active_goals_before_care_status() CASC
 DROP FUNCTION IF EXISTS is_assigned_coordinator(UUID) CASCADE;
 DROP FUNCTION IF EXISTS is_coordinator() CASCADE;
 DROP FUNCTION IF EXISTS is_admin() CASCADE;
+DROP FUNCTION IF EXISTS get_authorized_incident_recipient_emails(UUID) CASCADE;
+DROP FUNCTION IF EXISTS get_authorized_client_related_emails(UUID) CASCADE;
 DROP FUNCTION IF EXISTS can_read_created_client(UUID) CASCADE;
 DROP FUNCTION IF EXISTS begin_client_creation() CASCADE;
 DROP FUNCTION IF EXISTS can_access_client(UUID, TEXT) CASCADE;
@@ -125,6 +127,15 @@ DROP FUNCTION IF EXISTS calendar_event_reset_work_approval_on_time_change() CASC
 DROP FUNCTION IF EXISTS generate_client_filenumber() CASCADE;
 DROP FUNCTION IF EXISTS insert_default_shifts() CASCADE;
 DROP SEQUENCE IF EXISTS client_filenumber_seq;
+DO $$
+DECLARE
+    policy_owner_name TEXT := 'maicare_rls_policy_owner_' || (
+        SELECT oid::TEXT FROM pg_catalog.pg_database WHERE datname = current_database()
+    );
+BEGIN
+    EXECUTE format('DROP ROLE IF EXISTS %I', policy_owner_name);
+END;
+$$;
 
 -- ==========================================
 -- TYPES (ENUMS)

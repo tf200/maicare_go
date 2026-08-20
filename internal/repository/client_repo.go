@@ -3038,13 +3038,17 @@ func (r *ClientRepository) DeleteAssignedEmployee(ctx context.Context, assignmen
 // =====================
 
 func (r *ClientRepository) GetClientRelatedEmails(ctx context.Context, clientID uuid.UUID) (*domain.ClientRelatedEmails, error) {
-	emails, err := actorQuery(ctx, r.store, func(q *db.Queries) ([]*string, error) {
+	emails, err := actorQuery(ctx, r.store, func(q *db.Queries) ([]string, error) {
 		return q.GetClientRelatedEmails(ctx, clientID)
 	})
 	if err != nil {
 		return nil, err
 	}
-	return &domain.ClientRelatedEmails{Emails: emails}, nil
+	emailPointers := make([]*string, len(emails))
+	for i := range emails {
+		emailPointers[i] = &emails[i]
+	}
+	return &domain.ClientRelatedEmails{Emails: emailPointers}, nil
 }
 
 // ListStatusHistory lists client status history records.
