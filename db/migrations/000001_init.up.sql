@@ -2918,14 +2918,195 @@ CREATE INDEX idx_audit_append_seq ON audit (append_seq DESC);
 -- ROW LEVEL SECURITY (RLS)
 -- ===============================================
 
--- Helper function to get current employee ID
-CREATE OR REPLACE FUNCTION get_current_employee_id() RETURNS UUID AS $$
+CREATE OR REPLACE FUNCTION public.get_current_user_id()
+RETURNS UUID
+LANGUAGE plpgsql
+STABLE
+PARALLEL SAFE
+AS $$
 BEGIN
-    RETURN current_setting('myapp.current_employee_id', true)::UUID;
+    RETURN NULLIF(current_setting('myapp.current_user_id', true), '')::UUID;
 EXCEPTION
-    WHEN OTHERS THEN RETURN NULL;
+    WHEN invalid_text_representation THEN RETURN NULL;
 END;
-$$ LANGUAGE plpgsql STABLE;
+$$;
+
+CREATE OR REPLACE FUNCTION public.get_current_employee_id()
+RETURNS UUID
+LANGUAGE plpgsql
+STABLE
+PARALLEL SAFE
+AS $$
+BEGIN
+    RETURN NULLIF(current_setting('myapp.current_employee_id', true), '')::UUID;
+EXCEPTION
+    WHEN invalid_text_representation THEN RETURN NULL;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.has_permission(permission_name TEXT)
+RETURNS BOOLEAN
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+PARALLEL RESTRICTED
+SET search_path = pg_catalog, public
+AS $$
+    SELECT COALESCE(EXISTS (
+        SELECT 1
+        FROM public.custom_user AS cu
+        JOIN public.employee_profile AS ep ON ep.user_id = cu.id
+        JOIN public.user_roles AS ur ON ur.user_id = cu.id
+        JOIN public.role_permissions AS rp ON rp.role_id = ur.role_id
+        JOIN public.permissions AS p ON p.id = rp.permission_id
+        WHERE cu.id = public.get_current_user_id()
+          AND ep.id = public.get_current_employee_id()
+          AND cu.is_active
+          AND NOT ep.is_archived
+          AND NOT COALESCE(ep.out_of_service, FALSE)
+          AND p.name = $1
+          AND (
+              (p.is_scoped AND rp.scope IS NOT NULL)
+              OR (NOT p.is_scoped AND rp.scope IS NULL)
+          )
+    ), FALSE);
+$$;
+
+CREATE TABLE public.rls_client_creation_context (
+    backend_pid INTEGER NOT NULL,
+    transaction_id XID8 NOT NULL,
+    client_id UUID NOT NULL,
+    PRIMARY KEY (backend_pid, transaction_id, client_id)
+);
+
+REVOKE ALL ON TABLE public.rls_client_creation_context FROM PUBLIC;
+
+CREATE OR REPLACE FUNCTION public.begin_client_creation()
+RETURNS UUID
+LANGUAGE plpgsql
+VOLATILE
+SECURITY DEFINER
+PARALLEL UNSAFE
+SET search_path = pg_catalog, public
+AS $$
+DECLARE
+    new_client_id UUID;
+BEGIN
+    IF NOT public.has_permission('CLIENT.CREATE') THEN
+        RETURN NULL;
+    END IF;
+
+    DELETE FROM public.rls_client_creation_context
+    WHERE backend_pid = pg_backend_pid();
+
+    new_client_id := gen_random_uuid();
+    INSERT INTO public.rls_client_creation_context (backend_pid, transaction_id, client_id)
+    VALUES (pg_backend_pid(), pg_current_xact_id(), new_client_id);
+
+    RETURN new_client_id;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.can_read_created_client(client_id UUID)
+RETURNS BOOLEAN
+LANGUAGE sql
+VOLATILE
+SECURITY DEFINER
+PARALLEL UNSAFE
+SET search_path = pg_catalog, public
+AS $$
+    SELECT COALESCE(
+        public.has_permission('CLIENT.CREATE')
+        AND EXISTS (
+            SELECT 1
+            FROM public.rls_client_creation_context AS context
+            WHERE context.backend_pid = pg_backend_pid()
+              AND context.transaction_id = pg_current_xact_id_if_assigned()
+              AND context.client_id = $1
+        ),
+        FALSE
+    );
+$$;
+
+CREATE OR REPLACE FUNCTION public.get_permission_scope(permission_name TEXT)
+RETURNS public.permission_scope_enum
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+PARALLEL RESTRICTED
+SET search_path = pg_catalog, public
+AS $$
+    SELECT rp.scope
+    FROM public.custom_user AS cu
+    JOIN public.employee_profile AS ep ON ep.user_id = cu.id
+    JOIN public.user_roles AS ur ON ur.user_id = cu.id
+    JOIN public.role_permissions AS rp ON rp.role_id = ur.role_id
+    JOIN public.permissions AS p ON p.id = rp.permission_id
+    WHERE cu.id = public.get_current_user_id()
+      AND ep.id = public.get_current_employee_id()
+      AND cu.is_active
+      AND NOT ep.is_archived
+      AND NOT COALESCE(ep.out_of_service, FALSE)
+      AND p.name = $1
+      AND p.is_scoped
+      AND rp.scope IS NOT NULL;
+$$;
+
+CREATE OR REPLACE FUNCTION public.is_assigned_to_client(client_id UUID)
+RETURNS BOOLEAN
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+PARALLEL RESTRICTED
+SET search_path = pg_catalog, public
+AS $$
+    SELECT COALESCE($1 IS NOT NULL AND EXISTS (
+        SELECT 1
+        FROM public.assigned_employee AS ae
+        WHERE ae.client_id = $1
+          AND ae.employee_id = public.get_current_employee_id()
+          AND ae.start_date <= CURRENT_DATE
+    ), FALSE);
+$$;
+
+CREATE OR REPLACE FUNCTION public.can_access_client(client_id UUID, permission_name TEXT)
+RETURNS BOOLEAN
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+PARALLEL RESTRICTED
+SET search_path = pg_catalog, public
+AS $$
+    SELECT COALESCE(
+        $1 IS NOT NULL
+        AND $2 IS NOT NULL
+        AND public.has_permission($2)
+        AND CASE public.get_permission_scope($2)
+            WHEN 'all'::public.permission_scope_enum THEN TRUE
+            WHEN 'assigned'::public.permission_scope_enum THEN public.is_assigned_to_client($1)
+            ELSE FALSE
+        END,
+        FALSE
+    );
+$$;
+
+REVOKE ALL ON FUNCTION public.get_current_user_id() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.get_current_employee_id() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.has_permission(TEXT) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.get_permission_scope(TEXT) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.is_assigned_to_client(UUID) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.can_access_client(UUID, TEXT) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.begin_client_creation() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.can_read_created_client(UUID) FROM PUBLIC;
+
+GRANT EXECUTE ON FUNCTION public.get_current_user_id() TO CURRENT_USER;
+GRANT EXECUTE ON FUNCTION public.get_current_employee_id() TO CURRENT_USER;
+GRANT EXECUTE ON FUNCTION public.has_permission(TEXT) TO CURRENT_USER;
+GRANT EXECUTE ON FUNCTION public.get_permission_scope(TEXT) TO CURRENT_USER;
+GRANT EXECUTE ON FUNCTION public.is_assigned_to_client(UUID) TO CURRENT_USER;
+GRANT EXECUTE ON FUNCTION public.can_access_client(UUID, TEXT) TO CURRENT_USER;
+GRANT EXECUTE ON FUNCTION public.begin_client_creation() TO CURRENT_USER;
+GRANT EXECUTE ON FUNCTION public.can_read_created_client(UUID) TO CURRENT_USER;
 
 -- Check if current employee is Admin
 CREATE OR REPLACE FUNCTION is_admin() RETURNS BOOLEAN AS $$
@@ -3004,8 +3185,31 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Apply RLS to tables with direct client_id or id
-SELECT apply_client_rls('client_details', 'id');
+-- Permission-and-scope pilot for the main client table.
+ALTER TABLE public.client_details ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.client_details FORCE ROW LEVEL SECURITY;
+
+CREATE POLICY client_details_select ON public.client_details
+    FOR SELECT
+    USING (
+        public.can_access_client(id, 'CLIENT.VIEW')
+        OR public.can_read_created_client(id)
+    );
+
+CREATE POLICY client_details_insert ON public.client_details
+    FOR INSERT
+    WITH CHECK (public.has_permission('CLIENT.CREATE'));
+
+CREATE POLICY client_details_update ON public.client_details
+    FOR UPDATE
+    USING (public.can_access_client(id, 'CLIENT.UPDATE'))
+    WITH CHECK (public.can_access_client(id, 'CLIENT.UPDATE'));
+
+CREATE POLICY client_details_delete ON public.client_details
+    FOR DELETE
+    USING (public.can_access_client(id, 'CLIENT.DELETE'));
+
+-- Apply legacy RLS to related tables until they are converted in Phase 9.
 SELECT apply_client_rls('progress_report');
 SELECT apply_client_rls('incident');
 SELECT apply_client_rls('client_documents');

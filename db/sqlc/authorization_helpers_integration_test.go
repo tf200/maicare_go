@@ -72,6 +72,8 @@ func TestAuthorizationHelpers(t *testing.T) {
 	if _, err := tx.Exec(ctx, `UPDATE public.employee_profile SET is_archived = TRUE WHERE id = $1`, actor.EmployeeID); err != nil {
 		t.Fatalf("archive employee: %v", err)
 	}
+	assertAuthorizationBool(t, ctx, tx, false, `SELECT public.has_permission($1)`, scopedPermission)
+	assertAuthorizationNull(t, ctx, tx, `SELECT public.get_permission_scope($1)`, scopedPermission)
 	assertAuthorizationBool(t, ctx, tx, false, `SELECT public.can_access_client($1, $2)`, clientID, scopedPermission)
 	if _, err := tx.Exec(ctx, `UPDATE public.employee_profile SET is_archived = FALSE, out_of_service = TRUE WHERE id = $1`, actor.EmployeeID); err != nil {
 		t.Fatalf("mark employee out of service: %v", err)
@@ -82,6 +84,8 @@ func TestAuthorizationHelpers(t *testing.T) {
 	}
 
 	setAuthorizationActor(t, ctx, tx, actor.UserID.String(), uuid.NewString())
+	assertAuthorizationBool(t, ctx, tx, false, `SELECT public.has_permission($1)`, scopedPermission)
+	assertAuthorizationNull(t, ctx, tx, `SELECT public.get_permission_scope($1)`, scopedPermission)
 	assertAuthorizationBool(t, ctx, tx, false, `SELECT public.can_access_client($1, $2)`, clientID, scopedPermission)
 	setAuthorizationActor(t, ctx, tx, actor.UserID.String(), actor.EmployeeID.String())
 	if _, err := tx.Exec(ctx, `UPDATE public.custom_user SET is_active = FALSE WHERE id = $1`, actor.UserID); err != nil {

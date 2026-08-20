@@ -152,7 +152,11 @@ func (q *Queries) CountActiveGoalsByClientID(ctx context.Context, clientID uuid.
 }
 
 const createClientDetails = `-- name: CreateClientDetails :one
+WITH new_client AS (
+    SELECT public.begin_client_creation() AS id
+)
 INSERT INTO client_details (
+    id,
     intake_form_id,
     registration_form_id,
     first_name,
@@ -200,12 +204,15 @@ INSERT INTO client_details (
     risk_other_description,
     risk_additional_notes,
     evaluation_intervals_weeks
-) VALUES (
+) SELECT
+    new_client.id,
     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16,
     $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30,
     $31, $32, $33, $34, $35, $36, $37, $38, $39, $40, $41, $42, $43, $44,
     $45, $46, $47
-) RETURNING id, intake_form_id, registration_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, evaluation_intervals_weeks, care_type, email, phone_number, gender, filenumber, created_at, placed_in_care_at, care_start_date, last_evaluation_anchor_date, next_evaluation_date, discharge_date, discharge_reason, final_evaluation, sender_id, location_id, street, house_number, house_number_addition, postal_code, city, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, nationality, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes
+FROM new_client
+WHERE new_client.id IS NOT NULL
+RETURNING id, intake_form_id, registration_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, evaluation_intervals_weeks, care_type, email, phone_number, gender, filenumber, created_at, placed_in_care_at, care_start_date, last_evaluation_anchor_date, next_evaluation_date, discharge_date, discharge_reason, final_evaluation, sender_id, location_id, street, house_number, house_number_addition, postal_code, city, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, nationality, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes
 `
 
 type CreateClientDetailsParams struct {

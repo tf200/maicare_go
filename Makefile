@@ -1,6 +1,6 @@
 
 INFISICAL_ENV ?= local
-MIGRATION_VERSION ?= 2
+MIGRATION_VERSION ?= 1
 LOCAL_DB_URL ?= postgresql://maicare:maicare@127.0.0.1:5432/maicare?sslmode=disable
 REMOTE_DEV_DB_URL ?= postgresql://maicare:maicare@167.86.75.250:25432/maicare?sslmode=disable
 

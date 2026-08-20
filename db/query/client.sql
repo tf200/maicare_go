@@ -1,5 +1,9 @@
 -- name: CreateClientDetails :one
+WITH new_client AS (
+    SELECT public.begin_client_creation() AS id
+)
 INSERT INTO client_details (
+    id,
     intake_form_id,
     registration_form_id,
     first_name,
@@ -47,12 +51,15 @@ INSERT INTO client_details (
     risk_other_description,
     risk_additional_notes,
     evaluation_intervals_weeks
-) VALUES (
+) SELECT
+    new_client.id,
     $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16,
     $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30,
     $31, $32, $33, $34, $35, $36, $37, $38, $39, $40, $41, $42, $43, $44,
     $45, $46, $47
-) RETURNING *;
+FROM new_client
+WHERE new_client.id IS NOT NULL
+RETURNING *;
 
 
 -- name: GetClientByIntakeFormID :one

@@ -4192,6 +4192,12 @@ type RiskAssessment struct {
 	Created                        pgtype.Timestamptz `json:"created"`
 }
 
+type RlsClientCreationContext struct {
+	BackendPid    int32         `json:"backend_pid"`
+	TransactionID pgtype.Uint64 `json:"transaction_id"`
+	ClientID      uuid.UUID     `json:"client_id"`
+}
+
 type Role struct {
 	ID          uuid.UUID `json:"id"`
 	Name        string    `json:"name"`

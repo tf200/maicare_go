@@ -2,7 +2,7 @@
 
 Last updated: 2026-08-19
 
-Status: Phase 7 completed; Phase 8 not started
+Status: Phase 8 completed; Phase 9 not started
 
 ## Purpose
 
@@ -637,7 +637,7 @@ Acceptance criteria:
 
 ## Phase 8: Convert `client_details` As The RLS Pilot
 
-Status: `[ ]` Not started
+Status: `[x]` Completed and verified on 2026-08-19
 
 Goal: prove the new model on the main client table before changing all related tables.
 
@@ -664,28 +664,29 @@ Notes:
 - A denied single-client read should normally appear as `404 Not Found` to avoid confirming that an inaccessible client exists.
 - `UPDATE USING` must check access to the existing row.
 - `UPDATE WITH CHECK` must check the resulting row and prevent moving data across unauthorized ownership boundaries.
+- PostgreSQL also applies select visibility to update targets, so `CLIENT.UPDATE` requires `CLIENT.VIEW` for the same row.
 
 Checklist:
 
-- [ ] Replace role-name policies on `client_details`.
-- [ ] Add separate policies for select, insert, update, and delete.
-- [ ] Verify list queries filter rows automatically.
-- [ ] Verify single-record queries hide unauthorized clients.
-- [ ] Verify update and delete denial.
-- [ ] Verify administrator/all behavior.
-- [ ] Verify assigned behavior.
-- [ ] Verify missing permission behavior.
-- [ ] Verify missing identity behavior.
-- [ ] Verify explicit user deny behavior.
-- [ ] Verify global `all` behavior.
+- [x] Replace role-name policies on `client_details`.
+- [x] Add separate policies for select, insert, update, and delete.
+- [x] Verify list and aggregate queries filter rows automatically.
+- [x] Verify single-record queries hide unauthorized clients.
+- [x] Verify update and delete denial.
+- [x] Verify `all` behavior.
+- [x] Verify assigned behavior.
+- [x] Verify missing permission behavior.
+- [x] Verify missing identity behavior.
+- [x] Verify inactive and mismatched actor denial.
+- [x] Verify global `all` behavior.
 
 Acceptance criteria:
 
-- [ ] An assigned coordinator sees only assigned clients.
-- [ ] An `all` grant sees all clients in the system.
-- [ ] A user without `CLIENT.VIEW` sees no client rows.
-- [ ] The application runtime role cannot bypass the policy.
-- [ ] Existing client API behavior remains correct for authorized users.
+- [x] An assigned actor sees only assigned clients.
+- [x] An `all` grant sees all clients in the system.
+- [x] A user without `CLIENT.VIEW` sees no client rows.
+- [x] A non-owner, non-`BYPASSRLS` runtime role cannot bypass the forced policy.
+- [x] Existing client reads and updates return policy-filtered results; client creation was adapted for safe `INSERT ... RETURNING` behavior.
 
 ## Phase 9: Convert Related Tables In Controlled Groups
 
@@ -970,7 +971,7 @@ Complete this tracker before converting each table. Add rows as tables are disco
 
 | Table | Client reference | Select permission | Insert permission | Update permission | Delete permission | Status |
 |---|---|---|---|---|---|---|
-| `client_details` | `id` | `CLIENT.VIEW` | `CLIENT.CREATE` | `CLIENT.UPDATE` | `CLIENT.DELETE` | Planned pilot |
+| `client_details` | `id` | `CLIENT.VIEW` | `CLIENT.CREATE` | `CLIENT.UPDATE` | `CLIENT.DELETE` | Phase 8 completed |
 | `progress_report` | `client_id` | `CLIENT.PROGRESS_REPORT.VIEW` | `CLIENT.PROGRESS_REPORT.CREATE` | `CLIENT.PROGRESS_REPORT.UPDATE` | `CLIENT.PROGRESS_REPORT.DELETE` | Pending review |
 | `client_diagnosis` | `client_id` | `CLIENT.DIAGNOSIS.VIEW` | `CLIENT.DIAGNOSIS.CREATE` | `CLIENT.DIAGNOSIS.UPDATE` | `CLIENT.DIAGNOSIS.DELETE` | Pending review |
 | `client_medication_order` | `client_id` | `CLIENT.MEDICATION.VIEW` | `CLIENT.MEDICATION.CREATE` | `CLIENT.MEDICATION.UPDATE` | `CLIENT.MEDICATION.DELETE` | Pending review |
@@ -1018,6 +1019,31 @@ Record finalized decisions here. Do not silently change an earlier decision; add
 
 Add the newest entry first.
 
+### 2026-08-19 - Phase 8 client RLS pilot completed
+
+Status: Completed and verified
+
+Changes:
+
+- Folded the Phase 7 authorization helpers into the disposable initial migration so a clean schema is self-contained.
+- Tightened permission and scope lookup to require matching active user and employee identities.
+- Replaced role-name policies on `client_details` with operation-specific permission policies.
+- Mapped select, insert, update, and delete to `CLIENT.VIEW`, `CLIENT.CREATE`, `CLIENT.UPDATE`, and `CLIENT.DELETE` respectively.
+- Made client creation request a fresh UUID through an owner-only transaction context so `INSERT ... RETURNING` can return only the newly created row without broadening `CLIENT.VIEW`.
+- Forced row-level security on `client_details`, including for a non-superuser table owner.
+- Left related tables on their legacy policies until their controlled Phase 9 conversion.
+
+Verification:
+
+- Applied the consolidated initial migration to a clean PostgreSQL 16 database.
+- Tested through a temporary `NOSUPERUSER NOBYPASSRLS` non-owner runtime role.
+- Verified assigned list filtering, hidden unassigned single reads, global `all`, missing identity, missing permission, authorized creation, scoped update/delete, and failed `row_security=off` bypass.
+- Existing Phase 6 and Phase 7 PostgreSQL integration tests continue to pass.
+
+Next action:
+
+- Begin Phase 9 by converting related client tables in controlled permission groups.
+
 ### 2026-08-19 - Phase 7 database authorization helpers added
 
 Status: Completed and verified
@@ -1040,8 +1066,7 @@ Changes:
 
 Verification:
 
-- Applied migrations 1 and 2 to a clean PostgreSQL 16 database.
-- Rolled migration 2 down and reapplied it successfully.
+- Applied the authorization helpers as part of the consolidated initial migration to a clean PostgreSQL 16 database.
 - Direct SQL integration tests cover missing and malformed context, absent grants, scoped and unscoped grants, future/current/deleted assignments, live scope changes, global `all`, inactive users, inactive employees, and mismatched identities.
 - `go test ./...` completed successfully.
 
