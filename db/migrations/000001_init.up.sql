@@ -1447,7 +1447,8 @@ CREATE TABLE client_diagnosis (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     archived_at TIMESTAMPTZ NULL,
 
-    CONSTRAINT client_diagnosis_dates CHECK (resolved_on IS NULL OR diagnosed_on IS NULL OR resolved_on >= diagnosed_on)
+    CONSTRAINT client_diagnosis_dates CHECK (resolved_on IS NULL OR diagnosed_on IS NULL OR resolved_on >= diagnosed_on),
+    CONSTRAINT client_diagnosis_id_client_unique UNIQUE (id, client_id)
 );
 
 CREATE INDEX client_diagnosis_client_status_idx ON client_diagnosis(client_id, status);
@@ -1504,7 +1505,7 @@ CREATE TYPE medication_admin_mode_enum AS ENUM ('self', 'staff', 'shared');
 CREATE TABLE client_medication_order (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
-    diagnosis_id UUID NULL REFERENCES client_diagnosis(id) ON DELETE SET NULL,
+    diagnosis_id UUID NULL,
 
     medication_name TEXT NOT NULL,
     dosage_text TEXT NOT NULL,
@@ -1544,7 +1545,11 @@ CREATE TABLE client_medication_order (
     CONSTRAINT client_med_order_prn_rules CHECK (
         (is_prn = FALSE)
         OR (is_prn = TRUE AND prn_indication IS NOT NULL)
-    )
+    ),
+    CONSTRAINT client_med_order_diagnosis_client_fk
+        FOREIGN KEY (diagnosis_id, client_id)
+        REFERENCES client_diagnosis(id, client_id)
+        ON DELETE RESTRICT
 );
 
 CREATE INDEX client_med_order_client_status_idx ON client_medication_order(client_id, status);
@@ -1569,6 +1574,33 @@ CREATE TRIGGER trigger_set_updated_at_client_medication_order
 BEFORE UPDATE ON client_medication_order
 FOR EACH ROW
 EXECUTE FUNCTION set_updated_at();
+
+CREATE OR REPLACE FUNCTION set_medical_actor_attribution()
+RETURNS TRIGGER AS $$
+DECLARE
+    actor_employee_id UUID := public.get_current_employee_id();
+BEGIN
+    IF actor_employee_id IS NULL THEN
+        RETURN NEW;
+    END IF;
+
+    IF TG_OP = 'INSERT' THEN
+        NEW.created_by_employee_id = actor_employee_id;
+    END IF;
+    NEW.updated_by_employee_id = actor_employee_id;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_set_actor_attribution_client_diagnosis
+BEFORE INSERT OR UPDATE ON client_diagnosis
+FOR EACH ROW
+EXECUTE FUNCTION set_medical_actor_attribution();
+
+CREATE TRIGGER trigger_set_actor_attribution_client_medication_order
+BEFORE INSERT OR UPDATE ON client_medication_order
+FOR EACH ROW
+EXECUTE FUNCTION set_medical_actor_attribution();
 
 -- Client location transfer status ENUM
 CREATE TYPE  client_location_transfer_status_enum AS ENUM ('pending', 'approved', 'rejected');
@@ -2987,7 +3019,7 @@ REVOKE ALL ON TABLE public.rls_client_creation_context FROM PUBLIC;
 CREATE TABLE public.rls_report_creation_context (
     backend_pid INTEGER NOT NULL,
     transaction_id XID8 NOT NULL,
-    report_kind TEXT NOT NULL CHECK (report_kind IN ('progress', 'ai')),
+    report_kind TEXT NOT NULL CHECK (report_kind IN ('progress', 'ai', 'diagnosis', 'medication')),
     report_id UUID NOT NULL,
     user_id UUID NOT NULL,
     employee_id UUID NOT NULL,
@@ -3145,6 +3177,108 @@ AS $$
     ), FALSE);
 $$;
 
+CREATE OR REPLACE FUNCTION public.begin_client_diagnosis_creation(client_id UUID)
+RETURNS UUID
+LANGUAGE plpgsql
+VOLATILE
+SECURITY DEFINER
+PARALLEL UNSAFE
+SET search_path = pg_catalog, public
+AS $$
+DECLARE
+    new_diagnosis_id UUID;
+BEGIN
+    IF NOT public.can_access_client($1, 'CLIENT.DIAGNOSIS.CREATE') THEN
+        RETURN NULL;
+    END IF;
+
+    DELETE FROM public.rls_report_creation_context
+    WHERE backend_pid = pg_backend_pid()
+      AND report_kind = 'diagnosis';
+
+    new_diagnosis_id := gen_random_uuid();
+    INSERT INTO public.rls_report_creation_context (
+        backend_pid, transaction_id, report_kind, report_id, user_id, employee_id
+    ) VALUES (
+        pg_backend_pid(), pg_current_xact_id(), 'diagnosis', new_diagnosis_id,
+        public.get_current_user_id(), public.get_current_employee_id()
+    );
+
+    RETURN new_diagnosis_id;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.can_read_created_client_diagnosis(diagnosis_id UUID)
+RETURNS BOOLEAN
+LANGUAGE sql
+VOLATILE
+SECURITY DEFINER
+PARALLEL UNSAFE
+SET search_path = pg_catalog, public
+AS $$
+    SELECT COALESCE(EXISTS (
+        SELECT 1
+        FROM public.rls_report_creation_context AS context
+        WHERE context.backend_pid = pg_backend_pid()
+          AND context.transaction_id = pg_current_xact_id_if_assigned()
+          AND context.report_kind = 'diagnosis'
+          AND context.report_id = $1
+          AND context.user_id = public.get_current_user_id()
+          AND context.employee_id = public.get_current_employee_id()
+    ), FALSE);
+$$;
+
+CREATE OR REPLACE FUNCTION public.begin_client_medication_creation(client_id UUID)
+RETURNS UUID
+LANGUAGE plpgsql
+VOLATILE
+SECURITY DEFINER
+PARALLEL UNSAFE
+SET search_path = pg_catalog, public
+AS $$
+DECLARE
+    new_medication_id UUID;
+BEGIN
+    IF NOT public.can_access_client($1, 'CLIENT.MEDICATION.CREATE') THEN
+        RETURN NULL;
+    END IF;
+
+    DELETE FROM public.rls_report_creation_context
+    WHERE backend_pid = pg_backend_pid()
+      AND report_kind = 'medication';
+
+    new_medication_id := gen_random_uuid();
+    INSERT INTO public.rls_report_creation_context (
+        backend_pid, transaction_id, report_kind, report_id, user_id, employee_id
+    ) VALUES (
+        pg_backend_pid(), pg_current_xact_id(), 'medication', new_medication_id,
+        public.get_current_user_id(), public.get_current_employee_id()
+    );
+
+    RETURN new_medication_id;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.can_read_created_client_medication(medication_id UUID)
+RETURNS BOOLEAN
+LANGUAGE sql
+VOLATILE
+SECURITY DEFINER
+PARALLEL UNSAFE
+SET search_path = pg_catalog, public
+AS $$
+    SELECT COALESCE(EXISTS (
+        SELECT 1
+        FROM public.rls_report_creation_context AS context
+        WHERE context.backend_pid = pg_backend_pid()
+          AND context.transaction_id = pg_current_xact_id_if_assigned()
+          AND context.report_kind = 'medication'
+          AND context.report_id = $1
+          AND context.user_id = public.get_current_user_id()
+          AND context.employee_id = public.get_current_employee_id()
+    ), FALSE);
+$$;
+
 CREATE OR REPLACE FUNCTION public.get_permission_scope(permission_name TEXT)
 RETURNS public.permission_scope_enum
 LANGUAGE sql
@@ -3295,6 +3429,10 @@ REVOKE ALL ON FUNCTION public.begin_progress_report_creation(UUID) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.can_read_created_progress_report(UUID) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.begin_ai_report_creation(UUID) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.can_read_created_ai_report(UUID) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.begin_client_diagnosis_creation(UUID) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.can_read_created_client_diagnosis(UUID) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.begin_client_medication_creation(UUID) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.can_read_created_client_medication(UUID) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.get_authorized_client_related_emails(UUID) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.get_authorized_incident_recipient_emails(UUID) FROM PUBLIC;
 
@@ -3508,12 +3646,56 @@ CREATE POLICY ai_generated_reports_insert ON public.ai_generated_reports
     FOR INSERT
     WITH CHECK (public.can_access_client(client_id, 'CLIENT.AI_PROGRESS_REPORT.CONFIRM'));
 
+ALTER TABLE public.client_diagnosis ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.client_diagnosis FORCE ROW LEVEL SECURITY;
+
+CREATE POLICY client_diagnosis_select ON public.client_diagnosis
+    FOR SELECT
+    USING (
+        public.can_access_client(client_id, 'CLIENT.DIAGNOSIS.VIEW')
+        OR public.can_read_created_client_diagnosis(id)
+    );
+
+CREATE POLICY client_diagnosis_insert ON public.client_diagnosis
+    FOR INSERT
+    WITH CHECK (public.can_access_client(client_id, 'CLIENT.DIAGNOSIS.CREATE'));
+
+CREATE POLICY client_diagnosis_update ON public.client_diagnosis
+    FOR UPDATE
+    USING (public.can_access_client(client_id, 'CLIENT.DIAGNOSIS.UPDATE'))
+    WITH CHECK (public.can_access_client(client_id, 'CLIENT.DIAGNOSIS.UPDATE'));
+
+CREATE POLICY client_diagnosis_delete ON public.client_diagnosis
+    FOR DELETE
+    USING (public.can_access_client(client_id, 'CLIENT.DIAGNOSIS.DELETE'));
+
+ALTER TABLE public.client_medication_order ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.client_medication_order FORCE ROW LEVEL SECURITY;
+
+CREATE POLICY client_medication_order_select ON public.client_medication_order
+    FOR SELECT
+    USING (
+        public.can_access_client(client_id, 'CLIENT.MEDICATION.VIEW')
+        OR public.can_read_created_client_medication(id)
+    );
+
+CREATE POLICY client_medication_order_insert ON public.client_medication_order
+    FOR INSERT
+    WITH CHECK (public.can_access_client(client_id, 'CLIENT.MEDICATION.CREATE'));
+
+CREATE POLICY client_medication_order_update ON public.client_medication_order
+    FOR UPDATE
+    USING (public.can_access_client(client_id, 'CLIENT.MEDICATION.UPDATE'))
+    WITH CHECK (public.can_access_client(client_id, 'CLIENT.MEDICATION.UPDATE'));
+
+CREATE POLICY client_medication_order_delete ON public.client_medication_order
+    FOR DELETE
+    USING (public.can_access_client(client_id, 'CLIENT.MEDICATION.DELETE'));
+
 -- Apply legacy RLS to related tables until they are converted in Phase 9.
 SELECT apply_client_rls('incident');
 SELECT apply_client_rls('client_documents');
 SELECT apply_client_rls('client_status_history');
-SELECT apply_client_rls('client_diagnosis');
-SELECT apply_client_rls('client_medication_order');
 SELECT apply_client_rls('client_location_transfer');
 	SELECT apply_client_rls('contract');
 	SELECT apply_client_rls('invoice');

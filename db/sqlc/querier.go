@@ -118,12 +118,15 @@ type Querier interface {
 	CreateShiftSwapRequest(ctx context.Context, arg CreateShiftSwapRequestParams) (ShiftSwapRequest, error)
 	CreateTemp2FaSecret(ctx context.Context, arg CreateTemp2FaSecretParams) (int64, error)
 	CreateUser(ctx context.Context, arg CreateUserParams) (CustomUser, error)
+	// Trusted bootstrap queries. Normal application writes use the actor-bound
+	// creation helpers above.
+	CurrentRoleBypassesRLS(ctx context.Context) (bool, error)
 	DeleteAssignedEmployee(ctx context.Context, id uuid.UUID) (AssignedEmployee, error)
 	DeleteAttachment(ctx context.Context, argUuid uuid.UUID) (AttachmentFile, error)
 	DeleteAttendeesByEventID(ctx context.Context, eventID uuid.UUID) error
 	DeleteClientDiagnosis(ctx context.Context, arg DeleteClientDiagnosisParams) (ClientDiagnosis, error)
 	DeleteClientDocument(ctx context.Context, arg DeleteClientDocumentParams) (ClientDocument, error)
-	DeleteClientMedicationOrder(ctx context.Context, arg DeleteClientMedicationOrderParams) error
+	DeleteClientMedicationOrder(ctx context.Context, arg DeleteClientMedicationOrderParams) (int64, error)
 	DeleteContractType(ctx context.Context, id uuid.UUID) error
 	DeleteDepartment(ctx context.Context, id uuid.UUID) error
 	DeleteEmergencyContact(ctx context.Context, id uuid.UUID) (ClientEmergencyContact, error)
@@ -402,6 +405,8 @@ type Querier interface {
 	RemovePermissionsFromRole(ctx context.Context, roleID uuid.UUID) error
 	ReplaceRegistrationFormDocument(ctx context.Context, arg ReplaceRegistrationFormDocumentParams) (RegistrationForm, error)
 	SearchEmployeesByNameOrEmail(ctx context.Context, search *string) ([]SearchEmployeesByNameOrEmailRow, error)
+	SeedClientDiagnosis(ctx context.Context, arg SeedClientDiagnosisParams) (ClientDiagnosis, error)
+	SeedClientMedicationOrder(ctx context.Context, arg SeedClientMedicationOrderParams) (ClientMedicationOrder, error)
 	SetAttachmentAsUsedorUnused(ctx context.Context, arg SetAttachmentAsUsedorUnusedParams) (AttachmentFile, error)
 	SetAttachmentsAsUsedorUnusedByUUIDs(ctx context.Context, arg SetAttachmentsAsUsedorUnusedByUUIDsParams) ([]AttachmentFile, error)
 	SetEmployeeProfilePicture(ctx context.Context, arg SetEmployeeProfilePictureParams) (CustomUser, error)

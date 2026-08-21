@@ -2,7 +2,7 @@
 
 Last updated: 2026-08-20
 
-Status: Phase 9 in progress; Groups A and B completed
+Status: Phase 9 in progress; Groups A, B, and C completed
 
 ## Purpose
 
@@ -690,7 +690,7 @@ Acceptance criteria:
 
 ## Phase 9: Convert Related Tables In Controlled Groups
 
-Status: `[~]` In progress; Groups A and B completed
+Status: `[~]` In progress; Groups A, B, and C completed
 
 Goal: apply permission-specific RLS to all client-owned information without one high-risk migration.
 
@@ -749,9 +749,15 @@ Likely tables:
 
 Permissions include `CLIENT.DIAGNOSIS.*` and `CLIENT.MEDICATION.*`.
 
-- [ ] Map operations.
-- [ ] Implement policies.
-- [ ] Add stricter access and audit tests for medical data.
+- [x] Map operations.
+- [x] Implement policies.
+- [x] Add stricter access and audit tests for medical data.
+
+Diagnosis and medication data require their own permissions; general `CLIENT.VIEW` does not expose either category. The combined overview requires both VIEW permissions. CREATE remains independent through actor-bound creation context, while UPDATE and DELETE also require category VIEW visibility under PostgreSQL mutation semantics. Creator/updater attribution comes from the transaction actor rather than request parameters.
+
+Medication-to-diagnosis ownership is enforced by a composite client foreign key. `source_attachment_uuid` remains a bare attachment reference because `attachment_file` has no client ownership; validating that association is explicitly deferred to Group E documents rather than inventing an unverifiable policy here.
+
+Deleting a diagnosis is restricted while medication orders reference it. Unlinking or deleting those orders requires the medication category's permissions and audit path, preventing diagnosis deletion from silently mutating medication data.
 
 ### Group D: Incidents
 
@@ -979,8 +985,8 @@ Complete this tracker before converting each table. Add rows as tables are disco
 |---|---|---|---|---|---|---|
 | `client_details` | `id` | `CLIENT.VIEW` | `CLIENT.CREATE` | `CLIENT.UPDATE` | `CLIENT.DELETE` | Phase 8 completed |
 | `progress_report` | `client_id` | `CLIENT.PROGRESS_REPORT.VIEW` or source read through `CLIENT.AI_PROGRESS_REPORT.GENERATE` | `CLIENT.PROGRESS_REPORT.CREATE` | `CLIENT.PROGRESS_REPORT.UPDATE` | `CLIENT.PROGRESS_REPORT.DELETE` | Phase 9 Group B completed |
-| `client_diagnosis` | `client_id` | `CLIENT.DIAGNOSIS.VIEW` | `CLIENT.DIAGNOSIS.CREATE` | `CLIENT.DIAGNOSIS.UPDATE` | `CLIENT.DIAGNOSIS.DELETE` | Pending review |
-| `client_medication_order` | `client_id` | `CLIENT.MEDICATION.VIEW` | `CLIENT.MEDICATION.CREATE` | `CLIENT.MEDICATION.UPDATE` | `CLIENT.MEDICATION.DELETE` | Pending review |
+| `client_diagnosis` | `client_id` | `CLIENT.DIAGNOSIS.VIEW` | `CLIENT.DIAGNOSIS.CREATE` | `CLIENT.DIAGNOSIS.UPDATE` | `CLIENT.DIAGNOSIS.DELETE` | Phase 9 Group C completed |
+| `client_medication_order` | `client_id` | `CLIENT.MEDICATION.VIEW` | `CLIENT.MEDICATION.CREATE` | `CLIENT.MEDICATION.UPDATE` | `CLIENT.MEDICATION.DELETE` | Phase 9 Group C completed |
 | `client_emergency_contact` | `client_id` | `CLIENT.EMERGENCY_CONTACT.VIEW` | `CLIENT.EMERGENCY_CONTACT.CREATE` | `CLIENT.EMERGENCY_CONTACT.UPDATE` | `CLIENT.EMERGENCY_CONTACT.DELETE` | Phase 9 Group A completed |
 | `assigned_employee` | `client_id` | `CLIENT.INVOLVED_EMPLOYEE.VIEW` | `CLIENT.INVOLVED_EMPLOYEE.CREATE` (`all` only) | `CLIENT.INVOLVED_EMPLOYEE.UPDATE` (`all` only) | `CLIENT.INVOLVED_EMPLOYEE.DELETE` (`all` only) | Phase 9 Group A completed |
 | `incident` | `client_id` | `CLIENT.INCIDENT.VIEW` | `CLIENT.INCIDENT.CREATE` | `CLIENT.INCIDENT.UPDATE` | `CLIENT.INCIDENT.DELETE` | Pending review |
@@ -1024,10 +1030,41 @@ Record finalized decisions here. Do not silently change an earlier decision; add
 | 2026-08-20 | Own assignment lookup and narrow recipient-email functions with a no-login `BYPASSRLS` policy-owner role. | This permits forced RLS on authorization-source and contact tables without recursive policies or broadening direct row visibility. | Confirmed |
 | 2026-08-20 | Let `CLIENT.AI_PROGRESS_REPORT.GENERATE` read scoped progress-report source rows without granting AI-report persistence or visibility. | Generation processes progress text but does not write or read `ai_generated_reports`; confirmation and AI history use separate permissions. | Confirmed |
 | 2026-08-20 | Give `ai_generated_reports` only VIEW and CONFIRM/insert policies. | There are no AI report update/delete operations or registered permissions, so inventing mutation authority would overgrant access. | Confirmed |
+| 2026-08-20 | Require both diagnosis and medication VIEW permissions for the combined medical overview. | General client visibility must not imply access to either sensitive medical category or return misleading partial overviews. | Confirmed |
+| 2026-08-20 | Derive medical creator/updater attribution from the database transaction actor. | Request parameters and direct repository callers must not be able to forge medical provenance. | Confirmed |
+| 2026-08-20 | Enforce medication diagnosis ownership with a composite `(diagnosis_id, client_id)` foreign key. | A medication order must not reference a diagnosis belonging to another client. | Confirmed |
+| 2026-08-20 | Restrict deletion of diagnoses referenced by medication orders. | Referential cascades must not mutate medication data without medication permission and audit coverage. | Confirmed |
 
 ## Progress Log
 
 Add the newest entry first.
+
+### 2026-08-20 - Phase 9 Group C medical RLS completed
+
+Status: Completed and verified
+
+Changes:
+
+- Replaced role-name policies on `client_diagnosis` and `client_medication_order` with forced permission-and-scope RLS.
+- Preserved independent medical CREATE permissions with actor-bound, unforgeable creation contexts.
+- Required both medical VIEW permissions for the combined overview and kept general client VIEW out of medical policies.
+- Derived medical creator/updater employee IDs from the transaction actor.
+- Prevented cross-client medication-to-diagnosis references with a composite foreign key.
+- Restricted linked-diagnosis deletion so medication changes remain explicit and separately authorized.
+- Made medication deletion report zero-row denial/not-found instead of false success.
+- Added best-effort NEN 7513 medical access/change events containing identifiers and counts but no clinical payloads.
+- Restricted actorless medical seed writes to an explicitly checked superuser/`BYPASSRLS` bootstrap role; normal application writes remain actor-bound.
+
+Verification:
+
+- Applied and rolled back the initial migration on a clean PostgreSQL 16 database.
+- Tested through a temporary `NOSUPERUSER NOBYPASSRLS` non-owner runtime role.
+- Verified category isolation, assigned/all visibility, general-VIEW denial, CREATE without VIEW, actor attribution, mutation visibility requirements, cross-client diagnosis-reference denial, forced policy state, unforgeable creation context, and failed `row_security=off` bypasses.
+- Verified medical audit classification and clinical-payload exclusion.
+
+Next action:
+
+- Convert Phase 9 Group D incidents.
 
 ### 2026-08-20 - Phase 9 Group B report RLS completed
 

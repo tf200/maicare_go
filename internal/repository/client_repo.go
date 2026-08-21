@@ -2447,8 +2447,6 @@ func (r *ClientRepository) CreateClientDiagnosis(ctx context.Context, params dom
 			ResolvedOn:          resolvedOn,
 			DiagnosingClinician: params.DiagnosingClinician,
 			Notes:               params.Notes,
-			CreatedByEmployeeID: params.CreatedByEmployeeID,
-			UpdatedByEmployeeID: params.UpdatedByEmployeeID,
 		})
 		return err
 	})
@@ -2536,7 +2534,6 @@ func (r *ClientRepository) UpdateClientDiagnosis(ctx context.Context, params dom
 			ResolvedOn:          resolvedOn,
 			DiagnosingClinician: params.DiagnosingClinician,
 			Notes:               params.Notes,
-			UpdatedByEmployeeID: params.UpdatedByEmployeeID,
 			ClientID:            params.ClientID,
 			ID:                  params.ID,
 		})
@@ -2621,8 +2618,6 @@ func (r *ClientRepository) CreateClientMedicationOrder(ctx context.Context, para
 			IsCritical:            params.IsCritical,
 			Notes:                 params.Notes,
 			SourceAttachmentUuid:  params.SourceAttachmentUUID,
-			CreatedByEmployeeID:   params.CreatedByEmployeeID,
-			UpdatedByEmployeeID:   params.UpdatedByEmployeeID,
 		})
 		return err
 	})
@@ -2723,7 +2718,6 @@ func (r *ClientRepository) UpdateClientMedicationOrder(ctx context.Context, para
 			IsCritical:            params.IsCritical,
 			Notes:                 params.Notes,
 			SourceAttachmentUuid:  params.SourceAttachmentUUID,
-			UpdatedByEmployeeID:   params.UpdatedByEmployeeID,
 			ClientID:              params.ClientID,
 			ID:                    params.ID,
 		})
@@ -2738,12 +2732,22 @@ func (r *ClientRepository) UpdateClientMedicationOrder(ctx context.Context, para
 
 func (r *ClientRepository) DeleteClientMedicationOrder(ctx context.Context, clientID, orderID uuid.UUID) (*domain.DeleteClientMedicationOrderResult, error) {
 	err := r.store.ExecActorTx(ctx, func(q *db.Queries) error {
-		return q.DeleteClientMedicationOrder(ctx, db.DeleteClientMedicationOrderParams{
+		rowsAffected, err := q.DeleteClientMedicationOrder(ctx, db.DeleteClientMedicationOrderParams{
 			ClientID: clientID,
 			ID:       orderID,
 		})
+		if err != nil {
+			return err
+		}
+		if rowsAffected == 0 {
+			return pgx.ErrNoRows
+		}
+		return nil
 	})
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, domain.ErrClientMedicationOrderNotFound
+		}
 		return nil, err
 	}
 

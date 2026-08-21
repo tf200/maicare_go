@@ -214,10 +214,10 @@ func (s *ClientService) GetClientCounts(ctx context.Context) (*domain.ClientCoun
 			SubjectID:   "summary",
 			AccessRule:  strPtr("CLIENT.VIEW"),
 			Details: map[string]any{
-				"metric":             "client_counts",
-				"total_clients":      counts.TotalClients,
-				"clients_in_care":    counts.ClientsInCare,
-				"clients_waiting":    counts.ClientsOnWaitingList,
+				"metric":              "client_counts",
+				"total_clients":       counts.TotalClients,
+				"clients_in_care":     counts.ClientsInCare,
+				"clients_waiting":     counts.ClientsOnWaitingList,
 				"clients_out_of_care": counts.ClientsOutOfCare,
 			},
 		}); auditErr != nil {
@@ -250,9 +250,9 @@ func (s *ClientService) GetClientStatusCounts(ctx context.Context) (*domain.Clie
 			SubjectID:   "summary",
 			AccessRule:  strPtr("CLIENT.VIEW"),
 			Details: map[string]any{
-				"metric":                      "client_status_counts",
-				"in_or_scheduled_care":        counts.ClientsInOrScheduledInCare,
-				"waiting_list":                counts.ClientsOnWaitingList,
+				"metric":                       "client_status_counts",
+				"in_or_scheduled_care":         counts.ClientsInOrScheduledInCare,
+				"waiting_list":                 counts.ClientsOnWaitingList,
 				"out_or_scheduled_out_of_care": counts.ClientsOutOrScheduledOutOfCare,
 			},
 		}); auditErr != nil {
@@ -285,9 +285,9 @@ func (s *ClientService) GetInCareStats(ctx context.Context) (*domain.InCareStats
 			SubjectID:   "summary",
 			AccessRule:  strPtr("CLIENT.VIEW"),
 			Details: map[string]any{
-				"metric":               "in_care_stats",
-				"clients_in_care":      stats.ClientsInCare,
-				"clients_scheduled":    stats.ClientsScheduledInCare,
+				"metric":                "in_care_stats",
+				"clients_in_care":       stats.ClientsInCare,
+				"clients_scheduled":     stats.ClientsScheduledInCare,
 				"contracts_ending_soon": stats.ContractsEndingSoon,
 			},
 		}); auditErr != nil {
@@ -1007,12 +1007,39 @@ func (s *ClientService) ListRecentDraftEvaluations(ctx context.Context, params d
 // Medical - Diagnoses
 // =====================
 
-func (s *ClientService) CreateClientDiagnosis(ctx context.Context, clientID uuid.UUID, employeeID uuid.UUID, params domain.CreateClientDiagnosisParams) (*domain.ClientDiagnosis, error) {
-	params.ClientID = clientID
-	if employeeID != uuid.Nil {
-		params.CreatedByEmployeeID = &employeeID
-		params.UpdatedByEmployeeID = &employeeID
+func (s *ClientService) logMedicalAudit(ctx context.Context, action, subjectType string, subjectID, clientID uuid.UUID, permission string, count int) {
+	if s.audit == nil {
+		return
 	}
+	eventType := "record_change"
+	if action == "read" || action == "list" {
+		eventType = "record_access"
+	}
+	var details map[string]any
+	if count >= 0 {
+		details = map[string]any{"count": count}
+	}
+	clientIDString := clientID.String()
+	if err := s.audit.Log(ctx, domain.AuditEvent{
+		EventType:   eventType,
+		Action:      action,
+		Result:      "success",
+		SubjectType: subjectType,
+		SubjectID:   subjectID.String(),
+		ClientID:    &clientIDString,
+		AccessRule:  strPtr(permission),
+		Details:     details,
+	}); err != nil && s.logger != nil {
+		s.logger.LogError(ctx, "ClientService.logMedicalAudit", "medical audit log failed", err,
+			zap.String("client_id", clientIDString),
+			zap.String("subject_type", subjectType),
+			zap.String("action", action),
+		)
+	}
+}
+
+func (s *ClientService) CreateClientDiagnosis(ctx context.Context, clientID uuid.UUID, _ uuid.UUID, params domain.CreateClientDiagnosisParams) (*domain.ClientDiagnosis, error) {
+	params.ClientID = clientID
 
 	result, err := s.repository.CreateClientDiagnosis(ctx, params)
 	if err != nil {
@@ -1024,6 +1051,7 @@ func (s *ClientService) CreateClientDiagnosis(ctx context.Context, clientID uuid
 		return nil, err
 	}
 
+	s.logMedicalAudit(ctx, "create", "client_diagnosis", result.ID, clientID, "CLIENT.DIAGNOSIS.CREATE", -1)
 	return result, nil
 }
 
@@ -1038,6 +1066,7 @@ func (s *ClientService) ListClientDiagnoses(ctx context.Context, params domain.L
 		return nil, err
 	}
 
+	s.logMedicalAudit(ctx, "list", "client_diagnosis", params.ClientID, params.ClientID, "CLIENT.DIAGNOSIS.VIEW", len(result.Items))
 	return result, nil
 }
 
@@ -1053,15 +1082,13 @@ func (s *ClientService) GetClientDiagnosis(ctx context.Context, clientID, diagno
 		return nil, err
 	}
 
+	s.logMedicalAudit(ctx, "read", "client_diagnosis", diagnosisID, clientID, "CLIENT.DIAGNOSIS.VIEW", -1)
 	return result, nil
 }
 
-func (s *ClientService) UpdateClientDiagnosis(ctx context.Context, clientID, diagnosisID, employeeID uuid.UUID, params domain.UpdateClientDiagnosisParams) (*domain.ClientDiagnosis, error) {
+func (s *ClientService) UpdateClientDiagnosis(ctx context.Context, clientID, diagnosisID, _ uuid.UUID, params domain.UpdateClientDiagnosisParams) (*domain.ClientDiagnosis, error) {
 	params.ClientID = clientID
 	params.ID = diagnosisID
-	if employeeID != uuid.Nil {
-		params.UpdatedByEmployeeID = &employeeID
-	}
 
 	result, err := s.repository.UpdateClientDiagnosis(ctx, params)
 	if err != nil {
@@ -1074,6 +1101,7 @@ func (s *ClientService) UpdateClientDiagnosis(ctx context.Context, clientID, dia
 		return nil, err
 	}
 
+	s.logMedicalAudit(ctx, "update", "client_diagnosis", diagnosisID, clientID, "CLIENT.DIAGNOSIS.UPDATE", -1)
 	return result, nil
 }
 
@@ -1089,6 +1117,7 @@ func (s *ClientService) DeleteClientDiagnosis(ctx context.Context, clientID, dia
 		return nil, err
 	}
 
+	s.logMedicalAudit(ctx, "delete", "client_diagnosis", diagnosisID, clientID, "CLIENT.DIAGNOSIS.DELETE", -1)
 	return result, nil
 }
 
@@ -1096,12 +1125,8 @@ func (s *ClientService) DeleteClientDiagnosis(ctx context.Context, clientID, dia
 // Medical - Medication Orders
 // =====================
 
-func (s *ClientService) CreateClientMedicationOrder(ctx context.Context, clientID uuid.UUID, employeeID uuid.UUID, params domain.CreateClientMedicationOrderParams) (*domain.ClientMedicationOrder, error) {
+func (s *ClientService) CreateClientMedicationOrder(ctx context.Context, clientID uuid.UUID, _ uuid.UUID, params domain.CreateClientMedicationOrderParams) (*domain.ClientMedicationOrder, error) {
 	params.ClientID = clientID
-	if employeeID != uuid.Nil {
-		params.CreatedByEmployeeID = &employeeID
-		params.UpdatedByEmployeeID = &employeeID
-	}
 
 	result, err := s.repository.CreateClientMedicationOrder(ctx, params)
 	if err != nil {
@@ -1113,6 +1138,7 @@ func (s *ClientService) CreateClientMedicationOrder(ctx context.Context, clientI
 		return nil, err
 	}
 
+	s.logMedicalAudit(ctx, "create", "client_medication_order", result.ID, clientID, "CLIENT.MEDICATION.CREATE", -1)
 	return result, nil
 }
 
@@ -1127,6 +1153,7 @@ func (s *ClientService) ListClientMedicationOrders(ctx context.Context, params d
 		return nil, err
 	}
 
+	s.logMedicalAudit(ctx, "list", "client_medication_order", params.ClientID, params.ClientID, "CLIENT.MEDICATION.VIEW", len(result.Items))
 	return result, nil
 }
 
@@ -1142,15 +1169,13 @@ func (s *ClientService) GetClientMedicationOrder(ctx context.Context, clientID, 
 		return nil, err
 	}
 
+	s.logMedicalAudit(ctx, "read", "client_medication_order", orderID, clientID, "CLIENT.MEDICATION.VIEW", -1)
 	return result, nil
 }
 
-func (s *ClientService) UpdateClientMedicationOrder(ctx context.Context, clientID, orderID, employeeID uuid.UUID, params domain.UpdateClientMedicationOrderParams) (*domain.ClientMedicationOrder, error) {
+func (s *ClientService) UpdateClientMedicationOrder(ctx context.Context, clientID, orderID, _ uuid.UUID, params domain.UpdateClientMedicationOrderParams) (*domain.ClientMedicationOrder, error) {
 	params.ClientID = clientID
 	params.ID = orderID
-	if employeeID != uuid.Nil {
-		params.UpdatedByEmployeeID = &employeeID
-	}
 
 	updated, err := s.repository.UpdateClientMedicationOrder(ctx, params)
 	if err != nil {
@@ -1175,6 +1200,7 @@ func (s *ClientService) UpdateClientMedicationOrder(ctx context.Context, clientI
 		return nil, err
 	}
 
+	s.logMedicalAudit(ctx, "update", "client_medication_order", orderID, clientID, "CLIENT.MEDICATION.UPDATE", -1)
 	return result, nil
 }
 
@@ -1190,6 +1216,7 @@ func (s *ClientService) DeleteClientMedicationOrder(ctx context.Context, clientI
 		return nil, err
 	}
 
+	s.logMedicalAudit(ctx, "delete", "client_medication_order", orderID, clientID, "CLIENT.MEDICATION.DELETE", -1)
 	return result, nil
 }
 
@@ -1203,6 +1230,8 @@ func (s *ClientService) GetClientMedicalOverview(ctx context.Context, clientID u
 		}
 		return nil, err
 	}
+	s.logMedicalAudit(ctx, "list", "client_diagnosis", clientID, clientID, "CLIENT.DIAGNOSIS.VIEW", len(result.Diagnoses))
+	s.logMedicalAudit(ctx, "list", "client_medication_order", clientID, clientID, "CLIENT.MEDICATION.VIEW", len(result.MedicationOrders))
 	return result, nil
 }
 

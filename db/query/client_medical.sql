@@ -4,7 +4,11 @@
 -- ==========================================
 
 -- name: CreateClientDiagnosis :one
+WITH new_diagnosis AS (
+    SELECT public.begin_client_diagnosis_creation($1) AS id
+)
 INSERT INTO client_diagnosis (
+    id,
     client_id,
     code_system,
     code,
@@ -18,9 +22,13 @@ INSERT INTO client_diagnosis (
     notes,
     created_by_employee_id,
     updated_by_employee_id
-) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13
-) RETURNING
+) SELECT
+    new_diagnosis.id,
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,
+    public.get_current_employee_id(), public.get_current_employee_id()
+FROM new_diagnosis
+WHERE new_diagnosis.id IS NOT NULL
+RETURNING
     id,
     client_id,
     code_system,
@@ -106,7 +114,7 @@ SET
     resolved_on = COALESCE(sqlc.narg('resolved_on'), resolved_on),
     diagnosing_clinician = COALESCE(sqlc.narg('diagnosing_clinician'), diagnosing_clinician),
     notes = COALESCE(sqlc.narg('notes'), notes),
-    updated_by_employee_id = COALESCE(sqlc.narg('updated_by_employee_id'), updated_by_employee_id)
+    updated_by_employee_id = public.get_current_employee_id()
 WHERE client_id = sqlc.arg('client_id')
   AND id = sqlc.arg('id')
   AND archived_at IS NULL
@@ -155,7 +163,11 @@ RETURNING
 
 
 -- name: CreateClientMedicationOrder :one
+WITH new_medication AS (
+    SELECT public.begin_client_medication_creation($1) AS id
+)
 INSERT INTO client_medication_order (
+    id,
     client_id,
     diagnosis_id,
     medication_name,
@@ -178,11 +190,15 @@ INSERT INTO client_medication_order (
     source_attachment_uuid,
     created_by_employee_id,
     updated_by_employee_id
-) VALUES (
+) SELECT
+    new_medication.id,
     $1, $2, $3, $4, $5, $6, $7, $8, $9,
     $10, $11, $12, $13, $14, $15, $16, $17,
-    $18, $19, $20, $21, $22
-) RETURNING
+    $18, $19, $20,
+    public.get_current_employee_id(), public.get_current_employee_id()
+FROM new_medication
+WHERE new_medication.id IS NOT NULL
+RETURNING
     id,
     client_id,
     diagnosis_id,
@@ -326,7 +342,7 @@ SET
     is_critical = COALESCE(sqlc.narg('is_critical'), is_critical),
     notes = COALESCE(sqlc.narg('notes'), notes),
     source_attachment_uuid = COALESCE(sqlc.narg('source_attachment_uuid'), source_attachment_uuid),
-    updated_by_employee_id = COALESCE(sqlc.narg('updated_by_employee_id'), updated_by_employee_id)
+    updated_by_employee_id = public.get_current_employee_id()
 WHERE client_id = sqlc.arg('client_id')
   AND id = sqlc.arg('id')
   AND archived_at IS NULL
@@ -359,7 +375,38 @@ RETURNING
     archived_at;
 
 
--- name: DeleteClientMedicationOrder :exec
+-- name: DeleteClientMedicationOrder :execrows
 DELETE FROM client_medication_order
 WHERE client_id = $1
   AND id = $2;
+
+-- Trusted bootstrap queries. Normal application writes use the actor-bound
+-- creation helpers above.
+-- name: CurrentRoleBypassesRLS :one
+SELECT COALESCE(rolsuper OR rolbypassrls, FALSE)::BOOLEAN AS can_bypass_rls
+FROM pg_catalog.pg_roles
+WHERE rolname = CURRENT_USER;
+
+-- name: SeedClientDiagnosis :one
+INSERT INTO client_diagnosis (
+    client_id, code_system, code, title, description, status, severity,
+    diagnosed_on, resolved_on, diagnosing_clinician, notes,
+    created_by_employee_id, updated_by_employee_id
+) VALUES (
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $12
+)
+RETURNING *;
+
+-- name: SeedClientMedicationOrder :one
+INSERT INTO client_medication_order (
+    client_id, diagnosis_id, medication_name, dosage_text, dose_amount,
+    dose_unit, route, frequency_text, schedule, is_prn, prn_indication,
+    max_doses_per_24h, start_date, end_date, status, admin_mode,
+    responsible_employee_id, is_critical, notes, source_attachment_uuid,
+    created_by_employee_id, updated_by_employee_id
+) VALUES (
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
+    $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
+    $21, $21
+)
+RETURNING *;

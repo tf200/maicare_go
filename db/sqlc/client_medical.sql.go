@@ -14,7 +14,11 @@ import (
 
 const createClientDiagnosis = `-- name: CreateClientDiagnosis :one
 
+WITH new_diagnosis AS (
+    SELECT public.begin_client_diagnosis_creation($1) AS id
+)
 INSERT INTO client_diagnosis (
+    id,
     client_id,
     code_system,
     code,
@@ -28,9 +32,13 @@ INSERT INTO client_diagnosis (
     notes,
     created_by_employee_id,
     updated_by_employee_id
-) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13
-) RETURNING
+) SELECT
+    new_diagnosis.id,
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11,
+    public.get_current_employee_id(), public.get_current_employee_id()
+FROM new_diagnosis
+WHERE new_diagnosis.id IS NOT NULL
+RETURNING
     id,
     client_id,
     code_system,
@@ -62,8 +70,6 @@ type CreateClientDiagnosisParams struct {
 	ResolvedOn          pgtype.Date           `json:"resolved_on"`
 	DiagnosingClinician *string               `json:"diagnosing_clinician"`
 	Notes               *string               `json:"notes"`
-	CreatedByEmployeeID *uuid.UUID            `json:"created_by_employee_id"`
-	UpdatedByEmployeeID *uuid.UUID            `json:"updated_by_employee_id"`
 }
 
 // ==========================================
@@ -83,8 +89,6 @@ func (q *Queries) CreateClientDiagnosis(ctx context.Context, arg CreateClientDia
 		arg.ResolvedOn,
 		arg.DiagnosingClinician,
 		arg.Notes,
-		arg.CreatedByEmployeeID,
-		arg.UpdatedByEmployeeID,
 	)
 	var i ClientDiagnosis
 	err := row.Scan(
@@ -110,7 +114,11 @@ func (q *Queries) CreateClientDiagnosis(ctx context.Context, arg CreateClientDia
 }
 
 const createClientMedicationOrder = `-- name: CreateClientMedicationOrder :one
+WITH new_medication AS (
+    SELECT public.begin_client_medication_creation($1) AS id
+)
 INSERT INTO client_medication_order (
+    id,
     client_id,
     diagnosis_id,
     medication_name,
@@ -133,11 +141,15 @@ INSERT INTO client_medication_order (
     source_attachment_uuid,
     created_by_employee_id,
     updated_by_employee_id
-) VALUES (
+) SELECT
+    new_medication.id,
     $1, $2, $3, $4, $5, $6, $7, $8, $9,
     $10, $11, $12, $13, $14, $15, $16, $17,
-    $18, $19, $20, $21, $22
-) RETURNING
+    $18, $19, $20,
+    public.get_current_employee_id(), public.get_current_employee_id()
+FROM new_medication
+WHERE new_medication.id IS NOT NULL
+RETURNING
     id,
     client_id,
     diagnosis_id,
@@ -187,8 +199,6 @@ type CreateClientMedicationOrderParams struct {
 	IsCritical            bool                      `json:"is_critical"`
 	Notes                 *string                   `json:"notes"`
 	SourceAttachmentUuid  *uuid.UUID                `json:"source_attachment_uuid"`
-	CreatedByEmployeeID   *uuid.UUID                `json:"created_by_employee_id"`
-	UpdatedByEmployeeID   *uuid.UUID                `json:"updated_by_employee_id"`
 }
 
 func (q *Queries) CreateClientMedicationOrder(ctx context.Context, arg CreateClientMedicationOrderParams) (ClientMedicationOrder, error) {
@@ -213,8 +223,6 @@ func (q *Queries) CreateClientMedicationOrder(ctx context.Context, arg CreateCli
 		arg.IsCritical,
 		arg.Notes,
 		arg.SourceAttachmentUuid,
-		arg.CreatedByEmployeeID,
-		arg.UpdatedByEmployeeID,
 	)
 	var i ClientMedicationOrder
 	err := row.Scan(
@@ -246,6 +254,21 @@ func (q *Queries) CreateClientMedicationOrder(ctx context.Context, arg CreateCli
 		&i.ArchivedAt,
 	)
 	return i, err
+}
+
+const currentRoleBypassesRLS = `-- name: CurrentRoleBypassesRLS :one
+SELECT COALESCE(rolsuper OR rolbypassrls, FALSE)::BOOLEAN AS can_bypass_rls
+FROM pg_catalog.pg_roles
+WHERE rolname = CURRENT_USER
+`
+
+// Trusted bootstrap queries. Normal application writes use the actor-bound
+// creation helpers above.
+func (q *Queries) CurrentRoleBypassesRLS(ctx context.Context) (bool, error) {
+	row := q.db.QueryRow(ctx, currentRoleBypassesRLS)
+	var can_bypass_rls bool
+	err := row.Scan(&can_bypass_rls)
+	return can_bypass_rls, err
 }
 
 const deleteClientDiagnosis = `-- name: DeleteClientDiagnosis :one
@@ -302,7 +325,7 @@ func (q *Queries) DeleteClientDiagnosis(ctx context.Context, arg DeleteClientDia
 	return i, err
 }
 
-const deleteClientMedicationOrder = `-- name: DeleteClientMedicationOrder :exec
+const deleteClientMedicationOrder = `-- name: DeleteClientMedicationOrder :execrows
 DELETE FROM client_medication_order
 WHERE client_id = $1
   AND id = $2
@@ -313,9 +336,12 @@ type DeleteClientMedicationOrderParams struct {
 	ID       uuid.UUID `json:"id"`
 }
 
-func (q *Queries) DeleteClientMedicationOrder(ctx context.Context, arg DeleteClientMedicationOrderParams) error {
-	_, err := q.db.Exec(ctx, deleteClientMedicationOrder, arg.ClientID, arg.ID)
-	return err
+func (q *Queries) DeleteClientMedicationOrder(ctx context.Context, arg DeleteClientMedicationOrderParams) (int64, error) {
+	result, err := q.db.Exec(ctx, deleteClientMedicationOrder, arg.ClientID, arg.ID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
 
 const getClientDiagnosis = `-- name: GetClientDiagnosis :one
@@ -744,6 +770,165 @@ func (q *Queries) ListClientMedicationOrders(ctx context.Context, arg ListClient
 	return items, nil
 }
 
+const seedClientDiagnosis = `-- name: SeedClientDiagnosis :one
+INSERT INTO client_diagnosis (
+    client_id, code_system, code, title, description, status, severity,
+    diagnosed_on, resolved_on, diagnosing_clinician, notes,
+    created_by_employee_id, updated_by_employee_id
+) VALUES (
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $12
+)
+RETURNING id, client_id, code_system, code, title, description, status, severity, diagnosed_on, resolved_on, diagnosing_clinician, notes, created_by_employee_id, updated_by_employee_id, created_at, updated_at, archived_at
+`
+
+type SeedClientDiagnosisParams struct {
+	ClientID            uuid.UUID             `json:"client_id"`
+	CodeSystem          string                `json:"code_system"`
+	Code                string                `json:"code"`
+	Title               *string               `json:"title"`
+	Description         *string               `json:"description"`
+	Status              DiagnosisStatusEnum   `json:"status"`
+	Severity            DiagnosisSeverityEnum `json:"severity"`
+	DiagnosedOn         pgtype.Date           `json:"diagnosed_on"`
+	ResolvedOn          pgtype.Date           `json:"resolved_on"`
+	DiagnosingClinician *string               `json:"diagnosing_clinician"`
+	Notes               *string               `json:"notes"`
+	CreatedByEmployeeID *uuid.UUID            `json:"created_by_employee_id"`
+}
+
+func (q *Queries) SeedClientDiagnosis(ctx context.Context, arg SeedClientDiagnosisParams) (ClientDiagnosis, error) {
+	row := q.db.QueryRow(ctx, seedClientDiagnosis,
+		arg.ClientID,
+		arg.CodeSystem,
+		arg.Code,
+		arg.Title,
+		arg.Description,
+		arg.Status,
+		arg.Severity,
+		arg.DiagnosedOn,
+		arg.ResolvedOn,
+		arg.DiagnosingClinician,
+		arg.Notes,
+		arg.CreatedByEmployeeID,
+	)
+	var i ClientDiagnosis
+	err := row.Scan(
+		&i.ID,
+		&i.ClientID,
+		&i.CodeSystem,
+		&i.Code,
+		&i.Title,
+		&i.Description,
+		&i.Status,
+		&i.Severity,
+		&i.DiagnosedOn,
+		&i.ResolvedOn,
+		&i.DiagnosingClinician,
+		&i.Notes,
+		&i.CreatedByEmployeeID,
+		&i.UpdatedByEmployeeID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.ArchivedAt,
+	)
+	return i, err
+}
+
+const seedClientMedicationOrder = `-- name: SeedClientMedicationOrder :one
+INSERT INTO client_medication_order (
+    client_id, diagnosis_id, medication_name, dosage_text, dose_amount,
+    dose_unit, route, frequency_text, schedule, is_prn, prn_indication,
+    max_doses_per_24h, start_date, end_date, status, admin_mode,
+    responsible_employee_id, is_critical, notes, source_attachment_uuid,
+    created_by_employee_id, updated_by_employee_id
+) VALUES (
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
+    $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
+    $21, $21
+)
+RETURNING id, client_id, diagnosis_id, medication_name, dosage_text, dose_amount, dose_unit, route, frequency_text, schedule, is_prn, prn_indication, max_doses_per_24h, start_date, end_date, status, admin_mode, responsible_employee_id, is_critical, notes, source_attachment_uuid, created_by_employee_id, updated_by_employee_id, created_at, updated_at, archived_at
+`
+
+type SeedClientMedicationOrderParams struct {
+	ClientID              uuid.UUID                 `json:"client_id"`
+	DiagnosisID           *uuid.UUID                `json:"diagnosis_id"`
+	MedicationName        string                    `json:"medication_name"`
+	DosageText            string                    `json:"dosage_text"`
+	DoseAmount            *float64                  `json:"dose_amount"`
+	DoseUnit              *string                   `json:"dose_unit"`
+	Route                 *string                   `json:"route"`
+	FrequencyText         *string                   `json:"frequency_text"`
+	Schedule              []byte                    `json:"schedule"`
+	IsPrn                 bool                      `json:"is_prn"`
+	PrnIndication         *string                   `json:"prn_indication"`
+	MaxDosesPer24h        *int32                    `json:"max_doses_per_24h"`
+	StartDate             pgtype.Date               `json:"start_date"`
+	EndDate               pgtype.Date               `json:"end_date"`
+	Status                MedicationOrderStatusEnum `json:"status"`
+	AdminMode             MedicationAdminModeEnum   `json:"admin_mode"`
+	ResponsibleEmployeeID *uuid.UUID                `json:"responsible_employee_id"`
+	IsCritical            bool                      `json:"is_critical"`
+	Notes                 *string                   `json:"notes"`
+	SourceAttachmentUuid  *uuid.UUID                `json:"source_attachment_uuid"`
+	CreatedByEmployeeID   *uuid.UUID                `json:"created_by_employee_id"`
+}
+
+func (q *Queries) SeedClientMedicationOrder(ctx context.Context, arg SeedClientMedicationOrderParams) (ClientMedicationOrder, error) {
+	row := q.db.QueryRow(ctx, seedClientMedicationOrder,
+		arg.ClientID,
+		arg.DiagnosisID,
+		arg.MedicationName,
+		arg.DosageText,
+		arg.DoseAmount,
+		arg.DoseUnit,
+		arg.Route,
+		arg.FrequencyText,
+		arg.Schedule,
+		arg.IsPrn,
+		arg.PrnIndication,
+		arg.MaxDosesPer24h,
+		arg.StartDate,
+		arg.EndDate,
+		arg.Status,
+		arg.AdminMode,
+		arg.ResponsibleEmployeeID,
+		arg.IsCritical,
+		arg.Notes,
+		arg.SourceAttachmentUuid,
+		arg.CreatedByEmployeeID,
+	)
+	var i ClientMedicationOrder
+	err := row.Scan(
+		&i.ID,
+		&i.ClientID,
+		&i.DiagnosisID,
+		&i.MedicationName,
+		&i.DosageText,
+		&i.DoseAmount,
+		&i.DoseUnit,
+		&i.Route,
+		&i.FrequencyText,
+		&i.Schedule,
+		&i.IsPrn,
+		&i.PrnIndication,
+		&i.MaxDosesPer24h,
+		&i.StartDate,
+		&i.EndDate,
+		&i.Status,
+		&i.AdminMode,
+		&i.ResponsibleEmployeeID,
+		&i.IsCritical,
+		&i.Notes,
+		&i.SourceAttachmentUuid,
+		&i.CreatedByEmployeeID,
+		&i.UpdatedByEmployeeID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.ArchivedAt,
+	)
+	return i, err
+}
+
 const updateClientDiagnosis = `-- name: UpdateClientDiagnosis :one
 UPDATE client_diagnosis
 SET
@@ -757,9 +942,9 @@ SET
     resolved_on = COALESCE($8, resolved_on),
     diagnosing_clinician = COALESCE($9, diagnosing_clinician),
     notes = COALESCE($10, notes),
-    updated_by_employee_id = COALESCE($11, updated_by_employee_id)
-WHERE client_id = $12
-  AND id = $13
+    updated_by_employee_id = public.get_current_employee_id()
+WHERE client_id = $11
+  AND id = $12
   AND archived_at IS NULL
 RETURNING
     id,
@@ -792,7 +977,6 @@ type UpdateClientDiagnosisParams struct {
 	ResolvedOn          pgtype.Date            `json:"resolved_on"`
 	DiagnosingClinician *string                `json:"diagnosing_clinician"`
 	Notes               *string                `json:"notes"`
-	UpdatedByEmployeeID *uuid.UUID             `json:"updated_by_employee_id"`
 	ClientID            uuid.UUID              `json:"client_id"`
 	ID                  uuid.UUID              `json:"id"`
 }
@@ -809,7 +993,6 @@ func (q *Queries) UpdateClientDiagnosis(ctx context.Context, arg UpdateClientDia
 		arg.ResolvedOn,
 		arg.DiagnosingClinician,
 		arg.Notes,
-		arg.UpdatedByEmployeeID,
 		arg.ClientID,
 		arg.ID,
 	)
@@ -858,9 +1041,9 @@ SET
     is_critical = COALESCE($17, is_critical),
     notes = COALESCE($18, notes),
     source_attachment_uuid = COALESCE($19, source_attachment_uuid),
-    updated_by_employee_id = COALESCE($20, updated_by_employee_id)
-WHERE client_id = $21
-  AND id = $22
+    updated_by_employee_id = public.get_current_employee_id()
+WHERE client_id = $20
+  AND id = $21
   AND archived_at IS NULL
 RETURNING
     id,
@@ -911,7 +1094,6 @@ type UpdateClientMedicationOrderParams struct {
 	IsCritical            *bool                      `json:"is_critical"`
 	Notes                 *string                    `json:"notes"`
 	SourceAttachmentUuid  *uuid.UUID                 `json:"source_attachment_uuid"`
-	UpdatedByEmployeeID   *uuid.UUID                 `json:"updated_by_employee_id"`
 	ClientID              uuid.UUID                  `json:"client_id"`
 	ID                    uuid.UUID                  `json:"id"`
 }
@@ -937,7 +1119,6 @@ func (q *Queries) UpdateClientMedicationOrder(ctx context.Context, arg UpdateCli
 		arg.IsCritical,
 		arg.Notes,
 		arg.SourceAttachmentUuid,
-		arg.UpdatedByEmployeeID,
 		arg.ClientID,
 		arg.ID,
 	)

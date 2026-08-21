@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
-	"github.com/goccy/go-json"
 	"fmt"
+	"github.com/goccy/go-json"
 	"time"
 
 	db "maicare_go/db/sqlc"
@@ -56,6 +56,13 @@ func (s *Seeder) SeedMedicalForClients(ctx context.Context, maxDiagnosesPerClien
 	if len(s.data.ClientIDs) == 0 {
 		return fmt.Errorf("no clients available; seed waiting-list or in-care clients first")
 	}
+	canBypassRLS, err := s.store.CurrentRoleBypassesRLS(ctx)
+	if err != nil {
+		return fmt.Errorf("check medical seed database role: %w", err)
+	}
+	if !canBypassRLS {
+		return fmt.Errorf("medical bootstrap requires a superuser or BYPASSRLS database role")
+	}
 
 	for i, clientID := range s.data.ClientIDs {
 		if (i+1)%10 == 0 || i == 0 || i+1 == len(s.data.ClientIDs) {
@@ -71,13 +78,13 @@ func (s *Seeder) SeedMedicalForClients(ctx context.Context, maxDiagnosesPerClien
 }
 
 func (s *Seeder) seedMedicalForClient(ctx context.Context, clientID uuid.UUID, maxDiagnosesPerClient int, maxMedicationOrdersPerClient int) error {
-	return s.store.ExecTx(ctx, func(q *db.Queries) error {
-		actorID := s.pickCoordinatorForClient(clientID)
-		var actor *uuid.UUID
-		if actorID != uuid.Nil {
-			actor = &actorID
-		}
+	actorID := s.pickCoordinatorForClient(clientID)
+	if actorID == uuid.Nil {
+		return fmt.Errorf("client has no coordinator")
+	}
+	actor := &actorID
 
+	return s.store.ExecTx(ctx, func(q *db.Queries) error {
 		diagnosisCount := 0
 		if maxDiagnosesPerClient > 0 {
 			diagnosisCount = gofakeit.Number(1, maxDiagnosesPerClient)
@@ -85,7 +92,7 @@ func (s *Seeder) seedMedicalForClient(ctx context.Context, clientID uuid.UUID, m
 
 		diagnosisIDs := make([]uuid.UUID, 0, diagnosisCount)
 		for range diagnosisCount {
-			createdDiagnosis, err := q.CreateClientDiagnosis(ctx, randomDiagnosisParams(clientID, actor))
+			createdDiagnosis, err := q.SeedClientDiagnosis(ctx, randomDiagnosisParams(clientID, actorID))
 			if err != nil {
 				return fmt.Errorf("create client diagnosis: %w", err)
 			}
@@ -99,7 +106,7 @@ func (s *Seeder) seedMedicalForClient(ctx context.Context, clientID uuid.UUID, m
 		}
 
 		for range medicationCount {
-			createdOrder, err := q.CreateClientMedicationOrder(ctx, randomMedicationOrderParams(clientID, diagnosisIDs, actor))
+			createdOrder, err := q.SeedClientMedicationOrder(ctx, randomMedicationOrderParams(clientID, diagnosisIDs, actor))
 			if err != nil {
 				return fmt.Errorf("create client medication order: %w", err)
 			}
@@ -110,7 +117,7 @@ func (s *Seeder) seedMedicalForClient(ctx context.Context, clientID uuid.UUID, m
 	})
 }
 
-func randomDiagnosisParams(clientID uuid.UUID, actor *uuid.UUID) db.CreateClientDiagnosisParams {
+func randomDiagnosisParams(clientID, actorID uuid.UUID) db.SeedClientDiagnosisParams {
 	preset := oneOf(diagnosisSeedPresets)
 	status := oneOf([]db.DiagnosisStatusEnum{
 		db.DiagnosisStatusEnumConfirmed,
@@ -148,7 +155,7 @@ func randomDiagnosisParams(clientID uuid.UUID, actor *uuid.UUID) db.CreateClient
 	title := preset.title
 	clinician := nullableString(fmt.Sprintf("Dr. %s", gofakeit.LastName()), 0.25)
 
-	return db.CreateClientDiagnosisParams{
+	return db.SeedClientDiagnosisParams{
 		ClientID:            clientID,
 		CodeSystem:          preset.codeSystem,
 		Code:                preset.code,
@@ -160,12 +167,11 @@ func randomDiagnosisParams(clientID uuid.UUID, actor *uuid.UUID) db.CreateClient
 		ResolvedOn:          resolvedOn,
 		DiagnosingClinician: clinician,
 		Notes:               notes,
-		CreatedByEmployeeID: actor,
-		UpdatedByEmployeeID: actor,
+		CreatedByEmployeeID: &actorID,
 	}
 }
 
-func randomMedicationOrderParams(clientID uuid.UUID, diagnosisIDs []uuid.UUID, actor *uuid.UUID) db.CreateClientMedicationOrderParams {
+func randomMedicationOrderParams(clientID uuid.UUID, diagnosisIDs []uuid.UUID, actor *uuid.UUID) db.SeedClientMedicationOrderParams {
 	preset := oneOf(medicationSeedPresets)
 
 	status := oneOf([]db.MedicationOrderStatusEnum{
@@ -238,7 +244,7 @@ func randomMedicationOrderParams(clientID uuid.UUID, diagnosisIDs []uuid.UUID, a
 
 	notes := nullableString(gofakeit.Sentence(10), 0.45)
 
-	return db.CreateClientMedicationOrderParams{
+	return db.SeedClientMedicationOrderParams{
 		ClientID:              clientID,
 		DiagnosisID:           diagnosisID,
 		MedicationName:        preset.name,
@@ -260,6 +266,5 @@ func randomMedicationOrderParams(clientID uuid.UUID, diagnosisIDs []uuid.UUID, a
 		Notes:                 notes,
 		SourceAttachmentUuid:  nil,
 		CreatedByEmployeeID:   actor,
-		UpdatedByEmployeeID:   actor,
 	}
 }

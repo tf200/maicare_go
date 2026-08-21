@@ -52,7 +52,11 @@ func RegisterClientRoutes(
 		clientsGroup.GET("/location_transfer", auth, requirePermission("CLIENT.VIEW"), handler.ListLocationTransferRequests)
 
 		// Medical
-		clientsGroup.GET("/:id/medical/overview", auth, requirePermission("CLIENT.VIEW"), handler.GetClientMedicalOverview)
+		clientsGroup.GET("/:id/medical/overview", auth,
+			requirePermission("CLIENT.DIAGNOSIS.VIEW"),
+			requirePermission("CLIENT.MEDICATION.VIEW"),
+			handler.GetClientMedicalOverview,
+		)
 		clientsGroup.POST("/:id/medical/diagnoses", auth, requirePermission("CLIENT.DIAGNOSIS.CREATE"), handler.CreateClientDiagnosis)
 		clientsGroup.GET("/:id/medical/diagnoses", auth, requirePermission("CLIENT.DIAGNOSIS.VIEW"), handler.ListClientDiagnoses)
 		clientsGroup.GET("/:id/medical/diagnoses/:diagnosis_id", auth, requirePermission("CLIENT.DIAGNOSIS.VIEW"), handler.GetClientDiagnosis)
@@ -1614,6 +1618,10 @@ func (h *ClientHandler) DeleteClientMedicationOrder(ctx *gin.Context) {
 
 	result, err := h.service.DeleteClientMedicationOrder(ctx.Request.Context(), clientID, orderID)
 	if err != nil {
+		if errors.Is(err, domain.ErrClientMedicationOrderNotFound) {
+			ctx.JSON(http.StatusNotFound, httpapi.Fail("medication order not found", ""))
+			return
+		}
 		ctx.JSON(http.StatusInternalServerError, httpapi.Fail("failed to delete medication order", ""))
 		return
 	}

@@ -11,6 +11,7 @@ import (
 )
 
 var ErrClientNotFound = errors.New("client not found")
+var ErrClientMedicationOrderNotFound = errors.New("client medication order not found")
 
 type Client struct {
 	ID                         uuid.UUID
