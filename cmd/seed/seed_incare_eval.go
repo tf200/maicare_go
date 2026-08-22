@@ -220,6 +220,9 @@ func (s *Seeder) SeedGoalEvaluationsForInCareClients(ctx context.Context, evalua
 }
 
 func (s *Seeder) seedEvaluationsForClient(ctx context.Context, clientID uuid.UUID, evaluationsPerClient int) error {
+	if err := s.requireRLSBootstrapRole(ctx, "client evaluation"); err != nil {
+		return err
+	}
 	return s.store.ExecTx(ctx, func(q *db.Queries) error {
 		client, err := q.GetClientDetails(ctx, clientID)
 		if err != nil {
@@ -324,7 +327,7 @@ func (s *Seeder) createCompletedEvaluationIfAllowed(ctx context.Context, q *db.Q
 	for _, goal := range goals {
 		progress := oneOf([]db.ClientGoalProgressEnum{db.ClientGoalProgressEnumRegression, db.ClientGoalProgressEnumLimitedProgress, db.ClientGoalProgressEnumGoodProgress, db.ClientGoalProgressEnumAchieved, db.ClientGoalProgressEnumBlocked})
 		notes := nullableString(gofakeit.Sentence(10), 0.15)
-		if _, err := q.UpsertGoalEvaluationItem(ctx, db.UpsertGoalEvaluationItemParams{EvaluationID: eval.ID, GoalID: goal.ID, Progress: progress, Notes: notes}); err != nil {
+		if _, err := q.UpsertGoalEvaluationItem(ctx, db.UpsertGoalEvaluationItemParams{ClientID: client.ID, EvaluationID: eval.ID, GoalID: goal.ID, Progress: progress, Notes: notes}); err != nil {
 			return uuid.Nil, false, fmt.Errorf("upsert completed evaluation item: %w", err)
 		}
 	}
@@ -387,7 +390,7 @@ func (s *Seeder) createDraftEvaluation(ctx context.Context, q *db.Queries, clien
 			progressPool = []db.ClientGoalProgressEnum{db.ClientGoalProgressEnumLimitedProgress, db.ClientGoalProgressEnumGoodProgress, db.ClientGoalProgressEnumAchieved}
 		}
 
-		if _, err := q.UpsertGoalEvaluationItem(ctx, db.UpsertGoalEvaluationItemParams{EvaluationID: eval.ID, GoalID: goal.ID, Progress: oneOf(progressPool), Notes: nullableString(gofakeit.Sentence(9), 0.35)}); err != nil {
+		if _, err := q.UpsertGoalEvaluationItem(ctx, db.UpsertGoalEvaluationItemParams{ClientID: client.ID, EvaluationID: eval.ID, GoalID: goal.ID, Progress: oneOf(progressPool), Notes: nullableString(gofakeit.Sentence(9), 0.35)}); err != nil {
 			return uuid.Nil, fmt.Errorf("upsert draft evaluation item: %w", err)
 		}
 	}

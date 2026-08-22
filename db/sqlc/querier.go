@@ -37,6 +37,7 @@ type Querier interface {
 	CancelClientGoalByID(ctx context.Context, arg CancelClientGoalByIDParams) (ClientGoal, error)
 	CheckAllShiftsExist(ctx context.Context, arg CheckAllShiftsExistParams) (bool, error)
 	ClaimIncidentConfirmationEmail(ctx context.Context, incidentID uuid.UUID) (uuid.UUID, error)
+	ClientHasDraftEvaluationForGoalUpdate(ctx context.Context, dollar_1 uuid.UUID) (bool, error)
 	CloneHandbookTemplateToDraft(ctx context.Context, arg CloneHandbookTemplateToDraftParams) (CloneHandbookTemplateToDraftRow, error)
 	CompleteEmployeeHandbookStep(ctx context.Context, arg CompleteEmployeeHandbookStepParams) (EmployeeHandbookStepProgress, error)
 	ConfirmIncident(ctx context.Context, incidentID uuid.UUID) (int64, error)
@@ -123,8 +124,8 @@ type Querier interface {
 	// Trusted bootstrap queries. Normal application writes use the actor-bound
 	// creation helpers above.
 	CurrentRoleBypassesRLS(ctx context.Context) (bool, error)
+	DeleteActorAttachment(ctx context.Context, argUuid uuid.UUID) (AttachmentFile, error)
 	DeleteAssignedEmployee(ctx context.Context, id uuid.UUID) (AssignedEmployee, error)
-	DeleteAttachment(ctx context.Context, argUuid uuid.UUID) (AttachmentFile, error)
 	DeleteAttendeesByEventID(ctx context.Context, eventID uuid.UUID) error
 	DeleteClientDiagnosis(ctx context.Context, arg DeleteClientDiagnosisParams) (ClientDiagnosis, error)
 	DeleteClientDocument(ctx context.Context, arg DeleteClientDocumentParams) (ClientDocument, error)
@@ -160,6 +161,8 @@ type Querier interface {
 	GetActiveHandbookTemplateByDepartment(ctx context.Context, departmentID uuid.UUID) (HandbookTemplate, error)
 	GetActiveLeavePolicyByType(ctx context.Context, leaveType LeaveRequestTypeEnum) (LeavePolicy, error)
 	GetActiveRegistrationUploadSession(ctx context.Context, tokenHash string) (RegistrationUploadSession, error)
+	GetActorAttachmentById(ctx context.Context, argUuid uuid.UUID) (AttachmentFile, error)
+	GetActorAttachmentsByUUIDs(ctx context.Context, dollar_1 []uuid.UUID) ([]AttachmentFile, error)
 	GetAdminDashboardStatCards(ctx context.Context) (GetAdminDashboardStatCardsRow, error)
 	// Returns the ID of the admin role.
 	GetAdminRoleId(ctx context.Context) (uuid.UUID, error)
@@ -266,7 +269,7 @@ type Querier interface {
 	// Returns every role granted to a user.
 	GetUserRoles(ctx context.Context, userID uuid.UUID) ([]GetUserRolesRow, error)
 	GetVisibleEventByID(ctx context.Context, arg GetVisibleEventByIDParams) (CalendarEvent, error)
-	GoalHasEvaluationItems(ctx context.Context, goalID uuid.UUID) (bool, error)
+	GoalHasEvaluationItems(ctx context.Context, arg GoalHasEvaluationItemsParams) (bool, error)
 	HasActiveClientByIntakeFormID(ctx context.Context, intakeFormID *uuid.UUID) (bool, error)
 	InsertBilledCalendarEvent(ctx context.Context, arg InsertBilledCalendarEventParams) (BilledCalendarEvent, error)
 	InsertIncoicePdfUrl(ctx context.Context, arg InsertIncoicePdfUrlParams) (*uuid.UUID, error)
@@ -411,8 +414,9 @@ type Querier interface {
 	SeedClientDiagnosis(ctx context.Context, arg SeedClientDiagnosisParams) (ClientDiagnosis, error)
 	SeedClientMedicationOrder(ctx context.Context, arg SeedClientMedicationOrderParams) (ClientMedicationOrder, error)
 	SeedIncident(ctx context.Context, arg SeedIncidentParams) (uuid.UUID, error)
+	SetActorAttachmentAsUsedOrUnused(ctx context.Context, arg SetActorAttachmentAsUsedOrUnusedParams) (AttachmentFile, error)
+	SetActorAttachmentsAsUsedByUUIDs(ctx context.Context, arg SetActorAttachmentsAsUsedByUUIDsParams) ([]AttachmentFile, error)
 	SetAttachmentAsUsedorUnused(ctx context.Context, arg SetAttachmentAsUsedorUnusedParams) (AttachmentFile, error)
-	SetAttachmentsAsUsedorUnusedByUUIDs(ctx context.Context, arg SetAttachmentsAsUsedorUnusedByUUIDsParams) ([]AttachmentFile, error)
 	SetEmployeeProfilePicture(ctx context.Context, arg SetEmployeeProfilePictureParams) (CustomUser, error)
 	StatusChangeCount(ctx context.Context) (int64, error)
 	TotalDischargeCount(ctx context.Context) (int64, error)

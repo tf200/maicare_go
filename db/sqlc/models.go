@@ -3132,14 +3132,15 @@ type Assignment struct {
 }
 
 type AttachmentFile struct {
-	Uuid    uuid.UUID          `json:"uuid"`
-	Name    string             `json:"name"`
-	File    string             `json:"file"`
-	Size    int32              `json:"size"`
-	IsUsed  bool               `json:"is_used"`
-	Tag     *string            `json:"tag"`
-	Updated pgtype.Timestamptz `json:"updated"`
-	Created pgtype.Timestamptz `json:"created"`
+	Uuid             uuid.UUID          `json:"uuid"`
+	UploadedByUserID *uuid.UUID         `json:"uploaded_by_user_id"`
+	Name             string             `json:"name"`
+	File             string             `json:"file"`
+	Size             int32              `json:"size"`
+	IsUsed           bool               `json:"is_used"`
+	Tag              *string            `json:"tag"`
+	Updated          pgtype.Timestamptz `json:"updated"`
+	Created          pgtype.Timestamptz `json:"created"`
 }
 
 type Audit struct {
@@ -3323,7 +3324,7 @@ type ClientDiagnosis struct {
 
 type ClientDocument struct {
 	ID             uuid.UUID               `json:"id"`
-	AttachmentUuid *uuid.UUID              `json:"attachment_uuid"`
+	AttachmentUuid uuid.UUID               `json:"attachment_uuid"`
 	ClientID       uuid.UUID               `json:"client_id"`
 	Label          ClientDocumentLabelEnum `json:"label"`
 }
@@ -3378,6 +3379,7 @@ type ClientGoalEvaluation struct {
 
 type ClientGoalEvaluationItem struct {
 	ID           uuid.UUID              `json:"id"`
+	ClientID     uuid.UUID              `json:"client_id"`
 	EvaluationID uuid.UUID              `json:"evaluation_id"`
 	GoalID       uuid.UUID              `json:"goal_id"`
 	Progress     ClientGoalProgressEnum `json:"progress"`

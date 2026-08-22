@@ -529,6 +529,37 @@ func (s *ClientService) ListStatusHistory(ctx context.Context, clientID uuid.UUI
 	return histories, nil
 }
 
+func (s *ClientService) logGroupEAudit(ctx context.Context, action, subjectType string, subjectID, clientID uuid.UUID, permission string, count int) {
+	if s.audit == nil {
+		return
+	}
+	eventType := "record_change"
+	if action == "read" || action == "list" {
+		eventType = "record_access"
+	}
+	var details map[string]any
+	if count >= 0 {
+		details = map[string]any{"count": count}
+	}
+	clientIDString := clientID.String()
+	if err := s.audit.Log(ctx, domain.AuditEvent{
+		EventType:   eventType,
+		Action:      action,
+		Result:      "success",
+		SubjectType: subjectType,
+		SubjectID:   subjectID.String(),
+		ClientID:    &clientIDString,
+		AccessRule:  strPtr(permission),
+		Details:     details,
+	}); err != nil && s.logger != nil {
+		s.logger.LogError(ctx, "ClientService.logGroupEAudit", "Group E audit log failed", err,
+			zap.String("client_id", clientIDString),
+			zap.String("subject_type", subjectType),
+			zap.String("action", action),
+		)
+	}
+}
+
 func (s *ClientService) AddClientDocument(ctx context.Context, clientID uuid.UUID, params domain.AddClientDocumentParams) ([]domain.AddClientDocumentResult, error) {
 	if len(params.Documents) == 0 {
 		return nil, fmt.Errorf("at least one document is required")
@@ -603,6 +634,7 @@ func (s *ClientService) AddClientDocument(ctx context.Context, clientID uuid.UUI
 			zap.Int("count", len(result)),
 		)
 	}
+	s.logGroupEAudit(ctx, "upload", "client_document", clientID, clientID, domain.PermClientDocumentsUpload.String(), len(result))
 
 	return result, nil
 }
@@ -631,6 +663,7 @@ func (s *ClientService) ListClientDocuments(ctx context.Context, params domain.L
 			zap.Int("count", len(result.Documents)),
 		)
 	}
+	s.logGroupEAudit(ctx, "list", "client_document", params.ClientID, params.ClientID, domain.PermClientDocumentsView.String(), len(result.Documents))
 
 	return result, nil
 }
@@ -653,6 +686,7 @@ func (s *ClientService) DeleteClientDocument(ctx context.Context, clientID uuid.
 			zap.String("document_id", documentID.String()),
 		)
 	}
+	s.logGroupEAudit(ctx, "delete", "client_document", documentID, clientID, domain.PermClientDocumentsDelete.String(), -1)
 
 	return result, nil
 }
@@ -671,6 +705,7 @@ func (s *ClientService) GetMissingClientDocuments(ctx context.Context, clientID 
 			zap.String("client_id", clientID.String()),
 		)
 	}
+	s.logGroupEAudit(ctx, "list", "client_document_requirement", clientID, clientID, domain.PermClientDocumentsView.String(), len(missingDocs))
 
 	return missingDocs, nil
 }
@@ -694,6 +729,7 @@ func (s *ClientService) CreateClientGoal(ctx context.Context, clientID uuid.UUID
 			zap.String("goal_id", goal.ID.String()),
 		)
 	}
+	s.logGroupEAudit(ctx, "create", "client_goal", goal.ID, clientID, domain.PermClientCarePlanCreate.String(), -1)
 
 	return goal, nil
 }
@@ -720,6 +756,7 @@ func (s *ClientService) UpdateClientGoal(ctx context.Context, clientID uuid.UUID
 			zap.String("goal_id", goalID.String()),
 		)
 	}
+	s.logGroupEAudit(ctx, "update", "client_goal", result.Goal.ID, clientID, domain.PermClientCarePlanUpdate.String(), -1)
 
 	return result, nil
 }
@@ -738,6 +775,7 @@ func (s *ClientService) GetClientGoalsForEvaluationPage(ctx context.Context, cli
 			zap.String("client_id", clientID.String()),
 		)
 	}
+	s.logGroupEAudit(ctx, "list", "client_goal", clientID, clientID, domain.PermClientEvaluationView.String(), len(result.Goals))
 
 	return result, nil
 }
@@ -769,8 +807,17 @@ func (s *ClientService) CreateGoalEvaluation(ctx context.Context, clientID uuid.
 			zap.Bool("submitted", params.Submit),
 		)
 	}
+	action := goalEvaluationAuditAction(params.Submit, result.SubmitError)
+	s.logGroupEAudit(ctx, action, "client_goal_evaluation", result.ID, clientID, domain.PermClientEvaluationCreate.String(), len(result.Items))
 
 	return result, nil
+}
+
+func goalEvaluationAuditAction(submitRequested bool, submitError *string) string {
+	if submitRequested && submitError == nil {
+		return "submit"
+	}
+	return "save"
 }
 
 func (s *ClientService) GetGoalEvaluationBootstrap(ctx context.Context, clientID uuid.UUID) (*domain.GoalEvaluationBootstrap, error) {
@@ -787,6 +834,7 @@ func (s *ClientService) GetGoalEvaluationBootstrap(ctx context.Context, clientID
 			zap.String("client_id", clientID.String()),
 		)
 	}
+	s.logGroupEAudit(ctx, "read", "client_goal_evaluation", clientID, clientID, domain.PermClientEvaluationView.String(), len(result.ActiveGoals))
 
 	return result, nil
 }
@@ -806,6 +854,7 @@ func (s *ClientService) ListClientSubmittedEvaluations(ctx context.Context, para
 			zap.Int("count", len(result.Items)),
 		)
 	}
+	s.logGroupEAudit(ctx, "list", "client_goal_evaluation", params.ClientID, params.ClientID, domain.PermClientEvaluationView.String(), len(result.Items))
 
 	return result, nil
 }
@@ -829,6 +878,7 @@ func (s *ClientService) ListGoalEvaluationHistory(ctx context.Context, params do
 			zap.Int("count", len(result.Items)),
 		)
 	}
+	s.logGroupEAudit(ctx, "list", "client_goal_evaluation", params.GoalID, params.ClientID, domain.PermClientEvaluationView.String(), len(result.Items))
 
 	return result, nil
 }
@@ -916,7 +966,6 @@ func (s *ClientService) ListLocationTransferRequests(ctx context.Context, params
 			zap.Int("count", len(result.Items)),
 		)
 	}
-
 	return result, nil
 }
 
@@ -936,6 +985,7 @@ func (s *ClientService) GetGoalEvaluation(ctx context.Context, evaluationID uuid
 			zap.String("evaluation_id", evaluationID.String()),
 		)
 	}
+	s.logGroupEAudit(ctx, "read", "client_goal_evaluation", result.ID, result.ClientID, domain.PermClientEvaluationView.String(), len(result.Items))
 
 	return result, nil
 }
@@ -956,6 +1006,9 @@ func (s *ClientService) ListUpcomingEvaluations(ctx context.Context, params doma
 			zap.String("employee_id", params.EmployeeID.String()),
 			zap.Int("count", len(result.Items)),
 		)
+	}
+	for _, item := range result.Items {
+		s.logGroupEAudit(ctx, "read", "client_goal_evaluation_schedule", item.ClientID, item.ClientID, domain.PermClientEvaluationView.String(), -1)
 	}
 
 	return result, nil
@@ -978,6 +1031,9 @@ func (s *ClientService) ListRecentSubmittedEvaluations(ctx context.Context, para
 			zap.Int("count", len(result.Items)),
 		)
 	}
+	for _, item := range result.Items {
+		s.logGroupEAudit(ctx, "read", "client_goal_evaluation", item.EvaluationID, item.ClientID, domain.PermClientEvaluationView.String(), -1)
+	}
 
 	return result, nil
 }
@@ -998,6 +1054,9 @@ func (s *ClientService) ListRecentDraftEvaluations(ctx context.Context, params d
 			zap.String("employee_id", params.EmployeeID.String()),
 			zap.Int("count", len(result.Items)),
 		)
+	}
+	for _, item := range result.Items {
+		s.logGroupEAudit(ctx, "read", "client_goal_evaluation", item.EvaluationID, item.ClientID, domain.PermClientEvaluationView.String(), -1)
 	}
 
 	return result, nil

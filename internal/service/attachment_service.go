@@ -110,16 +110,22 @@ func (s *AttachmentService) GetAttachment(ctx context.Context, id uuid.UUID) (*d
 }
 
 func (s *AttachmentService) DeleteAttachment(ctx context.Context, id uuid.UUID) (*domain.AttachmentResult, error) {
-	attachment, err := s.repository.GetAttachmentByID(ctx, id)
+	deleted, err := s.repository.DeleteAttachment(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("failed to delete attachment: %w", err)
 	}
-	if err := s.storage.Delete(ctx, attachment.File); err != nil {
+	if err := s.storage.Delete(ctx, deleted.File); err != nil {
+		s.logError(ctx, "AttachmentService.DeleteAttachment", "attachment record deleted but storage cleanup failed", err, zap.String("file_id", id.String()))
+		if _, restoreErr := s.repository.CreateAttachment(ctx, domain.CreateAttachmentParams{
+			ID: deleted.UUID, Name: deleted.Name, File: deleted.File, Size: deleted.Size, Tag: deleted.Tag,
+		}); restoreErr != nil {
+			s.logError(ctx, "AttachmentService.DeleteAttachment", "failed to restore attachment after storage cleanup failure", restoreErr, zap.String("file_id", id.String()))
+		} else if deleted.IsUsed {
+			if _, restoreErr := s.repository.SetAttachmentUsed(ctx, id, true); restoreErr != nil {
+				s.logError(ctx, "AttachmentService.DeleteAttachment", "failed to restore attachment usage state", restoreErr, zap.String("file_id", id.String()))
+			}
+		}
 		return nil, fmt.Errorf("failed to delete file from storage: %w", err)
-	}
-	deleted, err := s.repository.DeleteAttachment(ctx, id)
-	if err != nil {
-		return nil, fmt.Errorf("failed to delete attachment record: %w", err)
 	}
 	return &domain.AttachmentResult{FileURL: deleted.File, FileID: deleted.UUID, CreatedAt: deleted.CreatedAt, Size: int64(deleted.Size)}, nil
 }

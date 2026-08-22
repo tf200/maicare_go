@@ -50,6 +50,17 @@ func (q *Queries) CancelClientGoalByID(ctx context.Context, arg CancelClientGoal
 	return i, err
 }
 
+const clientHasDraftEvaluationForGoalUpdate = `-- name: ClientHasDraftEvaluationForGoalUpdate :one
+SELECT public.client_has_draft_evaluation_for_goal_update($1::uuid)
+`
+
+func (q *Queries) ClientHasDraftEvaluationForGoalUpdate(ctx context.Context, dollar_1 uuid.UUID) (bool, error) {
+	row := q.db.QueryRow(ctx, clientHasDraftEvaluationForGoalUpdate, dollar_1)
+	var client_has_draft_evaluation_for_goal_update bool
+	err := row.Scan(&client_has_draft_evaluation_for_goal_update)
+	return client_has_draft_evaluation_for_goal_update, err
+}
+
 const createClientGoalsFromIntakeAssessments = `-- name: CreateClientGoalsFromIntakeAssessments :many
 WITH intake_rows AS (
     SELECT
@@ -360,18 +371,22 @@ func (q *Queries) GetNextActiveClientGoalSortOrder(ctx context.Context, clientID
 }
 
 const goalHasEvaluationItems = `-- name: GoalHasEvaluationItems :one
-SELECT EXISTS (
-    SELECT 1
-    FROM client_goal_evaluation_items
-    WHERE goal_id = $1
+SELECT public.goal_has_evaluation_history_for_update(
+    $1::uuid,
+    $2::uuid
 )
 `
 
-func (q *Queries) GoalHasEvaluationItems(ctx context.Context, goalID uuid.UUID) (bool, error) {
-	row := q.db.QueryRow(ctx, goalHasEvaluationItems, goalID)
-	var exists bool
-	err := row.Scan(&exists)
-	return exists, err
+type GoalHasEvaluationItemsParams struct {
+	GoalID   uuid.UUID `json:"goal_id"`
+	ClientID uuid.UUID `json:"client_id"`
+}
+
+func (q *Queries) GoalHasEvaluationItems(ctx context.Context, arg GoalHasEvaluationItemsParams) (bool, error) {
+	row := q.db.QueryRow(ctx, goalHasEvaluationItems, arg.GoalID, arg.ClientID)
+	var goal_has_evaluation_history_for_update bool
+	err := row.Scan(&goal_has_evaluation_history_for_update)
+	return goal_has_evaluation_history_for_update, err
 }
 
 const listActiveGoalsByClientID = `-- name: ListActiveGoalsByClientID :many

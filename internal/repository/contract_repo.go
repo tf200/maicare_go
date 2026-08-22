@@ -372,20 +372,28 @@ func (r *ContractRepository) GetAttachmentFiles(ctx context.Context, ids []uuid.
 	if err != nil {
 		return nil, err
 	}
+	return toDomainAttachmentFiles(rows), nil
+}
+
+func (r *ContractRepository) GetActorAttachmentFiles(ctx context.Context, ids []uuid.UUID) ([]domain.AttachmentFile, error) {
+	rows, err := actorQuery(ctx, r.store, func(q *db.Queries) ([]db.AttachmentFile, error) {
+		return q.GetActorAttachmentsByUUIDs(ctx, ids)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return toDomainAttachmentFiles(rows), nil
+}
+
+func toDomainAttachmentFiles(rows []db.AttachmentFile) []domain.AttachmentFile {
 	result := make([]domain.AttachmentFile, len(rows))
 	for i, row := range rows {
 		result[i] = domain.AttachmentFile{
-			UUID:      row.Uuid,
-			Name:      row.Name,
-			File:      row.File,
-			Size:      row.Size,
-			IsUsed:    row.IsUsed,
-			Tag:       row.Tag,
-			UpdatedAt: row.Updated.Time,
-			CreatedAt: row.Created.Time,
+			UUID: row.Uuid, Name: row.Name, File: row.File, Size: row.Size,
+			IsUsed: row.IsUsed, Tag: row.Tag, UpdatedAt: row.Updated.Time, CreatedAt: row.Created.Time,
 		}
 	}
-	return result, nil
+	return result
 }
 
 func (r *ContractRepository) GetContractAuditLog(ctx context.Context, contractID uuid.UUID) ([]domain.ContractAuditLog, error) {

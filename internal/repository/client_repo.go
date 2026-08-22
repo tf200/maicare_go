@@ -1191,14 +1191,18 @@ func (r *ClientRepository) AddClientDocuments(ctx context.Context, clientID uuid
 		Documents: txDocs,
 	})
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, domain.ErrClientNotFound
+		}
 		return nil, fmt.Errorf("failed to add client documents: %w", err)
 	}
 
 	docs := make([]domain.AddClientDocumentResult, 0, len(result.Documents))
 	for _, item := range result.Documents {
+		attachmentID := item.ClientDocument.AttachmentUuid
 		docs = append(docs, domain.AddClientDocumentResult{
 			ID:           item.ClientDocument.ID,
-			AttachmentID: item.ClientDocument.AttachmentUuid,
+			AttachmentID: &attachmentID,
 			ClientID:     item.ClientDocument.ClientID,
 			Label:        string(item.ClientDocument.Label),
 			Name:         item.Attachment.Name,
@@ -1235,9 +1239,10 @@ func (r *ClientRepository) ListClientDocuments(ctx context.Context, params domai
 	totalCount := rows[0].TotalCount
 	docs := make([]domain.ClientDocument, 0, len(rows))
 	for _, row := range rows {
+		attachmentID := row.AttachmentUuid
 		docs = append(docs, domain.ClientDocument{
 			ID:           row.ID,
-			AttachmentID: row.AttachmentUuid,
+			AttachmentID: &attachmentID,
 			Uuid:         row.Uuid,
 			ClientID:     row.ClientID,
 			Label:        string(row.Label),
@@ -1263,12 +1268,16 @@ func (r *ClientRepository) DeleteClientDocument(ctx context.Context, clientID uu
 		DocumentID: documentID,
 	})
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, domain.ErrClientDocumentNotFound
+		}
 		return nil, fmt.Errorf("failed to delete client document: %w", err)
 	}
 
+	attachmentID := result.ClientDocument.AttachmentUuid
 	return &domain.DeleteClientDocumentResult{
 		ID:           result.ClientDocument.ID,
-		AttachmentID: result.ClientDocument.AttachmentUuid,
+		AttachmentID: &attachmentID,
 	}, nil
 }
 
@@ -1283,7 +1292,9 @@ func (r *ClientRepository) GetMissingClientDocuments(ctx context.Context, client
 }
 
 func (r *ClientRepository) GetAttachmentsByUUIDs(ctx context.Context, ids []uuid.UUID) ([]domain.AttachmentFile, error) {
-	attachments, err := r.store.GetAttachmentsByUUIDs(ctx, ids)
+	attachments, err := actorQuery(ctx, r.store, func(q *db.Queries) ([]db.AttachmentFile, error) {
+		return q.GetActorAttachmentsByUUIDs(ctx, ids)
+	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get attachments: %w", err)
 	}
@@ -1389,10 +1400,12 @@ func (r *ClientRepository) UpdateClientGoal(ctx context.Context, clientID uuid.U
 			return domain.ErrClientGoalGoalNotFound
 		}
 
-		if _, err := q.GetLatestDraftEvaluationByClient(ctx, clientID); err == nil {
-			return domain.ErrClientGoalDraftEvaluationExists
-		} else if !errors.Is(err, pgx.ErrNoRows) {
+		hasDraft, err := q.ClientHasDraftEvaluationForGoalUpdate(ctx, clientID)
+		if err != nil {
 			return fmt.Errorf("failed to check for draft evaluations: %w", err)
+		}
+		if hasDraft {
+			return domain.ErrClientGoalDraftEvaluationExists
 		}
 
 		nextTitle := existingGoal.Title
@@ -1442,7 +1455,10 @@ func (r *ClientRepository) UpdateClientGoal(ctx context.Context, clientID uuid.U
 			return nil
 		}
 
-		hasHistory, err := q.GoalHasEvaluationItems(ctx, goalID)
+		hasHistory, err := q.GoalHasEvaluationItems(ctx, db.GoalHasEvaluationItemsParams{
+			GoalID:   goalID,
+			ClientID: clientID,
+		})
 		if err != nil {
 			return fmt.Errorf("failed to check goal evaluation history: %w", err)
 		}
@@ -1668,6 +1684,9 @@ func (r *ClientRepository) CreateGoalEvaluation(ctx context.Context, clientID uu
 				}
 			}
 		}
+		if evaluation.CreatedByEmployeeID == nil || *evaluation.CreatedByEmployeeID != employeeID {
+			return domain.ErrGoalEvaluationOwnedByOther
+		}
 
 		evaluation, err = q.UpdateGoalEvaluation(ctx, db.UpdateGoalEvaluationParams{
 			ID:           evaluation.ID,
@@ -1710,6 +1729,7 @@ func (r *ClientRepository) CreateGoalEvaluation(ctx context.Context, clientID uu
 			}
 
 			_, err = q.UpsertGoalEvaluationItem(ctx, db.UpsertGoalEvaluationItemParams{
+				ClientID:     clientID,
 				EvaluationID: evaluation.ID,
 				GoalID:       goal.ID,
 				Progress:     progress,
@@ -1731,6 +1751,7 @@ func (r *ClientRepository) CreateGoalEvaluation(ctx context.Context, clientID uu
 			}
 
 			_, err = q.UpsertGoalEvaluationItem(ctx, db.UpsertGoalEvaluationItemParams{
+				ClientID:     clientID,
 				EvaluationID: evaluation.ID,
 				GoalID:       reqItem.GoalID,
 				Progress:     parsedProgress,
@@ -2254,7 +2275,7 @@ func (r *ClientRepository) GetGoalEvaluation(ctx context.Context, evaluationID u
 	})
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, fmt.Errorf("goal evaluation not found")
+			return nil, domain.ErrGoalEvaluationNotFound
 		}
 		return nil, fmt.Errorf("failed to get goal evaluation: %w", err)
 	}

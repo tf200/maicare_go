@@ -24,7 +24,7 @@ INSERT INTO attachment_file (
     $3,
     $4,
     $5
-) RETURNING uuid, name, file, size, is_used, tag, updated, created
+) RETURNING uuid, uploaded_by_user_id, name, file, size, is_used, tag, updated, created
 `
 
 type CreateAttachmentParams struct {
@@ -46,6 +46,7 @@ func (q *Queries) CreateAttachment(ctx context.Context, arg CreateAttachmentPara
 	var i AttachmentFile
 	err := row.Scan(
 		&i.Uuid,
+		&i.UploadedByUserID,
 		&i.Name,
 		&i.File,
 		&i.Size,
@@ -57,17 +58,20 @@ func (q *Queries) CreateAttachment(ctx context.Context, arg CreateAttachmentPara
 	return i, err
 }
 
-const deleteAttachment = `-- name: DeleteAttachment :one
+const deleteActorAttachment = `-- name: DeleteActorAttachment :one
 DELETE FROM attachment_file
 WHERE uuid = $1
-RETURNING uuid, name, file, size, is_used, tag, updated, created
+  AND uploaded_by_user_id IS NOT DISTINCT FROM public.get_current_user_id()
+  AND NOT public.attachment_file_is_referenced(uuid)
+RETURNING uuid, uploaded_by_user_id, name, file, size, is_used, tag, updated, created
 `
 
-func (q *Queries) DeleteAttachment(ctx context.Context, argUuid uuid.UUID) (AttachmentFile, error) {
-	row := q.db.QueryRow(ctx, deleteAttachment, argUuid)
+func (q *Queries) DeleteActorAttachment(ctx context.Context, argUuid uuid.UUID) (AttachmentFile, error) {
+	row := q.db.QueryRow(ctx, deleteActorAttachment, argUuid)
 	var i AttachmentFile
 	err := row.Scan(
 		&i.Uuid,
+		&i.UploadedByUserID,
 		&i.Name,
 		&i.File,
 		&i.Size,
@@ -79,8 +83,70 @@ func (q *Queries) DeleteAttachment(ctx context.Context, argUuid uuid.UUID) (Atta
 	return i, err
 }
 
+const getActorAttachmentById = `-- name: GetActorAttachmentById :one
+SELECT uuid, uploaded_by_user_id, name, file, size, is_used, tag, updated, created FROM attachment_file
+WHERE uuid = $1
+  AND uploaded_by_user_id IS NOT DISTINCT FROM public.get_current_user_id()
+  AND public.can_access_actor_attachment(uuid)
+LIMIT 1
+`
+
+func (q *Queries) GetActorAttachmentById(ctx context.Context, argUuid uuid.UUID) (AttachmentFile, error) {
+	row := q.db.QueryRow(ctx, getActorAttachmentById, argUuid)
+	var i AttachmentFile
+	err := row.Scan(
+		&i.Uuid,
+		&i.UploadedByUserID,
+		&i.Name,
+		&i.File,
+		&i.Size,
+		&i.IsUsed,
+		&i.Tag,
+		&i.Updated,
+		&i.Created,
+	)
+	return i, err
+}
+
+const getActorAttachmentsByUUIDs = `-- name: GetActorAttachmentsByUUIDs :many
+SELECT uuid, uploaded_by_user_id, name, file, size, is_used, tag, updated, created FROM attachment_file
+WHERE uuid = ANY($1::uuid[])
+  AND uploaded_by_user_id IS NOT DISTINCT FROM public.get_current_user_id()
+  AND public.can_access_actor_attachment(uuid)
+`
+
+func (q *Queries) GetActorAttachmentsByUUIDs(ctx context.Context, dollar_1 []uuid.UUID) ([]AttachmentFile, error) {
+	rows, err := q.db.Query(ctx, getActorAttachmentsByUUIDs, dollar_1)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []AttachmentFile{}
+	for rows.Next() {
+		var i AttachmentFile
+		if err := rows.Scan(
+			&i.Uuid,
+			&i.UploadedByUserID,
+			&i.Name,
+			&i.File,
+			&i.Size,
+			&i.IsUsed,
+			&i.Tag,
+			&i.Updated,
+			&i.Created,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getAttachmentById = `-- name: GetAttachmentById :one
-SELECT uuid, name, file, size, is_used, tag, updated, created FROM attachment_file
+SELECT uuid, uploaded_by_user_id, name, file, size, is_used, tag, updated, created FROM attachment_file
 WHERE uuid = $1 LIMIT 1
 `
 
@@ -89,6 +155,7 @@ func (q *Queries) GetAttachmentById(ctx context.Context, argUuid uuid.UUID) (Att
 	var i AttachmentFile
 	err := row.Scan(
 		&i.Uuid,
+		&i.UploadedByUserID,
 		&i.Name,
 		&i.File,
 		&i.Size,
@@ -101,7 +168,7 @@ func (q *Queries) GetAttachmentById(ctx context.Context, argUuid uuid.UUID) (Att
 }
 
 const getAttachmentsByUUIDs = `-- name: GetAttachmentsByUUIDs :many
-SELECT uuid, name, file, size, is_used, tag, updated, created FROM attachment_file
+SELECT uuid, uploaded_by_user_id, name, file, size, is_used, tag, updated, created FROM attachment_file
 WHERE uuid = ANY($1::uuid[])
 `
 
@@ -116,6 +183,82 @@ func (q *Queries) GetAttachmentsByUUIDs(ctx context.Context, dollar_1 []uuid.UUI
 		var i AttachmentFile
 		if err := rows.Scan(
 			&i.Uuid,
+			&i.UploadedByUserID,
+			&i.Name,
+			&i.File,
+			&i.Size,
+			&i.IsUsed,
+			&i.Tag,
+			&i.Updated,
+			&i.Created,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const setActorAttachmentAsUsedOrUnused = `-- name: SetActorAttachmentAsUsedOrUnused :one
+UPDATE attachment_file
+SET is_used = $2
+WHERE uuid = $1
+  AND uploaded_by_user_id IS NOT DISTINCT FROM public.get_current_user_id()
+  AND public.can_access_actor_attachment(uuid)
+RETURNING uuid, uploaded_by_user_id, name, file, size, is_used, tag, updated, created
+`
+
+type SetActorAttachmentAsUsedOrUnusedParams struct {
+	Uuid   uuid.UUID `json:"uuid"`
+	IsUsed bool      `json:"is_used"`
+}
+
+func (q *Queries) SetActorAttachmentAsUsedOrUnused(ctx context.Context, arg SetActorAttachmentAsUsedOrUnusedParams) (AttachmentFile, error) {
+	row := q.db.QueryRow(ctx, setActorAttachmentAsUsedOrUnused, arg.Uuid, arg.IsUsed)
+	var i AttachmentFile
+	err := row.Scan(
+		&i.Uuid,
+		&i.UploadedByUserID,
+		&i.Name,
+		&i.File,
+		&i.Size,
+		&i.IsUsed,
+		&i.Tag,
+		&i.Updated,
+		&i.Created,
+	)
+	return i, err
+}
+
+const setActorAttachmentsAsUsedByUUIDs = `-- name: SetActorAttachmentsAsUsedByUUIDs :many
+UPDATE attachment_file
+SET is_used = $2
+WHERE uuid = ANY($1::uuid[])
+  AND uploaded_by_user_id IS NOT DISTINCT FROM public.get_current_user_id()
+  AND public.can_access_actor_attachment(uuid)
+RETURNING uuid, uploaded_by_user_id, name, file, size, is_used, tag, updated, created
+`
+
+type SetActorAttachmentsAsUsedByUUIDsParams struct {
+	Column1 []uuid.UUID `json:"column_1"`
+	IsUsed  bool        `json:"is_used"`
+}
+
+func (q *Queries) SetActorAttachmentsAsUsedByUUIDs(ctx context.Context, arg SetActorAttachmentsAsUsedByUUIDsParams) ([]AttachmentFile, error) {
+	rows, err := q.db.Query(ctx, setActorAttachmentsAsUsedByUUIDs, arg.Column1, arg.IsUsed)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []AttachmentFile{}
+	for rows.Next() {
+		var i AttachmentFile
+		if err := rows.Scan(
+			&i.Uuid,
+			&i.UploadedByUserID,
 			&i.Name,
 			&i.File,
 			&i.Size,
@@ -140,7 +283,7 @@ SET
     is_used = $2
 WHERE
     uuid = $1
-RETURNING uuid, name, file, size, is_used, tag, updated, created
+RETURNING uuid, uploaded_by_user_id, name, file, size, is_used, tag, updated, created
 `
 
 type SetAttachmentAsUsedorUnusedParams struct {
@@ -153,6 +296,7 @@ func (q *Queries) SetAttachmentAsUsedorUnused(ctx context.Context, arg SetAttach
 	var i AttachmentFile
 	err := row.Scan(
 		&i.Uuid,
+		&i.UploadedByUserID,
 		&i.Name,
 		&i.File,
 		&i.Size,
@@ -162,47 +306,4 @@ func (q *Queries) SetAttachmentAsUsedorUnused(ctx context.Context, arg SetAttach
 		&i.Created,
 	)
 	return i, err
-}
-
-const setAttachmentsAsUsedorUnusedByUUIDs = `-- name: SetAttachmentsAsUsedorUnusedByUUIDs :many
-UPDATE attachment_file
-SET
-    is_used = $2
-WHERE
-    uuid = ANY($1::uuid[])
-RETURNING uuid, name, file, size, is_used, tag, updated, created
-`
-
-type SetAttachmentsAsUsedorUnusedByUUIDsParams struct {
-	Column1 []uuid.UUID `json:"column_1"`
-	IsUsed  bool        `json:"is_used"`
-}
-
-func (q *Queries) SetAttachmentsAsUsedorUnusedByUUIDs(ctx context.Context, arg SetAttachmentsAsUsedorUnusedByUUIDsParams) ([]AttachmentFile, error) {
-	rows, err := q.db.Query(ctx, setAttachmentsAsUsedorUnusedByUUIDs, arg.Column1, arg.IsUsed)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []AttachmentFile{}
-	for rows.Next() {
-		var i AttachmentFile
-		if err := rows.Scan(
-			&i.Uuid,
-			&i.Name,
-			&i.File,
-			&i.Size,
-			&i.IsUsed,
-			&i.Tag,
-			&i.Updated,
-			&i.Created,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
 }

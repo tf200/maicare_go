@@ -115,11 +115,13 @@ WHERE id = $1
 LIMIT 1;
 
 -- name: GoalHasEvaluationItems :one
-SELECT EXISTS (
-    SELECT 1
-    FROM client_goal_evaluation_items
-    WHERE goal_id = $1
+SELECT public.goal_has_evaluation_history_for_update(
+    sqlc.arg(goal_id)::uuid,
+    sqlc.arg(client_id)::uuid
 );
+
+-- name: ClientHasDraftEvaluationForGoalUpdate :one
+SELECT public.client_has_draft_evaluation_for_goal_update($1::uuid);
 
 -- name: UpdateClientGoalByID :one
 UPDATE client_goals

@@ -36,12 +36,13 @@ RETURNING *;
 
 -- name: UpsertGoalEvaluationItem :one
 INSERT INTO client_goal_evaluation_items (
+    client_id,
     evaluation_id,
     goal_id,
     progress,
     notes
 ) VALUES (
-    $1, $2, $3, $4
+    $1, $2, $3, $4, $5
 )
 ON CONFLICT (evaluation_id, goal_id) DO UPDATE
 SET

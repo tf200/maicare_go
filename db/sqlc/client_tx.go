@@ -64,34 +64,6 @@ type AddClientDocumentsTxResults struct {
 	Documents []AddClientDocumentTxResults
 }
 
-func (store *Store) AddClientDocumentTx(ctx context.Context, arg AddClientDocumentTxParams) (AddClientDocumentTxResults, error) {
-	var result AddClientDocumentTxResults
-
-	err := store.ExecActorTx(ctx, func(q *Queries) error {
-		var err error
-		result.Attachment, err = q.SetAttachmentAsUsedorUnused(ctx, SetAttachmentAsUsedorUnusedParams{
-			Uuid:   arg.AttachmentID,
-			IsUsed: true,
-		})
-		if err != nil {
-			return fmt.Errorf("failed to set attachment %s as used: %w", arg.AttachmentID, err)
-		}
-
-		result.ClientDocument, err = q.CreateClientDocument(ctx, CreateClientDocumentParams{
-			ClientID:       arg.ClientID,
-			AttachmentUuid: &result.Attachment.Uuid,
-			Label:          ClientDocumentLabelEnum(arg.Label),
-		})
-		if err != nil {
-			return fmt.Errorf("failed to create client details: %w", err)
-		}
-
-		return nil
-	})
-
-	return result, err
-}
-
 func (store *Store) AddClientDocumentsTx(ctx context.Context, arg AddClientDocumentsTxParams) (AddClientDocumentsTxResults, error) {
 	var result AddClientDocumentsTxResults
 
@@ -101,7 +73,7 @@ func (store *Store) AddClientDocumentsTx(ctx context.Context, arg AddClientDocum
 			attachmentIDs = append(attachmentIDs, doc.AttachmentID)
 		}
 
-		attachments, err := q.SetAttachmentsAsUsedorUnusedByUUIDs(ctx, SetAttachmentsAsUsedorUnusedByUUIDsParams{
+		attachments, err := q.SetActorAttachmentsAsUsedByUUIDs(ctx, SetActorAttachmentsAsUsedByUUIDsParams{
 			Column1: attachmentIDs,
 			IsUsed:  true,
 		})
@@ -124,7 +96,7 @@ func (store *Store) AddClientDocumentsTx(ctx context.Context, arg AddClientDocum
 
 			clientDoc, err := q.CreateClientDocument(ctx, CreateClientDocumentParams{
 				ClientID:       arg.ClientID,
-				AttachmentUuid: &attachmentRow.Uuid,
+				AttachmentUuid: attachmentRow.Uuid,
 				Label:          ClientDocumentLabelEnum(doc.Label),
 			})
 			if err != nil {
@@ -149,7 +121,6 @@ type DeleteClientDocumentTxParams struct {
 
 type DeleteClientDocumentResults struct {
 	ClientDocument ClientDocument
-	Attachment     AttachmentFile
 }
 
 func (store *Store) DeleteClientDocumentTx(ctx context.Context, arg DeleteClientDocumentTxParams) (DeleteClientDocumentResults, error) {
@@ -164,18 +135,6 @@ func (store *Store) DeleteClientDocumentTx(ctx context.Context, arg DeleteClient
 		if err != nil {
 			return fmt.Errorf("failed to delete client document %s: %w", arg.DocumentID, err)
 		}
-		if result.ClientDocument.AttachmentUuid == nil {
-			return fmt.Errorf("client document %s has no linked attachment", arg.DocumentID)
-		}
-
-		result.Attachment, err = q.SetAttachmentAsUsedorUnused(ctx, SetAttachmentAsUsedorUnusedParams{
-			Uuid:   *result.ClientDocument.AttachmentUuid,
-			IsUsed: false,
-		})
-		if err != nil {
-			return fmt.Errorf("failed to set attachment %s as unused: %w", result.ClientDocument.AttachmentUuid.String(), err)
-		}
-
 		return nil
 	})
 

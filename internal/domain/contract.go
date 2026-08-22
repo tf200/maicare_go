@@ -236,6 +236,7 @@ type ContractRepository interface {
 	GetContractAuditLog(ctx context.Context, contractID uuid.UUID) ([]ContractAuditLog, error)
 
 	GetAttachmentFiles(ctx context.Context, ids []uuid.UUID) ([]AttachmentFile, error)
+	GetActorAttachmentFiles(ctx context.Context, ids []uuid.UUID) ([]AttachmentFile, error)
 }
 
 type ContractService interface {

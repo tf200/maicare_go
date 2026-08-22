@@ -788,10 +788,12 @@ Likely tables:
 - `intake_topic_assessments`
 - Care-plan-related tables
 
-- [ ] Map operations and nested client ownership.
-- [ ] Prefer direct indexed `client_id` where justified.
-- [ ] Implement policies.
-- [ ] Test nested records and helper functions.
+- [x] Map operations and nested client ownership.
+- [x] Prefer direct indexed `client_id` where justified.
+- [x] Implement policies.
+- [x] Test nested records and helper functions.
+
+`intake_topic_assessments` remains intake-owned before promotion and is deferred to Group G, where pre-client and promoted-client authorization can be handled together without breaking public intake workflows.
 
 ### Group F: Contracts And Invoices
 
@@ -991,7 +993,10 @@ Complete this tracker before converting each table. Add rows as tables are disco
 | `assigned_employee` | `client_id` | `CLIENT.INVOLVED_EMPLOYEE.VIEW` | `CLIENT.INVOLVED_EMPLOYEE.CREATE` (`all` only) | `CLIENT.INVOLVED_EMPLOYEE.UPDATE` (`all` only) | `CLIENT.INVOLVED_EMPLOYEE.DELETE` (`all` only) | Phase 9 Group A completed |
 | `incident` | `client_id` | `CLIENT.INCIDENT.VIEW` | `CLIENT.INCIDENT.CREATE` | `CLIENT.INCIDENT.UPDATE` | `CLIENT.INCIDENT.DELETE` | Completed; confirmation uses `CLIENT.INCIDENT.CONFIRM` through a narrow DB function |
 | `ai_generated_reports` | `client_id` | `CLIENT.AI_PROGRESS_REPORT.VIEW` | `CLIENT.AI_PROGRESS_REPORT.CONFIRM` | No operation or permission | No operation or permission | Phase 9 Group B completed |
-| `client_documents` | `client_id` | `CLIENT.DOCUMENTS.VIEW` | `CLIENT.DOCUMENTS.UPLOAD` | To decide | `CLIENT.DOCUMENTS.DELETE` | Pending review |
+| `client_documents` | `client_id` | `CLIENT.DOCUMENTS.VIEW` | `CLIENT.DOCUMENTS.UPLOAD` | No operation or permission | `CLIENT.DOCUMENTS.DELETE` | Phase 9 Group E completed |
+| `client_goals` | `client_id` | `CLIENT.CARE_PLAN.VIEW` or evaluation source-read through `CLIENT.EVALUATION.VIEW` | `CLIENT.CARE_PLAN.CREATE`; replacement rows through `CLIENT.CARE_PLAN.UPDATE`; intake promotion creation context | `CLIENT.CARE_PLAN.UPDATE` | `CLIENT.CARE_PLAN.DELETE` (no current route) | Phase 9 Group E completed |
+| `client_goal_evaluations` | `client_id` | `CLIENT.EVALUATION.VIEW` | `CLIENT.EVALUATION.CREATE` | `CLIENT.EVALUATION.CREATE`, creator-owned draft only | No operation or permission | Phase 9 Group E completed |
+| `client_goal_evaluation_items` | direct indexed `client_id`, constrained to matching evaluation and goal ownership | `CLIENT.EVALUATION.VIEW` | `CLIENT.EVALUATION.CREATE`, creator-owned draft only | `CLIENT.EVALUATION.CREATE`, creator-owned draft only | No operation or permission | Phase 9 Group E completed |
 
 ## Known Risks
 
@@ -1038,10 +1043,46 @@ Record finalized decisions here. Do not silently change an earlier decision; add
 | 2026-08-22 | Require matching `CLIENT.VIEW`, `CLIENT.INCIDENT.VIEW`, and `CLIENT.INCIDENT.CONFIRM` scope for confirmation. | Confirmation delegates a protected report read to the email worker, so the initiating actor must be able to load the same incident and client identity. | Confirmed |
 | 2026-08-22 | Treat incident UPDATE as requiring matching incident VIEW visibility. | PostgreSQL applies SELECT visibility to mutation queries that read existing columns and return rows; the route makes this dependency explicit. | Confirmed |
 | 2026-08-22 | Treat incident DELETE as requiring matching incident VIEW visibility. | Returning the owning client for accurate audit attribution applies incident SELECT visibility to the deletion; the route makes this dependency explicit. | Confirmed |
+| 2026-08-22 | Treat `client_goals` as the current care-plan resource and authorize it with `CLIENT.CARE_PLAN.*`. | There is no separate care-plan table; goals are the mutable care-plan records used by the current API. | Confirmed |
+| 2026-08-22 | Require matching `CLIENT.VIEW` and `CLIENT.EVALUATION.VIEW` for evaluation creation, in addition to `CLIENT.EVALUATION.CREATE`. | Evaluation creation reads client cadence, goals, existing drafts, and returned evaluation data; the route must expose those read dependencies explicitly. | Confirmed |
+| 2026-08-22 | Keep document upload independent of document VIEW, but require matching VIEW for document deletion. | Upload uses a narrow creation context; deletion returns and audits the target document and therefore requires SELECT visibility. | Confirmed |
+| 2026-08-22 | Bind evaluation drafts and items to their creating employee and make completed evaluations immutable. | Prevents one employee from changing another employee's draft and protects submitted clinical records from later modification. | Confirmed |
+| 2026-08-22 | Give evaluation items a direct indexed `client_id` with composite evaluation/client and goal/client foreign keys. | Prevents cross-client goal/evaluation combinations without recursive RLS helpers. | Confirmed |
+| 2026-08-22 | Separate actor-facing attachment staging queries from trusted internal attachment resolution. | User-supplied attachment IDs require uploader ownership, while already-authorized registration, contract, invoice, and generated-document flows must continue resolving shared attachments. | Confirmed |
 
 ## Progress Log
 
 Add the newest entry first.
+
+### 2026-08-22 - Phase 9 Group E documents, care plans, goals, and evaluations completed
+
+Status: Completed and verified
+
+Changes:
+
+- Replaced legacy role-name policies on client documents, goals, evaluations, and evaluation items with forced operation-specific permission-and-scope RLS.
+- Mapped client goals to `CLIENT.CARE_PLAN.*`, documents to `CLIENT.DOCUMENTS.*`, and evaluations to `CLIENT.EVALUATION.*`.
+- Preserved upload without document VIEW through an actor-bound document creation context while requiring VIEW plus DELETE for deletion.
+- Added immutable uploader attribution and actor-facing attachment queries for user-supplied attachment IDs without breaking trusted internal attachment resolution.
+- Prevented deletion of attachments referenced by registration forms, contracts, profile pictures, client documents, medication records, invoices, and generated documents.
+- Added direct evaluation-item client ownership with composite foreign keys that reject cross-client goal/evaluation combinations.
+- Derived evaluation creator attribution from the database actor, restricted draft mutation to that creator, forced runtime inserts to draft, and made completed evaluations immutable.
+- Enforced evaluation completeness and submission windows in database triggers before advancing client cadence.
+- Preserved care-plan goal versioning under UPDATE authority and intake-promotion goal creation through the existing client creation context.
+- Added scoped document, care-plan, and evaluation audits without attachment contents, goal narratives, evaluation notes, or progress payloads.
+- Restricted actorless Group E seed writes to an explicitly checked superuser/`BYPASSRLS` bootstrap role.
+- Deferred `intake_topic_assessments` to Group G because intake records do not consistently have client ownership before promotion.
+
+Verification:
+
+- Applied and rolled back the initial migration on a clean PostgreSQL 17 database.
+- Tested through a temporary `NOSUPERUSER NOBYPASSRLS` non-owner runtime role.
+- Verified assigned/all scope, category isolation, upload without VIEW, attachment ownership and reference protection, document deletion lifecycle, care-plan versioning, creator-bound drafts, nested composite ownership, incomplete-submission rejection, completed-record immutability, and lack of evaluation delete authority.
+- Verified Group E audit classification and clinical-payload exclusion.
+
+Next action:
+
+- Convert Phase 9 Group F contracts and invoices.
 
 ### 2026-08-22 - Phase 9 Group D incident RLS completed
 

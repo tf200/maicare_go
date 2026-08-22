@@ -11,6 +11,9 @@ import (
 )
 
 var ErrClientNotFound = errors.New("client not found")
+var ErrClientDocumentNotFound = errors.New("client document not found")
+var ErrGoalEvaluationNotFound = errors.New("goal evaluation not found")
+var ErrGoalEvaluationOwnedByOther = errors.New("goal evaluation draft belongs to another employee")
 var ErrClientMedicationOrderNotFound = errors.New("client medication order not found")
 
 type Client struct {

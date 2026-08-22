@@ -631,6 +631,7 @@ CREATE INDEX idx_notifications_user_id_read_at ON notifications (user_id, read_a
 -- Attachment files
 CREATE TABLE attachment_file (
     "uuid" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    uploaded_by_user_id UUID NULL REFERENCES custom_user(id) ON DELETE SET NULL,
     name VARCHAR(255) NOT NULL,
     "file" VARCHAR(255) NOT NULL,
     "size" INTEGER NOT NULL DEFAULT 0,
@@ -642,6 +643,7 @@ CREATE TABLE attachment_file (
 
 CREATE INDEX attachment_file_is_used_idx ON attachment_file(is_used);
 CREATE INDEX attachment_file_created_idx ON attachment_file(created);
+CREATE INDEX attachment_file_uploaded_by_user_id_idx ON attachment_file(uploaded_by_user_id);
 
 CREATE TABLE registration_upload_sessions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -1236,7 +1238,8 @@ CREATE TABLE client_goals (
     sort_order INT NOT NULL DEFAULT 0,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    archived_at TIMESTAMPTZ NULL
+    archived_at TIMESTAMPTZ NULL,
+    UNIQUE (id, client_id)
 );
 
 CREATE INDEX client_goals_client_status_idx ON client_goals(client_id, status);
@@ -1255,7 +1258,8 @@ CREATE TABLE client_goal_evaluations (
     overall_notes TEXT NULL,
     created_by_employee_id UUID NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (id, client_id)
 );
 
 CREATE INDEX client_goal_evaluations_client_date_idx ON client_goal_evaluations(client_id, evaluation_date DESC);
@@ -1266,15 +1270,21 @@ CREATE UNIQUE INDEX client_goal_evaluations_unique_draft_client_date_idx
 
 CREATE TABLE client_goal_evaluation_items (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    evaluation_id UUID NOT NULL REFERENCES client_goal_evaluations(id) ON DELETE CASCADE,
-    goal_id UUID NOT NULL REFERENCES client_goals(id) ON DELETE CASCADE,
+    client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
+    evaluation_id UUID NOT NULL,
+    goal_id UUID NOT NULL,
     progress client_goal_progress_enum NOT NULL,
     notes TEXT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(evaluation_id, goal_id)
+    UNIQUE(evaluation_id, goal_id),
+    FOREIGN KEY (evaluation_id, client_id)
+        REFERENCES client_goal_evaluations(id, client_id) ON DELETE CASCADE,
+    FOREIGN KEY (goal_id, client_id)
+        REFERENCES client_goals(id, client_id) ON DELETE CASCADE
 );
 
+CREATE INDEX client_goal_evaluation_items_client_id_idx ON client_goal_evaluation_items(client_id);
 CREATE INDEX client_goal_evaluation_items_goal_created_idx ON client_goal_evaluation_items(goal_id, created_at DESC);
 CREATE INDEX client_goal_evaluation_items_evaluation_idx ON client_goal_evaluation_items(evaluation_id);
 
@@ -1316,6 +1326,25 @@ DECLARE
 BEGIN
     -- Only check when transitioning to 'completed'
     IF NEW.status = 'completed' AND (OLD.status IS NULL OR OLD.status <> 'completed') THEN
+        IF NOT EXISTS (
+            SELECT 1
+            FROM public.client_goals AS goal
+            WHERE goal.client_id = NEW.client_id
+              AND goal.status = 'active'
+        ) OR EXISTS (
+            SELECT 1
+            FROM public.client_goals AS goal
+            LEFT JOIN public.client_goal_evaluation_items AS item
+              ON item.evaluation_id = NEW.id
+             AND item.goal_id = goal.id
+             AND item.client_id = NEW.client_id
+            WHERE goal.client_id = NEW.client_id
+              AND goal.status = 'active'
+              AND (item.id IS NULL OR item.progress = 'no_progress')
+        ) THEN
+            RAISE EXCEPTION 'All active goals must be evaluated before submission';
+        END IF;
+
         SELECT next_evaluation_date INTO v_next_eval_date
         FROM client_details
         WHERE id = NEW.client_id;
@@ -1327,7 +1356,7 @@ BEGIN
     END IF;
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public;
 
 CREATE TRIGGER trigger_enforce_evaluation_submission_window
 BEFORE UPDATE OF status ON client_goal_evaluations
@@ -1359,7 +1388,7 @@ BEGIN
     END IF;
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public;
 
 CREATE TRIGGER trigger_update_client_evaluation_cadence
 AFTER UPDATE OF status ON client_goal_evaluations
@@ -1487,7 +1516,7 @@ CREATE TYPE client_document_label_enum AS ENUM (
 -- Client documents
 CREATE TABLE client_documents (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    attachment_uuid UUID NULL REFERENCES attachment_file("uuid") ON DELETE SET NULL,
+    attachment_uuid UUID NOT NULL REFERENCES attachment_file("uuid") ON DELETE RESTRICT,
     client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
     label client_document_label_enum NOT NULL DEFAULT 'other'
 );
@@ -3065,7 +3094,7 @@ REVOKE ALL ON TABLE public.rls_client_creation_context FROM PUBLIC;
 CREATE TABLE public.rls_report_creation_context (
     backend_pid INTEGER NOT NULL,
     transaction_id XID8 NOT NULL,
-    report_kind TEXT NOT NULL CHECK (report_kind IN ('progress', 'ai', 'diagnosis', 'medication', 'incident')),
+    report_kind TEXT NOT NULL CHECK (report_kind IN ('progress', 'ai', 'diagnosis', 'medication', 'incident', 'document')),
     report_id UUID NOT NULL,
     user_id UUID NOT NULL,
     employee_id UUID NOT NULL,
@@ -3376,6 +3405,317 @@ AS $$
     ), FALSE);
 $$;
 
+CREATE OR REPLACE FUNCTION public.begin_client_document_creation(client_id UUID)
+RETURNS UUID
+LANGUAGE plpgsql
+VOLATILE
+SECURITY DEFINER
+PARALLEL UNSAFE
+SET search_path = pg_catalog, public
+AS $$
+DECLARE
+    new_document_id UUID;
+BEGIN
+    IF NOT public.can_access_client($1, 'CLIENT.DOCUMENTS.UPLOAD') THEN
+        RETURN NULL;
+    END IF;
+
+    DELETE FROM public.rls_report_creation_context
+    WHERE backend_pid = pg_backend_pid()
+      AND report_kind = 'document';
+
+    new_document_id := gen_random_uuid();
+    INSERT INTO public.rls_report_creation_context (
+        backend_pid, transaction_id, report_kind, report_id, user_id, employee_id
+    ) VALUES (
+        pg_backend_pid(), pg_current_xact_id(), 'document', new_document_id,
+        public.get_current_user_id(), public.get_current_employee_id()
+    );
+
+    RETURN new_document_id;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.can_read_created_client_document(document_id UUID)
+RETURNS BOOLEAN
+LANGUAGE sql
+VOLATILE
+SECURITY DEFINER
+PARALLEL UNSAFE
+SET search_path = pg_catalog, public
+AS $$
+    SELECT COALESCE(EXISTS (
+        SELECT 1
+        FROM public.rls_report_creation_context AS context
+        WHERE context.backend_pid = pg_backend_pid()
+          AND context.transaction_id = pg_current_xact_id_if_assigned()
+          AND context.report_kind = 'document'
+          AND context.report_id = $1
+          AND context.user_id = public.get_current_user_id()
+          AND context.employee_id = public.get_current_employee_id()
+    ), FALSE);
+$$;
+
+CREATE OR REPLACE FUNCTION public.client_has_draft_evaluation_for_goal_update(client_id UUID)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+PARALLEL RESTRICTED
+SET search_path = pg_catalog, public
+AS $$
+BEGIN
+    RETURN COALESCE(
+        public.can_access_client($1, 'CLIENT.CARE_PLAN.UPDATE')
+        AND EXISTS (
+            SELECT 1
+            FROM public.client_goal_evaluations AS evaluation
+            WHERE evaluation.client_id = $1
+              AND evaluation.status = 'draft'
+        ),
+        FALSE
+    );
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.goal_has_evaluation_history_for_update(goal_id UUID, client_id UUID)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+PARALLEL RESTRICTED
+SET search_path = pg_catalog, public
+AS $$
+BEGIN
+    RETURN COALESCE(
+        public.can_access_client($2, 'CLIENT.CARE_PLAN.UPDATE')
+        AND EXISTS (
+            SELECT 1
+            FROM public.client_goal_evaluation_items AS item
+            WHERE item.goal_id = $1
+              AND item.client_id = $2
+        ),
+        FALSE
+    );
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.can_mutate_goal_evaluation(evaluation_id UUID, client_id UUID)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+PARALLEL RESTRICTED
+SET search_path = pg_catalog, public
+AS $$
+BEGIN
+    RETURN COALESCE(
+        public.can_access_client($2, 'CLIENT.EVALUATION.CREATE')
+        AND EXISTS (
+            SELECT 1
+            FROM public.client_goal_evaluations AS evaluation
+            WHERE evaluation.id = $1
+              AND evaluation.client_id = $2
+              AND evaluation.created_by_employee_id = public.get_current_employee_id()
+              AND evaluation.status = 'draft'
+        ),
+        FALSE
+    );
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.attachment_file_is_referenced(attachment_id UUID)
+RETURNS BOOLEAN
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+PARALLEL RESTRICTED
+SET search_path = pg_catalog, public
+AS $$
+    SELECT EXISTS (SELECT 1 FROM public.registration_form WHERE document_referral = $1)
+        OR EXISTS (SELECT 1 FROM public.registration_form WHERE document_education_report = $1)
+        OR EXISTS (SELECT 1 FROM public.registration_form WHERE document_action_plan = $1)
+        OR EXISTS (SELECT 1 FROM public.registration_form WHERE document_psychiatric_report = $1)
+        OR EXISTS (SELECT 1 FROM public.registration_form WHERE document_diagnosis = $1)
+        OR EXISTS (SELECT 1 FROM public.registration_form WHERE document_safety_plan = $1)
+        OR EXISTS (SELECT 1 FROM public.registration_form WHERE document_id_copy = $1)
+        OR EXISTS (SELECT 1 FROM public.client_documents WHERE attachment_uuid = $1)
+        OR EXISTS (SELECT 1 FROM public.contract WHERE $1 = ANY(attachment_ids))
+        OR EXISTS (
+            SELECT 1
+            FROM public.custom_user AS app_user
+            JOIN public.attachment_file AS attachment ON attachment.uuid = $1
+            WHERE app_user.profile_picture = attachment.file
+        )
+        OR EXISTS (SELECT 1 FROM public.client_medication_order WHERE source_attachment_uuid = $1)
+        OR EXISTS (SELECT 1 FROM public.invoice WHERE pdf_attachment_id = $1)
+        OR EXISTS (SELECT 1 FROM public.collaboration_agreement WHERE pdf_attachment_id = $1)
+        OR EXISTS (SELECT 1 FROM public.risk_assessment WHERE pdf_attachment_id = $1)
+        OR EXISTS (SELECT 1 FROM public.consent_declaration WHERE pdf_attachment_id = $1);
+$$;
+
+CREATE OR REPLACE FUNCTION public.can_access_actor_attachment(attachment_id UUID)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+PARALLEL RESTRICTED
+SET search_path = pg_catalog, public
+AS $$
+BEGIN
+    IF NOT public.attachment_file_is_referenced($1) THEN
+        RETURN TRUE;
+    END IF;
+
+    RETURN EXISTS (
+        SELECT 1
+        FROM public.client_documents AS document
+        WHERE document.attachment_uuid = $1
+          AND public.can_access_client(document.client_id, 'CLIENT.DOCUMENTS.VIEW')
+    ) AND NOT (
+        EXISTS (SELECT 1 FROM public.registration_form WHERE document_referral = $1 OR document_education_report = $1 OR document_action_plan = $1 OR document_psychiatric_report = $1 OR document_diagnosis = $1 OR document_safety_plan = $1 OR document_id_copy = $1)
+        OR EXISTS (SELECT 1 FROM public.contract WHERE $1 = ANY(attachment_ids))
+        OR EXISTS (
+            SELECT 1
+            FROM public.custom_user AS app_user
+            JOIN public.attachment_file AS attachment ON attachment.uuid = $1
+            WHERE app_user.profile_picture = attachment.file
+        )
+        OR EXISTS (SELECT 1 FROM public.client_medication_order WHERE source_attachment_uuid = $1)
+        OR EXISTS (SELECT 1 FROM public.invoice WHERE pdf_attachment_id = $1)
+        OR EXISTS (SELECT 1 FROM public.collaboration_agreement WHERE pdf_attachment_id = $1)
+        OR EXISTS (SELECT 1 FROM public.risk_assessment WHERE pdf_attachment_id = $1)
+        OR EXISTS (SELECT 1 FROM public.consent_declaration WHERE pdf_attachment_id = $1)
+    );
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.release_deleted_client_document_attachment()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+VOLATILE
+SECURITY DEFINER
+PARALLEL UNSAFE
+SET search_path = pg_catalog, public
+AS $$
+BEGIN
+    IF public.get_current_user_id() IS NOT NULL
+       AND NOT public.can_access_client(OLD.client_id, 'CLIENT.DOCUMENTS.DELETE') THEN
+        RAISE EXCEPTION 'client document attachment release is not authorized';
+    END IF;
+
+    UPDATE public.attachment_file AS attachment
+    SET is_used = FALSE
+    WHERE attachment.uuid = OLD.attachment_uuid
+      AND NOT public.attachment_file_is_referenced(attachment.uuid);
+    RETURN OLD;
+END;
+$$;
+
+CREATE TRIGGER client_documents_release_attachment
+AFTER DELETE ON public.client_documents
+FOR EACH ROW EXECUTE FUNCTION public.release_deleted_client_document_attachment();
+
+CREATE OR REPLACE FUNCTION public.set_group_e_actor_and_ownership()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path = pg_catalog, public
+AS $$
+DECLARE
+    actor_employee_id UUID := public.get_current_employee_id();
+BEGIN
+    IF TG_TABLE_NAME = 'client_goal_evaluations' THEN
+        IF TG_OP = 'INSERT' AND actor_employee_id IS NOT NULL THEN
+            NEW.created_by_employee_id := actor_employee_id;
+            NEW.status := 'draft';
+        ELSIF TG_OP = 'UPDATE' AND (
+            NEW.client_id IS DISTINCT FROM OLD.client_id
+            OR NEW.created_by_employee_id IS DISTINCT FROM OLD.created_by_employee_id
+        ) THEN
+            RAISE EXCEPTION 'evaluation ownership and creator are immutable';
+        ELSIF TG_OP = 'UPDATE'
+              AND actor_employee_id IS NOT NULL
+              AND NEW.status NOT IN ('draft', 'completed') THEN
+            RAISE EXCEPTION 'runtime evaluation status may only transition from draft to completed';
+        END IF;
+    ELSIF TG_TABLE_NAME = 'client_goals' THEN
+        IF TG_OP = 'UPDATE' AND NEW.client_id IS DISTINCT FROM OLD.client_id THEN
+            RAISE EXCEPTION 'goal ownership is immutable';
+        END IF;
+    ELSIF TG_TABLE_NAME = 'client_goal_evaluation_items' THEN
+        IF TG_OP = 'UPDATE' AND (
+            NEW.client_id IS DISTINCT FROM OLD.client_id
+            OR NEW.evaluation_id IS DISTINCT FROM OLD.evaluation_id
+            OR NEW.goal_id IS DISTINCT FROM OLD.goal_id
+        ) THEN
+            RAISE EXCEPTION 'evaluation item ownership is immutable';
+        END IF;
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.set_attachment_actor()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path = pg_catalog, public
+AS $$
+DECLARE
+    actor_user_id UUID := public.get_current_user_id();
+BEGIN
+    IF TG_OP = 'INSERT' AND actor_user_id IS NOT NULL THEN
+        NEW.uploaded_by_user_id := actor_user_id;
+    ELSIF TG_OP = 'UPDATE'
+          AND NEW.uploaded_by_user_id IS DISTINCT FROM OLD.uploaded_by_user_id THEN
+        RAISE EXCEPTION 'attachment uploader is immutable';
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.validate_client_document_attachment()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = pg_catalog, public
+AS $$
+DECLARE
+    actor_user_id UUID := public.get_current_user_id();
+BEGIN
+    IF actor_user_id IS NOT NULL AND NOT EXISTS (
+        SELECT 1
+        FROM public.attachment_file AS attachment
+        WHERE attachment.uuid = NEW.attachment_uuid
+          AND attachment.uploaded_by_user_id = actor_user_id
+    ) THEN
+        RAISE EXCEPTION 'attachment is not owned by the current actor';
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER attachment_file_set_actor
+BEFORE INSERT OR UPDATE ON public.attachment_file
+FOR EACH ROW EXECUTE FUNCTION public.set_attachment_actor();
+
+CREATE TRIGGER client_documents_validate_attachment
+BEFORE INSERT OR UPDATE OF attachment_uuid ON public.client_documents
+FOR EACH ROW EXECUTE FUNCTION public.validate_client_document_attachment();
+
+CREATE TRIGGER client_goals_protect_ownership
+BEFORE UPDATE ON public.client_goals
+FOR EACH ROW EXECUTE FUNCTION public.set_group_e_actor_and_ownership();
+
+CREATE TRIGGER client_goal_evaluations_set_actor
+BEFORE INSERT OR UPDATE ON public.client_goal_evaluations
+FOR EACH ROW EXECUTE FUNCTION public.set_group_e_actor_and_ownership();
+
+CREATE TRIGGER client_goal_evaluation_items_protect_ownership
+BEFORE UPDATE ON public.client_goal_evaluation_items
+FOR EACH ROW EXECUTE FUNCTION public.set_group_e_actor_and_ownership();
+
 CREATE OR REPLACE FUNCTION public.get_permission_scope(permission_name TEXT)
 RETURNS public.permission_scope_enum
 LANGUAGE sql
@@ -3644,11 +3984,25 @@ BEGIN
     EXECUTE format('ALTER FUNCTION public.mark_incident_confirmation_email_sent(UUID, UUID) OWNER TO %I', policy_owner_name);
     EXECUTE format('ALTER FUNCTION public.claim_incident_confirmation_email(UUID) OWNER TO %I', policy_owner_name);
     EXECUTE format('ALTER FUNCTION public.release_incident_confirmation_email(UUID, UUID) OWNER TO %I', policy_owner_name);
+    EXECUTE format('ALTER FUNCTION public.client_has_draft_evaluation_for_goal_update(UUID) OWNER TO %I', policy_owner_name);
+    EXECUTE format('ALTER FUNCTION public.goal_has_evaluation_history_for_update(UUID, UUID) OWNER TO %I', policy_owner_name);
+    EXECUTE format('ALTER FUNCTION public.can_mutate_goal_evaluation(UUID, UUID) OWNER TO %I', policy_owner_name);
+    EXECUTE format('ALTER FUNCTION public.attachment_file_is_referenced(UUID) OWNER TO %I', policy_owner_name);
+    EXECUTE format('ALTER FUNCTION public.can_access_actor_attachment(UUID) OWNER TO %I', policy_owner_name);
+    EXECUTE format('ALTER FUNCTION public.enforce_evaluation_submission_window() OWNER TO %I', policy_owner_name);
+    EXECUTE format('ALTER FUNCTION public.update_client_evaluation_cadence() OWNER TO %I', policy_owner_name);
+    EXECUTE format('ALTER FUNCTION public.validate_client_document_attachment() OWNER TO %I', policy_owner_name);
+    EXECUTE format('ALTER FUNCTION public.release_deleted_client_document_attachment() OWNER TO %I', policy_owner_name);
     EXECUTE format(
         'GRANT SELECT ON public.assigned_employee, public.employee_profile, public.client_emergency_contact TO %I',
         policy_owner_name
     );
     EXECUTE format('GRANT SELECT, UPDATE ON public.incident TO %I', policy_owner_name);
+    EXECUTE format('GRANT SELECT ON public.client_goals, public.client_goal_evaluations, public.client_goal_evaluation_items TO %I', policy_owner_name);
+    EXECUTE format('GRANT SELECT, UPDATE ON public.client_details TO %I', policy_owner_name);
+    EXECUTE format('GRANT SELECT ON public.attachment_file, public.client_documents TO %I', policy_owner_name);
+    EXECUTE format('GRANT UPDATE ON public.attachment_file TO %I', policy_owner_name);
+    EXECUTE format('GRANT SELECT ON public.registration_form, public.contract, public.custom_user, public.client_medication_order, public.invoice, public.collaboration_agreement, public.risk_assessment, public.consent_declaration TO %I', policy_owner_name);
     EXECUTE format('GRANT EXECUTE ON FUNCTION public.get_current_user_id() TO %I', policy_owner_name);
     EXECUTE format('GRANT EXECUTE ON FUNCTION public.get_current_employee_id() TO %I', policy_owner_name);
     EXECUTE format('GRANT EXECUTE ON FUNCTION public.can_access_client(UUID, TEXT) TO %I', policy_owner_name);
@@ -3663,6 +4017,11 @@ GRANT EXECUTE ON FUNCTION public.confirm_incident(UUID) TO CURRENT_USER;
 GRANT EXECUTE ON FUNCTION public.mark_incident_confirmation_email_sent(UUID, UUID) TO CURRENT_USER;
 GRANT EXECUTE ON FUNCTION public.claim_incident_confirmation_email(UUID) TO CURRENT_USER;
 GRANT EXECUTE ON FUNCTION public.release_incident_confirmation_email(UUID, UUID) TO CURRENT_USER;
+GRANT EXECUTE ON FUNCTION public.client_has_draft_evaluation_for_goal_update(UUID) TO CURRENT_USER;
+GRANT EXECUTE ON FUNCTION public.goal_has_evaluation_history_for_update(UUID, UUID) TO CURRENT_USER;
+GRANT EXECUTE ON FUNCTION public.can_mutate_goal_evaluation(UUID, UUID) TO CURRENT_USER;
+GRANT EXECUTE ON FUNCTION public.attachment_file_is_referenced(UUID) TO CURRENT_USER;
+GRANT EXECUTE ON FUNCTION public.can_access_actor_attachment(UUID) TO CURRENT_USER;
 
 REVOKE ALL ON FUNCTION public.get_current_user_id() FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.get_current_employee_id() FROM PUBLIC;
@@ -3682,6 +4041,14 @@ REVOKE ALL ON FUNCTION public.begin_client_medication_creation(UUID) FROM PUBLIC
 REVOKE ALL ON FUNCTION public.can_read_created_client_medication(UUID) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.begin_incident_creation(UUID) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.can_read_created_incident(UUID) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.begin_client_document_creation(UUID) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.can_read_created_client_document(UUID) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.client_has_draft_evaluation_for_goal_update(UUID) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.goal_has_evaluation_history_for_update(UUID, UUID) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.can_mutate_goal_evaluation(UUID, UUID) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.attachment_file_is_referenced(UUID) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.can_access_actor_attachment(UUID) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.release_deleted_client_document_attachment() FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.get_authorized_client_related_emails(UUID) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.get_authorized_incident_recipient_emails(UUID) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.confirm_incident(UUID) FROM PUBLIC;
@@ -3699,6 +4066,8 @@ GRANT EXECUTE ON FUNCTION public.begin_client_creation() TO CURRENT_USER;
 GRANT EXECUTE ON FUNCTION public.can_read_created_client(UUID) TO CURRENT_USER;
 GRANT EXECUTE ON FUNCTION public.begin_incident_creation(UUID) TO CURRENT_USER;
 GRANT EXECUTE ON FUNCTION public.can_read_created_incident(UUID) TO CURRENT_USER;
+GRANT EXECUTE ON FUNCTION public.begin_client_document_creation(UUID) TO CURRENT_USER;
+GRANT EXECUTE ON FUNCTION public.can_read_created_client_document(UUID) TO CURRENT_USER;
 
 -- Check if current employee is Admin
 CREATE OR REPLACE FUNCTION is_admin() RETURNS BOOLEAN AS $$
@@ -3809,6 +4178,13 @@ ALTER TABLE public.assigned_employee FORCE ROW LEVEL SECURITY;
 CREATE POLICY assigned_employee_select ON public.assigned_employee
     FOR SELECT
     USING (public.can_access_client(client_id, 'CLIENT.INVOLVED_EMPLOYEE.VIEW'));
+
+CREATE POLICY assigned_employee_evaluation_select ON public.assigned_employee
+    FOR SELECT
+    USING (
+        employee_id = public.get_current_employee_id()
+        AND public.can_access_client(client_id, 'CLIENT.EVALUATION.VIEW')
+    );
 
 CREATE POLICY assigned_employee_insert ON public.assigned_employee
     FOR INSERT
@@ -3970,8 +4346,92 @@ CREATE POLICY incident_delete ON public.incident
     FOR DELETE
     USING (public.can_access_client(client_id, 'CLIENT.INCIDENT.DELETE'));
 
+ALTER TABLE public.client_documents ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.client_documents FORCE ROW LEVEL SECURITY;
+
+CREATE POLICY client_documents_select ON public.client_documents
+    FOR SELECT
+    USING (
+        public.can_access_client(client_id, 'CLIENT.DOCUMENTS.VIEW')
+        OR public.can_read_created_client_document(id)
+    );
+
+CREATE POLICY client_documents_insert ON public.client_documents
+    FOR INSERT
+    WITH CHECK (public.can_access_client(client_id, 'CLIENT.DOCUMENTS.UPLOAD'));
+
+CREATE POLICY client_documents_delete ON public.client_documents
+    FOR DELETE
+    USING (public.can_access_client(client_id, 'CLIENT.DOCUMENTS.DELETE'));
+
+ALTER TABLE public.client_goals ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.client_goals FORCE ROW LEVEL SECURITY;
+
+CREATE POLICY client_goals_select ON public.client_goals
+    FOR SELECT
+    USING (
+        public.can_access_client(client_id, 'CLIENT.CARE_PLAN.VIEW')
+        OR public.can_access_client(client_id, 'CLIENT.EVALUATION.VIEW')
+        OR public.can_read_created_client(client_id)
+    );
+
+CREATE POLICY client_goals_insert ON public.client_goals
+    FOR INSERT
+    WITH CHECK (
+        public.can_access_client(client_id, 'CLIENT.CARE_PLAN.CREATE')
+        OR public.can_access_client(client_id, 'CLIENT.CARE_PLAN.UPDATE')
+        OR public.can_read_created_client(client_id)
+    );
+
+CREATE POLICY client_goals_update ON public.client_goals
+    FOR UPDATE
+    USING (public.can_access_client(client_id, 'CLIENT.CARE_PLAN.UPDATE'))
+    WITH CHECK (public.can_access_client(client_id, 'CLIENT.CARE_PLAN.UPDATE'));
+
+CREATE POLICY client_goals_delete ON public.client_goals
+    FOR DELETE
+    USING (public.can_access_client(client_id, 'CLIENT.CARE_PLAN.DELETE'));
+
+ALTER TABLE public.client_goal_evaluations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.client_goal_evaluations FORCE ROW LEVEL SECURITY;
+
+CREATE POLICY client_goal_evaluations_select ON public.client_goal_evaluations
+    FOR SELECT
+    USING (public.can_access_client(client_id, 'CLIENT.EVALUATION.VIEW'));
+
+CREATE POLICY client_goal_evaluations_insert ON public.client_goal_evaluations
+    FOR INSERT
+    WITH CHECK (public.can_access_client(client_id, 'CLIENT.EVALUATION.CREATE'));
+
+CREATE POLICY client_goal_evaluations_update ON public.client_goal_evaluations
+    FOR UPDATE
+    USING (
+        public.can_access_client(client_id, 'CLIENT.EVALUATION.CREATE')
+        AND created_by_employee_id = public.get_current_employee_id()
+        AND status = 'draft'
+    )
+    WITH CHECK (
+        public.can_access_client(client_id, 'CLIENT.EVALUATION.CREATE')
+        AND created_by_employee_id = public.get_current_employee_id()
+    );
+
+ALTER TABLE public.client_goal_evaluation_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.client_goal_evaluation_items FORCE ROW LEVEL SECURITY;
+
+CREATE POLICY client_goal_evaluation_items_select ON public.client_goal_evaluation_items
+    FOR SELECT
+    USING (public.can_access_client(client_id, 'CLIENT.EVALUATION.VIEW'));
+
+CREATE POLICY client_goal_evaluation_items_insert ON public.client_goal_evaluation_items
+    FOR INSERT
+    WITH CHECK (public.can_mutate_goal_evaluation(evaluation_id, client_id));
+
+CREATE POLICY client_goal_evaluation_items_update ON public.client_goal_evaluation_items
+    FOR UPDATE
+    USING (public.can_mutate_goal_evaluation(evaluation_id, client_id))
+    WITH CHECK (public.can_mutate_goal_evaluation(evaluation_id, client_id));
+
 -- Apply legacy RLS to related tables until they are converted in Phase 9.
-SELECT apply_client_rls('client_documents');
 SELECT apply_client_rls('client_status_history');
 SELECT apply_client_rls('client_location_transfer');
 	SELECT apply_client_rls('contract');
@@ -3990,8 +4450,6 @@ SELECT apply_client_rls('consent_declaration');
 SELECT apply_client_rls('youth_care_intake');
 SELECT apply_client_rls('data_sharing_statement');
 SELECT apply_client_rls('framework_agreement');
-SELECT apply_client_rls('client_goals');
-SELECT apply_client_rls('client_goal_evaluations');
 
 -- Special cases for nested tables
 -- Registration and Intake
@@ -4003,9 +4461,6 @@ SELECT apply_client_rls('intake_forms', 'get_client_id_from_registration_form(re
 -- Contract sub-tables
 SELECT apply_client_rls('client_agreement', 'get_client_id_from_contract(contract_id)');
 SELECT apply_client_rls('provision', 'get_client_id_from_contract(contract_id)');
-
--- Goal evaluations (new model)
-SELECT apply_client_rls('client_goal_evaluation_items', 'get_client_id_from_goal_evaluation(evaluation_id)');
 
 -- Helper to get client_id from intake_form
 CREATE OR REPLACE FUNCTION get_client_id_from_intake_form(intake_id UUID) RETURNS UUID AS $$

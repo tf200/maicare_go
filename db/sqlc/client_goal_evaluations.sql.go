@@ -190,7 +190,7 @@ func (q *Queries) GetGoalEvaluationByID(ctx context.Context, id uuid.UUID) (GetG
 
 const getGoalEvaluationItems = `-- name: GetGoalEvaluationItems :many
 SELECT 
-    ei.id, ei.evaluation_id, ei.goal_id, ei.progress, ei.notes, ei.created_at, ei.updated_at,
+    ei.id, ei.client_id, ei.evaluation_id, ei.goal_id, ei.progress, ei.notes, ei.created_at, ei.updated_at,
     g.title AS goal_title,
     g.description AS goal_description,
     g.topic_name_snapshot
@@ -202,6 +202,7 @@ ORDER BY g.sort_order
 
 type GetGoalEvaluationItemsRow struct {
 	ID                uuid.UUID              `json:"id"`
+	ClientID          uuid.UUID              `json:"client_id"`
 	EvaluationID      uuid.UUID              `json:"evaluation_id"`
 	GoalID            uuid.UUID              `json:"goal_id"`
 	Progress          ClientGoalProgressEnum `json:"progress"`
@@ -224,6 +225,7 @@ func (q *Queries) GetGoalEvaluationItems(ctx context.Context, evaluationID uuid.
 		var i GetGoalEvaluationItemsRow
 		if err := rows.Scan(
 			&i.ID,
+			&i.ClientID,
 			&i.EvaluationID,
 			&i.GoalID,
 			&i.Progress,
@@ -829,22 +831,24 @@ func (q *Queries) UpdateGoalEvaluation(ctx context.Context, arg UpdateGoalEvalua
 
 const upsertGoalEvaluationItem = `-- name: UpsertGoalEvaluationItem :one
 INSERT INTO client_goal_evaluation_items (
+    client_id,
     evaluation_id,
     goal_id,
     progress,
     notes
 ) VALUES (
-    $1, $2, $3, $4
+    $1, $2, $3, $4, $5
 )
 ON CONFLICT (evaluation_id, goal_id) DO UPDATE
 SET
     progress = EXCLUDED.progress,
     notes = EXCLUDED.notes,
     updated_at = CURRENT_TIMESTAMP
-RETURNING id, evaluation_id, goal_id, progress, notes, created_at, updated_at
+RETURNING id, client_id, evaluation_id, goal_id, progress, notes, created_at, updated_at
 `
 
 type UpsertGoalEvaluationItemParams struct {
+	ClientID     uuid.UUID              `json:"client_id"`
 	EvaluationID uuid.UUID              `json:"evaluation_id"`
 	GoalID       uuid.UUID              `json:"goal_id"`
 	Progress     ClientGoalProgressEnum `json:"progress"`
@@ -853,6 +857,7 @@ type UpsertGoalEvaluationItemParams struct {
 
 func (q *Queries) UpsertGoalEvaluationItem(ctx context.Context, arg UpsertGoalEvaluationItemParams) (ClientGoalEvaluationItem, error) {
 	row := q.db.QueryRow(ctx, upsertGoalEvaluationItem,
+		arg.ClientID,
 		arg.EvaluationID,
 		arg.GoalID,
 		arg.Progress,
@@ -861,6 +866,7 @@ func (q *Queries) UpsertGoalEvaluationItem(ctx context.Context, arg UpsertGoalEv
 	var i ClientGoalEvaluationItem
 	err := row.Scan(
 		&i.ID,
+		&i.ClientID,
 		&i.EvaluationID,
 		&i.GoalID,
 		&i.Progress,

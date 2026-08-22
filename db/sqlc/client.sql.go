@@ -380,18 +380,28 @@ func (q *Queries) CreateClientDetails(ctx context.Context, arg CreateClientDetai
 }
 
 const createClientDocument = `-- name: CreateClientDocument :one
+WITH new_document AS (
+    SELECT public.begin_client_document_creation($1::uuid) AS id
+)
 INSERT INTO client_documents (
+    id,
     client_id,
     attachment_uuid,
     label
-) VALUES (
-    $1, $2, $3
-) RETURNING id, attachment_uuid, client_id, label
+)
+SELECT
+    id,
+    $1::uuid,
+    $2::uuid,
+    $3::client_document_label_enum
+FROM new_document
+WHERE id IS NOT NULL
+RETURNING id, attachment_uuid, client_id, label
 `
 
 type CreateClientDocumentParams struct {
 	ClientID       uuid.UUID               `json:"client_id"`
-	AttachmentUuid *uuid.UUID              `json:"attachment_uuid"`
+	AttachmentUuid uuid.UUID               `json:"attachment_uuid"`
 	Label          ClientDocumentLabelEnum `json:"label"`
 }
 
@@ -1183,7 +1193,7 @@ func (q *Queries) ListClientDetails(ctx context.Context, arg ListClientDetailsPa
 const listClientDocuments = `-- name: ListClientDocuments :many
 SELECT
     cd.id, cd.attachment_uuid, cd.client_id, cd.label,
-    a.uuid, a.name, a.file, a.size, a.is_used, a.tag, a.updated, a.created,
+    a.uuid, a.uploaded_by_user_id, a.name, a.file, a.size, a.is_used, a.tag, a.updated, a.created,
     COUNT(*) OVER() AS total_count
 FROM client_documents cd
 JOIN attachment_file a ON cd.attachment_uuid = a.uuid
@@ -1198,19 +1208,20 @@ type ListClientDocumentsParams struct {
 }
 
 type ListClientDocumentsRow struct {
-	ID             uuid.UUID               `json:"id"`
-	AttachmentUuid *uuid.UUID              `json:"attachment_uuid"`
-	ClientID       uuid.UUID               `json:"client_id"`
-	Label          ClientDocumentLabelEnum `json:"label"`
-	Uuid           uuid.UUID               `json:"uuid"`
-	Name           string                  `json:"name"`
-	File           string                  `json:"file"`
-	Size           int32                   `json:"size"`
-	IsUsed         bool                    `json:"is_used"`
-	Tag            *string                 `json:"tag"`
-	Updated        pgtype.Timestamptz      `json:"updated"`
-	Created        pgtype.Timestamptz      `json:"created"`
-	TotalCount     int64                   `json:"total_count"`
+	ID               uuid.UUID               `json:"id"`
+	AttachmentUuid   uuid.UUID               `json:"attachment_uuid"`
+	ClientID         uuid.UUID               `json:"client_id"`
+	Label            ClientDocumentLabelEnum `json:"label"`
+	Uuid             uuid.UUID               `json:"uuid"`
+	UploadedByUserID *uuid.UUID              `json:"uploaded_by_user_id"`
+	Name             string                  `json:"name"`
+	File             string                  `json:"file"`
+	Size             int32                   `json:"size"`
+	IsUsed           bool                    `json:"is_used"`
+	Tag              *string                 `json:"tag"`
+	Updated          pgtype.Timestamptz      `json:"updated"`
+	Created          pgtype.Timestamptz      `json:"created"`
+	TotalCount       int64                   `json:"total_count"`
 }
 
 func (q *Queries) ListClientDocuments(ctx context.Context, arg ListClientDocumentsParams) ([]ListClientDocumentsRow, error) {
@@ -1228,6 +1239,7 @@ func (q *Queries) ListClientDocuments(ctx context.Context, arg ListClientDocumen
 			&i.ClientID,
 			&i.Label,
 			&i.Uuid,
+			&i.UploadedByUserID,
 			&i.Name,
 			&i.File,
 			&i.Size,

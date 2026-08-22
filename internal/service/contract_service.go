@@ -218,7 +218,17 @@ func (s *ContractService) UpdateContract(ctx context.Context, params domain.Upda
 	if params.AttachmentIds != nil {
 		attachmentIDs = normalizeAttachmentIDs(params.AttachmentIds)
 	}
-	if err := s.validateAttachmentIds(ctx, attachmentIDs); err != nil {
+	existingAttachmentIDs := make(map[uuid.UUID]struct{}, len(existing.AttachmentIds))
+	for _, id := range existing.AttachmentIds {
+		existingAttachmentIDs[id] = struct{}{}
+	}
+	newAttachmentIDs := make([]uuid.UUID, 0, len(attachmentIDs))
+	for _, id := range attachmentIDs {
+		if _, alreadyLinked := existingAttachmentIDs[id]; !alreadyLinked {
+			newAttachmentIDs = append(newAttachmentIDs, id)
+		}
+	}
+	if err := s.validateAttachmentIds(ctx, newAttachmentIDs); err != nil {
 		return nil, err
 	}
 	params.AttachmentIds = attachmentIDs
@@ -334,7 +344,7 @@ func (s *ContractService) validateAttachmentIds(ctx context.Context, attachmentI
 	if len(attachmentIds) == 0 {
 		return nil
 	}
-	attachments, err := s.repository.GetAttachmentFiles(ctx, attachmentIds)
+	attachments, err := s.repository.GetActorAttachmentFiles(ctx, attachmentIds)
 	if err != nil {
 		return fmt.Errorf("failed to validate attachment IDs: %w", err)
 	}

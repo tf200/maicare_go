@@ -1,6 +1,9 @@
 package main
 
 import (
+	"context"
+	"fmt"
+
 	db "maicare_go/db/sqlc"
 	"maicare_go/internal/service"
 
@@ -33,6 +36,17 @@ type SeedData struct {
 	InvoiceIDs                     []uuid.UUID
 	PaymentIDs                     []uuid.UUID
 	HandbookAssignmentCount        int
+}
+
+func (s *Seeder) requireRLSBootstrapRole(ctx context.Context, resource string) error {
+	canBypassRLS, err := s.store.CurrentRoleBypassesRLS(ctx)
+	if err != nil {
+		return fmt.Errorf("check %s bootstrap database role: %w", resource, err)
+	}
+	if !canBypassRLS {
+		return fmt.Errorf("%s bootstrap requires a database role with superuser or BYPASSRLS capability", resource)
+	}
+	return nil
 }
 
 type Seeder struct {

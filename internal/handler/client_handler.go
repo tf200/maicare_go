@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strings"
 
 	"maicare_go/internal/domain"
 	"maicare_go/internal/httpapi"
@@ -36,17 +35,44 @@ func RegisterClientRoutes(
 		clientsGroup.PUT("/:id/put-in-care", auth, requirePermission("CLIENT.STATUS.UPDATE"), handler.PutClientInCare)
 		clientsGroup.PUT("/:id/put-out-of-care", auth, requirePermission("CLIENT.STATUS.UPDATE"), handler.PutClientOutOfCare)
 		clientsGroup.GET("/:id/status_history", auth, requirePermission("CLIENT.VIEW"), handler.ListStatusHistory)
-		clientsGroup.POST("/:id/documents", auth, requirePermission("CLIENT.CREATE"), handler.AddClientDocument)
-		clientsGroup.GET("/:id/documents", auth, requirePermission("CLIENT.VIEW"), handler.ListClientDocuments)
-		clientsGroup.DELETE("/:id/documents/:doc_id", auth, requirePermission("CLIENT.VIEW"), handler.DeleteClientDocument)
-		clientsGroup.GET("/:id/missing_documents", auth, requirePermission("CLIENT.CREATE"), handler.GetMissingClientDocuments)
-		clientsGroup.GET("/:id/evaluations/bootstrap", auth, requirePermission(domain.PermClientEvaluationView.String()), handler.GetGoalEvaluationBootstrap)
-		clientsGroup.POST("/:id/goals", auth, requirePermission("CLIENT.UPDATE"), handler.CreateClientGoal)
-		clientsGroup.PATCH("/:id/goals/:goal_id", auth, requirePermission("CLIENT.UPDATE"), handler.UpdateClientGoal)
-		clientsGroup.GET("/:id/goals", auth, requirePermission("CLIENT.VIEW"), handler.GetClientGoalsForEvaluationPage)
+		clientsGroup.POST("/:id/documents", auth, requirePermission(domain.PermClientDocumentsUpload.String()), handler.AddClientDocument)
+		clientsGroup.GET("/:id/documents", auth, requirePermission(domain.PermClientDocumentsView.String()), handler.ListClientDocuments)
+		clientsGroup.DELETE("/:id/documents/:doc_id", auth,
+			requirePermission(domain.PermClientDocumentsView.String()),
+			requirePermission(domain.PermClientDocumentsDelete.String()),
+			handler.DeleteClientDocument,
+		)
+		clientsGroup.GET("/:id/missing_documents", auth, requirePermission(domain.PermClientDocumentsView.String()), handler.GetMissingClientDocuments)
+		clientsGroup.GET("/:id/evaluations/bootstrap", auth,
+			requirePermission(domain.PermClientView.String()),
+			requirePermission(domain.PermClientEvaluationView.String()),
+			handler.GetGoalEvaluationBootstrap,
+		)
+		clientsGroup.POST("/:id/goals", auth,
+			requirePermission(domain.PermClientView.String()),
+			requirePermission(domain.PermClientCarePlanView.String()),
+			requirePermission(domain.PermClientCarePlanCreate.String()),
+			handler.CreateClientGoal,
+		)
+		clientsGroup.PATCH("/:id/goals/:goal_id", auth,
+			requirePermission(domain.PermClientView.String()),
+			requirePermission(domain.PermClientCarePlanView.String()),
+			requirePermission(domain.PermClientCarePlanUpdate.String()),
+			handler.UpdateClientGoal,
+		)
+		clientsGroup.GET("/:id/goals", auth,
+			requirePermission(domain.PermClientView.String()),
+			requirePermission(domain.PermClientEvaluationView.String()),
+			handler.GetClientGoalsForEvaluationPage,
+		)
 		clientsGroup.GET("/:id/goals/:goal_id/history", auth, requirePermission(domain.PermClientEvaluationView.String()), handler.ListGoalEvaluationHistory)
 		clientsGroup.GET("/:id/evaluations/submitted", auth, requirePermission(domain.PermClientEvaluationView.String()), handler.ListClientSubmittedEvaluations)
-		clientsGroup.POST("/:id/evaluations", auth, requirePermission(domain.PermClientEvaluationCreate.String()), handler.CreateGoalEvaluation)
+		clientsGroup.POST("/:id/evaluations", auth,
+			requirePermission(domain.PermClientView.String()),
+			requirePermission(domain.PermClientEvaluationView.String()),
+			requirePermission(domain.PermClientEvaluationCreate.String()),
+			handler.CreateGoalEvaluation,
+		)
 		clientsGroup.POST("/:id/location_transfer", auth, requirePermission("CLIENT.UPDATE"), handler.RequestLocationTransfer)
 		clientsGroup.POST("/location_transfer/approve_reject", auth, requirePermission("CLIENT.UPDATE"), handler.ApproveOrRejectLocationTransfer)
 		clientsGroup.GET("/location_transfer", auth, requirePermission("CLIENT.VIEW"), handler.ListLocationTransferRequests)
@@ -107,10 +133,10 @@ func RegisterEvaluationRoutes(
 ) {
 	evaluationsGroup := rg.Group("/evaluations")
 	{
-		evaluationsGroup.GET("/upcoming", auth, requirePermission(domain.PermClientEvaluationView.String()), handler.ListUpcomingEvaluations)
-		evaluationsGroup.GET("/recent-submitted", auth, requirePermission(domain.PermClientEvaluationView.String()), handler.ListRecentSubmittedEvaluations)
-		evaluationsGroup.GET("/recent-drafts", auth, requirePermission(domain.PermClientEvaluationView.String()), handler.ListRecentDraftEvaluations)
-		evaluationsGroup.GET("/:evaluation_id", auth, requirePermission(domain.PermClientEvaluationView.String()), handler.GetGoalEvaluation)
+		evaluationsGroup.GET("/upcoming", auth, requirePermission(domain.PermClientView.String()), requirePermission(domain.PermClientEvaluationView.String()), handler.ListUpcomingEvaluations)
+		evaluationsGroup.GET("/recent-submitted", auth, requirePermission(domain.PermClientView.String()), requirePermission(domain.PermClientEvaluationView.String()), handler.ListRecentSubmittedEvaluations)
+		evaluationsGroup.GET("/recent-drafts", auth, requirePermission(domain.PermClientView.String()), requirePermission(domain.PermClientEvaluationView.String()), handler.ListRecentDraftEvaluations)
+		evaluationsGroup.GET("/:evaluation_id", auth, requirePermission(domain.PermClientView.String()), requirePermission(domain.PermClientEvaluationView.String()), handler.GetGoalEvaluation)
 	}
 }
 
@@ -577,6 +603,10 @@ func (h *ClientHandler) AddClientDocument(ctx *gin.Context) {
 
 	results, err := h.service.AddClientDocument(ctx.Request.Context(), clientID, toAddClientDocumentParams(req))
 	if err != nil {
+		if errors.Is(err, domain.ErrClientNotFound) {
+			ctx.JSON(http.StatusNotFound, httpapi.Fail(err.Error(), ""))
+			return
+		}
 		ctx.JSON(http.StatusBadRequest, httpapi.Fail(err.Error(), ""))
 		return
 	}
@@ -651,6 +681,10 @@ func (h *ClientHandler) DeleteClientDocument(ctx *gin.Context) {
 
 	result, err := h.service.DeleteClientDocument(ctx.Request.Context(), clientID, documentID)
 	if err != nil {
+		if errors.Is(err, domain.ErrClientDocumentNotFound) {
+			ctx.JSON(http.StatusNotFound, httpapi.Fail(err.Error(), ""))
+			return
+		}
 		ctx.JSON(http.StatusInternalServerError, httpapi.Fail("failed to delete client document", ""))
 		return
 	}
@@ -954,6 +988,10 @@ func (h *ClientHandler) CreateGoalEvaluation(ctx *gin.Context) {
 
 	result, err := h.service.CreateGoalEvaluation(ctx.Request.Context(), clientID, employeeID, toCreateGoalEvaluationParams(req))
 	if err != nil {
+		if errors.Is(err, domain.ErrGoalEvaluationOwnedByOther) {
+			ctx.JSON(http.StatusConflict, httpapi.Fail(err.Error(), ""))
+			return
+		}
 		ctx.JSON(http.StatusBadRequest, httpapi.Fail(err.Error(), ""))
 		return
 	}
@@ -1077,7 +1115,7 @@ func (h *ClientHandler) GetGoalEvaluation(ctx *gin.Context) {
 
 	result, err := h.service.GetGoalEvaluation(ctx.Request.Context(), evaluationID)
 	if err != nil {
-		if strings.Contains(err.Error(), "not found") {
+		if errors.Is(err, domain.ErrGoalEvaluationNotFound) {
 			ctx.JSON(http.StatusNotFound, httpapi.Fail(err.Error(), ""))
 			return
 		}

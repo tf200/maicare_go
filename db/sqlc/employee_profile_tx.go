@@ -19,8 +19,8 @@ type SetEmployeeProfilePictureTxResult struct {
 func (store *Store) SetEmployeeProfilePictureTx(ctx context.Context, arg SetEmployeeProfilePictureTxParams) (SetEmployeeProfilePictureTxResult, error) {
 	var result SetEmployeeProfilePictureTxResult
 
-	err := store.ExecTx(ctx, func(q *Queries) error {
-		attachement, err := q.SetAttachmentAsUsedorUnused(ctx, SetAttachmentAsUsedorUnusedParams{
+	err := store.ExecActorTx(ctx, func(q *Queries) error {
+		attachement, err := q.SetActorAttachmentAsUsedOrUnused(ctx, SetActorAttachmentAsUsedOrUnusedParams{
 			Uuid:   arg.AttachementID,
 			IsUsed: true,
 		})

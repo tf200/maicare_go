@@ -564,13 +564,23 @@ WHERE status = 'scheduled_out_of_care'
 
 
 -- name: CreateClientDocument :one
+WITH new_document AS (
+    SELECT public.begin_client_document_creation(sqlc.arg(client_id)::uuid) AS id
+)
 INSERT INTO client_documents (
+    id,
     client_id,
     attachment_uuid,
     label
-) VALUES (
-    $1, $2, $3
-) RETURNING *;
+)
+SELECT
+    id,
+    sqlc.arg(client_id)::uuid,
+    sqlc.arg(attachment_uuid)::uuid,
+    sqlc.arg(label)::client_document_label_enum
+FROM new_document
+WHERE id IS NOT NULL
+RETURNING *;
 
 -- name: ListClientDocuments :many
 SELECT

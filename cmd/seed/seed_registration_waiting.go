@@ -35,6 +35,9 @@ func (s *Seeder) SeedWaitingListClients(ctx context.Context, count int) error {
 	if count <= 0 {
 		return nil
 	}
+	if err := s.requireRLSBootstrapRole(ctx, "client care-plan"); err != nil {
+		return err
+	}
 	if len(s.data.SenderIDs) == 0 {
 		return fmt.Errorf("no senders available; seed senders first")
 	}
