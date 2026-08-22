@@ -22,7 +22,6 @@ type RegistrationUploadSessionRepository interface {
 	GetActive(ctx context.Context, tokenHash string) (*RegistrationUploadSession, error)
 	AddAttachment(ctx context.Context, sessionID, attachmentID uuid.UUID) error
 	HasAttachments(ctx context.Context, sessionID uuid.UUID, attachmentIDs []uuid.UUID) (bool, error)
-	Consume(ctx context.Context, sessionID uuid.UUID) error
 }
 
 // Document represents a file attachment

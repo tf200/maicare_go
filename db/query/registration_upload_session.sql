@@ -25,9 +25,3 @@ SELECT EXISTS (
       AND submitted_at IS NULL
       AND attachment_ids @> $2::uuid[]
 ) AS valid;
-
--- name: ConsumeRegistrationUploadSession :exec
-UPDATE registration_upload_sessions
-SET submitted_at = CURRENT_TIMESTAMP
-WHERE id = $1
-  AND submitted_at IS NULL;

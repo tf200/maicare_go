@@ -43,10 +43,6 @@ func (r *RegistrationUploadSessionRepository) HasAttachments(ctx context.Context
 	return r.store.RegistrationUploadSessionHasAttachments(ctx, db.RegistrationUploadSessionHasAttachmentsParams{ID: sessionID, Column2: attachmentIDs})
 }
 
-func (r *RegistrationUploadSessionRepository) Consume(ctx context.Context, sessionID uuid.UUID) error {
-	return r.store.ConsumeRegistrationUploadSession(ctx, sessionID)
-}
-
 func toDomainUploadSession(session db.RegistrationUploadSession) *domain.RegistrationUploadSession {
 	return &domain.RegistrationUploadSession{
 		ID:            session.ID,

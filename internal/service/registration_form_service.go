@@ -92,9 +92,6 @@ func (s *RegistrationFormService) CreateRegistrationForm(ctx context.Context, pa
 		s.logError(ctx, "CreateRegistrationForm", err, zap.String("client_name", params.ClientFirstName+" "+params.ClientLastName))
 		return nil, err
 	}
-	if err := s.uploads.Consume(ctx, session.ID); err != nil {
-		return nil, err
-	}
 	return form, nil
 }
 
@@ -231,7 +228,7 @@ func (s *RegistrationFormService) ProcessRegistrationForm(ctx context.Context, p
 func (s *RegistrationFormService) GetPublicIntakeOptions(ctx context.Context, token string) (*domain.PublicIntakeOptions, error) {
 	options, err := s.repo.GetPublicIntakeOptions(ctx, token)
 	if err != nil {
-		s.logError(ctx, "GetPublicIntakeOptions", err, zap.String("token", token))
+		s.logError(ctx, "GetPublicIntakeOptions", err)
 		return nil, err
 	}
 	return options, nil
@@ -240,7 +237,7 @@ func (s *RegistrationFormService) GetPublicIntakeOptions(ctx context.Context, to
 func (s *RegistrationFormService) SelectIntakeDate(ctx context.Context, params domain.SelectIntakeDateParams) error {
 	err := s.repo.SelectIntakeDate(ctx, params)
 	if err != nil {
-		s.logError(ctx, "SelectIntakeDate", err, zap.String("token", params.Token))
+		s.logError(ctx, "SelectIntakeDate", err)
 		return err
 	}
 	return nil

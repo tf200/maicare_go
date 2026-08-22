@@ -30,18 +30,6 @@ func (q *Queries) AddRegistrationUploadAttachment(ctx context.Context, arg AddRe
 	return err
 }
 
-const consumeRegistrationUploadSession = `-- name: ConsumeRegistrationUploadSession :exec
-UPDATE registration_upload_sessions
-SET submitted_at = CURRENT_TIMESTAMP
-WHERE id = $1
-  AND submitted_at IS NULL
-`
-
-func (q *Queries) ConsumeRegistrationUploadSession(ctx context.Context, id uuid.UUID) error {
-	_, err := q.db.Exec(ctx, consumeRegistrationUploadSession, id)
-	return err
-}
-
 const createRegistrationUploadSession = `-- name: CreateRegistrationUploadSession :one
 INSERT INTO registration_upload_sessions (token_hash, expires_at)
 VALUES ($1, $2)

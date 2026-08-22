@@ -1007,6 +1007,7 @@ CREATE TABLE registration_form (
     form_status form_status_enum NOT NULL DEFAULT 'pending',
     intake_options JSONB DEFAULT '[]',
     intake_token VARCHAR(255) UNIQUE,
+    intake_token_expires_at TIMESTAMPTZ NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     submitted_at TIMESTAMPTZ NULL,
@@ -1097,7 +1098,7 @@ $$ LANGUAGE plpgsql;
 CREATE TABLE client_details (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     intake_form_id UUID NULL REFERENCES intake_forms(id) ON DELETE SET NULL,
-    registration_form_id UUID NULL REFERENCES registration_form(id) ON DELETE SET NULL,
+    registration_form_id UUID NULL UNIQUE REFERENCES registration_form(id) ON DELETE SET NULL,
     first_name VARCHAR(100) NOT NULL,
     last_name VARCHAR(100) NOT NULL,
     date_of_birth DATE NULL,
@@ -1208,9 +1209,6 @@ CREATE TABLE client_details (
 
 CREATE INDEX client_details_sender_id_idx ON client_details(sender_id);
 CREATE INDEX client_details_location_id_idx ON client_details(location_id);
-CREATE INDEX client_details_registration_form_id_idx ON client_details(registration_form_id);
-
-
 -- Client goals and grouped evaluations (new model)
 CREATE TYPE client_goal_priority_enum AS ENUM ('low', 'medium', 'high');
 CREATE TYPE client_goal_status_enum AS ENUM ('active', 'achieved', 'cancelled');
@@ -3123,6 +3121,17 @@ CREATE TABLE public.rls_report_creation_context (
 
 REVOKE ALL ON TABLE public.rls_report_creation_context FROM PUBLIC;
 
+CREATE TABLE public.rls_registration_submission_context (
+    backend_pid INTEGER NOT NULL,
+    transaction_id XID8 NOT NULL,
+    session_id UUID NOT NULL,
+    attachment_ids UUID[] NOT NULL,
+    registration_id UUID NULL,
+    PRIMARY KEY (backend_pid, transaction_id)
+);
+
+REVOKE ALL ON TABLE public.rls_registration_submission_context FROM PUBLIC;
+
 CREATE OR REPLACE FUNCTION public.begin_client_creation()
 RETURNS UUID
 LANGUAGE plpgsql
@@ -3797,6 +3806,456 @@ AS $$
         FALSE
     );
 $$;
+
+CREATE OR REPLACE FUNCTION public.can_access_registration_form(registration_id UUID, permission_name TEXT)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+PARALLEL RESTRICTED
+SET search_path = pg_catalog, public
+AS $$
+DECLARE
+    owning_client_id UUID;
+    client_permission TEXT;
+BEGIN
+    IF $2 NOT IN ('REGISTRATION_FORM.VIEW', 'REGISTRATION_FORM.UPDATE', 'REGISTRATION_FORM.DELETE')
+       OR NOT public.has_permission($2) THEN
+        RETURN FALSE;
+    END IF;
+
+    SELECT cd.id INTO owning_client_id
+    FROM public.client_details AS cd
+    WHERE cd.registration_form_id = $1
+    LIMIT 1;
+
+    IF owning_client_id IS NULL THEN
+        RETURN TRUE;
+    END IF;
+
+    client_permission := CASE $2
+        WHEN 'REGISTRATION_FORM.VIEW' THEN 'CLIENT.VIEW'
+        WHEN 'REGISTRATION_FORM.UPDATE' THEN 'CLIENT.UPDATE'
+        WHEN 'REGISTRATION_FORM.DELETE' THEN 'CLIENT.DELETE'
+    END;
+    RETURN public.can_access_client(owning_client_id, client_permission);
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.can_access_intake_form(intake_id UUID, permission_name TEXT)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+PARALLEL RESTRICTED
+SET search_path = pg_catalog, public
+AS $$
+DECLARE
+    owning_client_id UUID;
+    client_permission TEXT;
+BEGIN
+    IF $2 NOT IN ('INTAKE_FORM.VIEW', 'INTAKE_FORM.UPDATE', 'INTAKE_FORM.DELETE')
+       OR NOT public.has_permission($2) THEN
+        RETURN FALSE;
+    END IF;
+
+    SELECT cd.id INTO owning_client_id
+    FROM public.client_details AS cd
+    WHERE cd.intake_form_id = $1
+    LIMIT 1;
+
+    IF owning_client_id IS NULL THEN
+        RETURN TRUE;
+    END IF;
+
+    client_permission := CASE $2
+        WHEN 'INTAKE_FORM.VIEW' THEN 'CLIENT.VIEW'
+        WHEN 'INTAKE_FORM.UPDATE' THEN 'CLIENT.UPDATE'
+        WHEN 'INTAKE_FORM.DELETE' THEN 'CLIENT.DELETE'
+    END;
+    RETURN public.can_access_client(owning_client_id, client_permission);
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.can_create_intake_form(registration_id UUID)
+RETURNS BOOLEAN
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+PARALLEL RESTRICTED
+SET search_path = pg_catalog, public
+AS $$
+    SELECT COALESCE(
+        public.has_permission('INTAKE_FORM.CREATE')
+        AND public.can_access_registration_form($1, 'REGISTRATION_FORM.VIEW')
+        AND EXISTS (
+            SELECT 1
+            FROM public.registration_form AS rf
+            WHERE rf.id = $1
+              AND rf.form_status = 'processed'::public.form_status_enum
+        ),
+        FALSE
+    );
+$$;
+
+CREATE OR REPLACE FUNCTION public.can_access_intake_assessment(assessment_id UUID, permission_name TEXT)
+RETURNS BOOLEAN
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+PARALLEL RESTRICTED
+SET search_path = pg_catalog, public
+AS $$
+    SELECT COALESCE(EXISTS (
+        SELECT 1
+        FROM public.intake_topic_assessments AS assessment
+        WHERE assessment.id = $1
+          AND public.can_access_intake_form(assessment.intake_form_id, $2)
+    ), FALSE);
+$$;
+
+CREATE OR REPLACE FUNCTION public.can_read_intake_promotion_source(intake_id UUID)
+RETURNS BOOLEAN
+LANGUAGE sql
+VOLATILE
+SECURITY DEFINER
+PARALLEL UNSAFE
+SET search_path = pg_catalog, public
+AS $$
+    SELECT COALESCE(EXISTS (
+        SELECT 1
+        FROM public.client_details AS client
+        WHERE client.intake_form_id = $1
+          AND public.can_read_created_client(client.id)
+    ), FALSE);
+$$;
+
+CREATE OR REPLACE FUNCTION public.begin_public_registration_submission(token_hash TEXT, attachment_ids UUID[])
+RETURNS UUID
+LANGUAGE plpgsql
+VOLATILE
+SECURITY DEFINER
+PARALLEL UNSAFE
+SET search_path = pg_catalog, public
+AS $$
+DECLARE
+    upload_session public.registration_upload_sessions%ROWTYPE;
+BEGIN
+    SELECT * INTO upload_session
+    FROM public.registration_upload_sessions AS session
+    WHERE session.token_hash = $1
+      AND session.expires_at > CURRENT_TIMESTAMP
+      AND session.submitted_at IS NULL
+    FOR UPDATE;
+
+    IF NOT FOUND THEN
+        RETURN NULL;
+    END IF;
+
+    PERFORM pg_advisory_xact_lock(hashtextextended(requested.id::TEXT, 0))
+    FROM unnest(COALESCE($2, '{}'::UUID[])) AS requested(id)
+    ORDER BY requested.id;
+
+    IF cardinality(COALESCE($2, '{}'::UUID[])) <> (
+           SELECT count(DISTINCT requested.id)
+           FROM unnest(COALESCE($2, '{}'::UUID[])) AS requested(id)
+       )
+       OR NOT upload_session.attachment_ids @> COALESCE($2, '{}'::UUID[])
+       OR EXISTS (
+           SELECT 1
+           FROM unnest(COALESCE($2, '{}'::UUID[])) AS requested(id)
+           LEFT JOIN public.attachment_file AS attachment ON attachment.uuid = requested.id
+            WHERE attachment.uuid IS NULL
+               OR attachment.uploaded_by_user_id IS NOT NULL
+               OR NOT attachment.is_used
+               OR public.attachment_file_is_referenced(requested.id)
+       ) THEN
+        RETURN NULL;
+    END IF;
+
+    DELETE FROM public.rls_registration_submission_context
+    WHERE backend_pid = pg_backend_pid();
+
+    INSERT INTO public.rls_registration_submission_context (
+        backend_pid, transaction_id, session_id, attachment_ids
+    ) VALUES (
+        pg_backend_pid(), pg_current_xact_id(), upload_session.id, COALESCE($2, '{}'::UUID[])
+    );
+    RETURN upload_session.id;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.authorize_public_registration_insert(registration_id UUID, attachment_ids UUID[])
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+VOLATILE
+SECURITY DEFINER
+PARALLEL UNSAFE
+SET search_path = pg_catalog, public
+AS $$
+DECLARE
+    affected INTEGER;
+BEGIN
+    IF cardinality(COALESCE($2, '{}'::UUID[])) <> (
+        SELECT count(DISTINCT requested.id)
+        FROM unnest(COALESCE($2, '{}'::UUID[])) AS requested(id)
+    ) THEN
+        RETURN FALSE;
+    END IF;
+
+    UPDATE public.rls_registration_submission_context AS context
+    SET registration_id = $1
+    WHERE context.backend_pid = pg_backend_pid()
+      AND context.transaction_id = pg_current_xact_id_if_assigned()
+      AND context.registration_id IS NULL
+      AND context.attachment_ids @> COALESCE($2, '{}'::UUID[]);
+    GET DIAGNOSTICS affected = ROW_COUNT;
+    RETURN affected = 1;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.can_read_public_submitted_registration(registration_id UUID)
+RETURNS BOOLEAN
+LANGUAGE sql
+VOLATILE
+SECURITY DEFINER
+PARALLEL UNSAFE
+SET search_path = pg_catalog, public
+AS $$
+    SELECT COALESCE(EXISTS (
+        SELECT 1
+        FROM public.rls_registration_submission_context AS context
+        WHERE context.backend_pid = pg_backend_pid()
+          AND context.transaction_id = pg_current_xact_id_if_assigned()
+          AND context.registration_id = $1
+    ), FALSE);
+$$;
+
+CREATE OR REPLACE FUNCTION public.consume_public_registration_submission(session_id UUID)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+VOLATILE
+SECURITY DEFINER
+PARALLEL UNSAFE
+SET search_path = pg_catalog, public
+AS $$
+DECLARE
+    affected INTEGER;
+BEGIN
+    UPDATE public.registration_upload_sessions AS session
+    SET submitted_at = CURRENT_TIMESTAMP
+    WHERE session.id = $1
+      AND session.submitted_at IS NULL
+      AND EXISTS (
+          SELECT 1
+          FROM public.rls_registration_submission_context AS context
+          WHERE context.backend_pid = pg_backend_pid()
+            AND context.transaction_id = pg_current_xact_id_if_assigned()
+            AND context.session_id = session.id
+      );
+    GET DIAGNOSTICS affected = ROW_COUNT;
+    RETURN affected = 1;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.get_public_intake_options(token TEXT)
+RETURNS JSONB
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+PARALLEL RESTRICTED
+SET search_path = pg_catalog, public
+AS $$
+    SELECT jsonb_build_object(
+        'client_first_name', rf.client_first_name,
+        'intake_location', COALESCE(rf.intake_appointment_location, ''),
+        'intake_options', COALESCE(rf.intake_options, '[]'::JSONB)
+    )
+    FROM public.registration_form AS rf
+    WHERE rf.intake_token = $1
+      AND rf.intake_token_expires_at > CURRENT_TIMESTAMP
+      AND rf.form_status = 'processed'::public.form_status_enum
+    LIMIT 1;
+$$;
+
+CREATE OR REPLACE FUNCTION public.select_public_intake_date(token TEXT, selected_date TIMESTAMPTZ)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+VOLATILE
+SECURITY DEFINER
+PARALLEL UNSAFE
+SET search_path = pg_catalog, public
+AS $$
+DECLARE
+    affected INTEGER;
+BEGIN
+    UPDATE public.registration_form AS rf
+    SET intake_appointment_datetime = $2,
+        intake_token = NULL,
+        intake_token_expires_at = NULL,
+        updated_at = CURRENT_TIMESTAMP
+    WHERE rf.intake_token = $1
+      AND rf.intake_token_expires_at > CURRENT_TIMESTAMP
+      AND rf.form_status = 'processed'::public.form_status_enum
+      AND EXISTS (
+          SELECT 1
+          FROM jsonb_array_elements_text(COALESCE(rf.intake_options, '[]'::JSONB)) AS option(value)
+          WHERE option.value::DATE = ($2 AT TIME ZONE 'UTC')::DATE
+      );
+    GET DIAGNOSTICS affected = ROW_COUNT;
+    RETURN affected = 1;
+EXCEPTION
+    WHEN invalid_text_representation OR datetime_field_overflow THEN RETURN FALSE;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.protect_intake_provenance()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = pg_catalog, public
+AS $$
+DECLARE
+    owning_intake_id UUID;
+BEGIN
+    owning_intake_id := CASE
+        WHEN TG_TABLE_NAME = 'intake_forms' THEN OLD.id
+        ELSE OLD.intake_form_id
+    END;
+
+    IF EXISTS (
+        SELECT 1
+        FROM public.client_details AS client
+        WHERE client.intake_form_id = owning_intake_id
+    ) THEN
+        RAISE EXCEPTION 'promoted intake source records are immutable';
+    END IF;
+
+    IF TG_TABLE_NAME = 'intake_forms'
+       AND TG_OP = 'UPDATE'
+       AND NEW.registration_form_id IS DISTINCT FROM OLD.registration_form_id THEN
+        RAISE EXCEPTION 'intake registration ownership is immutable';
+    END IF;
+    IF TG_TABLE_NAME = 'intake_topic_assessments'
+       AND TG_OP = 'UPDATE'
+       AND NEW.intake_form_id IS DISTINCT FROM OLD.intake_form_id THEN
+        RAISE EXCEPTION 'intake assessment ownership is immutable';
+    END IF;
+    IF TG_OP = 'DELETE' THEN
+        RETURN OLD;
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.validate_registration_document_change()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = pg_catalog, public
+AS $$
+DECLARE
+    attachment_id UUID;
+    document_ids UUID[];
+BEGIN
+    document_ids := array_remove(ARRAY[
+        NEW.document_referral,
+        NEW.document_education_report,
+        NEW.document_action_plan,
+        NEW.document_psychiatric_report,
+        NEW.document_diagnosis,
+        NEW.document_safety_plan,
+        NEW.document_id_copy
+    ]::UUID[], NULL);
+    IF cardinality(document_ids) <> (
+        SELECT count(DISTINCT document.id) FROM unnest(document_ids) AS document(id)
+    ) THEN
+        RAISE EXCEPTION 'registration attachments must be unique';
+    END IF;
+
+    FOR attachment_id IN
+        SELECT id FROM unnest(document_ids) AS added(id)
+        EXCEPT
+        SELECT id FROM unnest(array_remove(ARRAY[
+            OLD.document_referral,
+            OLD.document_education_report,
+            OLD.document_action_plan,
+            OLD.document_psychiatric_report,
+            OLD.document_diagnosis,
+            OLD.document_safety_plan,
+            OLD.document_id_copy
+        ]::UUID[], NULL)) AS existing(id)
+        ORDER BY id
+    LOOP
+        PERFORM pg_advisory_xact_lock(hashtextextended(attachment_id::TEXT, 0));
+        IF NOT EXISTS (
+            SELECT 1
+            FROM public.attachment_file AS attachment
+            WHERE attachment.uuid = attachment_id
+              AND attachment.uploaded_by_user_id = public.get_current_user_id()
+              AND attachment.is_used
+              AND public.can_access_actor_attachment(attachment.uuid)
+        ) THEN
+            RAISE EXCEPTION 'registration attachment is not owned by the current actor';
+        END IF;
+    END LOOP;
+    RETURN NEW;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.validate_client_intake_provenance()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    source_registration_id UUID;
+    source_conclusion public.intake_conclusion_enum;
+BEGIN
+    IF TG_OP = 'UPDATE'
+       AND (
+           NEW.intake_form_id IS DISTINCT FROM OLD.intake_form_id
+           OR NEW.registration_form_id IS DISTINCT FROM OLD.registration_form_id
+       ) THEN
+        RAISE EXCEPTION 'client intake provenance is immutable';
+    END IF;
+
+    IF (NEW.intake_form_id IS NULL) IS DISTINCT FROM (NEW.registration_form_id IS NULL) THEN
+        RAISE EXCEPTION 'client intake and registration provenance must be provided together';
+    END IF;
+
+    IF NEW.intake_form_id IS NOT NULL THEN
+        SELECT intake.registration_form_id, intake.intake_conclusion
+        INTO source_registration_id, source_conclusion
+        FROM public.intake_forms AS intake
+        WHERE intake.id = NEW.intake_form_id;
+
+        IF NOT FOUND
+           OR NEW.registration_form_id IS DISTINCT FROM source_registration_id
+           OR source_conclusion <> 'suitable'::public.intake_conclusion_enum THEN
+            RAISE EXCEPTION 'client intake provenance is invalid';
+        END IF;
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER intake_forms_protect_provenance
+BEFORE UPDATE OR DELETE ON public.intake_forms
+FOR EACH ROW EXECUTE FUNCTION public.protect_intake_provenance();
+
+CREATE TRIGGER intake_topic_assessments_protect_provenance
+BEFORE UPDATE OR DELETE ON public.intake_topic_assessments
+FOR EACH ROW EXECUTE FUNCTION public.protect_intake_provenance();
+
+CREATE TRIGGER registration_form_validate_document_change
+BEFORE UPDATE OF document_referral, document_education_report, document_action_plan,
+    document_psychiatric_report, document_diagnosis, document_safety_plan, document_id_copy
+ON public.registration_form
+FOR EACH ROW EXECUTE FUNCTION public.validate_registration_document_change();
+
+CREATE TRIGGER client_details_validate_intake_provenance
+BEFORE INSERT OR UPDATE OF intake_form_id, registration_form_id ON public.client_details
+FOR EACH ROW EXECUTE FUNCTION public.validate_client_intake_provenance();
 
 CREATE OR REPLACE FUNCTION public.begin_invoice_payment_operation(invoice_id UUID, permission_name TEXT, payment_id UUID)
 RETURNS VOID
@@ -4518,6 +4977,19 @@ BEGIN
     EXECUTE format('ALTER FUNCTION public.allocate_invoice_sequence_for_date(TIMESTAMPTZ) OWNER TO %I', policy_owner_name);
     EXECUTE format('ALTER FUNCTION public.attach_generated_invoice_pdf(UUID, UUID) OWNER TO %I', policy_owner_name);
     EXECUTE format('ALTER FUNCTION public.can_manage_invoice_run(UUID) OWNER TO %I', policy_owner_name);
+    EXECUTE format('ALTER FUNCTION public.can_access_registration_form(UUID, TEXT) OWNER TO %I', policy_owner_name);
+    EXECUTE format('ALTER FUNCTION public.can_access_intake_form(UUID, TEXT) OWNER TO %I', policy_owner_name);
+    EXECUTE format('ALTER FUNCTION public.can_create_intake_form(UUID) OWNER TO %I', policy_owner_name);
+    EXECUTE format('ALTER FUNCTION public.can_access_intake_assessment(UUID, TEXT) OWNER TO %I', policy_owner_name);
+    EXECUTE format('ALTER FUNCTION public.can_read_intake_promotion_source(UUID) OWNER TO %I', policy_owner_name);
+    EXECUTE format('ALTER FUNCTION public.begin_public_registration_submission(TEXT, UUID[]) OWNER TO %I', policy_owner_name);
+    EXECUTE format('ALTER FUNCTION public.authorize_public_registration_insert(UUID, UUID[]) OWNER TO %I', policy_owner_name);
+    EXECUTE format('ALTER FUNCTION public.can_read_public_submitted_registration(UUID) OWNER TO %I', policy_owner_name);
+    EXECUTE format('ALTER FUNCTION public.consume_public_registration_submission(UUID) OWNER TO %I', policy_owner_name);
+    EXECUTE format('ALTER FUNCTION public.get_public_intake_options(TEXT) OWNER TO %I', policy_owner_name);
+    EXECUTE format('ALTER FUNCTION public.select_public_intake_date(TEXT, TIMESTAMPTZ) OWNER TO %I', policy_owner_name);
+    EXECUTE format('ALTER FUNCTION public.protect_intake_provenance() OWNER TO %I', policy_owner_name);
+    EXECUTE format('ALTER FUNCTION public.validate_registration_document_change() OWNER TO %I', policy_owner_name);
     EXECUTE format('ALTER FUNCTION public.set_group_f_ownership() OWNER TO %I', policy_owner_name);
     EXECUTE format('ALTER FUNCTION public.contract_audit_trigger_func() OWNER TO %I', policy_owner_name);
     EXECUTE format('ALTER FUNCTION public.invoice_audit_trigger_func() OWNER TO %I', policy_owner_name);
@@ -4531,6 +5003,9 @@ BEGIN
     EXECUTE format('GRANT SELECT ON public.attachment_file, public.client_documents TO %I', policy_owner_name);
     EXECUTE format('GRANT UPDATE ON public.attachment_file TO %I', policy_owner_name);
     EXECUTE format('GRANT SELECT ON public.registration_form, public.contract, public.custom_user, public.client_medication_order, public.invoice, public.collaboration_agreement, public.risk_assessment, public.consent_declaration TO %I', policy_owner_name);
+    EXECUTE format('GRANT SELECT ON public.intake_forms, public.intake_topic_assessments, public.registration_upload_sessions TO %I', policy_owner_name);
+    EXECUTE format('GRANT UPDATE ON public.registration_form, public.registration_upload_sessions TO %I', policy_owner_name);
+    EXECUTE format('GRANT SELECT, INSERT, UPDATE, DELETE ON public.rls_registration_submission_context TO %I', policy_owner_name);
     EXECUTE format('GRANT SELECT ON public.invoice_payment_history, public.invoice_line, public.invoice_run, public.calendar_event_attendees TO %I', policy_owner_name);
     EXECUTE format('GRANT UPDATE ON public.invoice TO %I', policy_owner_name);
     EXECUTE format('GRANT SELECT, INSERT, UPDATE ON public.invoice_number_counter TO %I', policy_owner_name);
@@ -4540,6 +5015,7 @@ BEGIN
     EXECUTE format('GRANT EXECUTE ON FUNCTION public.has_permission(TEXT) TO %I', policy_owner_name);
     EXECUTE format('GRANT EXECUTE ON FUNCTION public.get_permission_scope(TEXT) TO %I', policy_owner_name);
     EXECUTE format('GRANT EXECUTE ON FUNCTION public.can_access_client(UUID, TEXT) TO %I', policy_owner_name);
+    EXECUTE format('GRANT EXECUTE ON FUNCTION public.can_read_created_client(UUID) TO %I', policy_owner_name);
     EXECUTE format('REVOKE %I FROM %I', policy_owner_name, current_user);
 END;
 $$;
@@ -4565,6 +5041,12 @@ GRANT EXECUTE ON FUNCTION public.can_access_invoice_mutation(UUID, TEXT) TO CURR
 GRANT EXECUTE ON FUNCTION public.allocate_invoice_sequence_for_date(TIMESTAMPTZ) TO CURRENT_USER;
 GRANT EXECUTE ON FUNCTION public.attach_generated_invoice_pdf(UUID, UUID) TO CURRENT_USER;
 GRANT EXECUTE ON FUNCTION public.can_manage_invoice_run(UUID) TO CURRENT_USER;
+GRANT EXECUTE ON FUNCTION public.begin_public_registration_submission(TEXT, UUID[]) TO CURRENT_USER;
+GRANT EXECUTE ON FUNCTION public.authorize_public_registration_insert(UUID, UUID[]) TO CURRENT_USER;
+GRANT EXECUTE ON FUNCTION public.can_read_public_submitted_registration(UUID) TO CURRENT_USER;
+GRANT EXECUTE ON FUNCTION public.consume_public_registration_submission(UUID) TO CURRENT_USER;
+GRANT EXECUTE ON FUNCTION public.get_public_intake_options(TEXT) TO CURRENT_USER;
+GRANT EXECUTE ON FUNCTION public.select_public_intake_date(TEXT, TIMESTAMPTZ) TO CURRENT_USER;
 
 REVOKE ALL ON FUNCTION public.get_current_user_id() FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.get_current_employee_id() FROM PUBLIC;
@@ -4602,6 +5084,19 @@ REVOKE ALL ON FUNCTION public.get_invoice_paid_total(UUID) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.allocate_invoice_sequence_for_date(TIMESTAMPTZ) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.attach_generated_invoice_pdf(UUID, UUID) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.can_manage_invoice_run(UUID) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.can_access_registration_form(UUID, TEXT) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.can_access_intake_form(UUID, TEXT) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.can_create_intake_form(UUID) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.can_access_intake_assessment(UUID, TEXT) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.can_read_intake_promotion_source(UUID) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.begin_public_registration_submission(TEXT, UUID[]) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.authorize_public_registration_insert(UUID, UUID[]) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.can_read_public_submitted_registration(UUID) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.consume_public_registration_submission(UUID) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.get_public_intake_options(TEXT) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.select_public_intake_date(TEXT, TIMESTAMPTZ) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.protect_intake_provenance() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.validate_registration_document_change() FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.set_group_f_ownership() FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.get_authorized_client_related_emails(UUID) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.get_authorized_incident_recipient_emails(UUID) FROM PUBLIC;
@@ -4623,6 +5118,11 @@ GRANT EXECUTE ON FUNCTION public.can_read_created_incident(UUID) TO CURRENT_USER
 GRANT EXECUTE ON FUNCTION public.begin_client_document_creation(UUID) TO CURRENT_USER;
 GRANT EXECUTE ON FUNCTION public.can_read_created_client_document(UUID) TO CURRENT_USER;
 GRANT EXECUTE ON FUNCTION public.get_invoice_paid_total(UUID) TO CURRENT_USER;
+GRANT EXECUTE ON FUNCTION public.can_access_registration_form(UUID, TEXT) TO CURRENT_USER;
+GRANT EXECUTE ON FUNCTION public.can_access_intake_form(UUID, TEXT) TO CURRENT_USER;
+GRANT EXECUTE ON FUNCTION public.can_create_intake_form(UUID) TO CURRENT_USER;
+GRANT EXECUTE ON FUNCTION public.can_access_intake_assessment(UUID, TEXT) TO CURRENT_USER;
+GRANT EXECUTE ON FUNCTION public.can_read_intake_promotion_source(UUID) TO CURRENT_USER;
 
 -- Check if current employee is Admin
 CREATE OR REPLACE FUNCTION is_admin() RETURNS BOOLEAN AS $$
@@ -5194,22 +5694,120 @@ CREATE POLICY invoice_run_update ON public.invoice_run FOR UPDATE
     )
     WITH CHECK (created_by = public.get_current_employee_id());
 
+-- Registration records are permission-owned before promotion and additionally
+-- inherit scoped client authorization after promotion.
+ALTER TABLE public.registration_form ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.registration_form FORCE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS coordinator_select ON public.registration_form;
+DROP POLICY IF EXISTS coordinator_insert ON public.registration_form;
+DROP POLICY IF EXISTS coordinator_update ON public.registration_form;
+DROP POLICY IF EXISTS coordinator_delete ON public.registration_form;
+CREATE POLICY registration_form_select ON public.registration_form FOR SELECT
+    USING (
+        public.can_access_registration_form(id, 'REGISTRATION_FORM.VIEW')
+        OR public.can_read_public_submitted_registration(id)
+    );
+CREATE POLICY registration_form_insert ON public.registration_form FOR INSERT
+    WITH CHECK (
+        public.authorize_public_registration_insert(
+            id,
+            array_remove(ARRAY[
+                document_referral,
+                document_education_report,
+                document_action_plan,
+                document_psychiatric_report,
+                document_diagnosis,
+                document_safety_plan,
+                document_id_copy
+            ]::UUID[], NULL)
+        )
+    );
+CREATE POLICY registration_form_update ON public.registration_form FOR UPDATE
+    USING (public.can_access_registration_form(id, 'REGISTRATION_FORM.UPDATE'))
+    WITH CHECK (public.can_access_registration_form(id, 'REGISTRATION_FORM.UPDATE'));
+CREATE POLICY registration_form_delete ON public.registration_form FOR DELETE
+    USING (public.can_access_registration_form(id, 'REGISTRATION_FORM.DELETE'));
+
+ALTER TABLE public.intake_forms ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.intake_forms FORCE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS coordinator_select ON public.intake_forms;
+DROP POLICY IF EXISTS coordinator_insert ON public.intake_forms;
+DROP POLICY IF EXISTS coordinator_update ON public.intake_forms;
+DROP POLICY IF EXISTS coordinator_delete ON public.intake_forms;
+CREATE POLICY intake_forms_select ON public.intake_forms FOR SELECT
+    USING (public.can_access_intake_form(id, 'INTAKE_FORM.VIEW'));
+CREATE POLICY intake_forms_insert ON public.intake_forms FOR INSERT
+    WITH CHECK (public.can_create_intake_form(registration_form_id));
+CREATE POLICY intake_forms_update ON public.intake_forms FOR UPDATE
+    USING (public.can_access_intake_form(id, 'INTAKE_FORM.UPDATE'))
+    WITH CHECK (public.can_access_intake_form(id, 'INTAKE_FORM.UPDATE'));
+CREATE POLICY intake_forms_delete ON public.intake_forms FOR DELETE
+    USING (public.can_access_intake_form(id, 'INTAKE_FORM.DELETE'));
+
+ALTER TABLE public.intake_topic_assessments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.intake_topic_assessments FORCE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS coordinator_select ON public.intake_topic_assessments;
+DROP POLICY IF EXISTS coordinator_insert ON public.intake_topic_assessments;
+DROP POLICY IF EXISTS coordinator_update ON public.intake_topic_assessments;
+DROP POLICY IF EXISTS coordinator_delete ON public.intake_topic_assessments;
+CREATE POLICY intake_topic_assessments_select ON public.intake_topic_assessments FOR SELECT
+    USING (
+        public.can_access_intake_form(intake_form_id, 'INTAKE_FORM.VIEW')
+        OR public.can_read_intake_promotion_source(intake_form_id)
+    );
+CREATE POLICY intake_topic_assessments_insert ON public.intake_topic_assessments FOR INSERT
+    WITH CHECK (public.can_access_intake_form(intake_form_id, 'INTAKE_FORM.UPDATE'));
+CREATE POLICY intake_topic_assessments_update ON public.intake_topic_assessments FOR UPDATE
+    USING (public.can_access_intake_assessment(id, 'INTAKE_FORM.UPDATE'))
+    WITH CHECK (public.can_access_intake_form(intake_form_id, 'INTAKE_FORM.UPDATE'));
+CREATE POLICY intake_topic_assessments_delete ON public.intake_topic_assessments FOR DELETE
+    USING (public.can_access_intake_assessment(id, 'INTAKE_FORM.UPDATE'));
+
+-- Legacy intake declarations have no separate application permission family;
+-- they are client-owned records and follow the matching client operation scope.
+DO $$
+DECLARE
+    protected_table TEXT;
+BEGIN
+    FOREACH protected_table IN ARRAY ARRAY[
+        'collaboration_agreement',
+        'risk_assessment',
+        'consent_declaration',
+        'youth_care_intake',
+        'data_sharing_statement'
+    ] LOOP
+        EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', protected_table);
+        EXECUTE format('ALTER TABLE public.%I FORCE ROW LEVEL SECURITY', protected_table);
+        EXECUTE format('DROP POLICY IF EXISTS coordinator_select ON public.%I', protected_table);
+        EXECUTE format('DROP POLICY IF EXISTS coordinator_insert ON public.%I', protected_table);
+        EXECUTE format('DROP POLICY IF EXISTS coordinator_update ON public.%I', protected_table);
+        EXECUTE format('DROP POLICY IF EXISTS coordinator_delete ON public.%I', protected_table);
+        EXECUTE format(
+            'CREATE POLICY %I ON public.%I FOR SELECT USING (public.can_access_client(client_id, ''CLIENT.VIEW''))',
+            protected_table || '_select', protected_table
+        );
+        EXECUTE format(
+            'CREATE POLICY %I ON public.%I FOR INSERT WITH CHECK (public.can_access_client(client_id, ''CLIENT.UPDATE''))',
+            protected_table || '_insert', protected_table
+        );
+        EXECUTE format(
+            'CREATE POLICY %I ON public.%I FOR UPDATE USING (public.can_access_client(client_id, ''CLIENT.UPDATE'')) WITH CHECK (public.can_access_client(client_id, ''CLIENT.UPDATE''))',
+            protected_table || '_update', protected_table
+        );
+        EXECUTE format(
+            'CREATE POLICY %I ON public.%I FOR DELETE USING (public.can_access_client(client_id, ''CLIENT.DELETE''))',
+            protected_table || '_delete', protected_table
+        );
+    END LOOP;
+END;
+$$;
+
 -- Apply legacy RLS to related tables until they are converted in Phase 9.
 SELECT apply_client_rls('client_status_history');
 SELECT apply_client_rls('client_location_transfer');
 	SELECT apply_client_rls('assignment');
 	SELECT apply_client_rls('calendar_event_attendees');
 SELECT apply_client_rls('appointment_card');
-SELECT apply_client_rls('collaboration_agreement');
-SELECT apply_client_rls('risk_assessment');
-SELECT apply_client_rls('consent_declaration');
-SELECT apply_client_rls('youth_care_intake');
-SELECT apply_client_rls('data_sharing_statement');
-
--- Special cases for nested tables
--- Registration and Intake
-SELECT apply_client_rls('registration_form', 'get_client_id_from_registration_form(id)');
-SELECT apply_client_rls('intake_forms', 'get_client_id_from_registration_form(registration_form_id)');
 
 -- Medication orders have direct client_id
 
@@ -5217,8 +5815,6 @@ SELECT apply_client_rls('intake_forms', 'get_client_id_from_registration_form(re
 CREATE OR REPLACE FUNCTION get_client_id_from_intake_form(intake_id UUID) RETURNS UUID AS $$
     SELECT id FROM client_details WHERE intake_form_id = intake_id;
 $$ LANGUAGE sql STABLE;
-
-SELECT apply_client_rls('intake_topic_assessments', 'get_client_id_from_intake_form(intake_form_id)');
 
 -- Clean up helper functions if desired, or keep them for future use.
 -- DROP FUNCTION apply_client_rls(TEXT, TEXT);

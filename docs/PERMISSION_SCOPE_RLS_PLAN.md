@@ -2,7 +2,7 @@
 
 Last updated: 2026-08-22
 
-Status: Phase 9 in progress; Groups A through F completed
+Status: Phase 9 in progress; Groups A through G completed
 
 ## Purpose
 
@@ -826,10 +826,14 @@ Likely tables:
 - `youth_care_intake`
 - Related declarations and agreements
 
-- [ ] Define when a pre-client record becomes client-owned.
-- [ ] Define access before client creation.
-- [ ] Replace nested helper policies carefully.
-- [ ] Test public registration/intake routes remain functional without exposing protected records.
+- [x] Define when a pre-client record becomes client-owned.
+- [x] Define access before client creation.
+- [x] Replace nested helper policies carefully.
+- [x] Test public registration/intake routes remain functional without exposing protected records.
+
+Before promotion, registration and intake records use their unscoped `REGISTRATION_FORM.*` and `INTAKE_FORM.*` permissions because no client assignment exists. After promotion, those permissions remain required and are composed with the matching scoped `CLIENT.VIEW`, `CLIENT.UPDATE`, or `CLIENT.DELETE` permission. Intake source records and their assessments become immutable once a client references the intake.
+
+Anonymous registration submission uses a transaction-bound upload-session context that validates and serializes the session's attachments, authorizes exactly one returned registration row, and consumes the session atomically. Public scheduling uses narrow security-definer operations that expose only the proposed options, accept only an offered date, and invalidate the token atomically.
 
 Acceptance criteria for Phase 9:
 
@@ -1014,6 +1018,10 @@ Complete this tracker before converting each table. Add rows as tables are disco
 | `invoice_line_calendar_event`, `billed_calendar_event` | direct `client_id`, validated against invoice line, invoice, and client attendee | `INVOICE.VIEW` | `INVOICE.CREATE` | `INVOICE.UPDATE` | `INVOICE.UPDATE` where supported | Phase 9 Group F completed |
 | `invoice_run` | multi-client; immutable creating employee | Creator with `INVOICE.CREATE` | `INVOICE.CREATE` (`all` only) | Creator with `INVOICE.CREATE` (`all` only) | No operation or permission | Phase 9 Group F completed |
 | `invoice_run_item` | immutable direct `client_id` plus creator-owned run | `INVOICE.VIEW` | Creator with `INVOICE.CREATE` (`all` only) | Creator with `INVOICE.CREATE` (`all` only) | No operation or permission | Phase 9 Group F completed |
+| `registration_form` | pre-client root; `client_details.registration_form_id` after promotion | `REGISTRATION_FORM.VIEW`; plus scoped `CLIENT.VIEW` after promotion; exact public submission return context | Public upload-session submission context only | `REGISTRATION_FORM.UPDATE`; plus scoped `CLIENT.UPDATE` after promotion | `REGISTRATION_FORM.DELETE`; plus scoped `CLIENT.DELETE` after promotion | Phase 9 Group G completed |
+| `intake_forms` | `registration_form_id`; `client_details.intake_form_id` after promotion | `INTAKE_FORM.VIEW`; plus scoped `CLIENT.VIEW` after promotion | `INTAKE_FORM.CREATE` with visible processed registration | `INTAKE_FORM.UPDATE`; plus scoped `CLIENT.UPDATE` after promotion, when source becomes immutable | `INTAKE_FORM.DELETE`; plus scoped `CLIENT.DELETE` after promotion, when source becomes immutable | Phase 9 Group G completed |
+| `intake_topic_assessments` | immutable `intake_form_id` | Parent `INTAKE_FORM.VIEW` | Parent `INTAKE_FORM.UPDATE` | Parent `INTAKE_FORM.UPDATE`; immutable after promotion | Parent `INTAKE_FORM.UPDATE`; immutable after promotion | Phase 9 Group G completed |
+| `collaboration_agreement`, `risk_assessment`, `consent_declaration`, `youth_care_intake`, `data_sharing_statement` | direct `client_id` | `CLIENT.VIEW` | `CLIENT.UPDATE` | `CLIENT.UPDATE` | `CLIENT.DELETE` | Phase 9 Group G completed; no active application mutation routes |
 
 ## Known Risks
 
@@ -1071,10 +1079,40 @@ Record finalized decisions here. Do not silently change an earlier decision; add
 | 2026-08-22 | Keep payment permissions independent of general invoice UPDATE and expose only an exact target, protected aggregates, and derived status recalculation. | Payment workflows must update invoice payment state without granting arbitrary invoice mutation or disclosing unrelated payment details. | Confirmed |
 | 2026-08-22 | Retain contract and invoice audit client IDs without cascading foreign keys. | Deleting a client must not erase historical financial audit evidence. | Confirmed |
 | 2026-08-22 | Defer deployment runtime-role separation to Phase 10. | Group F proves policies with a non-owner `NOSUPERUSER NOBYPASSRLS` role, while local/deployment credentials still require the repository-wide role split already planned for Phase 10. | Confirmed |
+| 2026-08-22 | Keep pre-client registration/intake permissions unscoped, then require the matching scoped client permission after promotion. | Pre-client records have no assignment target, while promoted records contain client data that must obey assigned/all reach. | Confirmed |
+| 2026-08-22 | Make promoted intake source records immutable. | Intake details and assessments are provenance for the created client; later edits or deletion would rewrite the basis of admission and generated goals. | Confirmed |
+| 2026-08-22 | Authorize anonymous registration and scheduling only through token-bound database operations. | A configured service actor must not turn public endpoints into a broad confused deputy, and attachment/date validation must remain atomic under concurrency. | Confirmed |
 
 ## Progress Log
 
 Add the newest entry first.
+
+### 2026-08-22 - Phase 9 Group G intake and registration completed
+
+Status: Completed and verified
+
+Changes:
+
+- Replaced legacy nested role-name policies on registration forms, intake forms, and topic assessments with forced operation-specific RLS.
+- Kept pre-client category permissions unscoped and composed promoted records with matching assigned/all client scope.
+- Made intake, assessment, and client source relationships immutable and database-consistent, including post-promotion source immutability.
+- Converted youth-care intake and related declaration/agreement tables to forced client-scoped policies.
+- Bound public registration insertion and its returned row to one locked upload session, required confirmed unique actorless attachments, serialized concurrent attachment claims, and consumed the session in the same transaction.
+- Replaced direct public intake-token table access with narrow option-read and exact date-selection functions; tokens expire after seven days, date-only options are timezone-stable, arbitrary dates are rejected, and valid tokens are consumed atomically.
+- Restricted staff registration document replacement to used attachments owned by the current actor.
+- Corrected route permission composition for registration mutations, intake source reads/mutations, promotion, and dashboard registration data.
+- Removed raw registration and intake tokens from error logging.
+
+Verification:
+
+- Applied, rolled back, and reapplied the initial migration on a clean PostgreSQL 17 database.
+- Tested through a temporary `NOSUPERUSER NOBYPASSRLS` non-owner runtime role.
+- Verified pre-client category isolation, post-promotion client scope and promotion source reads, forced RLS, unique immutable provenance, attachment ownership and duplication rejection, attachment-free and one-time public submission, exact appointment-option validation, expiry, and token consumption.
+- Passed the complete PostgreSQL integration suite.
+
+Next action:
+
+- Map and convert the remaining legacy Phase 9 policies for status history, location transfers, legacy assignments, calendar attendees, and appointment cards before marking the phase acceptance criteria complete.
 
 ### 2026-08-22 - Phase 9 Group F contracts and invoices completed
 

@@ -80,6 +80,15 @@ INSERT INTO registration_form (
     $66, $67, $68, $69
 ) RETURNING *;
 
+-- name: BeginPublicRegistrationSubmission :one
+SELECT public.begin_public_registration_submission(
+    sqlc.arg('token_hash')::TEXT,
+    sqlc.arg('attachment_ids')::UUID[]
+) AS session_id;
+
+-- name: ConsumePublicRegistrationSubmission :one
+SELECT public.consume_public_registration_submission(sqlc.arg('session_id')::UUID) AS consumed;
+
 
 
 
@@ -257,6 +266,10 @@ SET
     addmission_type = COALESCE(sqlc.narg('addmission_type'), addmission_type),
     intake_options = COALESCE(sqlc.narg('intake_options'), intake_options),
     intake_token = COALESCE(sqlc.narg('intake_token'), intake_token),
+    intake_token_expires_at = CASE
+        WHEN sqlc.narg('intake_token')::TEXT IS NOT NULL THEN CURRENT_TIMESTAMP + INTERVAL '7 days'
+        ELSE intake_token_expires_at
+    END,
     rejection_reason = COALESCE(sqlc.narg('rejection_reason'), rejection_reason),
     processed_at = CURRENT_TIMESTAMP,
     updated_at = CURRENT_TIMESTAMP
@@ -264,15 +277,11 @@ WHERE id = $1
 RETURNING *;
 
 
--- name: GetRegistrationFormByToken :one
-SELECT * FROM registration_form
-WHERE intake_token = $1
-LIMIT 1;
+-- name: GetPublicIntakeOptions :one
+SELECT public.get_public_intake_options(sqlc.arg('token')::TEXT) AS options;
 
--- name: UpdateRegistrationFormIntakeDate :one
-UPDATE registration_form
-SET
-    intake_appointment_datetime = $2,
-    intake_token = NULL -- Invalidate token after use
-WHERE id = $1
-RETURNING *;
+-- name: SelectPublicIntakeDate :one
+SELECT public.select_public_intake_date(
+    sqlc.arg('token')::TEXT,
+    sqlc.arg('selected_date')::TIMESTAMPTZ
+) AS selected;

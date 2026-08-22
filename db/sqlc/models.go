@@ -4141,6 +4141,7 @@ type RegistrationForm struct {
 	FormStatus                    FormStatusEnum     `json:"form_status"`
 	IntakeOptions                 []byte             `json:"intake_options"`
 	IntakeToken                   *string            `json:"intake_token"`
+	IntakeTokenExpiresAt          pgtype.Timestamptz `json:"intake_token_expires_at"`
 	CreatedAt                     pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt                     pgtype.Timestamptz `json:"updated_at"`
 	SubmittedAt                   pgtype.Timestamptz `json:"submitted_at"`
@@ -4212,6 +4213,14 @@ type RlsClientCreationContext struct {
 	BackendPid    int32         `json:"backend_pid"`
 	TransactionID pgtype.Uint64 `json:"transaction_id"`
 	ClientID      uuid.UUID     `json:"client_id"`
+}
+
+type RlsRegistrationSubmissionContext struct {
+	BackendPid     int32         `json:"backend_pid"`
+	TransactionID  pgtype.Uint64 `json:"transaction_id"`
+	SessionID      uuid.UUID     `json:"session_id"`
+	AttachmentIds  []uuid.UUID   `json:"attachment_ids"`
+	RegistrationID *uuid.UUID    `json:"registration_id"`
 }
 
 type RlsReportCreationContext struct {

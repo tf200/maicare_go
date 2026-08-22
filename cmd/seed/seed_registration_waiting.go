@@ -14,6 +14,12 @@ import (
 )
 
 func (s *Seeder) SeedRegistrationForms(ctx context.Context, count int) error {
+	if count <= 0 {
+		return nil
+	}
+	if err := s.requireRLSBootstrapRole(ctx, "registration and intake"); err != nil {
+		return err
+	}
 	for i := range count {
 		if (i+1)%25 == 0 || i == 0 || i+1 == count {
 			fmt.Printf("[seed] registration forms: %d/%d\n", i+1, count)
@@ -252,6 +258,9 @@ func (s *Seeder) SeedOtherIntakeForms(ctx context.Context, count int) error {
 	if count <= 0 {
 		return nil
 	}
+	if err := s.requireRLSBootstrapRole(ctx, "registration and intake"); err != nil {
+		return err
+	}
 	if len(s.data.SenderIDs) == 0 {
 		return fmt.Errorf("no senders available; seed senders first")
 	}
@@ -350,6 +359,9 @@ func (s *Seeder) SeedOtherIntakeForms(ctx context.Context, count int) error {
 func (s *Seeder) SeedUnprocessedRegistrationForms(ctx context.Context, count int) error {
 	if count <= 0 {
 		return nil
+	}
+	if err := s.requireRLSBootstrapRole(ctx, "registration and intake"); err != nil {
+		return err
 	}
 
 	rejectionReasons := []string{

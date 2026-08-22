@@ -25,7 +25,7 @@ func RegisterDashboardRoutes(
 ) {
 	dashboardGroup := rg.Group("/dashboard")
 	{
-		dashboardGroup.GET("/admin", auth, requirePermission("DASHBOARD.VIEW"), handler.GetAdminDashboard)
+		dashboardGroup.GET("/admin", auth, requirePermission("DASHBOARD.VIEW"), requirePermission(domain.PermRegistrationFormView.String()), handler.GetAdminDashboard)
 	}
 }
 

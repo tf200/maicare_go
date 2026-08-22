@@ -3,7 +3,10 @@ package repository
 import (
 	"context"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
+	"fmt"
 
 	db "maicare_go/db/sqlc"
 	"maicare_go/internal/ctxkeys"
@@ -102,9 +105,30 @@ func (r *RegistrationFormRepository) CreateRegistrationForm(ctx context.Context,
 
 	var form db.RegistrationForm
 	err := r.store.ExecAsActor(ctx, r.serviceActor, func(q *db.Queries) error {
-		var err error
+		attachmentIDs := registrationFormAttachmentIDs(params)
+		sessionID, err := q.BeginPublicRegistrationSubmission(ctx, db.BeginPublicRegistrationSubmissionParams{
+			TokenHash:     registrationUploadTokenHash(params.RegistrationUploadToken),
+			AttachmentIds: attachmentIDs,
+		})
+		if err != nil {
+			return fmt.Errorf("invalid registration upload session: %w", err)
+		}
+		if sessionID == uuid.Nil {
+			return fmt.Errorf("invalid registration upload session")
+		}
+
 		form, err = q.CreateRegistrationForm(ctx, arg)
-		return err
+		if err != nil {
+			return err
+		}
+		consumed, err := q.ConsumePublicRegistrationSubmission(ctx, sessionID)
+		if err != nil {
+			return err
+		}
+		if !consumed {
+			return fmt.Errorf("registration upload session was not consumed")
+		}
+		return nil
 	})
 	if err != nil {
 		return nil, err
@@ -401,10 +425,10 @@ func (r *RegistrationFormRepository) ProcessRegistrationForm(ctx context.Context
 }
 
 func (r *RegistrationFormRepository) GetPublicIntakeOptions(ctx context.Context, token string) (*domain.PublicIntakeOptions, error) {
-	var form db.RegistrationForm
+	var optionsJSON []byte
 	err := r.store.ExecAsActor(ctx, r.serviceActor, func(q *db.Queries) error {
 		var err error
-		form, err = q.GetRegistrationFormByToken(ctx, &token)
+		optionsJSON, err = q.GetPublicIntakeOptions(ctx, token)
 		return err
 	})
 	if err != nil {
@@ -414,53 +438,38 @@ func (r *RegistrationFormRepository) GetPublicIntakeOptions(ctx context.Context,
 		return nil, err
 	}
 
-	var dates []string
-	if len(form.IntakeOptions) > 0 {
-		if err := json.Unmarshal(form.IntakeOptions, &dates); err != nil {
-			return nil, err
-		}
+	if len(optionsJSON) == 0 || string(optionsJSON) == "null" {
+		return nil, domain.ErrRegistrationFormNotFound
+	}
+	var options struct {
+		ClientFirstName string   `json:"client_first_name"`
+		IntakeLocation  string   `json:"intake_location"`
+		ProposedDates   []string `json:"intake_options"`
+	}
+	if err := json.Unmarshal(optionsJSON, &options); err != nil {
+		return nil, err
 	}
 
 	return &domain.PublicIntakeOptions{
-		ClientFirstName: form.ClientFirstName,
-		IntakeLocation:  derefString(form.IntakeAppointmentLocation),
-		ProposedDates:   dates,
+		ClientFirstName: options.ClientFirstName,
+		IntakeLocation:  options.IntakeLocation,
+		ProposedDates:   options.ProposedDates,
 	}, nil
 }
 
 func (r *RegistrationFormRepository) SelectIntakeDate(ctx context.Context, params domain.SelectIntakeDateParams) error {
-	var form db.RegistrationForm
-	err := r.store.ExecAsActor(ctx, r.serviceActor, func(q *db.Queries) error {
-		var err error
-		form, err = q.GetRegistrationFormByToken(ctx, &params.Token)
-		return err
-	})
-	if err != nil {
-		if isDBNotFound(err) {
+	return r.store.ExecAsActor(ctx, r.serviceActor, func(q *db.Queries) error {
+		selected, err := q.SelectPublicIntakeDate(ctx, db.SelectPublicIntakeDateParams{
+			Token:        params.Token,
+			SelectedDate: pgtype.Timestamptz{Time: params.SelectedDate, Valid: true},
+		})
+		if err != nil {
+			return err
+		}
+		if !selected {
 			return domain.ErrRegistrationFormNotFound
 		}
-		return err
-	}
-
-	// Validate selected date is in options (permissive - doesn't strictly fail)
-	if len(form.IntakeOptions) > 0 {
-		var dates []string
-		if err := json.Unmarshal(form.IntakeOptions, &dates); err != nil {
-			// Permissive - continue even if unmarshal fails
-		} else {
-			// Validation is permissive per old implementation
-			_ = dates
-		}
-	}
-
-	arg := db.UpdateRegistrationFormIntakeDateParams{
-		ID:                        form.ID,
-		IntakeAppointmentDatetime: pgtype.Timestamptz{Time: params.SelectedDate, Valid: true},
-	}
-
-	return r.store.ExecAsActor(ctx, r.serviceActor, func(q *db.Queries) error {
-		_, err := q.UpdateRegistrationFormIntakeDate(ctx, arg)
-		return err
+		return nil
 	})
 }
 
@@ -759,6 +768,28 @@ func defaultEducationLevel(level string) string {
 		return "none"
 	}
 	return level
+}
+
+func registrationUploadTokenHash(token string) string {
+	hash := sha256.Sum256([]byte(token))
+	return hex.EncodeToString(hash[:])
+}
+
+func registrationFormAttachmentIDs(params domain.CreateRegistrationFormParams) []uuid.UUID {
+	ids := make([]uuid.UUID, 0, 6)
+	for _, id := range []*uuid.UUID{
+		params.DocumentReferral,
+		params.DocumentEducationReport,
+		params.DocumentPsychiatricReport,
+		params.DocumentDiagnosis,
+		params.DocumentSafetyPlan,
+		params.DocumentIDCopy,
+	} {
+		if id != nil {
+			ids = append(ids, *id)
+		}
+	}
+	return ids
 }
 
 var _ domain.RegistrationFormRepository = (*RegistrationFormRepository)(nil)

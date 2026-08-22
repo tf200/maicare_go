@@ -35,6 +35,7 @@ type Querier interface {
 	AssignRoleToUser(ctx context.Context, arg AssignRoleToUserParams) error
 	AssignSender(ctx context.Context, arg AssignSenderParams) (ClientDetail, error)
 	BeginInvoicePaymentOperation(ctx context.Context, arg BeginInvoicePaymentOperationParams) error
+	BeginPublicRegistrationSubmission(ctx context.Context, arg BeginPublicRegistrationSubmissionParams) (uuid.UUID, error)
 	BulkCreateAuditRecords(ctx context.Context, arg []BulkCreateAuditRecordsParams) (int64, error)
 	CancelCalendarEvent(ctx context.Context, id uuid.UUID) error
 	CancelClientGoalByID(ctx context.Context, arg CancelClientGoalByIDParams) (ClientGoal, error)
@@ -44,7 +45,7 @@ type Querier interface {
 	CloneHandbookTemplateToDraft(ctx context.Context, arg CloneHandbookTemplateToDraftParams) (CloneHandbookTemplateToDraftRow, error)
 	CompleteEmployeeHandbookStep(ctx context.Context, arg CompleteEmployeeHandbookStepParams) (EmployeeHandbookStepProgress, error)
 	ConfirmIncident(ctx context.Context, incidentID uuid.UUID) (int64, error)
-	ConsumeRegistrationUploadSession(ctx context.Context, id uuid.UUID) error
+	ConsumePublicRegistrationSubmission(ctx context.Context, sessionID uuid.UUID) (bool, error)
 	ContractEndCount(ctx context.Context) (int64, error)
 	CountActiveGoalsByClientID(ctx context.Context, clientID uuid.UUID) (int64, error)
 	CountAllIncidents(ctx context.Context, arg CountAllIncidentsParams) (int64, error)
@@ -244,8 +245,8 @@ type Querier interface {
 	GetPaymentWithInvoice(ctx context.Context, arg GetPaymentWithInvoiceParams) (GetPaymentWithInvoiceRow, error)
 	GetProgressReport(ctx context.Context, id uuid.UUID) (GetProgressReportRow, error)
 	GetProgressReportsByDateRange(ctx context.Context, arg GetProgressReportsByDateRangeParams) ([]ProgressReport, error)
+	GetPublicIntakeOptions(ctx context.Context, token string) ([]byte, error)
 	GetRegistrationForm(ctx context.Context, id uuid.UUID) (GetRegistrationFormRow, error)
-	GetRegistrationFormByToken(ctx context.Context, intakeToken *string) (RegistrationForm, error)
 	GetRegistrationFormCounts(ctx context.Context) (GetRegistrationFormCountsRow, error)
 	GetScheduleById(ctx context.Context, id uuid.UUID) (GetScheduleByIdRow, error)
 	GetScheduleForSwapValidation(ctx context.Context, id uuid.UUID) (GetScheduleForSwapValidationRow, error)
@@ -417,6 +418,7 @@ type Querier interface {
 	SeedClientDiagnosis(ctx context.Context, arg SeedClientDiagnosisParams) (ClientDiagnosis, error)
 	SeedClientMedicationOrder(ctx context.Context, arg SeedClientMedicationOrderParams) (ClientMedicationOrder, error)
 	SeedIncident(ctx context.Context, arg SeedIncidentParams) (uuid.UUID, error)
+	SelectPublicIntakeDate(ctx context.Context, arg SelectPublicIntakeDateParams) (bool, error)
 	SetActorAttachmentAsUsedOrUnused(ctx context.Context, arg SetActorAttachmentAsUsedOrUnusedParams) (AttachmentFile, error)
 	SetActorAttachmentsAsUsedByUUIDs(ctx context.Context, arg SetActorAttachmentsAsUsedByUUIDsParams) ([]AttachmentFile, error)
 	SetAttachmentAsUsedorUnused(ctx context.Context, arg SetAttachmentAsUsedorUnusedParams) (AttachmentFile, error)
@@ -503,7 +505,6 @@ type Querier interface {
 	UpdatePayment(ctx context.Context, arg UpdatePaymentParams) (InvoicePaymentHistory, error)
 	UpdateProgressReport(ctx context.Context, arg UpdateProgressReportParams) (ProgressReport, error)
 	UpdateRegistrationForm(ctx context.Context, arg UpdateRegistrationFormParams) (RegistrationForm, error)
-	UpdateRegistrationFormIntakeDate(ctx context.Context, arg UpdateRegistrationFormIntakeDateParams) (RegistrationForm, error)
 	UpdateRegistrationFormStatus(ctx context.Context, arg UpdateRegistrationFormStatusParams) (RegistrationForm, error)
 	UpdateSchedule(ctx context.Context, arg UpdateScheduleParams) (UpdateScheduleRow, error)
 	UpdateScheduleEmployeeAssignment(ctx context.Context, arg UpdateScheduleEmployeeAssignmentParams) error
