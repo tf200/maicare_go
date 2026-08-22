@@ -120,7 +120,7 @@ INSERT INTO contract_reminder (
     ) THEN 'initial'::contract_reminder_type_enum
     ELSE 'follow_up'::contract_reminder_type_enum END
 )
-RETURNING id, contract_id, reminder_sent_at, reminder_type
+RETURNING id, contract_id, client_id, reminder_sent_at, reminder_type
 `
 
 type CreateContractReminderParams struct {
@@ -134,6 +134,7 @@ func (q *Queries) CreateContractReminder(ctx context.Context, arg CreateContract
 	err := row.Scan(
 		&i.ID,
 		&i.ContractID,
+		&i.ClientID,
 		&i.ReminderSentAt,
 		&i.ReminderType,
 	)
@@ -355,7 +356,7 @@ func (q *Queries) GetClientContract(ctx context.Context, id uuid.UUID) (GetClien
 }
 
 const getContractAudit = `-- name: GetContractAudit :many
-SELECT ca.audit_id, ca.contract_id, ca.operation, ca.changed_by, ca.changed_at, ca.old_values, ca.new_values, ca.changed_fields,
+SELECT ca.audit_id, ca.contract_id, ca.client_id, ca.operation, ca.changed_by, ca.changed_at, ca.old_values, ca.new_values, ca.changed_fields,
          e.first_name AS changed_by_first_name,
          e.last_name AS changed_by_last_name
 FROM contract_audit ca
@@ -367,6 +368,7 @@ ORDER BY ca.changed_at DESC
 type GetContractAuditRow struct {
 	AuditID            uuid.UUID                  `json:"audit_id"`
 	ContractID         uuid.UUID                  `json:"contract_id"`
+	ClientID           uuid.UUID                  `json:"client_id"`
 	Operation          ContractAuditOperationEnum `json:"operation"`
 	ChangedBy          *uuid.UUID                 `json:"changed_by"`
 	ChangedAt          pgtype.Timestamptz         `json:"changed_at"`
@@ -389,6 +391,7 @@ func (q *Queries) GetContractAudit(ctx context.Context, contractID uuid.UUID) ([
 		if err := rows.Scan(
 			&i.AuditID,
 			&i.ContractID,
+			&i.ClientID,
 			&i.Operation,
 			&i.ChangedBy,
 			&i.ChangedAt,

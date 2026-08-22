@@ -278,9 +278,9 @@ type GetPaymentByIDResponseDTO struct {
 }
 
 type UpdatePaymentRequest struct {
-	PaymentMethod    *string    `json:"payment_method"`
-	PaymentStatus    *string    `json:"payment_status"`
-	Amount           *float64   `json:"amount"`
+	PaymentMethod    *string    `json:"payment_method" binding:"omitempty,oneof=credit_card bank_transfer cash check other"`
+	PaymentStatus    *string    `json:"payment_status" binding:"omitempty,oneof=pending completed failed refunded reversed"`
+	Amount           *float64   `json:"amount" binding:"omitempty,min=0"`
 	PaymentDate      *time.Time `json:"payment_date"`
 	PaymentReference *string    `json:"payment_reference"`
 	Notes            *string    `json:"notes"`

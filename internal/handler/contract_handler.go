@@ -27,18 +27,18 @@ func RegisterContractRoutes(
 	// Client-scoped contract routes
 	clientsGroup := rg.Group("/clients")
 	{
-		clientsGroup.GET("/:id/contracts", auth, requirePermission("CONTRACT.VIEW"), handler.ListClientContracts)
+		clientsGroup.GET("/:id/contracts", auth, requirePermission("CLIENT.VIEW"), requirePermission("CONTRACT.VIEW"), handler.ListClientContracts)
 	}
 
 	// Top-level contract routes
 	contractsGroup := rg.Group("/contracts")
 	{
-		contractsGroup.POST("", auth, requirePermission("CONTRACT.CREATE"), handler.CreateContract)
-		contractsGroup.GET("", auth, requirePermission("CONTRACT.VIEW"), handler.ListContracts)
-		contractsGroup.GET("/:id", auth, requirePermission("CONTRACT.VIEW"), handler.GetContract)
-		contractsGroup.PUT("/:id", auth, requirePermission("CONTRACT.UPDATE"), handler.UpdateContract)
-		contractsGroup.PUT("/:id/status", auth, requirePermission("CONTRACT.UPDATE"), handler.UpdateContractStatus)
-		contractsGroup.GET("/:id/audit", auth, requirePermission("CONTRACT.VIEW"), handler.GetContractAuditLog)
+		contractsGroup.POST("", auth, requirePermission("CLIENT.VIEW"), requirePermission("CONTRACT.CREATE"), handler.CreateContract)
+		contractsGroup.GET("", auth, requirePermission("CLIENT.VIEW"), requirePermission("CONTRACT.VIEW"), handler.ListContracts)
+		contractsGroup.GET("/:id", auth, requirePermission("CLIENT.VIEW"), requirePermission("CONTRACT.VIEW"), handler.GetContract)
+		contractsGroup.PUT("/:id", auth, requirePermission("CLIENT.VIEW"), requirePermission("CONTRACT.VIEW"), requirePermission("CONTRACT.UPDATE"), handler.UpdateContract)
+		contractsGroup.PUT("/:id/status", auth, requirePermission("CLIENT.VIEW"), requirePermission("CONTRACT.VIEW"), requirePermission("CONTRACT.UPDATE"), handler.UpdateContractStatus)
+		contractsGroup.GET("/:id/audit", auth, requirePermission("CLIENT.VIEW"), requirePermission("CONTRACT.VIEW"), handler.GetContractAuditLog)
 	}
 }
 

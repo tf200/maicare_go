@@ -24,7 +24,9 @@ func NewContractRepository(store *db.Store) domain.ContractRepository {
 // ==================== ContractType ====================
 
 func (r *ContractRepository) CreateContractType(ctx context.Context, params domain.CreateContractTypeParams) (*domain.ContractType, error) {
-	ct, err := r.store.CreateContractType(ctx, params.Name)
+	ct, err := actorQuery(ctx, r.store, func(q *db.Queries) (db.ContractType, error) {
+		return q.CreateContractType(ctx, params.Name)
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +34,9 @@ func (r *ContractRepository) CreateContractType(ctx context.Context, params doma
 }
 
 func (r *ContractRepository) ListContractTypes(ctx context.Context) ([]domain.ContractType, error) {
-	rows, err := r.store.ListContractTypes(ctx)
+	rows, err := actorQuery(ctx, r.store, func(q *db.Queries) ([]db.ContractType, error) {
+		return q.ListContractTypes(ctx)
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +48,9 @@ func (r *ContractRepository) ListContractTypes(ctx context.Context) ([]domain.Co
 }
 
 func (r *ContractRepository) DeleteContractType(ctx context.Context, contractTypeID uuid.UUID) error {
-	return r.store.DeleteContractType(ctx, contractTypeID)
+	return r.store.ExecActorTx(ctx, func(q *db.Queries) error {
+		return q.DeleteContractType(ctx, contractTypeID)
+	})
 }
 
 // ==================== Contract CRUD ====================
@@ -397,7 +403,9 @@ func toDomainAttachmentFiles(rows []db.AttachmentFile) []domain.AttachmentFile {
 }
 
 func (r *ContractRepository) GetContractAuditLog(ctx context.Context, contractID uuid.UUID) ([]domain.ContractAuditLog, error) {
-	rows, err := r.store.GetContractAudit(ctx, contractID)
+	rows, err := actorQuery(ctx, r.store, func(q *db.Queries) ([]db.GetContractAuditRow, error) {
+		return q.GetContractAudit(ctx, contractID)
+	})
 	if err != nil {
 		return nil, err
 	}

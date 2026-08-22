@@ -109,6 +109,9 @@ func (s *Seeder) SeedInCareClients(ctx context.Context, count int) error {
 	if count <= 0 {
 		return nil
 	}
+	if err := s.requireRLSBootstrapRole(ctx, "client contract"); err != nil {
+		return err
+	}
 
 	startClientCount := len(s.data.ClientIDs)
 	if err := s.SeedWaitingListClients(ctx, count); err != nil {

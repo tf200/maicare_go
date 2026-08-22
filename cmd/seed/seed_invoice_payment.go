@@ -73,7 +73,7 @@ func (s *Seeder) SeedInvoicesAndPaymentsForInCareClients(ctx context.Context, in
 				continue
 			}
 
-			if err := s.seedPaymentsForInvoice(actorCtx, generatedInvoice.ID, generatedInvoice.GrossTotal, maxPaymentsPerInvoice, employeeID); err != nil {
+			if err := s.seedPaymentsForInvoice(actorCtx, generatedInvoice.ID, generatedInvoice.GrossTotal, maxPaymentsPerInvoice); err != nil {
 				return fmt.Errorf("seed payments for invoice %s: %w", generatedInvoice.ID, err)
 			}
 		}
@@ -172,7 +172,7 @@ func (s *Seeder) seedBillableAppointmentsForClient(ctx context.Context, clientID
 	})
 }
 
-func (s *Seeder) seedPaymentsForInvoice(ctx context.Context, invoiceID uuid.UUID, grossTotal float64, maxPayments int, employeeID uuid.UUID) error {
+func (s *Seeder) seedPaymentsForInvoice(ctx context.Context, invoiceID uuid.UUID, grossTotal float64, maxPayments int) error {
 	if maxPayments <= 0 {
 		return nil
 	}
@@ -212,7 +212,7 @@ func (s *Seeder) seedPaymentsForInvoice(ctx context.Context, invoiceID uuid.UUID
 		ref := fmt.Sprintf("SEED-PMT-%s-%02d", invoiceID.String()[:8], i+1)
 		notes := "Seeded payment"
 
-		payment, err := s.invoiceService.CreatePayment(ctx, invoiceID, employeeID, domain.CreatePaymentParams{
+		payment, err := s.invoiceService.CreatePayment(ctx, invoiceID, domain.CreatePaymentParams{
 			PaymentMethod:    method,
 			PaymentStatus:    string(db.PaymentStatusEnumCompleted),
 			Amount:           amount,

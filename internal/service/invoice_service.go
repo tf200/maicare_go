@@ -21,7 +21,6 @@ import (
 const (
 	defaultBillingTimezone = "Europe/Amsterdam"
 	defaultBillingCycle    = "iso_4_week"
-	paymentTolerance       = 50.0
 )
 
 var (
@@ -251,22 +250,19 @@ func invoiceFromGetRow(inv db.GetInvoiceRow) domain.Invoice {
 
 // ==================== Invoice Number Generation ====================
 
-func (s *InvoiceService) generateInvoiceNumber(ctx context.Context) (string, int64, error) {
+func (s *InvoiceService) generateInvoiceNumber(ctx context.Context, q *db.Queries) (string, int64, error) {
 	now := time.Now()
 	datePart := now.Format("20060102")
-	maxSeq, err := actorQuery(ctx, s.store, func(q *db.Queries) (int64, error) {
-		return q.GetMaxInvoiceSequenceForDate(ctx, now)
-	})
+	nextSeq, err := q.AllocateInvoiceSequenceForDate(ctx, pgtype.Timestamptz{Time: now, Valid: true})
 	if err != nil {
 		return "", 0, fmt.Errorf("failed to get max invoice sequence: %w", err)
 	}
-	nextSeq := maxSeq + 1
 	return fmt.Sprintf("INV-%s-%04d", datePart, nextSeq), nextSeq, nil
 }
 
 // ==================== Create Invoice ====================
 
-func (s *InvoiceService) CreateInvoice(ctx context.Context, params domain.CreateInvoiceParams, employeeID uuid.UUID) (*domain.Invoice, []domain.InvoiceLine, error) {
+func (s *InvoiceService) CreateInvoice(ctx context.Context, params domain.CreateInvoiceParams) (*domain.Invoice, []domain.InvoiceLine, error) {
 	if params.ClientID == uuid.Nil {
 		return nil, nil, fmt.Errorf("client_id is required")
 	}
@@ -285,17 +281,16 @@ func (s *InvoiceService) CreateInvoice(ctx context.Context, params domain.Create
 	}
 	senderID := *client.SenderID
 
-	invoiceNumber, invoiceSequence, err := s.generateInvoiceNumber(ctx)
-	if err != nil {
-		return nil, nil, err
-	}
-
 	tx, err := s.store.BeginActorTx(ctx)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to begin transaction: %w", err)
 	}
 	defer tx.Rollback(ctx)
 	qtx := s.store.WithTx(tx)
+	invoiceNumber, invoiceSequence, err := s.generateInvoiceNumber(ctx, qtx)
+	if err != nil {
+		return nil, nil, err
+	}
 
 	billingTz := defaultBillingTimezone
 	currency := "EUR"
@@ -554,13 +549,16 @@ func (s *InvoiceService) ListInvoices(ctx context.Context, params domain.ListInv
 
 // ==================== Update Invoice ====================
 
-func (s *InvoiceService) UpdateInvoice(ctx context.Context, invoiceID uuid.UUID, employeeID uuid.UUID, params domain.CreateInvoiceParams) (*domain.Invoice, error) {
+func (s *InvoiceService) UpdateInvoice(ctx context.Context, invoiceID uuid.UUID, params domain.CreateInvoiceParams) (*domain.Invoice, error) {
 	tx, err := s.store.BeginActorTx(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to begin transaction: %w", err)
 	}
 	defer tx.Rollback(ctx)
 	qtx := s.store.WithTx(tx)
+	if _, err := qtx.LockInvoice(ctx, invoiceID); err != nil {
+		return nil, fmt.Errorf("failed to lock invoice: %w", err)
+	}
 
 	inv, err := qtx.GetInvoice(ctx, invoiceID)
 	if err != nil {
@@ -587,7 +585,7 @@ func (s *InvoiceService) UpdateInvoice(ctx context.Context, invoiceID uuid.UUID,
 			return nil, fmt.Errorf("cannot update invoice lines on a locked invoice")
 		}
 
-		paid, err := qtx.GetTotalPaidAmountByInvoice(ctx, invoiceID)
+		paid, err := qtx.GetInvoicePaidTotal(ctx, invoiceID)
 		if err != nil {
 			return nil, fmt.Errorf("failed to check payments: %w", err)
 		}
@@ -878,11 +876,6 @@ func (s *InvoiceService) generateInvoiceForTarget(ctx context.Context, p generat
 		byCareType[c.CareType] = c
 	}
 
-	invoiceNumber, invoiceSequence, err := s.generateInvoiceNumber(ctx)
-	if err != nil {
-		return nil, warningCount, fmt.Errorf("failed to generate invoice number: %w", err)
-	}
-
 	issueDate := time.Now()
 	dueDate := issueDate.Add(30 * 24 * time.Hour)
 
@@ -893,6 +886,10 @@ func (s *InvoiceService) generateInvoiceForTarget(ctx context.Context, p generat
 	defer tx.Rollback(ctx)
 
 	qtx := s.store.WithTx(tx)
+	invoiceNumber, invoiceSequence, err := s.generateInvoiceNumber(ctx, qtx)
+	if err != nil {
+		return nil, warningCount, fmt.Errorf("failed to generate invoice number: %w", err)
+	}
 
 	inv, err := qtx.CreateInvoice(ctx, db.CreateInvoiceParams{
 		InvoiceNumber:     invoiceNumber,
@@ -1213,7 +1210,7 @@ func (s *InvoiceService) generateInvoiceForTarget(ctx context.Context, p generat
 
 // ==================== Credit Invoice ====================
 
-func (s *InvoiceService) CreditInvoice(ctx context.Context, invoiceID uuid.UUID, employeeID uuid.UUID) (*domain.CreditInvoiceResult, error) {
+func (s *InvoiceService) CreditInvoice(ctx context.Context, invoiceID uuid.UUID) (*domain.CreditInvoiceResult, error) {
 	tx, err := s.store.BeginActorTx(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to begin transaction: %w", err)
@@ -1238,7 +1235,7 @@ func (s *InvoiceService) CreditInvoice(ctx context.Context, invoiceID uuid.UUID,
 		return nil, fmt.Errorf("original invoice has no lines to credit")
 	}
 
-	creditNumber, creditSeq, err := s.generateInvoiceNumber(ctx)
+	creditNumber, creditSeq, err := s.generateInvoiceNumber(ctx, qtx)
 	if err != nil {
 		return nil, err
 	}
@@ -1387,7 +1384,9 @@ func (s *InvoiceService) GetInvoiceAuditLogs(ctx context.Context, invoiceID uuid
 // ==================== Invoice Template Items ====================
 
 func (s *InvoiceService) GetInvoiceTemplateItems(ctx context.Context) ([]domain.InvoiceTemplateItemData, error) {
-	items, err := s.store.GetAllTemplateItems(ctx)
+	items, err := actorQuery(ctx, s.store, func(q *db.Queries) ([]db.TemplateItem, error) {
+		return q.GetAllTemplateItems(ctx)
+	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get template items: %w", err)
 	}
@@ -1416,7 +1415,9 @@ func (s *InvoiceService) GenerateInvoicePDF(ctx context.Context, invoiceID uuid.
 	}
 
 	if inv.PdfAttachmentID != nil {
-		att, err := s.store.GetAttachmentById(ctx, *inv.PdfAttachmentID)
+		att, err := actorQuery(ctx, s.store, func(q *db.Queries) (db.AttachmentFile, error) {
+			return q.GetAttachmentById(ctx, *inv.PdfAttachmentID)
+		})
 		if err != nil {
 			return nil, fmt.Errorf("failed to get pdf attachment: %w", err)
 		}
@@ -1533,8 +1534,8 @@ func (s *InvoiceService) GenerateInvoicePDF(ctx context.Context, invoiceID uuid.
 		}
 
 		_, err = qtx.InsertIncoicePdfUrl(ctx, db.InsertIncoicePdfUrlParams{
-			ID:              invoiceID,
-			PdfAttachmentID: &attID,
+			InvoiceID:    invoiceID,
+			AttachmentID: attID,
 		})
 		if err != nil {
 			if err == pgx.ErrNoRows {
@@ -1582,33 +1583,12 @@ func (s *InvoiceService) SendInvoiceReminder(ctx context.Context, invoiceID uuid
 
 // ==================== Payments ====================
 
-func (s *InvoiceService) determineInvoiceStatus(invoiceTotal, totalPaid float64) (db.InvoiceStatusEnum, error) {
-	diff := totalPaid - invoiceTotal
-
-	if totalPaid <= paymentTolerance {
-		return db.InvoiceStatusEnumOutstanding, nil
-	}
-
-	if diff < -paymentTolerance {
-		return db.InvoiceStatusEnumPartiallyPaid, nil
-	}
-
-	if diff >= -paymentTolerance && diff <= paymentTolerance {
-		return db.InvoiceStatusEnumPaid, nil
-	}
-	if diff > paymentTolerance {
-		return db.InvoiceStatusEnumOverpaid, nil
-	}
-
-	return "", fmt.Errorf("could not determine invoice status for totalPaid: %f, invoiceTotal: %f", totalPaid, invoiceTotal)
-}
-
 func (s *InvoiceService) calculatePaymentCompletionPercentage(ctx context.Context, totalAmount float64, invoiceID uuid.UUID) float64 {
 	if totalAmount == 0 {
 		return 0
 	}
 	totalPaid, err := actorQuery(ctx, s.store, func(q *db.Queries) (float64, error) {
-		return q.GetCompletedPaymentSum(ctx, invoiceID)
+		return q.GetInvoicePaidTotal(ctx, invoiceID)
 	})
 	if err != nil {
 		s.logger.LogError(ctx, "InvoiceService.calculatePaymentCompletionPercentage", "failed to get total completed payment", err, zap.String("invoice_id", invoiceID.String()))
@@ -1617,7 +1597,7 @@ func (s *InvoiceService) calculatePaymentCompletionPercentage(ctx context.Contex
 	return (totalPaid / totalAmount) * 100
 }
 
-func (s *InvoiceService) CreatePayment(ctx context.Context, invoiceID uuid.UUID, employeeID uuid.UUID, params domain.CreatePaymentParams) (*domain.CreatePaymentResult, error) {
+func (s *InvoiceService) CreatePayment(ctx context.Context, invoiceID uuid.UUID, params domain.CreatePaymentParams) (*domain.CreatePaymentResult, error) {
 	tx, err := s.store.BeginActorTx(ctx)
 	if err != nil {
 		s.logger.LogError(ctx, "InvoiceService.CreatePayment", "failed to begin transaction", err, zap.String("invoice_id", invoiceID.String()))
@@ -1626,6 +1606,11 @@ func (s *InvoiceService) CreatePayment(ctx context.Context, invoiceID uuid.UUID,
 	defer tx.Rollback(ctx)
 
 	qtx := s.store.WithTx(tx)
+	if err := qtx.BeginInvoicePaymentOperation(ctx, db.BeginInvoicePaymentOperationParams{
+		InvoiceID: invoiceID, PermissionName: "INVOICE.PAYMENT.CREATE",
+	}); err != nil {
+		return nil, fmt.Errorf("failed to authorize payment creation: %v", err)
+	}
 
 	getInvoice, err := qtx.GetInvoice(ctx, invoiceID)
 	if err != nil {
@@ -1641,7 +1626,7 @@ func (s *InvoiceService) CreatePayment(ctx context.Context, invoiceID uuid.UUID,
 		PaymentDate:      pgtype.Date{Time: params.PaymentDate, Valid: true},
 		PaymentReference: params.PaymentReference,
 		Notes:            params.Notes,
-		RecordedBy:       &employeeID,
+		RecordedBy:       nil,
 	}
 
 	payment, err := qtx.CreatePayment(ctx, paymentParams)
@@ -1654,28 +1639,13 @@ func (s *InvoiceService) CreatePayment(ctx context.Context, invoiceID uuid.UUID,
 	invoiceStatusChanged := false
 
 	if params.PaymentStatus == string(domain.PaymentStatusCompleted) {
-		totalPaid, err := qtx.GetCompletedPaymentSum(ctx, invoiceID)
+		newInvoiceStatus, err = qtx.RecalculateInvoicePaymentStatus(ctx, invoiceID)
 		if err != nil {
-			s.logger.LogError(ctx, "InvoiceService.CreatePayment", "failed to get total completed payment", err, zap.String("invoice_id", invoiceID.String()))
-			return nil, fmt.Errorf("failed to get total completed payment: %v", err)
+			s.logger.LogError(ctx, "InvoiceService.CreatePayment", "failed to recalculate invoice status", err, zap.String("invoice_id", invoiceID.String()))
+			return nil, fmt.Errorf("failed to recalculate invoice status: %v", err)
 		}
-
-		newInvoiceStatus, err = s.determineInvoiceStatus(getInvoice.GrossTotalAmount, totalPaid)
-		if err != nil {
-			s.logger.LogError(ctx, "InvoiceService.CreatePayment", "failed to determine invoice status", err, zap.String("invoice_id", invoiceID.String()))
-			return nil, fmt.Errorf("failed to determine invoice status: %v", err)
-		}
-
 		if newInvoiceStatus != db.InvoiceStatusEnum(getInvoice.Status) {
 			invoiceStatusChanged = true
-			_, err = qtx.UpdateInvoiceStatus(ctx, db.UpdateInvoiceStatusParams{
-				ID:     invoiceID,
-				Status: newInvoiceStatus,
-			})
-			if err != nil {
-				s.logger.LogError(ctx, "InvoiceService.CreatePayment", "failed to update invoice status", err, zap.String("invoice_id", invoiceID.String()))
-				return nil, fmt.Errorf("failed to update invoice status: %v", err)
-			}
 		}
 	}
 
@@ -1730,13 +1700,16 @@ func (s *InvoiceService) ListPayments(ctx context.Context, invoiceID uuid.UUID) 
 	return response, nil
 }
 
-func (s *InvoiceService) GetPaymentByID(ctx context.Context, paymentID uuid.UUID) (*domain.Payment, error) {
+func (s *InvoiceService) GetPaymentByID(ctx context.Context, invoiceID uuid.UUID, paymentID uuid.UUID) (*domain.Payment, error) {
 	payment, err := actorQuery(ctx, s.store, func(q *db.Queries) (db.GetPaymentRow, error) {
-		return q.GetPayment(ctx, paymentID)
+		return q.GetPayment(ctx, db.GetPaymentParams{PaymentID: paymentID, InvoiceID: invoiceID})
 	})
 	if err != nil {
 		s.logger.LogError(ctx, "InvoiceService.GetPaymentByID", "failed to get payment by ID", err, zap.String("payment_id", paymentID.String()))
-		return nil, fmt.Errorf("failed to get payment by ID: %v", err)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, domain.ErrPaymentNotFound
+		}
+		return nil, fmt.Errorf("failed to get payment by ID: %w", err)
 	}
 
 	return &domain.Payment{
@@ -1756,7 +1729,7 @@ func (s *InvoiceService) GetPaymentByID(ctx context.Context, paymentID uuid.UUID
 	}, nil
 }
 
-func (s *InvoiceService) UpdatePayment(ctx context.Context, invoiceID uuid.UUID, paymentID uuid.UUID, employeeID uuid.UUID, params domain.UpdatePaymentParams) (*domain.UpdatePaymentResult, error) {
+func (s *InvoiceService) UpdatePayment(ctx context.Context, invoiceID uuid.UUID, paymentID uuid.UUID, params domain.UpdatePaymentParams) (*domain.UpdatePaymentResult, error) {
 	tx, err := s.store.BeginActorTx(ctx)
 	if err != nil {
 		s.logger.LogError(ctx, "InvoiceService.UpdatePayment", "failed to begin transaction", err, zap.String("payment_id", paymentID.String()))
@@ -1765,15 +1738,16 @@ func (s *InvoiceService) UpdatePayment(ctx context.Context, invoiceID uuid.UUID,
 	defer tx.Rollback(ctx)
 
 	qtx := s.store.WithTx(tx)
+	if err := qtx.BeginInvoicePaymentOperation(ctx, db.BeginInvoicePaymentOperationParams{
+		InvoiceID: invoiceID, PermissionName: "INVOICE.PAYMENT.UPDATE", PaymentID: &paymentID,
+	}); err != nil {
+		return nil, domain.ErrPaymentNotFound
+	}
 
-	currentPayment, err := qtx.GetPaymentWithInvoice(ctx, paymentID)
+	currentPayment, err := qtx.GetPaymentWithInvoice(ctx, db.GetPaymentWithInvoiceParams{PaymentID: paymentID, InvoiceID: invoiceID})
 	if err != nil {
 		s.logger.LogError(ctx, "InvoiceService.UpdatePayment", "failed to get current payment", err, zap.String("payment_id", paymentID.String()))
 		return nil, fmt.Errorf("failed to get current payment: %v", err)
-	}
-
-	if currentPayment.InvoiceID != invoiceID {
-		return nil, fmt.Errorf("payment does not belong to the specified invoice")
 	}
 
 	originalInvoiceStatus := currentPayment.InvoiceStatus
@@ -1784,7 +1758,7 @@ func (s *InvoiceService) UpdatePayment(ctx context.Context, invoiceID uuid.UUID,
 		Amount:           params.Amount,
 		PaymentReference: params.PaymentReference,
 		Notes:            params.Notes,
-		RecordedBy:       &employeeID,
+		RecordedBy:       nil,
 	}
 	if params.PaymentDate != nil {
 		updateParams.PaymentDate = pgtype.Date{Time: *params.PaymentDate, Valid: true}
@@ -1801,28 +1775,14 @@ func (s *InvoiceService) UpdatePayment(ctx context.Context, invoiceID uuid.UUID,
 
 	if updatedPayment.PaymentStatus == db.PaymentStatusEnumCompleted ||
 		currentPayment.PaymentStatus == db.PaymentStatusEnumCompleted {
-		totalPaid, err := qtx.GetTotalPaidAmountByInvoice(ctx, invoiceID)
+		newStatus, err := qtx.RecalculateInvoicePaymentStatus(ctx, invoiceID)
 		if err != nil {
-			s.logger.LogError(ctx, "InvoiceService.UpdatePayment", "failed to get total paid amount", err, zap.String("invoice_id", invoiceID.String()))
-			return nil, fmt.Errorf("failed to get total paid amount: %v", err)
-		}
-
-		newStatus, err := s.determineInvoiceStatus(currentPayment.InvoiceTotalAmount, totalPaid)
-		if err != nil {
-			s.logger.LogError(ctx, "InvoiceService.UpdatePayment", "failed to determine invoice status", err, zap.String("invoice_id", invoiceID.String()))
-			return nil, fmt.Errorf("failed to determine invoice status: %v", err)
+			s.logger.LogError(ctx, "InvoiceService.UpdatePayment", "failed to recalculate invoice status", err, zap.String("invoice_id", invoiceID.String()))
+			return nil, fmt.Errorf("failed to recalculate invoice status: %v", err)
 		}
 
 		if newStatus != originalInvoiceStatus {
-			updatedInvoice, err := qtx.UpdateInvoice(ctx, db.UpdateInvoiceParams{
-				ID:     invoiceID,
-				Status: &newStatus,
-			})
-			if err != nil {
-				s.logger.LogError(ctx, "InvoiceService.UpdatePayment", "failed to update invoice status", err, zap.String("invoice_id", invoiceID.String()))
-				return nil, fmt.Errorf("failed to update invoice status: %v", err)
-			}
-			newInvoiceStatus = updatedInvoice.Status
+			newInvoiceStatus = newStatus
 			statusChanged = true
 		} else {
 			newInvoiceStatus = originalInvoiceStatus
@@ -1853,7 +1813,7 @@ func (s *InvoiceService) UpdatePayment(ctx context.Context, invoiceID uuid.UUID,
 	}, nil
 }
 
-func (s *InvoiceService) DeletePayment(ctx context.Context, invoiceID uuid.UUID, paymentID uuid.UUID, employeeID uuid.UUID) (*domain.DeletePaymentResult, error) {
+func (s *InvoiceService) DeletePayment(ctx context.Context, invoiceID uuid.UUID, paymentID uuid.UUID) (*domain.DeletePaymentResult, error) {
 	tx, err := s.store.BeginActorTx(ctx)
 	if err != nil {
 		s.logger.LogError(ctx, "InvoiceService.DeletePayment", "failed to begin transaction", err, zap.String("payment_id", paymentID.String()))
@@ -1861,20 +1821,21 @@ func (s *InvoiceService) DeletePayment(ctx context.Context, invoiceID uuid.UUID,
 	}
 	defer tx.Rollback(ctx)
 	qtx := s.store.WithTx(tx)
+	if err := qtx.BeginInvoicePaymentOperation(ctx, db.BeginInvoicePaymentOperationParams{
+		InvoiceID: invoiceID, PermissionName: "INVOICE.PAYMENT.DELETE", PaymentID: &paymentID,
+	}); err != nil {
+		return nil, domain.ErrPaymentNotFound
+	}
 
-	paymentToDelete, err := qtx.GetPaymentWithInvoice(ctx, paymentID)
+	paymentToDelete, err := qtx.GetPaymentWithInvoice(ctx, db.GetPaymentWithInvoiceParams{PaymentID: paymentID, InvoiceID: invoiceID})
 	if err != nil {
 		s.logger.LogError(ctx, "InvoiceService.DeletePayment", "failed to get payment to delete", err, zap.String("payment_id", paymentID.String()))
 		return nil, fmt.Errorf("failed to get payment to delete: %v", err)
 	}
 
-	if paymentToDelete.InvoiceID != invoiceID {
-		return nil, fmt.Errorf("payment does not belong to the specified invoice")
-	}
-
 	originalInvoiceStatus := paymentToDelete.InvoiceStatus
 
-	deletedPayment, err := qtx.DeletePayment(ctx, paymentID)
+	deletedPayment, err := qtx.DeletePayment(ctx, db.DeletePaymentParams{PaymentID: paymentID, InvoiceID: invoiceID})
 	if err != nil {
 		s.logger.LogError(ctx, "InvoiceService.DeletePayment", "failed to delete payment", err, zap.String("payment_id", paymentID.String()))
 		return nil, fmt.Errorf("failed to delete payment: %v", err)
@@ -1884,28 +1845,14 @@ func (s *InvoiceService) DeletePayment(ctx context.Context, invoiceID uuid.UUID,
 	var statusChanged bool = false
 
 	if deletedPayment.PaymentStatus == db.PaymentStatusEnumCompleted {
-		totalPaid, err := qtx.GetTotalPaidAmountByInvoice(ctx, invoiceID)
+		newStatus, err := qtx.RecalculateInvoicePaymentStatus(ctx, invoiceID)
 		if err != nil {
-			s.logger.LogError(ctx, "InvoiceService.DeletePayment", "failed to get total paid amount", err, zap.String("invoice_id", invoiceID.String()))
-			return nil, fmt.Errorf("failed to get total paid amount: %v", err)
-		}
-
-		newStatus, err := s.determineInvoiceStatus(paymentToDelete.InvoiceTotalAmount, totalPaid)
-		if err != nil {
-			s.logger.LogError(ctx, "InvoiceService.DeletePayment", "failed to determine invoice status", err, zap.String("invoice_id", invoiceID.String()))
-			return nil, fmt.Errorf("failed to determine invoice status: %v", err)
+			s.logger.LogError(ctx, "InvoiceService.DeletePayment", "failed to recalculate invoice status", err, zap.String("invoice_id", invoiceID.String()))
+			return nil, fmt.Errorf("failed to recalculate invoice status: %v", err)
 		}
 
 		if newStatus != originalInvoiceStatus {
-			updatedInvoice, err := qtx.UpdateInvoice(ctx, db.UpdateInvoiceParams{
-				ID:     invoiceID,
-				Status: &newStatus,
-			})
-			if err != nil {
-				s.logger.LogError(ctx, "InvoiceService.DeletePayment", "failed to update invoice status", err, zap.String("invoice_id", invoiceID.String()))
-				return nil, fmt.Errorf("failed to update invoice status: %v", err)
-			}
-			newInvoiceStatus = updatedInvoice.Status
+			newInvoiceStatus = newStatus
 			statusChanged = true
 		} else {
 			newInvoiceStatus = originalInvoiceStatus

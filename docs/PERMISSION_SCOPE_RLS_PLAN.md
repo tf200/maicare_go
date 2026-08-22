@@ -1,8 +1,8 @@
 # Permission Scope and Row-Level Security Plan
 
-Last updated: 2026-08-20
+Last updated: 2026-08-22
 
-Status: Phase 9 in progress; Groups A, B, and C completed
+Status: Phase 9 in progress; Groups A through F completed
 
 ## Purpose
 
@@ -807,10 +807,14 @@ Likely tables and files:
 - `internal/repository/contract_repo.go`
 - `internal/service/invoice_service.go`
 
-- [ ] Map each nested table to a client.
-- [ ] Decide whether direct `client_id` should be added to deeply nested tables.
-- [ ] Implement permission-specific policies.
-- [ ] Test financial separation from general client access.
+- [x] Map each nested table to a client.
+- [x] Decide whether direct `client_id` should be added to deeply nested tables.
+- [x] Implement permission-specific policies.
+- [x] Test financial separation from general client access.
+
+Nested contract records, payments, and retained contract/invoice audit rows carry direct indexed `client_id`. Invoice lines, run items, appointment links, and billed events already had direct ownership and now have database-enforced parent consistency. Multi-client invoice runs remain creator-owned and require `INVOICE.CREATE` with `all` scope.
+
+Automatic invoice generation requires matching `CLIENT.VIEW`, `CONTRACT.VIEW`, and `INVOICE.CREATE`. Payment mutations remain independent of invoice UPDATE authority: an invoice-specific, actor-bound context exposes only the target payment and narrow aggregate/status operations. Generated PDF linking is restricted to actor-owned, used `invoice_pdf` attachments and a visible invoice.
 
 ### Group G: Intake And Registration
 
@@ -997,6 +1001,19 @@ Complete this tracker before converting each table. Add rows as tables are disco
 | `client_goals` | `client_id` | `CLIENT.CARE_PLAN.VIEW` or evaluation source-read through `CLIENT.EVALUATION.VIEW` | `CLIENT.CARE_PLAN.CREATE`; replacement rows through `CLIENT.CARE_PLAN.UPDATE`; intake promotion creation context | `CLIENT.CARE_PLAN.UPDATE` | `CLIENT.CARE_PLAN.DELETE` (no current route) | Phase 9 Group E completed |
 | `client_goal_evaluations` | `client_id` | `CLIENT.EVALUATION.VIEW` | `CLIENT.EVALUATION.CREATE` | `CLIENT.EVALUATION.CREATE`, creator-owned draft only | No operation or permission | Phase 9 Group E completed |
 | `client_goal_evaluation_items` | direct indexed `client_id`, constrained to matching evaluation and goal ownership | `CLIENT.EVALUATION.VIEW` | `CLIENT.EVALUATION.CREATE`, creator-owned draft only | `CLIENT.EVALUATION.CREATE`, creator-owned draft only | No operation or permission | Phase 9 Group E completed |
+| `contract` | `client_id` | `CONTRACT.VIEW` | `CONTRACT.CREATE` | `CONTRACT.UPDATE` | `CONTRACT.DELETE` | Phase 9 Group F completed |
+| `contract_audit` | retained direct `client_id` | `CONTRACT.VIEW` | Trigger only | No operation or permission | No operation or permission | Phase 9 Group F completed |
+| `contract_reminder` | direct `client_id`, derived from `contract_id` | `CONTRACT.VIEW` | `CONTRACT.UPDATE` | No operation or permission | No operation or permission | Phase 9 Group F completed |
+| `contract_working_hours` | direct `client_id`, derived from `contract_id` | `CONTRACT.VIEW` | `CONTRACT.UPDATE` | `CONTRACT.UPDATE` | `CONTRACT.UPDATE` | Phase 9 Group F completed |
+| `client_agreement`, `provision` | direct `client_id`, derived from `contract_id` | `CONTRACT.VIEW` | `CONTRACT.CREATE` | `CONTRACT.UPDATE` | `CONTRACT.DELETE` | Phase 9 Group F completed |
+| `framework_agreement` | immutable `client_id` | `CONTRACT.VIEW` | `CONTRACT.CREATE` | `CONTRACT.UPDATE` | `CONTRACT.DELETE` | Phase 9 Group F completed |
+| `invoice` | immutable `client_id` | `INVOICE.VIEW`; exact payment-operation parent context | `INVOICE.CREATE`; credit note through `INVOICE.UPDATE` | `INVOICE.UPDATE`; exact creation finalization; derived payment status helper | `INVOICE.DELETE` | Phase 9 Group F completed |
+| `invoice_audit` | retained direct `client_id` | `INVOICE.VIEW` | Trigger only | No operation or permission | No operation or permission | Phase 9 Group F completed |
+| `invoice_line` | direct `client_id`, validated against invoice, sender, and contract | `INVOICE.VIEW`, CREATE, or UPDATE workflow | `INVOICE.CREATE` or `INVOICE.UPDATE` | `INVOICE.UPDATE` | `INVOICE.UPDATE` | Phase 9 Group F completed |
+| `invoice_payment_history` | direct `client_id`, derived from immutable `invoice_id` | `INVOICE.PAYMENT.VIEW`; exact mutation target | `INVOICE.PAYMENT.CREATE` | `INVOICE.PAYMENT.UPDATE` | `INVOICE.PAYMENT.DELETE` | Phase 9 Group F completed |
+| `invoice_line_calendar_event`, `billed_calendar_event` | direct `client_id`, validated against invoice line, invoice, and client attendee | `INVOICE.VIEW` | `INVOICE.CREATE` | `INVOICE.UPDATE` | `INVOICE.UPDATE` where supported | Phase 9 Group F completed |
+| `invoice_run` | multi-client; immutable creating employee | Creator with `INVOICE.CREATE` | `INVOICE.CREATE` (`all` only) | Creator with `INVOICE.CREATE` (`all` only) | No operation or permission | Phase 9 Group F completed |
+| `invoice_run_item` | immutable direct `client_id` plus creator-owned run | `INVOICE.VIEW` | Creator with `INVOICE.CREATE` (`all` only) | Creator with `INVOICE.CREATE` (`all` only) | No operation or permission | Phase 9 Group F completed |
 
 ## Known Risks
 
@@ -1049,10 +1066,46 @@ Record finalized decisions here. Do not silently change an earlier decision; add
 | 2026-08-22 | Bind evaluation drafts and items to their creating employee and make completed evaluations immutable. | Prevents one employee from changing another employee's draft and protects submitted clinical records from later modification. | Confirmed |
 | 2026-08-22 | Give evaluation items a direct indexed `client_id` with composite evaluation/client and goal/client foreign keys. | Prevents cross-client goal/evaluation combinations without recursive RLS helpers. | Confirmed |
 | 2026-08-22 | Separate actor-facing attachment staging queries from trusted internal attachment resolution. | User-supplied attachment IDs require uploader ownership, while already-authorized registration, contract, invoice, and generated-document flows must continue resolving shared attachments. | Confirmed |
+| 2026-08-22 | Give nested contract records and invoice payments direct trigger-derived client ownership while retaining direct client IDs already present on invoice children. | Forced RLS must not depend on recursive reads through protected parent tables, and duplicated ownership must be database-consistent. | Confirmed |
+| 2026-08-22 | Require CONTRACT VIEW for automatic invoice generation instead of broadening contract policies for invoice creators. | Generation needs contract terms and status history; making that read dependency explicit avoids a hidden cross-category data path. | Confirmed |
+| 2026-08-22 | Keep payment permissions independent of general invoice UPDATE and expose only an exact target, protected aggregates, and derived status recalculation. | Payment workflows must update invoice payment state without granting arbitrary invoice mutation or disclosing unrelated payment details. | Confirmed |
+| 2026-08-22 | Retain contract and invoice audit client IDs without cascading foreign keys. | Deleting a client must not erase historical financial audit evidence. | Confirmed |
+| 2026-08-22 | Defer deployment runtime-role separation to Phase 10. | Group F proves policies with a non-owner `NOSUPERUSER NOBYPASSRLS` role, while local/deployment credentials still require the repository-wide role split already planned for Phase 10. | Confirmed |
 
 ## Progress Log
 
 Add the newest entry first.
+
+### 2026-08-22 - Phase 9 Group F contracts and invoices completed
+
+Status: Completed and verified
+
+Changes:
+
+- Replaced legacy role-name policies with forced operation-specific RLS for contracts, agreements, provisions, invoices, lines, payments, appointment billing links, run items, and financial audits.
+- Added direct trigger-derived client ownership to nested contract records, payments, and retained audit rows.
+- Enforced immutable and consistent client, sender, contract, invoice, line, appointment-attendee, run, and actor relationships in database triggers.
+- Made contract types available to contract viewers while preserving dedicated contract-type mutation permissions.
+- Required matching client, contract, and invoice permissions for automatic invoice generation.
+- Added actor- and invoice-bound creation finalization so `INVOICE.CREATE` can complete a new invoice without gaining general update authority.
+- Isolated payment parent access, exact payment targets, completed-payment totals, and invoice-status recalculation behind narrow security-definer functions.
+- Serialized invoice edits with payment status changes and allocated per-date invoice numbers atomically inside the creating transaction.
+- Restricted generated invoice PDF linking to visible invoices and actor-owned, used invoice-PDF attachments.
+- Derived payment recorder attribution from the database actor and enforced nested invoice/payment path matching with not-found responses.
+- Restricted multi-client invoice runs and items to their immutable creator with `INVOICE.CREATE` `all` scope.
+- Retained financial audit rows when clients and their operational records are deleted.
+- Restricted actorless contract seed writes to an explicitly checked superuser/`BYPASSRLS` bootstrap role.
+
+Verification:
+
+- Applied, rolled back, and reapplied the initial migration on a clean PostgreSQL 16 database.
+- Tested through a temporary `NOSUPERUSER NOBYPASSRLS` non-owner runtime role.
+- Verified assigned/all scope, general-client/category separation, contract and invoice CRUD boundaries, audit visibility and retention, cross-client nested-record rejection, create-only finalization, update-only credit creation, view-only generated PDF linking, protected paid totals, exact payment targeting and attribution, derived status updates, and invoice-run ownership.
+- Passed `go test ./...`, the complete PostgreSQL integration suite, `sqlc vet`, `sqlc diff`, and `git diff --check`.
+
+Next action:
+
+- Convert Phase 9 Group G intake and registration while preserving public pre-client workflows.
 
 ### 2026-08-22 - Phase 9 Group E documents, care plans, goals, and evaluations completed
 
@@ -1082,7 +1135,7 @@ Verification:
 
 Next action:
 
-- Convert Phase 9 Group F contracts and invoices.
+- Completed by Phase 9 Group F; continue with Group G intake and registration.
 
 ### 2026-08-22 - Phase 9 Group D incident RLS completed
 

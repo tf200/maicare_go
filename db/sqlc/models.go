@@ -3237,6 +3237,7 @@ type Certification struct {
 type ClientAgreement struct {
 	ID               uuid.UUID          `json:"id"`
 	ContractID       uuid.UUID          `json:"contract_id"`
+	ClientID         uuid.UUID          `json:"client_id"`
 	AgreementDetails string             `json:"agreement_details"`
 	Created          pgtype.Timestamptz `json:"created"`
 }
@@ -3513,6 +3514,7 @@ type Contract struct {
 type ContractAudit struct {
 	AuditID       uuid.UUID                  `json:"audit_id"`
 	ContractID    uuid.UUID                  `json:"contract_id"`
+	ClientID      uuid.UUID                  `json:"client_id"`
 	Operation     ContractAuditOperationEnum `json:"operation"`
 	ChangedBy     *uuid.UUID                 `json:"changed_by"`
 	ChangedAt     pgtype.Timestamptz         `json:"changed_at"`
@@ -3524,6 +3526,7 @@ type ContractAudit struct {
 type ContractReminder struct {
 	ID             uuid.UUID                `json:"id"`
 	ContractID     uuid.UUID                `json:"contract_id"`
+	ClientID       uuid.UUID                `json:"client_id"`
 	ReminderSentAt pgtype.Timestamptz       `json:"reminder_sent_at"`
 	ReminderType   ContractReminderTypeEnum `json:"reminder_type"`
 }
@@ -3536,6 +3539,7 @@ type ContractType struct {
 type ContractWorkingHour struct {
 	ID         uuid.UUID          `json:"id"`
 	ContractID uuid.UUID          `json:"contract_id"`
+	ClientID   uuid.UUID          `json:"client_id"`
 	Minutes    int32              `json:"minutes"`
 	Datetime   pgtype.Timestamptz `json:"datetime"`
 	Notes      *string            `json:"notes"`
@@ -3821,6 +3825,7 @@ type Invoice struct {
 type InvoiceAudit struct {
 	AuditID       uuid.UUID                 `json:"audit_id"`
 	InvoiceID     uuid.UUID                 `json:"invoice_id"`
+	ClientID      uuid.UUID                 `json:"client_id"`
 	Operation     InvoiceAuditOperationEnum `json:"operation"`
 	ChangedBy     *uuid.UUID                `json:"changed_by"`
 	ChangedAt     pgtype.Timestamptz        `json:"changed_at"`
@@ -3864,9 +3869,15 @@ type InvoiceLineCalendarEvent struct {
 	CreatedAt       pgtype.Timestamptz `json:"created_at"`
 }
 
+type InvoiceNumberCounter struct {
+	InvoiceDate  pgtype.Date `json:"invoice_date"`
+	LastSequence int64       `json:"last_sequence"`
+}
+
 type InvoicePaymentHistory struct {
 	ID               uuid.UUID          `json:"id"`
 	InvoiceID        uuid.UUID          `json:"invoice_id"`
+	ClientID         uuid.UUID          `json:"client_id"`
 	PaymentMethod    PaymentMethodEnum  `json:"payment_method"`
 	PaymentStatus    PaymentStatusEnum  `json:"payment_status"`
 	Amount           float64            `json:"amount"`
@@ -4050,6 +4061,7 @@ type ProgressReport struct {
 type Provision struct {
 	ID               uuid.UUID          `json:"id"`
 	ContractID       uuid.UUID          `json:"contract_id"`
+	ClientID         uuid.UUID          `json:"client_id"`
 	ProvisionDetails string             `json:"provision_details"`
 	Created          pgtype.Timestamptz `json:"created"`
 }

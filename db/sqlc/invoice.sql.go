@@ -12,6 +12,36 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const allocateInvoiceSequenceForDate = `-- name: AllocateInvoiceSequenceForDate :one
+SELECT public.allocate_invoice_sequence_for_date($1)::BIGINT AS sequence
+`
+
+func (q *Queries) AllocateInvoiceSequenceForDate(ctx context.Context, createdDate pgtype.Timestamptz) (int64, error) {
+	row := q.db.QueryRow(ctx, allocateInvoiceSequenceForDate, createdDate)
+	var sequence int64
+	err := row.Scan(&sequence)
+	return sequence, err
+}
+
+const beginInvoicePaymentOperation = `-- name: BeginInvoicePaymentOperation :exec
+SELECT public.begin_invoice_payment_operation(
+    $1,
+    $2,
+    $3
+)
+`
+
+type BeginInvoicePaymentOperationParams struct {
+	InvoiceID      uuid.UUID  `json:"invoice_id"`
+	PermissionName string     `json:"permission_name"`
+	PaymentID      *uuid.UUID `json:"payment_id"`
+}
+
+func (q *Queries) BeginInvoicePaymentOperation(ctx context.Context, arg BeginInvoicePaymentOperationParams) error {
+	_, err := q.db.Exec(ctx, beginInvoicePaymentOperation, arg.InvoiceID, arg.PermissionName, arg.PaymentID)
+	return err
+}
+
 const countBilledCalendarEventsByInvoice = `-- name: CountBilledCalendarEventsByInvoice :one
 SELECT COUNT(*)::BIGINT AS count
 FROM billed_calendar_event
@@ -415,7 +445,7 @@ INSERT INTO invoice_payment_history (
     recorded_by
 ) VALUES (
     $1, $2, $3, $4, $5, $6, $7, $8
-) RETURNING id, invoice_id, payment_method, payment_status, amount, payment_date, payment_reference, notes, recorded_by, created_at, updated_at
+) RETURNING id, invoice_id, client_id, payment_method, payment_status, amount, payment_date, payment_reference, notes, recorded_by, created_at, updated_at
 `
 
 type CreatePaymentParams struct {
@@ -445,6 +475,7 @@ func (q *Queries) CreatePayment(ctx context.Context, arg CreatePaymentParams) (I
 	err := row.Scan(
 		&i.ID,
 		&i.InvoiceID,
+		&i.ClientID,
 		&i.PaymentMethod,
 		&i.PaymentStatus,
 		&i.Amount,
@@ -481,15 +512,22 @@ func (q *Queries) DeleteInvoiceLinesByInvoice(ctx context.Context, invoiceID uui
 const deletePayment = `-- name: DeletePayment :one
 DELETE FROM invoice_payment_history
 WHERE id = $1
-RETURNING id, invoice_id, payment_method, payment_status, amount, payment_date, payment_reference, notes, recorded_by, created_at, updated_at
+  AND invoice_id = $2
+RETURNING id, invoice_id, client_id, payment_method, payment_status, amount, payment_date, payment_reference, notes, recorded_by, created_at, updated_at
 `
 
-func (q *Queries) DeletePayment(ctx context.Context, id uuid.UUID) (InvoicePaymentHistory, error) {
-	row := q.db.QueryRow(ctx, deletePayment, id)
+type DeletePaymentParams struct {
+	PaymentID uuid.UUID `json:"payment_id"`
+	InvoiceID uuid.UUID `json:"invoice_id"`
+}
+
+func (q *Queries) DeletePayment(ctx context.Context, arg DeletePaymentParams) (InvoicePaymentHistory, error) {
+	row := q.db.QueryRow(ctx, deletePayment, arg.PaymentID, arg.InvoiceID)
 	var i InvoicePaymentHistory
 	err := row.Scan(
 		&i.ID,
 		&i.InvoiceID,
+		&i.ClientID,
 		&i.PaymentMethod,
 		&i.PaymentStatus,
 		&i.Amount,
@@ -501,20 +539,6 @@ func (q *Queries) DeletePayment(ctx context.Context, id uuid.UUID) (InvoicePayme
 		&i.UpdatedAt,
 	)
 	return i, err
-}
-
-const getCompletedPaymentSum = `-- name: GetCompletedPaymentSum :one
-SELECT COALESCE(SUM(amount), 0)::DECIMAL as total_completed_amount
-FROM invoice_payment_history
-WHERE invoice_id = $1
-  AND payment_status = 'completed'
-`
-
-func (q *Queries) GetCompletedPaymentSum(ctx context.Context, invoiceID uuid.UUID) (float64, error) {
-	row := q.db.QueryRow(ctx, getCompletedPaymentSum, invoiceID)
-	var total_completed_amount float64
-	err := row.Scan(&total_completed_amount)
-	return total_completed_amount, err
 }
 
 const getInvoice = `-- name: GetInvoice :one
@@ -644,7 +668,7 @@ func (q *Queries) GetInvoice(ctx context.Context, id uuid.UUID) (GetInvoiceRow, 
 
 const getInvoiceAuditLogs = `-- name: GetInvoiceAuditLogs :many
 SELECT
-    ia.audit_id, ia.invoice_id, ia.operation, ia.changed_by, ia.changed_at, ia.old_values, ia.new_values, ia.changed_fields,
+    ia.audit_id, ia.invoice_id, ia.client_id, ia.operation, ia.changed_by, ia.changed_at, ia.old_values, ia.new_values, ia.changed_fields,
     e.first_name AS changed_by_first_name,
     e.last_name AS changed_by_last_name
 FROM
@@ -660,6 +684,7 @@ ORDER BY
 type GetInvoiceAuditLogsRow struct {
 	AuditID            uuid.UUID                 `json:"audit_id"`
 	InvoiceID          uuid.UUID                 `json:"invoice_id"`
+	ClientID           uuid.UUID                 `json:"client_id"`
 	Operation          InvoiceAuditOperationEnum `json:"operation"`
 	ChangedBy          *uuid.UUID                `json:"changed_by"`
 	ChangedAt          pgtype.Timestamptz        `json:"changed_at"`
@@ -682,6 +707,7 @@ func (q *Queries) GetInvoiceAuditLogs(ctx context.Context, invoiceID uuid.UUID) 
 		if err := rows.Scan(
 			&i.AuditID,
 			&i.InvoiceID,
+			&i.ClientID,
 			&i.Operation,
 			&i.ChangedBy,
 			&i.ChangedAt,
@@ -701,6 +727,17 @@ func (q *Queries) GetInvoiceAuditLogs(ctx context.Context, invoiceID uuid.UUID) 
 	return items, nil
 }
 
+const getInvoicePaidTotal = `-- name: GetInvoicePaidTotal :one
+SELECT public.get_invoice_paid_total($1)::FLOAT AS total_paid
+`
+
+func (q *Queries) GetInvoicePaidTotal(ctx context.Context, invoiceID uuid.UUID) (float64, error) {
+	row := q.db.QueryRow(ctx, getInvoicePaidTotal, invoiceID)
+	var total_paid float64
+	err := row.Scan(&total_paid)
+	return total_paid, err
+}
+
 const getInvoiceSenderID = `-- name: GetInvoiceSenderID :one
 SELECT sender_id
 FROM invoice
@@ -714,22 +751,9 @@ func (q *Queries) GetInvoiceSenderID(ctx context.Context, id uuid.UUID) (uuid.UU
 	return sender_id, err
 }
 
-const getMaxInvoiceSequenceForDate = `-- name: GetMaxInvoiceSequenceForDate :one
-SELECT COALESCE(MAX(invoice_sequence), 0)::BIGINT as max_sequence
-FROM invoice
-WHERE DATE(created_at) = DATE($1)
-`
-
-func (q *Queries) GetMaxInvoiceSequenceForDate(ctx context.Context, date interface{}) (int64, error) {
-	row := q.db.QueryRow(ctx, getMaxInvoiceSequenceForDate, date)
-	var max_sequence int64
-	err := row.Scan(&max_sequence)
-	return max_sequence, err
-}
-
 const getPayment = `-- name: GetPayment :one
 SELECT
-    iph.id, iph.invoice_id, iph.payment_method, iph.payment_status, iph.amount, iph.payment_date, iph.payment_reference, iph.notes, iph.recorded_by, iph.created_at, iph.updated_at,
+    iph.id, iph.invoice_id, iph.client_id, iph.payment_method, iph.payment_status, iph.amount, iph.payment_date, iph.payment_reference, iph.notes, iph.recorded_by, iph.created_at, iph.updated_at,
     e.first_name AS recorded_by_first_name,
     e.last_name AS recorded_by_last_name
 FROM
@@ -738,12 +762,19 @@ LEFT JOIN
     employee_profile e ON iph.recorded_by = e.id
 WHERE
     iph.id = $1
+    AND iph.invoice_id = $2
 LIMIT 1
 `
+
+type GetPaymentParams struct {
+	PaymentID uuid.UUID `json:"payment_id"`
+	InvoiceID uuid.UUID `json:"invoice_id"`
+}
 
 type GetPaymentRow struct {
 	ID                  uuid.UUID          `json:"id"`
 	InvoiceID           uuid.UUID          `json:"invoice_id"`
+	ClientID            uuid.UUID          `json:"client_id"`
 	PaymentMethod       PaymentMethodEnum  `json:"payment_method"`
 	PaymentStatus       PaymentStatusEnum  `json:"payment_status"`
 	Amount              float64            `json:"amount"`
@@ -757,12 +788,13 @@ type GetPaymentRow struct {
 	RecordedByLastName  *string            `json:"recorded_by_last_name"`
 }
 
-func (q *Queries) GetPayment(ctx context.Context, id uuid.UUID) (GetPaymentRow, error) {
-	row := q.db.QueryRow(ctx, getPayment, id)
+func (q *Queries) GetPayment(ctx context.Context, arg GetPaymentParams) (GetPaymentRow, error) {
+	row := q.db.QueryRow(ctx, getPayment, arg.PaymentID, arg.InvoiceID)
 	var i GetPaymentRow
 	err := row.Scan(
 		&i.ID,
 		&i.InvoiceID,
+		&i.ClientID,
 		&i.PaymentMethod,
 		&i.PaymentStatus,
 		&i.Amount,
@@ -780,64 +812,29 @@ func (q *Queries) GetPayment(ctx context.Context, id uuid.UUID) (GetPaymentRow, 
 
 const getPaymentWithInvoice = `-- name: GetPaymentWithInvoice :one
 SELECT
-    p.id, p.invoice_id, p.payment_method, p.payment_status, p.amount, p.payment_date, p.payment_reference, p.notes, p.recorded_by, p.created_at, p.updated_at,
-    i.gross_total_amount as invoice_total_amount,
-    i.status as invoice_status
+    p.payment_status,
+    i.status AS invoice_status
 FROM invoice_payment_history p
 JOIN invoice i ON p.invoice_id = i.id
 WHERE p.id = $1
+  AND p.invoice_id = $2
 `
+
+type GetPaymentWithInvoiceParams struct {
+	PaymentID uuid.UUID `json:"payment_id"`
+	InvoiceID uuid.UUID `json:"invoice_id"`
+}
 
 type GetPaymentWithInvoiceRow struct {
-	ID                 uuid.UUID          `json:"id"`
-	InvoiceID          uuid.UUID          `json:"invoice_id"`
-	PaymentMethod      PaymentMethodEnum  `json:"payment_method"`
-	PaymentStatus      PaymentStatusEnum  `json:"payment_status"`
-	Amount             float64            `json:"amount"`
-	PaymentDate        pgtype.Date        `json:"payment_date"`
-	PaymentReference   *string            `json:"payment_reference"`
-	Notes              *string            `json:"notes"`
-	RecordedBy         *uuid.UUID         `json:"recorded_by"`
-	CreatedAt          pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt          pgtype.Timestamptz `json:"updated_at"`
-	InvoiceTotalAmount float64            `json:"invoice_total_amount"`
-	InvoiceStatus      InvoiceStatusEnum  `json:"invoice_status"`
+	PaymentStatus PaymentStatusEnum `json:"payment_status"`
+	InvoiceStatus InvoiceStatusEnum `json:"invoice_status"`
 }
 
-func (q *Queries) GetPaymentWithInvoice(ctx context.Context, id uuid.UUID) (GetPaymentWithInvoiceRow, error) {
-	row := q.db.QueryRow(ctx, getPaymentWithInvoice, id)
+func (q *Queries) GetPaymentWithInvoice(ctx context.Context, arg GetPaymentWithInvoiceParams) (GetPaymentWithInvoiceRow, error) {
+	row := q.db.QueryRow(ctx, getPaymentWithInvoice, arg.PaymentID, arg.InvoiceID)
 	var i GetPaymentWithInvoiceRow
-	err := row.Scan(
-		&i.ID,
-		&i.InvoiceID,
-		&i.PaymentMethod,
-		&i.PaymentStatus,
-		&i.Amount,
-		&i.PaymentDate,
-		&i.PaymentReference,
-		&i.Notes,
-		&i.RecordedBy,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.InvoiceTotalAmount,
-		&i.InvoiceStatus,
-	)
+	err := row.Scan(&i.PaymentStatus, &i.InvoiceStatus)
 	return i, err
-}
-
-const getTotalPaidAmountByInvoice = `-- name: GetTotalPaidAmountByInvoice :one
-SELECT
-    COALESCE(SUM(amount), 0)::FLOAT AS total_paid
-FROM invoice_payment_history
-WHERE invoice_id = $1
-  AND payment_status = 'completed'
-`
-
-func (q *Queries) GetTotalPaidAmountByInvoice(ctx context.Context, invoiceID uuid.UUID) (float64, error) {
-	row := q.db.QueryRow(ctx, getTotalPaidAmountByInvoice, invoiceID)
-	var total_paid float64
-	err := row.Scan(&total_paid)
-	return total_paid, err
 }
 
 const insertBilledCalendarEvent = `-- name: InsertBilledCalendarEvent :one
@@ -879,23 +876,17 @@ func (q *Queries) InsertBilledCalendarEvent(ctx context.Context, arg InsertBille
 }
 
 const insertIncoicePdfUrl = `-- name: InsertIncoicePdfUrl :one
-UPDATE invoice
-SET
-    pdf_attachment_id = $2
-WHERE
-    id = $1
-    AND pdf_attachment_id IS NULL
-RETURNING invoice.pdf_attachment_id
+SELECT public.attach_generated_invoice_pdf($1, $2) AS pdf_attachment_id
 `
 
 type InsertIncoicePdfUrlParams struct {
-	ID              uuid.UUID  `json:"id"`
-	PdfAttachmentID *uuid.UUID `json:"pdf_attachment_id"`
+	InvoiceID    uuid.UUID `json:"invoice_id"`
+	AttachmentID uuid.UUID `json:"attachment_id"`
 }
 
-func (q *Queries) InsertIncoicePdfUrl(ctx context.Context, arg InsertIncoicePdfUrlParams) (*uuid.UUID, error) {
-	row := q.db.QueryRow(ctx, insertIncoicePdfUrl, arg.ID, arg.PdfAttachmentID)
-	var pdf_attachment_id *uuid.UUID
+func (q *Queries) InsertIncoicePdfUrl(ctx context.Context, arg InsertIncoicePdfUrlParams) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, insertIncoicePdfUrl, arg.InvoiceID, arg.AttachmentID)
+	var pdf_attachment_id uuid.UUID
 	err := row.Scan(&pdf_attachment_id)
 	return pdf_attachment_id, err
 }
@@ -954,13 +945,6 @@ WITH params AS (
         $1::text AS sort_by,
         $2::text AS sort_dir
 ),
-paid AS (
-    SELECT
-        iph.invoice_id,
-        COALESCE(SUM(CASE WHEN iph.payment_status = 'completed' THEN iph.amount ELSE 0 END), 0)::NUMERIC(20,2) AS paid_total_amount
-    FROM invoice_payment_history iph
-    GROUP BY iph.invoice_id
-),
 base AS (
     SELECT
         i.id,
@@ -979,17 +963,19 @@ base AS (
         COALESCE(NULLIF(i.client_snapshot->>'last_name', ''), cd.last_name) AS client_last_name,
         COALESCE(NULLIF(i.client_snapshot->>'filenumber', ''), cd.filenumber) AS client_filenumber,
 
-        COALESCE(p.paid_total_amount, 0)::NUMERIC(20,2) AS paid_total_amount,
-        GREATEST(i.gross_total_amount - COALESCE(p.paid_total_amount, 0), 0)::NUMERIC(20,2) AS balance_due_amount,
+        p.paid_total_amount,
+        GREATEST(i.gross_total_amount - p.paid_total_amount, 0)::NUMERIC(20,2) AS balance_due_amount,
         CASE
             WHEN i.gross_total_amount <= 0 THEN 0
-            ELSE ROUND((COALESCE(p.paid_total_amount, 0) / i.gross_total_amount) * 100, 2)
+            ELSE ROUND((p.paid_total_amount / i.gross_total_amount) * 100, 2)
         END::NUMERIC(10,2) AS payment_completion_prc,
         COALESCE((i.due_date < CURRENT_DATE AND i.status NOT IN ('paid', 'canceled')), false)::boolean AS is_overdue
     FROM invoice i
     JOIN client_details cd ON i.client_id = cd.id
     LEFT JOIN sender s ON i.sender_id = s.id
-    LEFT JOIN paid p ON p.invoice_id = i.id
+    LEFT JOIN LATERAL (
+        SELECT public.get_invoice_paid_total(i.id) AS paid_total_amount
+    ) AS p ON TRUE
     WHERE
         (i.client_id = $3 OR $3 IS NULL)
         AND (i.sender_id = $4 OR $4 IS NULL)
@@ -1190,7 +1176,7 @@ func (q *Queries) ListInvoices(ctx context.Context, arg ListInvoicesParams) ([]L
 
 const listPayments = `-- name: ListPayments :many
 SELECT
-    iph.id, iph.invoice_id, iph.payment_method, iph.payment_status, iph.amount, iph.payment_date, iph.payment_reference, iph.notes, iph.recorded_by, iph.created_at, iph.updated_at,
+    iph.id, iph.invoice_id, iph.client_id, iph.payment_method, iph.payment_status, iph.amount, iph.payment_date, iph.payment_reference, iph.notes, iph.recorded_by, iph.created_at, iph.updated_at,
     e.first_name AS recorded_by_first_name,
     e.last_name AS recorded_by_last_name
 FROM
@@ -1206,6 +1192,7 @@ ORDER BY
 type ListPaymentsRow struct {
 	ID                  uuid.UUID          `json:"id"`
 	InvoiceID           uuid.UUID          `json:"invoice_id"`
+	ClientID            uuid.UUID          `json:"client_id"`
 	PaymentMethod       PaymentMethodEnum  `json:"payment_method"`
 	PaymentStatus       PaymentStatusEnum  `json:"payment_status"`
 	Amount              float64            `json:"amount"`
@@ -1231,6 +1218,7 @@ func (q *Queries) ListPayments(ctx context.Context, invoiceID uuid.UUID) ([]List
 		if err := rows.Scan(
 			&i.ID,
 			&i.InvoiceID,
+			&i.ClientID,
 			&i.PaymentMethod,
 			&i.PaymentStatus,
 			&i.Amount,
@@ -1251,6 +1239,28 @@ func (q *Queries) ListPayments(ctx context.Context, invoiceID uuid.UUID) ([]List
 		return nil, err
 	}
 	return items, nil
+}
+
+const lockInvoice = `-- name: LockInvoice :one
+SELECT id FROM public.invoice WHERE id = $1 FOR UPDATE
+`
+
+func (q *Queries) LockInvoice(ctx context.Context, id uuid.UUID) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, lockInvoice, id)
+	var id_2 uuid.UUID
+	err := row.Scan(&id_2)
+	return id_2, err
+}
+
+const recalculateInvoicePaymentStatus = `-- name: RecalculateInvoicePaymentStatus :one
+SELECT public.recalculate_invoice_payment_status($1) AS status
+`
+
+func (q *Queries) RecalculateInvoicePaymentStatus(ctx context.Context, invoiceID uuid.UUID) (InvoiceStatusEnum, error) {
+	row := q.db.QueryRow(ctx, recalculateInvoicePaymentStatus, invoiceID)
+	var status InvoiceStatusEnum
+	err := row.Scan(&status)
+	return status, err
 }
 
 const updateInvoice = `-- name: UpdateInvoice :one
@@ -1601,7 +1611,7 @@ SET
     recorded_by = COALESCE($7, recorded_by),
     updated_at = CURRENT_TIMESTAMP
 WHERE id = $8
-RETURNING id, invoice_id, payment_method, payment_status, amount, payment_date, payment_reference, notes, recorded_by, created_at, updated_at
+RETURNING id, invoice_id, client_id, payment_method, payment_status, amount, payment_date, payment_reference, notes, recorded_by, created_at, updated_at
 `
 
 type UpdatePaymentParams struct {
@@ -1630,6 +1640,7 @@ func (q *Queries) UpdatePayment(ctx context.Context, arg UpdatePaymentParams) (I
 	err := row.Scan(
 		&i.ID,
 		&i.InvoiceID,
+		&i.ClientID,
 		&i.PaymentMethod,
 		&i.PaymentStatus,
 		&i.Amount,

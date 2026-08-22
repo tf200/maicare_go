@@ -2,10 +2,13 @@ package domain
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
 )
+
+var ErrPaymentNotFound = errors.New("payment not found")
 
 // ==================== Payment Types ====================
 
@@ -141,12 +144,6 @@ type InvoiceTemplateItemData struct {
 	SourceColumn string
 }
 
-type PaymentWithInvoice struct {
-	Payment
-	InvoiceTotalAmount float64
-	InvoiceStatus      string
-}
-
 // ==================== Parameter Structs ====================
 
 type CreateInvoiceLineInput struct {
@@ -218,46 +215,28 @@ type UpdatePaymentParams struct {
 	Notes            *string
 }
 
-// ==================== Repository Interface ====================
-// InvoiceRepository handles direct database operations.
-
-type InvoiceRepository interface {
-	GetInvoice(ctx context.Context, invoiceID uuid.UUID) (*Invoice, error)
-	GetInvoiceWithLines(ctx context.Context, invoiceID uuid.UUID) (*Invoice, []InvoiceLine, error)
-	ListInvoices(ctx context.Context, params ListInvoicesParams) ([]InvoiceListItem, int64, error)
-
-	GetInvoiceAuditLogs(ctx context.Context, invoiceID uuid.UUID) ([]InvoiceAuditLog, error)
-	GetInvoiceTemplateItems(ctx context.Context) ([]InvoiceTemplateItem, error)
-	GetTotalPaid(ctx context.Context, invoiceID uuid.UUID) (float64, error)
-	GetCompletedPaymentSum(ctx context.Context, invoiceID uuid.UUID) (float64, error)
-
-	ListPayments(ctx context.Context, invoiceID uuid.UUID) ([]Payment, error)
-	GetPaymentByID(ctx context.Context, paymentID uuid.UUID) (*Payment, error)
-	GetPaymentWithInvoice(ctx context.Context, paymentID uuid.UUID) (*PaymentWithInvoice, error)
-}
-
 // ==================== Service Interface ====================
 
 type InvoiceService interface {
-	CreateInvoice(ctx context.Context, params CreateInvoiceParams, employeeID uuid.UUID) (*Invoice, []InvoiceLine, error)
+	CreateInvoice(ctx context.Context, params CreateInvoiceParams) (*Invoice, []InvoiceLine, error)
 	GetInvoiceByID(ctx context.Context, invoiceID uuid.UUID) (*Invoice, []InvoiceLine, float64, error)
 	ListInvoices(ctx context.Context, params ListInvoicesParams) (*ListResult[InvoiceListItem], error)
-	UpdateInvoice(ctx context.Context, invoiceID uuid.UUID, employeeID uuid.UUID, params CreateInvoiceParams) (*Invoice, error)
+	UpdateInvoice(ctx context.Context, invoiceID uuid.UUID, params CreateInvoiceParams) (*Invoice, error)
 	DeleteInvoice(ctx context.Context, invoiceID uuid.UUID) error
 
 	GenerateInvoice(ctx context.Context, params GenerateInvoiceParams) (*GenerateInvoiceResult, int64, error)
-	CreditInvoice(ctx context.Context, invoiceID uuid.UUID, employeeID uuid.UUID) (*CreditInvoiceResult, error)
+	CreditInvoice(ctx context.Context, invoiceID uuid.UUID) (*CreditInvoiceResult, error)
 
 	GetInvoiceAuditLogs(ctx context.Context, invoiceID uuid.UUID) ([]InvoiceAuditLog, error)
 	GenerateInvoicePDF(ctx context.Context, invoiceID uuid.UUID) (*GeneratePDFResult, error)
 	GetInvoiceTemplateItems(ctx context.Context) ([]InvoiceTemplateItemData, error)
 	SendInvoiceReminder(ctx context.Context, invoiceID uuid.UUID) error
 
-	CreatePayment(ctx context.Context, invoiceID uuid.UUID, employeeID uuid.UUID, params CreatePaymentParams) (*CreatePaymentResult, error)
+	CreatePayment(ctx context.Context, invoiceID uuid.UUID, params CreatePaymentParams) (*CreatePaymentResult, error)
 	ListPayments(ctx context.Context, invoiceID uuid.UUID) ([]Payment, error)
-	GetPaymentByID(ctx context.Context, paymentID uuid.UUID) (*Payment, error)
-	UpdatePayment(ctx context.Context, invoiceID uuid.UUID, paymentID uuid.UUID, employeeID uuid.UUID, params UpdatePaymentParams) (*UpdatePaymentResult, error)
-	DeletePayment(ctx context.Context, invoiceID uuid.UUID, paymentID uuid.UUID, employeeID uuid.UUID) (*DeletePaymentResult, error)
+	GetPaymentByID(ctx context.Context, invoiceID uuid.UUID, paymentID uuid.UUID) (*Payment, error)
+	UpdatePayment(ctx context.Context, invoiceID uuid.UUID, paymentID uuid.UUID, params UpdatePaymentParams) (*UpdatePaymentResult, error)
+	DeletePayment(ctx context.Context, invoiceID uuid.UUID, paymentID uuid.UUID) (*DeletePaymentResult, error)
 }
 
 // ==================== Result Structs ====================

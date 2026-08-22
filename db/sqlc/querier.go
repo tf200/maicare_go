@@ -8,6 +8,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Querier interface {
@@ -25,6 +26,7 @@ type Querier interface {
 	// Insert one permission grant while replacing a role's grants transactionally.
 	AddPermissionToRole(ctx context.Context, arg AddPermissionToRoleParams) error
 	AddRegistrationUploadAttachment(ctx context.Context, arg AddRegistrationUploadAttachmentParams) error
+	AllocateInvoiceSequenceForDate(ctx context.Context, createdDate pgtype.Timestamptz) (int64, error)
 	ApplyLeaveBalanceDeduction(ctx context.Context, arg ApplyLeaveBalanceDeductionParams) (LeaveBalance, error)
 	ApplyLeaveBalanceTotalAdjustment(ctx context.Context, arg ApplyLeaveBalanceTotalAdjustmentParams) (LeaveBalance, error)
 	ApproveOrRejectClientLocationTransfer(ctx context.Context, arg ApproveOrRejectClientLocationTransferParams) error
@@ -32,6 +34,7 @@ type Querier interface {
 	AssignEmployee(ctx context.Context, arg AssignEmployeeParams) (AssignEmployeeRow, error)
 	AssignRoleToUser(ctx context.Context, arg AssignRoleToUserParams) error
 	AssignSender(ctx context.Context, arg AssignSenderParams) (ClientDetail, error)
+	BeginInvoicePaymentOperation(ctx context.Context, arg BeginInvoicePaymentOperationParams) error
 	BulkCreateAuditRecords(ctx context.Context, arg []BulkCreateAuditRecordsParams) (int64, error)
 	CancelCalendarEvent(ctx context.Context, id uuid.UUID) error
 	CancelClientGoalByID(ctx context.Context, arg CancelClientGoalByIDParams) (ClientGoal, error)
@@ -145,7 +148,7 @@ type Querier interface {
 	DeleteInvoiceLinesByInvoice(ctx context.Context, invoiceID uuid.UUID) error
 	DeleteLocation(ctx context.Context, id uuid.UUID) (Location, error)
 	DeleteOrganisation(ctx context.Context, id uuid.UUID) (Organisation, error)
-	DeletePayment(ctx context.Context, id uuid.UUID) (InvoicePaymentHistory, error)
+	DeletePayment(ctx context.Context, arg DeletePaymentParams) (InvoicePaymentHistory, error)
 	DeleteProgressReport(ctx context.Context, id uuid.UUID) error
 	DeleteRegistrationForm(ctx context.Context, id uuid.UUID) error
 	DeleteRemindersByEventID(ctx context.Context, eventID uuid.UUID) error
@@ -194,7 +197,6 @@ type Querier interface {
 	GetClientRelatedEmails(ctx context.Context, clientID uuid.UUID) ([]string, error)
 	GetClientSender(ctx context.Context, id uuid.UUID) (Sender, error)
 	GetClientStatusCounts(ctx context.Context) (GetClientStatusCountsRow, error)
-	GetCompletedPaymentSum(ctx context.Context, invoiceID uuid.UUID) (float64, error)
 	GetContractAudit(ctx context.Context, contractID uuid.UUID) ([]GetContractAuditRow, error)
 	GetCurrentCycleDraftEvaluationByClientAndEmployee(ctx context.Context, arg GetCurrentCycleDraftEvaluationByClientAndEmployeeParams) (ClientGoalEvaluation, error)
 	GetDepartment(ctx context.Context, id uuid.UUID) (Department, error)
@@ -226,20 +228,20 @@ type Querier interface {
 	GetIntakeTopicsAssessments(ctx context.Context, intakeFormID uuid.UUID) ([]GetIntakeTopicsAssessmentsRow, error)
 	GetInvoice(ctx context.Context, id uuid.UUID) (GetInvoiceRow, error)
 	GetInvoiceAuditLogs(ctx context.Context, invoiceID uuid.UUID) ([]GetInvoiceAuditLogsRow, error)
+	GetInvoicePaidTotal(ctx context.Context, invoiceID uuid.UUID) (float64, error)
 	GetInvoiceSenderID(ctx context.Context, id uuid.UUID) (uuid.UUID, error)
 	GetLatestAuditHash(ctx context.Context) (string, error)
 	GetLatestCompletedEvaluationByClient(ctx context.Context, clientID uuid.UUID) (GetLatestCompletedEvaluationByClientRow, error)
 	GetLatestDraftEvaluationByClient(ctx context.Context, clientID uuid.UUID) (GetLatestDraftEvaluationByClientRow, error)
 	GetLeaveRequestStats(ctx context.Context) (GetLeaveRequestStatsRow, error)
 	GetLocation(ctx context.Context, id uuid.UUID) (Location, error)
-	GetMaxInvoiceSequenceForDate(ctx context.Context, date interface{}) (int64, error)
 	GetMissingClientDocuments(ctx context.Context, clientID uuid.UUID) ([]string, error)
 	GetMyLeaveRequestStats(ctx context.Context, employeeID uuid.UUID) (GetMyLeaveRequestStatsRow, error)
 	GetNextActiveClientGoalSortOrder(ctx context.Context, clientID uuid.UUID) (int32, error)
 	GetOrganisation(ctx context.Context, id uuid.UUID) (GetOrganisationRow, error)
 	GetOrganisationCounts(ctx context.Context, id uuid.UUID) (GetOrganisationCountsRow, error)
-	GetPayment(ctx context.Context, id uuid.UUID) (GetPaymentRow, error)
-	GetPaymentWithInvoice(ctx context.Context, id uuid.UUID) (GetPaymentWithInvoiceRow, error)
+	GetPayment(ctx context.Context, arg GetPaymentParams) (GetPaymentRow, error)
+	GetPaymentWithInvoice(ctx context.Context, arg GetPaymentWithInvoiceParams) (GetPaymentWithInvoiceRow, error)
 	GetProgressReport(ctx context.Context, id uuid.UUID) (GetProgressReportRow, error)
 	GetProgressReportsByDateRange(ctx context.Context, arg GetProgressReportsByDateRangeParams) ([]ProgressReport, error)
 	GetRegistrationForm(ctx context.Context, id uuid.UUID) (GetRegistrationFormRow, error)
@@ -261,7 +263,6 @@ type Querier interface {
 	GetTemplateItemsBySourceTable(ctx context.Context, dollar_1 []uuid.UUID) ([]TemplateItem, error)
 	GetTopicByID(ctx context.Context, id uuid.UUID) (Topic, error)
 	GetTopicLevel(ctx context.Context, arg GetTopicLevelParams) (GetTopicLevelRow, error)
-	GetTotalPaidAmountByInvoice(ctx context.Context, invoiceID uuid.UUID) (float64, error)
 	GetUserByEmail(ctx context.Context, email string) (GetUserByEmailRow, error)
 	GetUserByID(ctx context.Context, id uuid.UUID) (GetUserByIDRow, error)
 	GetUserIDByEmployeeID(ctx context.Context, id uuid.UUID) (uuid.UUID, error)
@@ -272,7 +273,7 @@ type Querier interface {
 	GoalHasEvaluationItems(ctx context.Context, arg GoalHasEvaluationItemsParams) (bool, error)
 	HasActiveClientByIntakeFormID(ctx context.Context, intakeFormID *uuid.UUID) (bool, error)
 	InsertBilledCalendarEvent(ctx context.Context, arg InsertBilledCalendarEventParams) (BilledCalendarEvent, error)
-	InsertIncoicePdfUrl(ctx context.Context, arg InsertIncoicePdfUrlParams) (*uuid.UUID, error)
+	InsertIncoicePdfUrl(ctx context.Context, arg InsertIncoicePdfUrlParams) (uuid.UUID, error)
 	ListActiveGoalSummariesByClientID(ctx context.Context, clientID uuid.UUID) ([]ListActiveGoalSummariesByClientIDRow, error)
 	ListActiveGoalsByClientID(ctx context.Context, clientID uuid.UUID) ([]ClientGoal, error)
 	ListActiveSessionsByUserID(ctx context.Context, userID uuid.UUID) ([]ListActiveSessionsByUserIDRow, error)
@@ -393,6 +394,7 @@ type Querier interface {
 	// Audit table queries
 	LockAuditHashChain(ctx context.Context) error
 	LockIntakeFormByID(ctx context.Context, id uuid.UUID) (uuid.UUID, error)
+	LockInvoice(ctx context.Context, id uuid.UUID) (uuid.UUID, error)
 	LockLeaveBalanceByEmployeeYear(ctx context.Context, arg LockLeaveBalanceByEmployeeYearParams) (LeaveBalance, error)
 	LockLeaveRequestByID(ctx context.Context, id uuid.UUID) (LeaveRequest, error)
 	LockSchedulesByIDsForSwap(ctx context.Context, dollar_1 []uuid.UUID) ([]LockSchedulesByIDsForSwapRow, error)
@@ -405,6 +407,7 @@ type Querier interface {
 	PublishHandbookTemplate(ctx context.Context, arg PublishHandbookTemplateParams) (HandbookTemplate, error)
 	PutClientInCare(ctx context.Context, arg PutClientInCareParams) (ClientDetail, error)
 	PutClientOutOfCare(ctx context.Context, arg PutClientOutOfCareParams) (ClientDetail, error)
+	RecalculateInvoicePaymentStatus(ctx context.Context, invoiceID uuid.UUID) (InvoiceStatusEnum, error)
 	RegistrationUploadSessionHasAttachments(ctx context.Context, arg RegistrationUploadSessionHasAttachmentsParams) (bool, error)
 	ReleaseIncidentConfirmationEmail(ctx context.Context, arg ReleaseIncidentConfirmationEmailParams) (int64, error)
 	// Removes *all* permissions from the given role.

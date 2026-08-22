@@ -1723,6 +1723,7 @@ CREATE TYPE contract_audit_operation_enum AS ENUM ('INSERT', 'UPDATE', 'DELETE')
 CREATE TABLE contract_audit (
     audit_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     contract_id UUID NOT NULL,
+    client_id UUID NOT NULL,
     operation contract_audit_operation_enum NOT NULL,
     changed_by UUID NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
     changed_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -1732,6 +1733,7 @@ CREATE TABLE contract_audit (
 );
 
 CREATE INDEX idx_contract_audit_contract_id ON contract_audit(contract_id);
+CREATE INDEX idx_contract_audit_client_id ON contract_audit(client_id);
 CREATE INDEX idx_contract_audit_changed_at ON contract_audit(changed_at);
 CREATE INDEX idx_contract_audit_operation ON contract_audit(operation);
 
@@ -1754,14 +1756,14 @@ BEGIN
 
     IF TG_OP = 'DELETE' THEN
         old_row := to_jsonb(OLD);
-        INSERT INTO contract_audit (contract_id, operation, old_values, changed_by, changed_at)
-        VALUES (OLD.id, 'DELETE', old_row, current_user_id, CURRENT_TIMESTAMP);
+        INSERT INTO contract_audit (contract_id, client_id, operation, old_values, changed_by, changed_at)
+        VALUES (OLD.id, OLD.client_id, 'DELETE', old_row, current_user_id, CURRENT_TIMESTAMP);
         RETURN OLD;
 
     ELSIF TG_OP = 'INSERT' THEN
         new_row := to_jsonb(NEW);
-        INSERT INTO contract_audit (contract_id, operation, new_values, changed_by, changed_at)
-        VALUES (NEW.id, 'INSERT', new_row, current_user_id, CURRENT_TIMESTAMP);
+        INSERT INTO contract_audit (contract_id, client_id, operation, new_values, changed_by, changed_at)
+        VALUES (NEW.id, NEW.client_id, 'INSERT', new_row, current_user_id, CURRENT_TIMESTAMP);
         RETURN NEW;
 
     ELSIF TG_OP = 'UPDATE' THEN
@@ -1776,15 +1778,15 @@ BEGIN
 
         IF array_length(changed_fields, 1) > 0 AND
            NOT (array_length(changed_fields, 1) = 1 AND 'updated_at' = ANY(changed_fields)) THEN
-            INSERT INTO contract_audit (contract_id, operation, old_values, new_values, changed_fields, changed_by, changed_at)
-            VALUES (NEW.id, 'UPDATE', old_row, new_row, changed_fields, current_user_id, CURRENT_TIMESTAMP);
+            INSERT INTO contract_audit (contract_id, client_id, operation, old_values, new_values, changed_fields, changed_by, changed_at)
+            VALUES (NEW.id, NEW.client_id, 'UPDATE', old_row, new_row, changed_fields, current_user_id, CURRENT_TIMESTAMP);
         END IF;
         RETURN NEW;
     END IF;
 
     RETURN NULL;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public;
 
 CREATE TRIGGER contract_audit_trigger
     AFTER INSERT OR UPDATE OR DELETE ON contract
@@ -1796,6 +1798,7 @@ CREATE TYPE contract_reminder_type_enum AS ENUM ('initial', 'follow_up', 'none')
 CREATE TABLE contract_reminder (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     contract_id UUID NOT NULL REFERENCES contract(id) ON DELETE CASCADE,
+    client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
     reminder_sent_at TIMESTAMPTZ NULL,
     reminder_type contract_reminder_type_enum NOT NULL DEFAULT 'none'
 );
@@ -1803,31 +1806,38 @@ CREATE TABLE contract_reminder (
 CREATE TABLE contract_working_hours (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     contract_id UUID NOT NULL REFERENCES contract(id) ON DELETE CASCADE,
+    client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
     minutes INTEGER NOT NULL DEFAULT 0,
     "datetime" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     notes TEXT NULL DEFAULT ''
 );
 
+CREATE INDEX contract_reminder_client_id_idx ON contract_reminder(client_id);
 CREATE INDEX contract_working_hours_contract_id_idx ON contract_working_hours(contract_id);
+CREATE INDEX contract_working_hours_client_id_idx ON contract_working_hours(client_id);
 CREATE INDEX contract_working_hours_datetime_idx ON contract_working_hours(datetime);
 
 CREATE TABLE client_agreement (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     contract_id UUID NOT NULL REFERENCES contract(id) ON DELETE CASCADE,
+    client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
     agreement_details TEXT NOT NULL,
     created TIMESTAMPTZ NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX client_agreement_contract_id_idx ON client_agreement(contract_id);
+CREATE INDEX client_agreement_client_id_idx ON client_agreement(client_id);
 
 CREATE TABLE provision (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     contract_id UUID NOT NULL REFERENCES contract(id) ON DELETE CASCADE,
+    client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
     provision_details TEXT NOT NULL,
     created TIMESTAMPTZ NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX provision_contract_id_idx ON provision(contract_id);
+CREATE INDEX provision_client_id_idx ON provision(client_id);
 
 CREATE TABLE framework_agreement (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -1930,6 +1940,11 @@ CREATE UNIQUE INDEX invoice_auto_standard_period_uq
 ON invoice(sender_id, client_id, period_start, period_end)
 WHERE source = 'auto' AND invoice_type = 'standard' AND status <> 'canceled';
 
+CREATE TABLE invoice_number_counter (
+    invoice_date DATE PRIMARY KEY,
+    last_sequence BIGINT NOT NULL CHECK (last_sequence > 0)
+);
+
 CREATE TABLE invoice_run_item (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     run_id UUID NOT NULL REFERENCES invoice_run(id) ON DELETE CASCADE,
@@ -1953,6 +1968,7 @@ CREATE TYPE invoice_audit_operation_enum AS ENUM ('INSERT', 'UPDATE', 'DELETE');
 CREATE TABLE invoice_audit (
     audit_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     invoice_id UUID NOT NULL,
+    client_id UUID NOT NULL,
     operation invoice_audit_operation_enum NOT NULL,
     changed_by UUID REFERENCES employee_profile(id) ON DELETE SET NULL,
     changed_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -1962,6 +1978,7 @@ CREATE TABLE invoice_audit (
 );
 
 CREATE INDEX idx_invoice_audit_invoice_id ON invoice_audit(invoice_id);
+CREATE INDEX idx_invoice_audit_client_id ON invoice_audit(client_id);
 CREATE INDEX idx_invoice_audit_changed_at ON invoice_audit(changed_at);
 CREATE INDEX idx_invoice_audit_operation ON invoice_audit(operation);
 
@@ -1984,14 +2001,14 @@ BEGIN
 
     IF TG_OP = 'DELETE' THEN
         old_row := to_jsonb(OLD);
-        INSERT INTO invoice_audit (invoice_id, operation, old_values, changed_by, changed_at)
-        VALUES (OLD.id, 'DELETE', old_row, current_employee_id, CURRENT_TIMESTAMP);
+        INSERT INTO invoice_audit (invoice_id, client_id, operation, old_values, changed_by, changed_at)
+        VALUES (OLD.id, OLD.client_id, 'DELETE', old_row, current_employee_id, CURRENT_TIMESTAMP);
         RETURN OLD;
 
     ELSIF TG_OP = 'INSERT' THEN
         new_row := to_jsonb(NEW);
-        INSERT INTO invoice_audit (invoice_id, operation, new_values, changed_by, changed_at)
-        VALUES (NEW.id, 'INSERT', new_row, current_employee_id, CURRENT_TIMESTAMP);
+        INSERT INTO invoice_audit (invoice_id, client_id, operation, new_values, changed_by, changed_at)
+        VALUES (NEW.id, NEW.client_id, 'INSERT', new_row, current_employee_id, CURRENT_TIMESTAMP);
         RETURN NEW;
 
     ELSIF TG_OP = 'UPDATE' THEN
@@ -2005,8 +2022,8 @@ BEGIN
         END LOOP;
 
         IF array_length(changed_fields_arr, 1) > 0 AND NOT (array_length(changed_fields_arr, 1) = 1 AND 'updated_at' = ANY(changed_fields_arr)) THEN
-            INSERT INTO invoice_audit (invoice_id, operation, old_values, new_values, changed_fields, changed_by, changed_at)
-            VALUES (NEW.id, 'UPDATE', old_row, new_row, changed_fields_arr, current_employee_id, CURRENT_TIMESTAMP);
+            INSERT INTO invoice_audit (invoice_id, client_id, operation, old_values, new_values, changed_fields, changed_by, changed_at)
+            VALUES (NEW.id, NEW.client_id, 'UPDATE', old_row, new_row, changed_fields_arr, current_employee_id, CURRENT_TIMESTAMP);
         END IF;
 
         RETURN NEW;
@@ -2014,7 +2031,7 @@ BEGIN
 
     RETURN NULL;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, public;
 
 CREATE TRIGGER invoice_audit_trigger
 AFTER INSERT OR UPDATE OR DELETE ON invoice
@@ -2033,6 +2050,7 @@ CREATE TYPE payment_status_enum AS ENUM (
 CREATE TABLE invoice_payment_history (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     invoice_id UUID NOT NULL REFERENCES invoice(id) ON DELETE CASCADE,
+    client_id UUID NOT NULL REFERENCES client_details(id) ON DELETE CASCADE,
     payment_method payment_method_enum NOT NULL DEFAULT 'bank_transfer',
     payment_status payment_status_enum NOT NULL DEFAULT 'completed',
     amount DECIMAL(20,2) NOT NULL DEFAULT 0,
@@ -2041,10 +2059,12 @@ CREATE TABLE invoice_payment_history (
     notes TEXT NULL,
     recorded_by UUID NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT invoice_payment_history_amount_nonnegative CHECK (amount >= 0)
 );
 
 CREATE INDEX idx_invoice_payment_history_invoice_id ON invoice_payment_history(invoice_id);
+CREATE INDEX idx_invoice_payment_history_client_id ON invoice_payment_history(client_id);
 CREATE INDEX idx_invoice_payment_history_payment_date ON invoice_payment_history(payment_date);
 CREATE INDEX idx_invoice_payment_history_payment_status ON invoice_payment_history(payment_status);
 
@@ -3778,6 +3798,501 @@ AS $$
     );
 $$;
 
+CREATE OR REPLACE FUNCTION public.begin_invoice_payment_operation(invoice_id UUID, permission_name TEXT, payment_id UUID)
+RETURNS VOID
+LANGUAGE plpgsql
+VOLATILE
+SECURITY DEFINER
+SET search_path = pg_catalog, public
+AS $$
+DECLARE
+    owning_client_id UUID;
+BEGIN
+    IF $2 NOT IN (
+        'INVOICE.PAYMENT.CREATE',
+        'INVOICE.PAYMENT.UPDATE',
+        'INVOICE.PAYMENT.DELETE'
+    ) THEN
+        RAISE EXCEPTION 'invalid invoice payment operation';
+    END IF;
+
+    SELECT payment_invoice.client_id INTO owning_client_id
+    FROM public.invoice AS payment_invoice
+    WHERE payment_invoice.id = $1;
+    IF owning_client_id IS NULL OR NOT public.can_access_client(owning_client_id, $2) THEN
+        RAISE EXCEPTION 'invoice payment operation is not authorized';
+    END IF;
+    IF $2 <> 'INVOICE.PAYMENT.CREATE' AND NOT EXISTS (
+        SELECT 1 FROM public.invoice_payment_history AS target_payment
+        WHERE target_payment.id = $3 AND target_payment.invoice_id = $1
+    ) THEN
+        RAISE EXCEPTION 'payment does not belong to invoice';
+    END IF;
+
+    PERFORM pg_catalog.set_config('myapp.invoice_payment_invoice_id', $1::TEXT, TRUE);
+    PERFORM pg_catalog.set_config('myapp.invoice_payment_permission', $2, TRUE);
+    PERFORM pg_catalog.set_config('myapp.invoice_payment_id', COALESCE($3::TEXT, ''), TRUE);
+    PERFORM pg_catalog.set_config('myapp.invoice_payment_actor_id', public.get_current_employee_id()::TEXT, TRUE);
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.can_access_invoice_payment_operation(invoice_id UUID)
+RETURNS BOOLEAN
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = pg_catalog, public
+AS $$
+    SELECT COALESCE(
+        $1 IS NOT NULL
+        AND NULLIF(pg_catalog.current_setting('myapp.invoice_payment_invoice_id', TRUE), '')::UUID = $1
+        AND NULLIF(pg_catalog.current_setting('myapp.invoice_payment_actor_id', TRUE), '')::UUID = public.get_current_employee_id()
+        AND EXISTS (
+            SELECT 1
+            FROM public.invoice AS operation_invoice
+            WHERE operation_invoice.id = $1
+              AND public.can_access_client(
+                    operation_invoice.client_id,
+                    NULLIF(pg_catalog.current_setting('myapp.invoice_payment_permission', TRUE), '')
+              )
+        ),
+        FALSE
+    );
+$$;
+
+CREATE OR REPLACE FUNCTION public.can_access_invoice_payment_record(
+    invoice_id UUID,
+    payment_id UUID,
+    recorded_by UUID
+)
+RETURNS BOOLEAN
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = pg_catalog, public
+AS $$
+    SELECT COALESCE(
+        public.can_access_invoice_payment_operation($1)
+        AND CASE pg_catalog.current_setting('myapp.invoice_payment_permission', TRUE)
+            WHEN 'INVOICE.PAYMENT.CREATE' THEN $3 = public.get_current_employee_id()
+            WHEN 'INVOICE.PAYMENT.UPDATE' THEN NULLIF(pg_catalog.current_setting('myapp.invoice_payment_id', TRUE), '')::UUID = $2
+            WHEN 'INVOICE.PAYMENT.DELETE' THEN NULLIF(pg_catalog.current_setting('myapp.invoice_payment_id', TRUE), '')::UUID = $2
+            ELSE FALSE
+        END,
+        FALSE
+    );
+$$;
+
+CREATE OR REPLACE FUNCTION public.get_payment_operation_completed_sum(invoice_id UUID)
+RETURNS NUMERIC(20,2)
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = pg_catalog, public
+AS $$
+BEGIN
+    IF NOT public.can_access_invoice_payment_operation($1) THEN
+        RETURN 0;
+    END IF;
+    RETURN (
+        SELECT COALESCE(SUM(payment.amount) FILTER (WHERE payment.payment_status = 'completed'), 0)::NUMERIC(20,2)
+        FROM public.invoice_payment_history AS payment
+        WHERE payment.invoice_id = $1
+    );
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.recalculate_invoice_payment_status(invoice_id UUID)
+RETURNS public.invoice_status_enum
+LANGUAGE plpgsql
+VOLATILE
+SECURITY DEFINER
+SET search_path = pg_catalog, public
+AS $$
+DECLARE
+    invoice_total NUMERIC(20,2);
+    paid_total NUMERIC(20,2);
+    calculated_status public.invoice_status_enum;
+BEGIN
+    IF NOT public.can_access_invoice_payment_operation($1) THEN
+        RAISE EXCEPTION 'invoice payment status update is not authorized';
+    END IF;
+
+    SELECT gross_total_amount INTO invoice_total
+    FROM public.invoice
+    WHERE id = $1
+    FOR UPDATE;
+    paid_total := public.get_payment_operation_completed_sum($1);
+    calculated_status := CASE
+        WHEN paid_total <= 50 THEN 'outstanding'::public.invoice_status_enum
+        WHEN paid_total - invoice_total < -50 THEN 'partially_paid'::public.invoice_status_enum
+        WHEN paid_total - invoice_total <= 50 THEN 'paid'::public.invoice_status_enum
+        ELSE 'overpaid'::public.invoice_status_enum
+    END;
+
+    UPDATE public.invoice
+    SET status = calculated_status,
+        updated_at = CURRENT_TIMESTAMP
+    WHERE id = $1;
+    RETURN calculated_status;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.can_access_invoice_mutation(invoice_id UUID, permission_name TEXT)
+RETURNS BOOLEAN
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = pg_catalog, public
+AS $$
+    SELECT COALESCE(
+        $1 IS NOT NULL
+        AND NULLIF(pg_catalog.current_setting('myapp.invoice_mutation_invoice_id', TRUE), '')::UUID = $1
+        AND NULLIF(pg_catalog.current_setting('myapp.invoice_mutation_actor_id', TRUE), '')::UUID = public.get_current_employee_id()
+        AND pg_catalog.current_setting('myapp.invoice_mutation_permission', TRUE) = $2
+        AND public.can_access_client(
+            NULLIF(pg_catalog.current_setting('myapp.invoice_mutation_client_id', TRUE), '')::UUID,
+            $2
+        ),
+        FALSE
+    );
+$$;
+
+CREATE OR REPLACE FUNCTION public.get_invoice_paid_total(invoice_id UUID)
+RETURNS NUMERIC(20,2)
+LANGUAGE plpgsql
+STABLE
+SECURITY DEFINER
+SET search_path = pg_catalog, public
+AS $$
+DECLARE
+    owning_client_id UUID;
+    paid_total NUMERIC(20,2);
+BEGIN
+    SELECT paid_invoice.client_id INTO owning_client_id
+    FROM public.invoice AS paid_invoice
+    WHERE paid_invoice.id = $1;
+    IF owning_client_id IS NULL OR NOT public.can_access_client(owning_client_id, 'INVOICE.VIEW') THEN
+        RETURN 0;
+    END IF;
+    SELECT COALESCE(SUM(amount) FILTER (WHERE payment_status = 'completed'), 0)::NUMERIC(20,2)
+    INTO paid_total
+    FROM public.invoice_payment_history AS payment
+    WHERE payment.invoice_id = $1;
+    RETURN paid_total;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.allocate_invoice_sequence_for_date(created_date TIMESTAMPTZ)
+RETURNS BIGINT
+LANGUAGE plpgsql
+VOLATILE
+SECURITY DEFINER
+SET search_path = pg_catalog, public
+AS $$
+DECLARE
+    allocated_sequence BIGINT;
+BEGIN
+    IF NOT public.has_permission('INVOICE.CREATE')
+       AND NOT public.has_permission('INVOICE.UPDATE') THEN
+        RAISE EXCEPTION 'invoice creation is not authorized';
+    END IF;
+    INSERT INTO public.invoice_number_counter (invoice_date, last_sequence)
+    VALUES (DATE($1), 1)
+    ON CONFLICT (invoice_date) DO UPDATE
+    SET last_sequence = public.invoice_number_counter.last_sequence + 1
+    RETURNING last_sequence INTO allocated_sequence;
+    RETURN allocated_sequence;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.attach_generated_invoice_pdf(invoice_id UUID, attachment_id UUID)
+RETURNS SETOF UUID
+LANGUAGE plpgsql
+VOLATILE
+SECURITY DEFINER
+SET search_path = pg_catalog, public
+AS $$
+DECLARE
+    owning_client_id UUID;
+BEGIN
+    SELECT generated_invoice.client_id INTO owning_client_id
+    FROM public.invoice AS generated_invoice
+    WHERE generated_invoice.id = $1;
+
+    IF owning_client_id IS NULL
+       OR NOT public.can_access_client(owning_client_id, 'INVOICE.VIEW')
+       OR NOT EXISTS (
+            SELECT 1
+            FROM public.attachment_file AS attachment
+            WHERE attachment.uuid = $2
+              AND attachment.uploaded_by_user_id = public.get_current_user_id()
+              AND attachment.is_used
+              AND attachment.tag = 'invoice_pdf'
+       ) THEN
+        RETURN;
+    END IF;
+
+    RETURN QUERY
+    UPDATE public.invoice
+    SET pdf_attachment_id = $2,
+        updated_at = CURRENT_TIMESTAMP
+    WHERE id = $1
+      AND pdf_attachment_id IS NULL
+    RETURNING pdf_attachment_id;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.can_manage_invoice_run(invoice_run_id UUID)
+RETURNS BOOLEAN
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = pg_catalog, public
+AS $$
+    SELECT COALESCE(EXISTS (
+        SELECT 1
+        FROM public.invoice_run AS managed_run
+        WHERE managed_run.id = $1
+          AND managed_run.created_by = public.get_current_employee_id()
+          AND public.get_permission_scope('INVOICE.CREATE') = 'all'
+    ), FALSE);
+$$;
+
+CREATE OR REPLACE FUNCTION public.set_group_f_ownership()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = pg_catalog, public
+AS $$
+DECLARE
+    owning_client_id UUID;
+    owning_sender_id UUID;
+    owning_invoice_id UUID;
+    actor_user_id UUID := public.get_current_user_id();
+    actor_employee_id UUID := public.get_current_employee_id();
+BEGIN
+    CASE TG_TABLE_NAME
+    WHEN 'contract' THEN
+        IF TG_OP = 'UPDATE' AND NEW.client_id IS DISTINCT FROM OLD.client_id THEN
+            RAISE EXCEPTION 'contract client ownership is immutable';
+        END IF;
+        IF actor_user_id IS NOT NULL AND EXISTS (
+            SELECT 1
+            FROM unnest(NEW.attachment_ids) AS requested(id)
+            LEFT JOIN public.attachment_file AS attachment ON attachment.uuid = requested.id
+            WHERE attachment.uuid IS NULL
+               OR NOT attachment.is_used
+               OR (
+                    (TG_OP = 'INSERT' OR NOT requested.id = ANY(OLD.attachment_ids))
+                    AND attachment.uploaded_by_user_id IS DISTINCT FROM actor_user_id
+               )
+        ) THEN
+            RAISE EXCEPTION 'contract attachments must be used files owned by the current actor';
+        END IF;
+    WHEN 'invoice' THEN
+        IF TG_OP = 'UPDATE' AND (
+            NEW.client_id IS DISTINCT FROM OLD.client_id
+            OR NEW.sender_id IS DISTINCT FROM OLD.sender_id
+        ) THEN
+            RAISE EXCEPTION 'invoice client and sender ownership are immutable';
+        END IF;
+        IF NEW.original_invoice_id IS NOT NULL AND NOT EXISTS (
+            SELECT 1 FROM public.invoice AS original
+            WHERE original.id = NEW.original_invoice_id
+              AND original.client_id = NEW.client_id
+              AND original.sender_id = NEW.sender_id
+        ) THEN
+            RAISE EXCEPTION 'original invoice must have matching client and sender ownership';
+        END IF;
+        IF NEW.replaces_invoice_id IS NOT NULL AND NOT EXISTS (
+            SELECT 1 FROM public.invoice AS replaced
+            WHERE replaced.id = NEW.replaces_invoice_id
+              AND replaced.client_id = NEW.client_id
+              AND replaced.sender_id = NEW.sender_id
+        ) THEN
+            RAISE EXCEPTION 'replaced invoice must have matching client and sender ownership';
+        END IF;
+        IF actor_employee_id IS NOT NULL THEN
+            IF TG_OP = 'INSERT' AND NEW.invoice_type = 'credit_note'
+               AND public.can_access_client(NEW.client_id, 'INVOICE.UPDATE') THEN
+                PERFORM pg_catalog.set_config('myapp.invoice_mutation_invoice_id', NEW.id::TEXT, TRUE);
+                PERFORM pg_catalog.set_config('myapp.invoice_mutation_client_id', NEW.client_id::TEXT, TRUE);
+                PERFORM pg_catalog.set_config('myapp.invoice_mutation_permission', 'INVOICE.UPDATE', TRUE);
+                PERFORM pg_catalog.set_config('myapp.invoice_mutation_actor_id', actor_employee_id::TEXT, TRUE);
+            ELSIF TG_OP = 'INSERT' AND public.can_access_client(NEW.client_id, 'INVOICE.CREATE') THEN
+                PERFORM pg_catalog.set_config('myapp.invoice_mutation_invoice_id', NEW.id::TEXT, TRUE);
+                PERFORM pg_catalog.set_config('myapp.invoice_mutation_client_id', NEW.client_id::TEXT, TRUE);
+                PERFORM pg_catalog.set_config('myapp.invoice_mutation_permission', 'INVOICE.CREATE', TRUE);
+                PERFORM pg_catalog.set_config('myapp.invoice_mutation_actor_id', actor_employee_id::TEXT, TRUE);
+            ELSIF TG_OP = 'UPDATE' AND public.can_access_client(NEW.client_id, 'INVOICE.UPDATE') THEN
+                PERFORM pg_catalog.set_config('myapp.invoice_mutation_invoice_id', NEW.id::TEXT, TRUE);
+                PERFORM pg_catalog.set_config('myapp.invoice_mutation_client_id', NEW.client_id::TEXT, TRUE);
+                PERFORM pg_catalog.set_config('myapp.invoice_mutation_permission', 'INVOICE.UPDATE', TRUE);
+                PERFORM pg_catalog.set_config('myapp.invoice_mutation_actor_id', actor_employee_id::TEXT, TRUE);
+            ELSIF TG_OP = 'UPDATE' AND public.can_access_invoice_payment_operation(NEW.id) THEN
+                IF (to_jsonb(NEW) - ARRAY['status', 'updated_at'])
+                   IS DISTINCT FROM (to_jsonb(OLD) - ARRAY['status', 'updated_at']) THEN
+                    RAISE EXCEPTION 'payment operations may only update invoice status';
+                END IF;
+            END IF;
+        END IF;
+    WHEN 'contract_reminder', 'contract_working_hours', 'client_agreement', 'provision' THEN
+        SELECT client_id INTO owning_client_id FROM public.contract WHERE id = NEW.contract_id;
+        IF owning_client_id IS NULL THEN
+            RAISE EXCEPTION 'contract not found';
+        END IF;
+        IF TG_OP = 'UPDATE' AND NEW.contract_id IS DISTINCT FROM OLD.contract_id THEN
+            RAISE EXCEPTION 'contract reference is immutable';
+        END IF;
+        NEW.client_id := owning_client_id;
+    WHEN 'framework_agreement' THEN
+        IF TG_OP = 'UPDATE' AND NEW.client_id IS DISTINCT FROM OLD.client_id THEN
+            RAISE EXCEPTION 'framework agreement client ownership is immutable';
+        END IF;
+    WHEN 'invoice_payment_history' THEN
+        SELECT client_id INTO owning_client_id FROM public.invoice WHERE id = NEW.invoice_id;
+        IF owning_client_id IS NULL THEN
+            RAISE EXCEPTION 'invoice not found';
+        END IF;
+        IF TG_OP = 'UPDATE' AND NEW.invoice_id IS DISTINCT FROM OLD.invoice_id THEN
+            RAISE EXCEPTION 'payment invoice ownership is immutable';
+        END IF;
+        NEW.client_id := owning_client_id;
+        IF actor_employee_id IS NOT NULL THEN
+            NEW.recorded_by := actor_employee_id;
+        END IF;
+    WHEN 'invoice_line' THEN
+        SELECT client_id, sender_id INTO owning_client_id, owning_sender_id
+        FROM public.invoice WHERE id = NEW.invoice_id;
+        IF owning_client_id IS NULL
+           OR NEW.client_id IS DISTINCT FROM owning_client_id
+           OR NEW.sender_id IS DISTINCT FROM owning_sender_id THEN
+            RAISE EXCEPTION 'invoice line ownership does not match its invoice';
+        END IF;
+        IF NEW.contract_id IS NOT NULL AND NOT EXISTS (
+            SELECT 1 FROM public.contract
+            WHERE id = NEW.contract_id
+              AND client_id = NEW.client_id
+              AND sender_id = NEW.sender_id
+        ) THEN
+            RAISE EXCEPTION 'invoice line contract ownership does not match its invoice';
+        END IF;
+        IF TG_OP = 'UPDATE' AND (
+            NEW.invoice_id IS DISTINCT FROM OLD.invoice_id
+            OR NEW.client_id IS DISTINCT FROM OLD.client_id
+            OR NEW.sender_id IS DISTINCT FROM OLD.sender_id
+        ) THEN
+            RAISE EXCEPTION 'invoice line ownership is immutable';
+        END IF;
+    WHEN 'invoice_line_calendar_event' THEN
+        SELECT client_id INTO owning_client_id FROM public.invoice_line WHERE id = NEW.invoice_line_id;
+        IF owning_client_id IS NULL OR NEW.client_id IS DISTINCT FROM owning_client_id THEN
+            RAISE EXCEPTION 'invoice appointment link ownership does not match its line';
+        END IF;
+        IF NOT EXISTS (
+            SELECT 1 FROM public.calendar_event_attendees
+            WHERE event_id = NEW.calendar_event_id AND client_id = NEW.client_id
+        ) THEN
+            RAISE EXCEPTION 'calendar event is not linked to the billed client';
+        END IF;
+    WHEN 'billed_calendar_event' THEN
+        SELECT invoice_id, client_id INTO owning_invoice_id, owning_client_id
+        FROM public.invoice_line WHERE id = NEW.invoice_line_id;
+        IF owning_client_id IS NULL
+           OR NEW.client_id IS DISTINCT FROM owning_client_id
+           OR NEW.invoice_id IS DISTINCT FROM owning_invoice_id THEN
+            RAISE EXCEPTION 'billed event ownership does not match its invoice line';
+        END IF;
+        IF NOT EXISTS (
+            SELECT 1 FROM public.calendar_event_attendees
+            WHERE event_id = NEW.calendar_event_id AND client_id = NEW.client_id
+        ) THEN
+            RAISE EXCEPTION 'calendar event is not linked to the billed client';
+        END IF;
+    WHEN 'invoice_run_item' THEN
+        IF actor_employee_id IS NOT NULL AND NOT public.can_manage_invoice_run(NEW.run_id) THEN
+            RAISE EXCEPTION 'invoice run item is not owned by the current actor';
+        END IF;
+        IF TG_OP = 'UPDATE' AND (
+            NEW.run_id IS DISTINCT FROM OLD.run_id
+            OR NEW.client_id IS DISTINCT FROM OLD.client_id
+            OR NEW.sender_id IS DISTINCT FROM OLD.sender_id
+        ) THEN
+            RAISE EXCEPTION 'invoice run item ownership is immutable';
+        END IF;
+        IF NEW.invoice_id IS NOT NULL THEN
+            SELECT client_id, sender_id INTO owning_client_id, owning_sender_id
+            FROM public.invoice WHERE id = NEW.invoice_id;
+            IF owning_client_id IS NULL
+               OR NEW.client_id IS DISTINCT FROM owning_client_id
+               OR NEW.sender_id IS DISTINCT FROM owning_sender_id THEN
+                RAISE EXCEPTION 'invoice run item ownership does not match its invoice';
+            END IF;
+        END IF;
+    WHEN 'invoice_run' THEN
+        IF TG_OP = 'INSERT' AND actor_employee_id IS NOT NULL THEN
+            NEW.created_by := actor_employee_id;
+        ELSIF TG_OP = 'UPDATE' AND NEW.created_by IS DISTINCT FROM OLD.created_by THEN
+            RAISE EXCEPTION 'invoice run creator is immutable';
+        END IF;
+    END CASE;
+    RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER contract_protect_group_f_ownership
+BEFORE INSERT OR UPDATE ON public.contract
+FOR EACH ROW EXECUTE FUNCTION public.set_group_f_ownership();
+
+CREATE TRIGGER invoice_protect_group_f_ownership
+BEFORE INSERT OR UPDATE ON public.invoice
+FOR EACH ROW EXECUTE FUNCTION public.set_group_f_ownership();
+
+CREATE TRIGGER contract_reminder_set_client
+BEFORE INSERT OR UPDATE ON public.contract_reminder
+FOR EACH ROW EXECUTE FUNCTION public.set_group_f_ownership();
+
+CREATE TRIGGER contract_working_hours_set_client
+BEFORE INSERT OR UPDATE ON public.contract_working_hours
+FOR EACH ROW EXECUTE FUNCTION public.set_group_f_ownership();
+
+CREATE TRIGGER client_agreement_set_client
+BEFORE INSERT OR UPDATE ON public.client_agreement
+FOR EACH ROW EXECUTE FUNCTION public.set_group_f_ownership();
+
+CREATE TRIGGER provision_set_client
+BEFORE INSERT OR UPDATE ON public.provision
+FOR EACH ROW EXECUTE FUNCTION public.set_group_f_ownership();
+
+CREATE TRIGGER framework_agreement_protect_client
+BEFORE UPDATE ON public.framework_agreement
+FOR EACH ROW EXECUTE FUNCTION public.set_group_f_ownership();
+
+CREATE TRIGGER invoice_payment_history_set_client_actor
+BEFORE INSERT OR UPDATE ON public.invoice_payment_history
+FOR EACH ROW EXECUTE FUNCTION public.set_group_f_ownership();
+
+CREATE TRIGGER invoice_line_protect_group_f_ownership
+BEFORE INSERT OR UPDATE ON public.invoice_line
+FOR EACH ROW EXECUTE FUNCTION public.set_group_f_ownership();
+
+CREATE TRIGGER invoice_line_calendar_event_protect_group_f_ownership
+BEFORE INSERT OR UPDATE ON public.invoice_line_calendar_event
+FOR EACH ROW EXECUTE FUNCTION public.set_group_f_ownership();
+
+CREATE TRIGGER billed_calendar_event_protect_group_f_ownership
+BEFORE INSERT OR UPDATE ON public.billed_calendar_event
+FOR EACH ROW EXECUTE FUNCTION public.set_group_f_ownership();
+
+CREATE TRIGGER invoice_run_item_protect_group_f_ownership
+BEFORE INSERT OR UPDATE ON public.invoice_run_item
+FOR EACH ROW EXECUTE FUNCTION public.set_group_f_ownership();
+
+CREATE TRIGGER invoice_run_set_actor
+BEFORE INSERT OR UPDATE ON public.invoice_run
+FOR EACH ROW EXECUTE FUNCTION public.set_group_f_ownership();
+
 DO $$
 DECLARE
     policy_owner_name TEXT := 'maicare_rls_policy_owner_' || (
@@ -3993,6 +4508,19 @@ BEGIN
     EXECUTE format('ALTER FUNCTION public.update_client_evaluation_cadence() OWNER TO %I', policy_owner_name);
     EXECUTE format('ALTER FUNCTION public.validate_client_document_attachment() OWNER TO %I', policy_owner_name);
     EXECUTE format('ALTER FUNCTION public.release_deleted_client_document_attachment() OWNER TO %I', policy_owner_name);
+    EXECUTE format('ALTER FUNCTION public.begin_invoice_payment_operation(UUID, TEXT, UUID) OWNER TO %I', policy_owner_name);
+    EXECUTE format('ALTER FUNCTION public.can_access_invoice_payment_operation(UUID) OWNER TO %I', policy_owner_name);
+    EXECUTE format('ALTER FUNCTION public.can_access_invoice_payment_record(UUID, UUID, UUID) OWNER TO %I', policy_owner_name);
+    EXECUTE format('ALTER FUNCTION public.get_payment_operation_completed_sum(UUID) OWNER TO %I', policy_owner_name);
+    EXECUTE format('ALTER FUNCTION public.recalculate_invoice_payment_status(UUID) OWNER TO %I', policy_owner_name);
+    EXECUTE format('ALTER FUNCTION public.can_access_invoice_mutation(UUID, TEXT) OWNER TO %I', policy_owner_name);
+    EXECUTE format('ALTER FUNCTION public.get_invoice_paid_total(UUID) OWNER TO %I', policy_owner_name);
+    EXECUTE format('ALTER FUNCTION public.allocate_invoice_sequence_for_date(TIMESTAMPTZ) OWNER TO %I', policy_owner_name);
+    EXECUTE format('ALTER FUNCTION public.attach_generated_invoice_pdf(UUID, UUID) OWNER TO %I', policy_owner_name);
+    EXECUTE format('ALTER FUNCTION public.can_manage_invoice_run(UUID) OWNER TO %I', policy_owner_name);
+    EXECUTE format('ALTER FUNCTION public.set_group_f_ownership() OWNER TO %I', policy_owner_name);
+    EXECUTE format('ALTER FUNCTION public.contract_audit_trigger_func() OWNER TO %I', policy_owner_name);
+    EXECUTE format('ALTER FUNCTION public.invoice_audit_trigger_func() OWNER TO %I', policy_owner_name);
     EXECUTE format(
         'GRANT SELECT ON public.assigned_employee, public.employee_profile, public.client_emergency_contact TO %I',
         policy_owner_name
@@ -4003,8 +4531,14 @@ BEGIN
     EXECUTE format('GRANT SELECT ON public.attachment_file, public.client_documents TO %I', policy_owner_name);
     EXECUTE format('GRANT UPDATE ON public.attachment_file TO %I', policy_owner_name);
     EXECUTE format('GRANT SELECT ON public.registration_form, public.contract, public.custom_user, public.client_medication_order, public.invoice, public.collaboration_agreement, public.risk_assessment, public.consent_declaration TO %I', policy_owner_name);
+    EXECUTE format('GRANT SELECT ON public.invoice_payment_history, public.invoice_line, public.invoice_run, public.calendar_event_attendees TO %I', policy_owner_name);
+    EXECUTE format('GRANT UPDATE ON public.invoice TO %I', policy_owner_name);
+    EXECUTE format('GRANT SELECT, INSERT, UPDATE ON public.invoice_number_counter TO %I', policy_owner_name);
+    EXECUTE format('GRANT INSERT ON public.contract_audit, public.invoice_audit TO %I', policy_owner_name);
     EXECUTE format('GRANT EXECUTE ON FUNCTION public.get_current_user_id() TO %I', policy_owner_name);
     EXECUTE format('GRANT EXECUTE ON FUNCTION public.get_current_employee_id() TO %I', policy_owner_name);
+    EXECUTE format('GRANT EXECUTE ON FUNCTION public.has_permission(TEXT) TO %I', policy_owner_name);
+    EXECUTE format('GRANT EXECUTE ON FUNCTION public.get_permission_scope(TEXT) TO %I', policy_owner_name);
     EXECUTE format('GRANT EXECUTE ON FUNCTION public.can_access_client(UUID, TEXT) TO %I', policy_owner_name);
     EXECUTE format('REVOKE %I FROM %I', policy_owner_name, current_user);
 END;
@@ -4022,6 +4556,15 @@ GRANT EXECUTE ON FUNCTION public.goal_has_evaluation_history_for_update(UUID, UU
 GRANT EXECUTE ON FUNCTION public.can_mutate_goal_evaluation(UUID, UUID) TO CURRENT_USER;
 GRANT EXECUTE ON FUNCTION public.attachment_file_is_referenced(UUID) TO CURRENT_USER;
 GRANT EXECUTE ON FUNCTION public.can_access_actor_attachment(UUID) TO CURRENT_USER;
+GRANT EXECUTE ON FUNCTION public.begin_invoice_payment_operation(UUID, TEXT, UUID) TO CURRENT_USER;
+GRANT EXECUTE ON FUNCTION public.can_access_invoice_payment_operation(UUID) TO CURRENT_USER;
+GRANT EXECUTE ON FUNCTION public.can_access_invoice_payment_record(UUID, UUID, UUID) TO CURRENT_USER;
+GRANT EXECUTE ON FUNCTION public.get_payment_operation_completed_sum(UUID) TO CURRENT_USER;
+GRANT EXECUTE ON FUNCTION public.recalculate_invoice_payment_status(UUID) TO CURRENT_USER;
+GRANT EXECUTE ON FUNCTION public.can_access_invoice_mutation(UUID, TEXT) TO CURRENT_USER;
+GRANT EXECUTE ON FUNCTION public.allocate_invoice_sequence_for_date(TIMESTAMPTZ) TO CURRENT_USER;
+GRANT EXECUTE ON FUNCTION public.attach_generated_invoice_pdf(UUID, UUID) TO CURRENT_USER;
+GRANT EXECUTE ON FUNCTION public.can_manage_invoice_run(UUID) TO CURRENT_USER;
 
 REVOKE ALL ON FUNCTION public.get_current_user_id() FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.get_current_employee_id() FROM PUBLIC;
@@ -4049,6 +4592,17 @@ REVOKE ALL ON FUNCTION public.can_mutate_goal_evaluation(UUID, UUID) FROM PUBLIC
 REVOKE ALL ON FUNCTION public.attachment_file_is_referenced(UUID) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.can_access_actor_attachment(UUID) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.release_deleted_client_document_attachment() FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.begin_invoice_payment_operation(UUID, TEXT, UUID) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.can_access_invoice_payment_operation(UUID) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.can_access_invoice_payment_record(UUID, UUID, UUID) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.get_payment_operation_completed_sum(UUID) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.recalculate_invoice_payment_status(UUID) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.can_access_invoice_mutation(UUID, TEXT) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.get_invoice_paid_total(UUID) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.allocate_invoice_sequence_for_date(TIMESTAMPTZ) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.attach_generated_invoice_pdf(UUID, UUID) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.can_manage_invoice_run(UUID) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.set_group_f_ownership() FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.get_authorized_client_related_emails(UUID) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.get_authorized_incident_recipient_emails(UUID) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.confirm_incident(UUID) FROM PUBLIC;
@@ -4068,6 +4622,7 @@ GRANT EXECUTE ON FUNCTION public.begin_incident_creation(UUID) TO CURRENT_USER;
 GRANT EXECUTE ON FUNCTION public.can_read_created_incident(UUID) TO CURRENT_USER;
 GRANT EXECUTE ON FUNCTION public.begin_client_document_creation(UUID) TO CURRENT_USER;
 GRANT EXECUTE ON FUNCTION public.can_read_created_client_document(UUID) TO CURRENT_USER;
+GRANT EXECUTE ON FUNCTION public.get_invoice_paid_total(UUID) TO CURRENT_USER;
 
 -- Check if current employee is Admin
 CREATE OR REPLACE FUNCTION is_admin() RETURNS BOOLEAN AS $$
@@ -4115,14 +4670,6 @@ $$ LANGUAGE sql STABLE;
 
 CREATE OR REPLACE FUNCTION get_client_id_from_goal_evaluation(eval_id UUID) RETURNS UUID AS $$
     SELECT client_id FROM client_goal_evaluations WHERE id = eval_id;
-$$ LANGUAGE sql STABLE;
-
-CREATE OR REPLACE FUNCTION get_client_id_from_contract(cont_id UUID) RETURNS UUID AS $$
-    SELECT client_id FROM contract WHERE id = cont_id;
-$$ LANGUAGE sql STABLE;
-
-CREATE OR REPLACE FUNCTION get_client_id_from_invoice(inv_id UUID) RETURNS UUID AS $$
-    SELECT client_id FROM invoice WHERE id = inv_id;
 $$ LANGUAGE sql STABLE;
 
 CREATE OR REPLACE FUNCTION get_client_id_from_registration_form(reg_id UUID) RETURNS UUID AS $$
@@ -4431,16 +4978,225 @@ CREATE POLICY client_goal_evaluation_items_update ON public.client_goal_evaluati
     USING (public.can_mutate_goal_evaluation(evaluation_id, client_id))
     WITH CHECK (public.can_mutate_goal_evaluation(evaluation_id, client_id));
 
+-- Group F: contract and financial records use permission-specific client scope.
+ALTER TABLE public.contract_type ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.contract_type FORCE ROW LEVEL SECURITY;
+CREATE POLICY contract_type_select ON public.contract_type FOR SELECT
+    USING (
+        public.has_permission('CONTRACT_TYPE.VIEW')
+        OR public.has_permission('CONTRACT.VIEW')
+    );
+CREATE POLICY contract_type_insert ON public.contract_type FOR INSERT
+    WITH CHECK (public.has_permission('CONTRACT_TYPE.CREATE'));
+CREATE POLICY contract_type_delete ON public.contract_type FOR DELETE
+    USING (public.has_permission('CONTRACT_TYPE.DELETE'));
+
+ALTER TABLE public.contract ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.contract FORCE ROW LEVEL SECURITY;
+CREATE POLICY contract_select ON public.contract FOR SELECT
+    USING (public.can_access_client(client_id, 'CONTRACT.VIEW'));
+CREATE POLICY contract_insert ON public.contract FOR INSERT
+    WITH CHECK (public.can_access_client(client_id, 'CONTRACT.CREATE'));
+CREATE POLICY contract_update ON public.contract FOR UPDATE
+    USING (public.can_access_client(client_id, 'CONTRACT.UPDATE'))
+    WITH CHECK (public.can_access_client(client_id, 'CONTRACT.UPDATE'));
+CREATE POLICY contract_delete ON public.contract FOR DELETE
+    USING (public.can_access_client(client_id, 'CONTRACT.DELETE'));
+
+ALTER TABLE public.contract_audit ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.contract_audit FORCE ROW LEVEL SECURITY;
+CREATE POLICY contract_audit_select ON public.contract_audit FOR SELECT
+    USING (public.can_access_client(client_id, 'CONTRACT.VIEW'));
+
+ALTER TABLE public.contract_reminder ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.contract_reminder FORCE ROW LEVEL SECURITY;
+CREATE POLICY contract_reminder_select ON public.contract_reminder FOR SELECT
+    USING (public.can_access_client(client_id, 'CONTRACT.VIEW'));
+CREATE POLICY contract_reminder_insert ON public.contract_reminder FOR INSERT
+    WITH CHECK (public.can_access_client(client_id, 'CONTRACT.UPDATE'));
+
+ALTER TABLE public.contract_working_hours ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.contract_working_hours FORCE ROW LEVEL SECURITY;
+CREATE POLICY contract_working_hours_select ON public.contract_working_hours FOR SELECT
+    USING (public.can_access_client(client_id, 'CONTRACT.VIEW'));
+CREATE POLICY contract_working_hours_insert ON public.contract_working_hours FOR INSERT
+    WITH CHECK (public.can_access_client(client_id, 'CONTRACT.UPDATE'));
+CREATE POLICY contract_working_hours_update ON public.contract_working_hours FOR UPDATE
+    USING (public.can_access_client(client_id, 'CONTRACT.UPDATE'))
+    WITH CHECK (public.can_access_client(client_id, 'CONTRACT.UPDATE'));
+CREATE POLICY contract_working_hours_delete ON public.contract_working_hours FOR DELETE
+    USING (public.can_access_client(client_id, 'CONTRACT.UPDATE'));
+
+ALTER TABLE public.client_agreement ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.client_agreement FORCE ROW LEVEL SECURITY;
+CREATE POLICY client_agreement_select ON public.client_agreement FOR SELECT
+    USING (public.can_access_client(client_id, 'CONTRACT.VIEW'));
+CREATE POLICY client_agreement_insert ON public.client_agreement FOR INSERT
+    WITH CHECK (public.can_access_client(client_id, 'CONTRACT.CREATE'));
+CREATE POLICY client_agreement_update ON public.client_agreement FOR UPDATE
+    USING (public.can_access_client(client_id, 'CONTRACT.UPDATE'))
+    WITH CHECK (public.can_access_client(client_id, 'CONTRACT.UPDATE'));
+CREATE POLICY client_agreement_delete ON public.client_agreement FOR DELETE
+    USING (public.can_access_client(client_id, 'CONTRACT.DELETE'));
+
+ALTER TABLE public.provision ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.provision FORCE ROW LEVEL SECURITY;
+CREATE POLICY provision_select ON public.provision FOR SELECT
+    USING (public.can_access_client(client_id, 'CONTRACT.VIEW'));
+CREATE POLICY provision_insert ON public.provision FOR INSERT
+    WITH CHECK (public.can_access_client(client_id, 'CONTRACT.CREATE'));
+CREATE POLICY provision_update ON public.provision FOR UPDATE
+    USING (public.can_access_client(client_id, 'CONTRACT.UPDATE'))
+    WITH CHECK (public.can_access_client(client_id, 'CONTRACT.UPDATE'));
+CREATE POLICY provision_delete ON public.provision FOR DELETE
+    USING (public.can_access_client(client_id, 'CONTRACT.DELETE'));
+
+ALTER TABLE public.framework_agreement ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.framework_agreement FORCE ROW LEVEL SECURITY;
+CREATE POLICY framework_agreement_select ON public.framework_agreement FOR SELECT
+    USING (public.can_access_client(client_id, 'CONTRACT.VIEW'));
+CREATE POLICY framework_agreement_insert ON public.framework_agreement FOR INSERT
+    WITH CHECK (public.can_access_client(client_id, 'CONTRACT.CREATE'));
+CREATE POLICY framework_agreement_update ON public.framework_agreement FOR UPDATE
+    USING (public.can_access_client(client_id, 'CONTRACT.UPDATE'))
+    WITH CHECK (public.can_access_client(client_id, 'CONTRACT.UPDATE'));
+CREATE POLICY framework_agreement_delete ON public.framework_agreement FOR DELETE
+    USING (public.can_access_client(client_id, 'CONTRACT.DELETE'));
+
+ALTER TABLE public.invoice ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.invoice FORCE ROW LEVEL SECURITY;
+CREATE POLICY invoice_select ON public.invoice FOR SELECT
+    USING (
+        public.can_access_client(client_id, 'INVOICE.VIEW')
+        OR public.can_access_invoice_payment_operation(id)
+        OR public.can_access_invoice_mutation(id, 'INVOICE.CREATE')
+        OR public.can_access_invoice_mutation(id, 'INVOICE.UPDATE')
+    );
+CREATE POLICY invoice_insert ON public.invoice FOR INSERT
+    WITH CHECK (
+        public.can_access_client(client_id, 'INVOICE.CREATE')
+        OR (
+            invoice_type = 'credit_note'
+            AND original_invoice_id IS NOT NULL
+            AND public.can_access_client(client_id, 'INVOICE.UPDATE')
+        )
+    );
+CREATE POLICY invoice_update ON public.invoice FOR UPDATE
+    USING (
+        public.can_access_client(client_id, 'INVOICE.UPDATE')
+        OR public.can_access_invoice_mutation(id, 'INVOICE.CREATE')
+        OR public.can_access_invoice_mutation(id, 'INVOICE.UPDATE')
+    )
+    WITH CHECK (
+        public.can_access_client(client_id, 'INVOICE.UPDATE')
+        OR public.can_access_invoice_mutation(id, 'INVOICE.CREATE')
+        OR public.can_access_invoice_mutation(id, 'INVOICE.UPDATE')
+    );
+CREATE POLICY invoice_delete ON public.invoice FOR DELETE
+    USING (public.can_access_client(client_id, 'INVOICE.DELETE'));
+
+ALTER TABLE public.invoice_audit ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.invoice_audit FORCE ROW LEVEL SECURITY;
+CREATE POLICY invoice_audit_select ON public.invoice_audit FOR SELECT
+    USING (public.can_access_client(client_id, 'INVOICE.VIEW'));
+
+ALTER TABLE public.invoice_line ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.invoice_line FORCE ROW LEVEL SECURITY;
+CREATE POLICY invoice_line_select ON public.invoice_line FOR SELECT
+    USING (
+        public.can_access_client(client_id, 'INVOICE.VIEW')
+        OR public.can_access_client(client_id, 'INVOICE.CREATE')
+        OR public.can_access_client(client_id, 'INVOICE.UPDATE')
+    );
+CREATE POLICY invoice_line_insert ON public.invoice_line FOR INSERT
+    WITH CHECK (
+        public.can_access_client(client_id, 'INVOICE.CREATE')
+        OR public.can_access_client(client_id, 'INVOICE.UPDATE')
+    );
+CREATE POLICY invoice_line_update ON public.invoice_line FOR UPDATE
+    USING (public.can_access_client(client_id, 'INVOICE.UPDATE'))
+    WITH CHECK (public.can_access_client(client_id, 'INVOICE.UPDATE'));
+CREATE POLICY invoice_line_delete ON public.invoice_line FOR DELETE
+    USING (public.can_access_client(client_id, 'INVOICE.UPDATE'));
+
+ALTER TABLE public.invoice_payment_history ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.invoice_payment_history FORCE ROW LEVEL SECURITY;
+CREATE POLICY invoice_payment_select ON public.invoice_payment_history FOR SELECT
+    USING (
+        public.can_access_client(client_id, 'INVOICE.PAYMENT.VIEW')
+        OR public.can_access_invoice_payment_record(invoice_id, id, recorded_by)
+    );
+CREATE POLICY invoice_payment_insert ON public.invoice_payment_history FOR INSERT
+    WITH CHECK (public.can_access_client(client_id, 'INVOICE.PAYMENT.CREATE'));
+CREATE POLICY invoice_payment_update ON public.invoice_payment_history FOR UPDATE
+    USING (public.can_access_client(client_id, 'INVOICE.PAYMENT.UPDATE'))
+    WITH CHECK (public.can_access_client(client_id, 'INVOICE.PAYMENT.UPDATE'));
+CREATE POLICY invoice_payment_delete ON public.invoice_payment_history FOR DELETE
+    USING (public.can_access_client(client_id, 'INVOICE.PAYMENT.DELETE'));
+
+ALTER TABLE public.invoice_line_calendar_event ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.invoice_line_calendar_event FORCE ROW LEVEL SECURITY;
+CREATE POLICY invoice_line_calendar_event_select ON public.invoice_line_calendar_event FOR SELECT
+    USING (public.can_access_client(client_id, 'INVOICE.VIEW'));
+CREATE POLICY invoice_line_calendar_event_insert ON public.invoice_line_calendar_event FOR INSERT
+    WITH CHECK (public.can_access_client(client_id, 'INVOICE.CREATE'));
+CREATE POLICY invoice_line_calendar_event_update ON public.invoice_line_calendar_event FOR UPDATE
+    USING (public.can_access_client(client_id, 'INVOICE.UPDATE'))
+    WITH CHECK (public.can_access_client(client_id, 'INVOICE.UPDATE'));
+CREATE POLICY invoice_line_calendar_event_delete ON public.invoice_line_calendar_event FOR DELETE
+    USING (public.can_access_client(client_id, 'INVOICE.UPDATE'));
+
+ALTER TABLE public.billed_calendar_event ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.billed_calendar_event FORCE ROW LEVEL SECURITY;
+CREATE POLICY billed_calendar_event_select ON public.billed_calendar_event FOR SELECT
+    USING (public.can_access_client(client_id, 'INVOICE.VIEW'));
+CREATE POLICY billed_calendar_event_insert ON public.billed_calendar_event FOR INSERT
+    WITH CHECK (public.can_access_client(client_id, 'INVOICE.CREATE'));
+CREATE POLICY billed_calendar_event_update ON public.billed_calendar_event FOR UPDATE
+    USING (public.can_access_client(client_id, 'INVOICE.UPDATE'))
+    WITH CHECK (public.can_access_client(client_id, 'INVOICE.UPDATE'));
+
+ALTER TABLE public.invoice_run_item ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.invoice_run_item FORCE ROW LEVEL SECURITY;
+CREATE POLICY invoice_run_item_select ON public.invoice_run_item FOR SELECT
+    USING (public.can_access_client(client_id, 'INVOICE.VIEW'));
+CREATE POLICY invoice_run_item_insert ON public.invoice_run_item FOR INSERT
+    WITH CHECK (
+        public.can_access_client(client_id, 'INVOICE.CREATE')
+        AND public.can_manage_invoice_run(run_id)
+    );
+CREATE POLICY invoice_run_item_update ON public.invoice_run_item FOR UPDATE
+    USING (
+        public.can_access_client(client_id, 'INVOICE.CREATE')
+        AND public.can_manage_invoice_run(run_id)
+    )
+    WITH CHECK (
+        public.can_access_client(client_id, 'INVOICE.CREATE')
+        AND public.can_manage_invoice_run(run_id)
+    );
+
+ALTER TABLE public.invoice_run ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.invoice_run FORCE ROW LEVEL SECURITY;
+CREATE POLICY invoice_run_select ON public.invoice_run FOR SELECT
+    USING (
+        created_by = public.get_current_employee_id()
+        AND public.has_permission('INVOICE.CREATE')
+    );
+CREATE POLICY invoice_run_insert ON public.invoice_run FOR INSERT
+    WITH CHECK (
+        created_by = public.get_current_employee_id()
+        AND public.get_permission_scope('INVOICE.CREATE') = 'all'
+    );
+CREATE POLICY invoice_run_update ON public.invoice_run FOR UPDATE
+    USING (
+        created_by = public.get_current_employee_id()
+        AND public.get_permission_scope('INVOICE.CREATE') = 'all'
+    )
+    WITH CHECK (created_by = public.get_current_employee_id());
+
 -- Apply legacy RLS to related tables until they are converted in Phase 9.
 SELECT apply_client_rls('client_status_history');
 SELECT apply_client_rls('client_location_transfer');
-	SELECT apply_client_rls('contract');
-	SELECT apply_client_rls('invoice');
-	SELECT apply_client_rls('invoice_run_item');
-	SELECT apply_client_rls('invoice_line');
-	SELECT apply_client_rls('invoice_line_calendar_event');
-	SELECT apply_client_rls('billed_calendar_event');
-	SELECT apply_client_rls('invoice_payment_history', 'get_client_id_from_invoice(invoice_id)');
 	SELECT apply_client_rls('assignment');
 	SELECT apply_client_rls('calendar_event_attendees');
 SELECT apply_client_rls('appointment_card');
@@ -4449,7 +5205,6 @@ SELECT apply_client_rls('risk_assessment');
 SELECT apply_client_rls('consent_declaration');
 SELECT apply_client_rls('youth_care_intake');
 SELECT apply_client_rls('data_sharing_statement');
-SELECT apply_client_rls('framework_agreement');
 
 -- Special cases for nested tables
 -- Registration and Intake
@@ -4457,10 +5212,6 @@ SELECT apply_client_rls('registration_form', 'get_client_id_from_registration_fo
 SELECT apply_client_rls('intake_forms', 'get_client_id_from_registration_form(registration_form_id)');
 
 -- Medication orders have direct client_id
-
--- Contract sub-tables
-SELECT apply_client_rls('client_agreement', 'get_client_id_from_contract(contract_id)');
-SELECT apply_client_rls('provision', 'get_client_id_from_contract(contract_id)');
 
 -- Helper to get client_id from intake_form
 CREATE OR REPLACE FUNCTION get_client_id_from_intake_form(intake_id UUID) RETURNS UUID AS $$

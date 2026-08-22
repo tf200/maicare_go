@@ -33,13 +33,6 @@ WITH params AS (
         sqlc.arg('sort_by')::text AS sort_by,
         sqlc.arg('sort_dir')::text AS sort_dir
 ),
-paid AS (
-    SELECT
-        iph.invoice_id,
-        COALESCE(SUM(CASE WHEN iph.payment_status = 'completed' THEN iph.amount ELSE 0 END), 0)::NUMERIC(20,2) AS paid_total_amount
-    FROM invoice_payment_history iph
-    GROUP BY iph.invoice_id
-),
 base AS (
     SELECT
         i.id,
@@ -58,17 +51,19 @@ base AS (
         COALESCE(NULLIF(i.client_snapshot->>'last_name', ''), cd.last_name) AS client_last_name,
         COALESCE(NULLIF(i.client_snapshot->>'filenumber', ''), cd.filenumber) AS client_filenumber,
 
-        COALESCE(p.paid_total_amount, 0)::NUMERIC(20,2) AS paid_total_amount,
-        GREATEST(i.gross_total_amount - COALESCE(p.paid_total_amount, 0), 0)::NUMERIC(20,2) AS balance_due_amount,
+        p.paid_total_amount,
+        GREATEST(i.gross_total_amount - p.paid_total_amount, 0)::NUMERIC(20,2) AS balance_due_amount,
         CASE
             WHEN i.gross_total_amount <= 0 THEN 0
-            ELSE ROUND((COALESCE(p.paid_total_amount, 0) / i.gross_total_amount) * 100, 2)
+            ELSE ROUND((p.paid_total_amount / i.gross_total_amount) * 100, 2)
         END::NUMERIC(10,2) AS payment_completion_prc,
         COALESCE((i.due_date < CURRENT_DATE AND i.status NOT IN ('paid', 'canceled')), false)::boolean AS is_overdue
     FROM invoice i
     JOIN client_details cd ON i.client_id = cd.id
     LEFT JOIN sender s ON i.sender_id = s.id
-    LEFT JOIN paid p ON p.invoice_id = i.id
+    LEFT JOIN LATERAL (
+        SELECT public.get_invoice_paid_total(i.id) AS paid_total_amount
+    ) AS p ON TRUE
     WHERE
         (i.client_id = sqlc.narg('client_id') OR sqlc.narg('client_id') IS NULL)
         AND (i.sender_id = sqlc.narg('sender_id') OR sqlc.narg('sender_id') IS NULL)
@@ -195,10 +190,24 @@ WHERE
 LIMIT 1;
 
 
--- name: GetMaxInvoiceSequenceForDate :one
-SELECT COALESCE(MAX(invoice_sequence), 0)::BIGINT as max_sequence
-FROM invoice
-WHERE DATE(created_at) = DATE($1);
+-- name: AllocateInvoiceSequenceForDate :one
+SELECT public.allocate_invoice_sequence_for_date($1)::BIGINT AS sequence;
+
+-- name: LockInvoice :one
+SELECT id FROM public.invoice WHERE id = $1 FOR UPDATE;
+
+-- name: BeginInvoicePaymentOperation :exec
+SELECT public.begin_invoice_payment_operation(
+    sqlc.arg('invoice_id'),
+    sqlc.arg('permission_name'),
+    sqlc.narg('payment_id')
+);
+
+-- name: GetInvoicePaidTotal :one
+SELECT public.get_invoice_paid_total($1)::FLOAT AS total_paid;
+
+-- name: RecalculateInvoicePaymentStatus :one
+SELECT public.recalculate_invoice_payment_status($1) AS status;
 
 
 -- name: UpdateInvoice :one
@@ -242,13 +251,7 @@ RETURNING *;
 
 
 -- name: InsertIncoicePdfUrl :one
-UPDATE invoice
-SET
-    pdf_attachment_id = $2
-WHERE
-    id = $1
-    AND pdf_attachment_id IS NULL
-RETURNING invoice.pdf_attachment_id;
+SELECT public.attach_generated_invoice_pdf($1, $2) AS pdf_attachment_id;
 
 
 -- name: DeleteInvoice :exec
@@ -447,14 +450,6 @@ INSERT INTO invoice_payment_history (
 ) RETURNING *;
 
 
--- name: GetTotalPaidAmountByInvoice :one
-SELECT
-    COALESCE(SUM(amount), 0)::FLOAT AS total_paid
-FROM invoice_payment_history
-WHERE invoice_id = $1
-  AND payment_status = 'completed';
-
-
 -- name: ListPayments :many
 SELECT
     iph.*,
@@ -480,7 +475,8 @@ FROM
 LEFT JOIN
     employee_profile e ON iph.recorded_by = e.id
 WHERE
-    iph.id = $1
+    iph.id = sqlc.arg('payment_id')
+    AND iph.invoice_id = sqlc.arg('invoice_id')
 LIMIT 1;
 
 
@@ -499,26 +495,20 @@ WHERE id = sqlc.arg('id')
 RETURNING *;
 
 
--- name: GetCompletedPaymentSum :one
-SELECT COALESCE(SUM(amount), 0)::DECIMAL as total_completed_amount
-FROM invoice_payment_history
-WHERE invoice_id = $1
-  AND payment_status = 'completed';
-
-
 -- name: GetPaymentWithInvoice :one
 SELECT
-    p.*,
-    i.gross_total_amount as invoice_total_amount,
-    i.status as invoice_status
+    p.payment_status,
+    i.status AS invoice_status
 FROM invoice_payment_history p
 JOIN invoice i ON p.invoice_id = i.id
-WHERE p.id = $1;
+WHERE p.id = sqlc.arg('payment_id')
+  AND p.invoice_id = sqlc.arg('invoice_id');
 
 
 -- name: DeletePayment :one
 DELETE FROM invoice_payment_history
-WHERE id = $1
+WHERE id = sqlc.arg('payment_id')
+  AND invoice_id = sqlc.arg('invoice_id')
 RETURNING *;
 
 

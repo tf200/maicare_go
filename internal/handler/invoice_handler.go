@@ -1,12 +1,12 @@
 package handler
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
 	"maicare_go/internal/domain"
 	"maicare_go/internal/httpapi"
-	"maicare_go/internal/middleware"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -27,8 +27,6 @@ func (h *InvoiceHandler) CreateInvoice(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, httpapi.Fail(err.Error(), "VALIDATION_ERROR"))
 		return
 	}
-
-	employeeID := middleware.EmployeeIDFromContext(ctx.Request.Context())
 
 	dparams := domain.CreateInvoiceParams{
 		ClientID:    req.ClientID,
@@ -52,7 +50,7 @@ func (h *InvoiceHandler) CreateInvoice(ctx *gin.Context) {
 		}
 	}
 
-	inv, lines, err := h.service.CreateInvoice(ctx.Request.Context(), dparams, employeeID)
+	inv, lines, err := h.service.CreateInvoice(ctx.Request.Context(), dparams)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, httpapi.Fail(err.Error(), "CREATE_ERROR"))
 		return
@@ -129,9 +127,7 @@ func (h *InvoiceHandler) CreditInvoice(ctx *gin.Context) {
 		return
 	}
 
-	employeeID := middleware.EmployeeIDFromContext(ctx.Request.Context())
-
-	result, err := h.service.CreditInvoice(ctx.Request.Context(), invoiceID, employeeID)
+	result, err := h.service.CreditInvoice(ctx.Request.Context(), invoiceID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, httpapi.Fail(err.Error(), "CREDIT_ERROR"))
 		return
@@ -251,12 +247,10 @@ func (h *InvoiceHandler) UpdateInvoice(ctx *gin.Context) {
 		return
 	}
 
-	employeeID := middleware.EmployeeIDFromContext(ctx.Request.Context())
-
 	dparams := domain.CreateInvoiceParams{
-		IssueDate:   req.IssueDate,
-		DueDate:     req.DueDate,
-		Lines:       make([]domain.CreateInvoiceLineInput, len(req.Lines)),
+		IssueDate: req.IssueDate,
+		DueDate:   req.DueDate,
+		Lines:     make([]domain.CreateInvoiceLineInput, len(req.Lines)),
 	}
 	for i, l := range req.Lines {
 		dparams.Lines[i] = domain.CreateInvoiceLineInput{
@@ -273,7 +267,7 @@ func (h *InvoiceHandler) UpdateInvoice(ctx *gin.Context) {
 		}
 	}
 
-	inv, err := h.service.UpdateInvoice(ctx.Request.Context(), invoiceID, employeeID, dparams)
+	inv, err := h.service.UpdateInvoice(ctx.Request.Context(), invoiceID, dparams)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, httpapi.Fail(err.Error(), "UPDATE_ERROR"))
 		return
@@ -393,8 +387,6 @@ func (h *InvoiceHandler) CreatePayment(ctx *gin.Context) {
 		return
 	}
 
-	employeeID := middleware.EmployeeIDFromContext(ctx.Request.Context())
-
 	dparams := domain.CreatePaymentParams{
 		PaymentMethod:    req.PaymentMethod,
 		PaymentStatus:    req.PaymentStatus,
@@ -404,7 +396,7 @@ func (h *InvoiceHandler) CreatePayment(ctx *gin.Context) {
 		Notes:            req.Notes,
 	}
 
-	result, err := h.service.CreatePayment(ctx.Request.Context(), invoiceID, employeeID, dparams)
+	result, err := h.service.CreatePayment(ctx.Request.Context(), invoiceID, dparams)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, httpapi.Fail(err.Error(), "PAYMENT_ERROR"))
 		return
@@ -449,14 +441,23 @@ func (h *InvoiceHandler) ListPayments(ctx *gin.Context) {
 
 // GetPaymentByID handles GET /invoices/:id/payments/:payment_id
 func (h *InvoiceHandler) GetPaymentByID(ctx *gin.Context) {
+	invoiceID, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, httpapi.Fail("invalid invoice ID", "INVALID_ID"))
+		return
+	}
 	paymentID, err := uuid.Parse(ctx.Param("payment_id"))
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, httpapi.Fail("invalid payment ID", "INVALID_ID"))
 		return
 	}
 
-	payment, err := h.service.GetPaymentByID(ctx.Request.Context(), paymentID)
+	payment, err := h.service.GetPaymentByID(ctx.Request.Context(), invoiceID, paymentID)
 	if err != nil {
+		if errors.Is(err, domain.ErrPaymentNotFound) {
+			ctx.JSON(http.StatusNotFound, httpapi.Fail(err.Error(), "NOT_FOUND"))
+			return
+		}
 		ctx.JSON(http.StatusInternalServerError, httpapi.Fail(err.Error(), "GET_ERROR"))
 		return
 	}
@@ -494,8 +495,6 @@ func (h *InvoiceHandler) UpdatePayment(ctx *gin.Context) {
 		return
 	}
 
-	employeeID := middleware.EmployeeIDFromContext(ctx.Request.Context())
-
 	dparams := domain.UpdatePaymentParams{
 		PaymentMethod:    req.PaymentMethod,
 		PaymentStatus:    req.PaymentStatus,
@@ -505,8 +504,12 @@ func (h *InvoiceHandler) UpdatePayment(ctx *gin.Context) {
 		Notes:            req.Notes,
 	}
 
-	result, err := h.service.UpdatePayment(ctx.Request.Context(), invoiceID, paymentID, employeeID, dparams)
+	result, err := h.service.UpdatePayment(ctx.Request.Context(), invoiceID, paymentID, dparams)
 	if err != nil {
+		if errors.Is(err, domain.ErrPaymentNotFound) {
+			ctx.JSON(http.StatusNotFound, httpapi.Fail(err.Error(), "NOT_FOUND"))
+			return
+		}
 		ctx.JSON(http.StatusInternalServerError, httpapi.Fail(err.Error(), "UPDATE_ERROR"))
 		return
 	}
@@ -523,7 +526,7 @@ func (h *InvoiceHandler) UpdatePayment(ctx *gin.Context) {
 
 // DeletePayment handles DELETE /invoices/:id/payments/:payment_id
 func (h *InvoiceHandler) DeletePayment(ctx *gin.Context) {
-	invoiceIDStr := ctx.Param("invoice_id")
+	invoiceIDStr := ctx.Param("id")
 	paymentIDStr := ctx.Param("payment_id")
 
 	invoiceID, err := uuid.Parse(invoiceIDStr)
@@ -538,10 +541,12 @@ func (h *InvoiceHandler) DeletePayment(ctx *gin.Context) {
 		return
 	}
 
-	employeeID := middleware.EmployeeIDFromContext(ctx.Request.Context())
-
-	result, err := h.service.DeletePayment(ctx.Request.Context(), invoiceID, paymentID, employeeID)
+	result, err := h.service.DeletePayment(ctx.Request.Context(), invoiceID, paymentID)
 	if err != nil {
+		if errors.Is(err, domain.ErrPaymentNotFound) {
+			ctx.JSON(http.StatusNotFound, httpapi.Fail(err.Error(), "NOT_FOUND"))
+			return
+		}
 		ctx.JSON(http.StatusInternalServerError, httpapi.Fail(err.Error(), "DELETE_ERROR"))
 		return
 	}
