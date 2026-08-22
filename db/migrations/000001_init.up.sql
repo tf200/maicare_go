@@ -4946,6 +4946,47 @@ BEGIN
 END;
 $$;
 
+-- Event participation decides attendee visibility without recursing into the
+-- attendee policy itself; evaluated as the policy owner.
+CREATE OR REPLACE FUNCTION public.can_participate_in_event(event_id UUID)
+RETURNS BOOLEAN
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+PARALLEL UNSAFE
+SET search_path = pg_catalog, public
+AS $$
+    SELECT EXISTS (
+        SELECT 1
+        FROM public.calendar_events ce
+        WHERE ce.id = $1
+          AND ce.organizer_employee_id = public.get_current_employee_id()
+    ) OR EXISTS (
+        SELECT 1
+        FROM public.calendar_event_attendees cea
+        WHERE cea.event_id = $1
+          AND cea.employee_id = public.get_current_employee_id()
+    );
+$$;
+
+-- Only organizers may grant event access by adding attendees; evaluated as the
+-- policy owner for the same recursion reason.
+CREATE OR REPLACE FUNCTION public.can_organize_event(event_id UUID)
+RETURNS BOOLEAN
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+PARALLEL UNSAFE
+SET search_path = pg_catalog, public
+AS $$
+    SELECT EXISTS (
+        SELECT 1
+        FROM public.calendar_events ce
+        WHERE ce.id = $1
+          AND ce.organizer_employee_id = public.get_current_employee_id()
+    );
+$$;
+
 DO $$
 DECLARE
     policy_owner_name TEXT := 'maicare_rls_policy_owner_' || (
@@ -4990,6 +5031,8 @@ BEGIN
     EXECUTE format('ALTER FUNCTION public.select_public_intake_date(TEXT, TIMESTAMPTZ) OWNER TO %I', policy_owner_name);
     EXECUTE format('ALTER FUNCTION public.protect_intake_provenance() OWNER TO %I', policy_owner_name);
     EXECUTE format('ALTER FUNCTION public.validate_registration_document_change() OWNER TO %I', policy_owner_name);
+    EXECUTE format('ALTER FUNCTION public.can_participate_in_event(UUID) OWNER TO %I', policy_owner_name);
+    EXECUTE format('ALTER FUNCTION public.can_organize_event(UUID) OWNER TO %I', policy_owner_name);
     EXECUTE format('ALTER FUNCTION public.set_group_f_ownership() OWNER TO %I', policy_owner_name);
     EXECUTE format('ALTER FUNCTION public.contract_audit_trigger_func() OWNER TO %I', policy_owner_name);
     EXECUTE format('ALTER FUNCTION public.invoice_audit_trigger_func() OWNER TO %I', policy_owner_name);
@@ -5007,6 +5050,7 @@ BEGIN
     EXECUTE format('GRANT UPDATE ON public.registration_form, public.registration_upload_sessions TO %I', policy_owner_name);
     EXECUTE format('GRANT SELECT, INSERT, UPDATE, DELETE ON public.rls_registration_submission_context TO %I', policy_owner_name);
     EXECUTE format('GRANT SELECT ON public.invoice_payment_history, public.invoice_line, public.invoice_run, public.calendar_event_attendees TO %I', policy_owner_name);
+    EXECUTE format('GRANT SELECT ON public.calendar_events TO %I', policy_owner_name);
     EXECUTE format('GRANT UPDATE ON public.invoice TO %I', policy_owner_name);
     EXECUTE format('GRANT SELECT, INSERT, UPDATE ON public.invoice_number_counter TO %I', policy_owner_name);
     EXECUTE format('GRANT INSERT ON public.contract_audit, public.invoice_audit TO %I', policy_owner_name);
@@ -5016,6 +5060,8 @@ BEGIN
     EXECUTE format('GRANT EXECUTE ON FUNCTION public.get_permission_scope(TEXT) TO %I', policy_owner_name);
     EXECUTE format('GRANT EXECUTE ON FUNCTION public.can_access_client(UUID, TEXT) TO %I', policy_owner_name);
     EXECUTE format('GRANT EXECUTE ON FUNCTION public.can_read_created_client(UUID) TO %I', policy_owner_name);
+    EXECUTE format('GRANT EXECUTE ON FUNCTION public.can_participate_in_event(UUID) TO %I', policy_owner_name);
+    EXECUTE format('GRANT EXECUTE ON FUNCTION public.can_organize_event(UUID) TO %I', policy_owner_name);
     EXECUTE format('REVOKE %I FROM %I', policy_owner_name, current_user);
 END;
 $$;
@@ -5047,6 +5093,8 @@ GRANT EXECUTE ON FUNCTION public.can_read_public_submitted_registration(UUID) TO
 GRANT EXECUTE ON FUNCTION public.consume_public_registration_submission(UUID) TO CURRENT_USER;
 GRANT EXECUTE ON FUNCTION public.get_public_intake_options(TEXT) TO CURRENT_USER;
 GRANT EXECUTE ON FUNCTION public.select_public_intake_date(TEXT, TIMESTAMPTZ) TO CURRENT_USER;
+GRANT EXECUTE ON FUNCTION public.can_participate_in_event(UUID) TO CURRENT_USER;
+GRANT EXECUTE ON FUNCTION public.can_organize_event(UUID) TO CURRENT_USER;
 
 REVOKE ALL ON FUNCTION public.get_current_user_id() FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.get_current_employee_id() FROM PUBLIC;
@@ -5056,6 +5104,8 @@ REVOKE ALL ON FUNCTION public.is_assigned_to_client(UUID) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.can_access_client(UUID, TEXT) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.begin_client_creation() FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.can_read_created_client(UUID) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.can_participate_in_event(UUID) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.can_organize_event(UUID) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.begin_progress_report_creation(UUID) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.can_read_created_progress_report(UUID) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.begin_ai_report_creation(UUID) FROM PUBLIC;
@@ -5802,12 +5852,120 @@ BEGIN
 END;
 $$;
 
--- Apply legacy RLS to related tables until they are converted in Phase 9.
-SELECT apply_client_rls('client_status_history');
-SELECT apply_client_rls('client_location_transfer');
-	SELECT apply_client_rls('assignment');
-	SELECT apply_client_rls('calendar_event_attendees');
-SELECT apply_client_rls('appointment_card');
+-- Phase 9 Group H: convert the remaining legacy client-scoped tables.
+
+-- Status history is an immutable audit trail written only by status
+-- transitions; no update or delete path exists.
+ALTER TABLE public.client_status_history ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.client_status_history FORCE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS coordinator_select ON public.client_status_history;
+DROP POLICY IF EXISTS coordinator_insert ON public.client_status_history;
+DROP POLICY IF EXISTS coordinator_update ON public.client_status_history;
+DROP POLICY IF EXISTS coordinator_delete ON public.client_status_history;
+CREATE POLICY client_status_history_select ON public.client_status_history FOR SELECT
+    USING (public.can_access_client(client_id, 'CLIENT.VIEW'));
+CREATE POLICY client_status_history_insert ON public.client_status_history FOR INSERT
+    WITH CHECK (public.can_access_client(client_id, 'CLIENT.STATUS.UPDATE'));
+
+-- Location transfers follow the matching client operation scope; approval runs
+-- by transfer id, so the UPDATE policy evaluates the owning client row.
+ALTER TABLE public.client_location_transfer ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.client_location_transfer FORCE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS coordinator_select ON public.client_location_transfer;
+DROP POLICY IF EXISTS coordinator_insert ON public.client_location_transfer;
+DROP POLICY IF EXISTS coordinator_update ON public.client_location_transfer;
+DROP POLICY IF EXISTS coordinator_delete ON public.client_location_transfer;
+CREATE POLICY client_location_transfer_select ON public.client_location_transfer FOR SELECT
+    USING (public.can_access_client(client_id, 'CLIENT.VIEW'));
+CREATE POLICY client_location_transfer_insert ON public.client_location_transfer FOR INSERT
+    WITH CHECK (public.can_access_client(client_id, 'CLIENT.UPDATE'));
+CREATE POLICY client_location_transfer_update ON public.client_location_transfer FOR UPDATE
+    USING (public.can_access_client(client_id, 'CLIENT.UPDATE'))
+    WITH CHECK (public.can_access_client(client_id, 'CLIENT.UPDATE'));
+
+-- The legacy assignment table has no application routes; it mirrors the
+-- assigned_employee rules so it cannot become an access bypass if revived.
+ALTER TABLE public.assignment ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.assignment FORCE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS coordinator_select ON public.assignment;
+DROP POLICY IF EXISTS coordinator_insert ON public.assignment;
+DROP POLICY IF EXISTS coordinator_update ON public.assignment;
+DROP POLICY IF EXISTS coordinator_delete ON public.assignment;
+CREATE POLICY assignment_select ON public.assignment FOR SELECT
+    USING (public.can_access_client(client_id, 'CLIENT.INVOLVED_EMPLOYEE.VIEW'));
+CREATE POLICY assignment_insert ON public.assignment FOR INSERT
+    WITH CHECK (
+        public.has_permission('CLIENT.INVOLVED_EMPLOYEE.CREATE')
+        AND public.get_permission_scope('CLIENT.INVOLVED_EMPLOYEE.CREATE') = 'all'
+    );
+CREATE POLICY assignment_update ON public.assignment FOR UPDATE
+    USING (
+        public.has_permission('CLIENT.INVOLVED_EMPLOYEE.UPDATE')
+        AND public.get_permission_scope('CLIENT.INVOLVED_EMPLOYEE.UPDATE') = 'all'
+    )
+    WITH CHECK (
+        public.has_permission('CLIENT.INVOLVED_EMPLOYEE.UPDATE')
+        AND public.get_permission_scope('CLIENT.INVOLVED_EMPLOYEE.UPDATE') = 'all'
+    );
+CREATE POLICY assignment_delete ON public.assignment FOR DELETE
+    USING (
+        public.has_permission('CLIENT.INVOLVED_EMPLOYEE.DELETE')
+        AND public.get_permission_scope('CLIENT.INVOLVED_EMPLOYEE.DELETE') = 'all'
+    );
+
+-- Attendee rows decide who can see an event, so event participants keep their
+-- rows visible through a policy-owner helper instead of recursive policies.
+-- Client attendees additionally require client reach; CONTRACT.VIEW covers the
+-- invoice-generation appointment reads for that client. Only organizers may add
+-- attendees, because adding a row grants event visibility to others; deletion
+-- only revokes access and stays open to participants so event edits and
+-- cascaded event deletion cannot silently strand rows the actor cannot reach.
+ALTER TABLE public.calendar_event_attendees ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.calendar_event_attendees FORCE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS coordinator_select ON public.calendar_event_attendees;
+DROP POLICY IF EXISTS coordinator_insert ON public.calendar_event_attendees;
+DROP POLICY IF EXISTS coordinator_update ON public.calendar_event_attendees;
+DROP POLICY IF EXISTS coordinator_delete ON public.calendar_event_attendees;
+CREATE POLICY calendar_event_attendees_select ON public.calendar_event_attendees FOR SELECT
+    USING (
+        public.can_participate_in_event(event_id)
+        OR (
+            client_id IS NOT NULL
+            AND (
+                public.can_access_client(client_id, 'CLIENT.VIEW')
+                OR public.can_access_client(client_id, 'CONTRACT.VIEW')
+            )
+        )
+    );
+CREATE POLICY calendar_event_attendees_insert ON public.calendar_event_attendees FOR INSERT
+    WITH CHECK (
+        public.can_organize_event(event_id)
+        AND (
+            client_id IS NULL
+            OR public.can_access_client(client_id, 'CLIENT.VIEW')
+            OR public.can_access_client(client_id, 'CONTRACT.VIEW')
+        )
+    );
+CREATE POLICY calendar_event_attendees_delete ON public.calendar_event_attendees FOR DELETE
+    USING (public.can_participate_in_event(event_id));
+
+-- Appointment cards are one-per-client client data with their own permission
+-- family; the PUT route upserts, so inserts require update reach.
+ALTER TABLE public.appointment_card ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.appointment_card FORCE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS coordinator_select ON public.appointment_card;
+DROP POLICY IF EXISTS coordinator_insert ON public.appointment_card;
+DROP POLICY IF EXISTS coordinator_update ON public.appointment_card;
+DROP POLICY IF EXISTS coordinator_delete ON public.appointment_card;
+CREATE POLICY appointment_card_select ON public.appointment_card FOR SELECT
+    USING (public.can_access_client(client_id, 'APPOINTMENT_CARD.VIEW'));
+CREATE POLICY appointment_card_insert ON public.appointment_card FOR INSERT
+    WITH CHECK (public.can_access_client(client_id, 'APPOINTMENT_CARD.UPDATE'));
+CREATE POLICY appointment_card_update ON public.appointment_card FOR UPDATE
+    USING (public.can_access_client(client_id, 'APPOINTMENT_CARD.UPDATE'))
+    WITH CHECK (public.can_access_client(client_id, 'APPOINTMENT_CARD.UPDATE'));
+CREATE POLICY appointment_card_delete ON public.appointment_card FOR DELETE
+    USING (public.can_access_client(client_id, 'APPOINTMENT_CARD.DELETE'));
 
 -- Medication orders have direct client_id
 

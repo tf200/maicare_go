@@ -119,9 +119,9 @@ func RegisterClientRoutes(
 		clientsGroup.GET("/:id/ai_progress_reports", auth, requirePermission("CLIENT.AI_PROGRESS_REPORT.VIEW"), handler.ListAiGeneratedReports)
 
 		// Appointment Cards
-		clientsGroup.GET("/:id/appointment_cards", auth, requirePermission("APPOINTMENT_CARD.VIEW"), handler.GetAppointmentCard)
-		clientsGroup.PUT("/:id/appointment_cards", auth, requirePermission("APPOINTMENT_CARD.UPDATE"), handler.UpdateAppointmentCard)
-		clientsGroup.POST("/:id/appointment_cards/generate_document", auth, requirePermission("APPOINTMENT_CARD.GENERATE_DOCUMENT"), handler.GenerateAppointmentCardDocument)
+		clientsGroup.GET("/:id/appointment_cards", auth, requirePermission(domain.PermClientView.String()), requirePermission(domain.PermAppointmentCardView.String()), handler.GetAppointmentCard)
+		clientsGroup.PUT("/:id/appointment_cards", auth, requirePermission(domain.PermAppointmentCardUpdate.String()), handler.UpdateAppointmentCard)
+		clientsGroup.POST("/:id/appointment_cards/generate_document", auth, requirePermission(domain.PermClientView.String()), requirePermission(domain.PermAppointmentCardView.String()), requirePermission(domain.PermAppointmentCardGenerateDocument.String()), handler.GenerateAppointmentCardDocument)
 	}
 }
 

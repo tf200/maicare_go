@@ -690,7 +690,7 @@ Acceptance criteria:
 
 ## Phase 9: Convert Related Tables In Controlled Groups
 
-Status: `[~]` In progress; Groups A, B, and C completed
+Status: `[x]` Completed and verified on 2026-08-22; Groups A through H converted
 
 Goal: apply permission-specific RLS to all client-owned information without one high-risk migration.
 
@@ -835,12 +835,31 @@ Before promotion, registration and intake records use their unscoped `REGISTRATI
 
 Anonymous registration submission uses a transaction-bound upload-session context that validates and serializes the session's attachments, authorizes exactly one returned registration row, and consumes the session atomically. Public scheduling uses narrow security-definer operations that expose only the proposed options, accept only an offered date, and invalidate the token atomically.
 
+### Group H: Remaining Legacy Tables
+
+Likely tables:
+
+- `client_status_history`
+- `client_location_transfer`
+- `assignment` (legacy)
+- `calendar_event_attendees`
+- `appointment_card`
+
+- [x] Keep status history immutable with transition-only inserts.
+- [x] Authorize location-transfer approval through the owning client row.
+- [x] Secure the unused legacy assignment table against revival.
+- [x] Authorize attendees through event participation without recursive policies.
+- [x] Restrict attendee additions to organizers while keeping removal open to participants.
+- [x] Bind appointment cards to their own permission family with upsert-aware inserts.
+
+Status history is an immutable audit trail: reads require `CLIENT.VIEW`, inserts require transition-context `CLIENT.STATUS.UPDATE`, and no update or delete policy exists. Location transfers follow the matching client operation scope, so approval by transfer id evaluates the owning client row. Event participation is evaluated through a policy-owner security-definer helper; participants keep their employee and email attendee rows visible while client attendee rows require scoped `CLIENT.VIEW` or billing `CONTRACT.VIEW` reach. Only organizers may add attendees because that grants visibility to others; any participant may remove rows so event edits and cascaded event deletion cannot strand unreachable rows. The unused legacy `assignment` table mirrors `assigned_employee` rules so it cannot become an access bypass if revived. Appointment cards use their permission family with update-reach upsert inserts, and card reads compose `CLIENT.VIEW` and `APPOINTMENT_CARD.VIEW`.
+
 Acceptance criteria for Phase 9:
 
-- [ ] Every RLS-protected table has a documented ownership and permission mapping.
-- [ ] No policy uses hard-coded application role names.
-- [ ] Sensitive categories require their own permissions.
-- [ ] Nested-table policies are tested for correctness and performance.
+- [x] Every RLS-protected table has a documented ownership and permission mapping.
+- [x] No policy uses hard-coded application role names.
+- [x] Sensitive categories require their own permissions.
+- [x] Nested-table policies are tested for correctness and performance.
 
 ## Phase 10: PostgreSQL Runtime Hardening
 
@@ -1022,6 +1041,11 @@ Complete this tracker before converting each table. Add rows as tables are disco
 | `intake_forms` | `registration_form_id`; `client_details.intake_form_id` after promotion | `INTAKE_FORM.VIEW`; plus scoped `CLIENT.VIEW` after promotion | `INTAKE_FORM.CREATE` with visible processed registration | `INTAKE_FORM.UPDATE`; plus scoped `CLIENT.UPDATE` after promotion, when source becomes immutable | `INTAKE_FORM.DELETE`; plus scoped `CLIENT.DELETE` after promotion, when source becomes immutable | Phase 9 Group G completed |
 | `intake_topic_assessments` | immutable `intake_form_id` | Parent `INTAKE_FORM.VIEW` | Parent `INTAKE_FORM.UPDATE` | Parent `INTAKE_FORM.UPDATE`; immutable after promotion | Parent `INTAKE_FORM.UPDATE`; immutable after promotion | Phase 9 Group G completed |
 | `collaboration_agreement`, `risk_assessment`, `consent_declaration`, `youth_care_intake`, `data_sharing_statement` | direct `client_id` | `CLIENT.VIEW` | `CLIENT.UPDATE` | `CLIENT.UPDATE` | `CLIENT.DELETE` | Phase 9 Group G completed; no active application mutation routes |
+| `client_status_history` | direct `client_id`; immutable audit trail | `CLIENT.VIEW` | `CLIENT.STATUS.UPDATE` transition context only | No operation or permission | No operation or permission | Phase 9 Group H completed |
+| `client_location_transfer` | direct `client_id` | `CLIENT.VIEW` | `CLIENT.UPDATE` | `CLIENT.UPDATE`; approval evaluates the owning client row by transfer id | No operation or permission | Phase 9 Group H completed |
+| `assignment` (legacy) | direct `client_id`; unused legacy table kept secured against revival | `CLIENT.INVOLVED_EMPLOYEE.VIEW` | `CLIENT.INVOLVED_EMPLOYEE.CREATE` (`all` only) | `CLIENT.INVOLVED_EMPLOYEE.UPDATE` (`all` only) | `CLIENT.INVOLVED_EMPLOYEE.DELETE` (`all` only) | Phase 9 Group H completed |
+| `calendar_event_attendees` | employee, client, or email target; event participation via policy-owner helper | Event participation; plus scoped `CLIENT.VIEW` or billing `CONTRACT.VIEW` for client attendee rows | Event participation plus client reach on client attendee rows | No operation or permission | Event participation plus client reach on client attendee rows | Phase 9 Group H completed |
+| `appointment_card` | direct `client_id`, one per client | `APPOINTMENT_CARD.VIEW` | `APPOINTMENT_CARD.UPDATE` upsert context | `APPOINTMENT_CARD.UPDATE` | `APPOINTMENT_CARD.DELETE` | Phase 9 Group H completed |
 
 ## Known Risks
 
@@ -1035,6 +1059,7 @@ Complete this tracker before converting each table. Add rows as tables are disco
 8. Background jobs can fail or bypass controls if no explicit service-actor model exists.
 9. Public registration and intake flows need separate treatment from authenticated client records.
 10. RLS does not replace auditing, route permissions, field-level response controls, encryption, session controls, or operational access reviews.
+11. `calendar_events` rows have no table-level RLS this phase; event content visibility relies on query-level organizer/participant filters while attendee linkage is policy-protected.
 
 ## Decision Log
 
@@ -1082,10 +1107,43 @@ Record finalized decisions here. Do not silently change an earlier decision; add
 | 2026-08-22 | Keep pre-client registration/intake permissions unscoped, then require the matching scoped client permission after promotion. | Pre-client records have no assignment target, while promoted records contain client data that must obey assigned/all reach. | Confirmed |
 | 2026-08-22 | Make promoted intake source records immutable. | Intake details and assessments are provenance for the created client; later edits or deletion would rewrite the basis of admission and generated goals. | Confirmed |
 | 2026-08-22 | Authorize anonymous registration and scheduling only through token-bound database operations. | A configured service actor must not turn public endpoints into a broad confused deputy, and attachment/date validation must remain atomic under concurrency. | Confirmed |
+| 2026-08-22 | Keep status history immutable with transition-only inserts requiring `CLIENT.STATUS.UPDATE`. | History is audit evidence of admission and discharge decisions; updates or deletes would let actors rewrite their own trail, and the scheduled system actor's role must include this all-scope permission in deployment. | Confirmed |
+| 2026-08-22 | Treat event participation as sufficient visibility for employee and email attendee rows, while client attendee rows additionally require scoped `CLIENT.VIEW` or billing `CONTRACT.VIEW`. | Participants already see the events they organize or attend; client attendance is client data that non-participants such as invoice generation may read through explicit billing reach. | Confirmed |
+| 2026-08-22 | Restrict attendee additions to event organizers while allowing any participant to remove rows. | Adding a row grants event visibility to other employees, so only organizers may grant it; deletion only revokes access and stays open to participants so event edits and cascaded event deletion cannot silently strand rows an actor cannot reach. | Confirmed |
+| 2026-08-22 | Evaluate attendee participation through a `SECURITY DEFINER` policy-owner helper instead of querying the table inside its own policies. | Self-referencing policies raise infinite-recursion errors in PostgreSQL, and the helper keeps participant checks fail-closed without recursive evaluation. | Confirmed |
+| 2026-08-22 | Let work-approval queue reads evaluate through attendee visibility instead of restoring legacy broad access. | Approval drives billing for attending clients, so effectively it requires `all` client reach; scoped reviewers see only entries for clients they may see rather than a hidden cross-client path. | Confirmed |
+| 2026-08-22 | Keep `calendar_events` visibility enforced by query-level participant filters this phase and defer table-level event RLS. | Events are not client-owned rows and their content gating already rests on organizer/participant filters; forcing event RLS is a separate schema-hardening effort beyond Phase 9 scope. | Confirmed |
+| 2026-08-22 | Secure the unused legacy `assignment` table with `assigned_employee` rules instead of dropping it. | Converting stays within the Phase 9 authorization scope while preventing an unsecured revival path; removal remains a later schema cleanup decision. | Confirmed |
+| 2026-08-22 | Require `APPOINTMENT_CARD.VIEW` alongside `GENERATE_DOCUMENT`, plus `CLIENT.VIEW` where card reads join client details. | Generation reads the card contents and the read query joins the client row, so those dependencies must be explicit like other composed route permissions. | Confirmed |
 
 ## Progress Log
 
 Add the newest entry first.
+
+### 2026-08-22 - Phase 9 Group H legacy tables completed
+
+Status: Completed and verified
+
+Changes:
+
+- Converted the remaining legacy coordinator policies on status history, location transfers, the unused legacy assignment table, calendar event attendees, and appointment cards to forced operation-specific RLS.
+- Kept client status history immutable with inserts bound to `CLIENT.STATUS.UPDATE` transition context; location transfers authorize approval through the owning client row by transfer id.
+- Mirrored `assigned_employee` rules on the unused legacy `assignment` table so it cannot become an access bypass if revived.
+- Authorized attendee visibility through a new `SECURITY DEFINER` policy-owner participation helper, keeping employee and email rows visible to event participants while requiring scoped `CLIENT.VIEW` or billing `CONTRACT.VIEW` reach on client attendee rows; restricted attendee additions to organizers and kept removal open to participants so edits and cascaded deletion cannot strand unreachable rows.
+- Bound appointment cards to their permission family with update-reach upsert inserts.
+- Composed `CLIENT.VIEW` and `APPOINTMENT_CARD.VIEW` on card reads and `GENERATE_DOCUMENT` on the document-generation route.
+
+Verification:
+
+- Applied, rolled back, and reapplied the initial migration on a clean PostgreSQL 17 database.
+- Tested through a temporary `NOSUPERUSER NOBYPASSRLS` non-owner runtime role.
+- Verified forced RLS, owned versus unowned visibility for every table, affected-row-checked write denials that RLS would otherwise silently reduce to zero-row updates (including status-history immutability), participant versus billing-context attendee reads, organizer-only attendee insertion with mere-participant denial, unreachable-client attendee denial, other-event mutation denial, missing-identity fail-closed behavior across all converted tables, and legacy all-scope mutation denial.
+- Passed dual security and correctness reviews; addressed attendee lateral-grant and silent-stale-row findings before commit.
+- Passed the complete Go test suite.
+
+Next action:
+
+- Mark the Phase 9 acceptance criteria complete and continue with Phase 10 deployment runtime-role separation.
 
 ### 2026-08-22 - Phase 9 Group G intake and registration completed
 
@@ -1112,7 +1170,7 @@ Verification:
 
 Next action:
 
-- Map and convert the remaining legacy Phase 9 policies for status history, location transfers, legacy assignments, calendar attendees, and appointment cards before marking the phase acceptance criteria complete.
+- Completed by Phase 9 Group H; all Phase 9 groups are now converted.
 
 ### 2026-08-22 - Phase 9 Group F contracts and invoices completed
 

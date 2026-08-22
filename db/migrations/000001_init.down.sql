@@ -118,6 +118,8 @@ DROP FUNCTION IF EXISTS get_public_intake_options(TEXT) CASCADE;
 DROP FUNCTION IF EXISTS select_public_intake_date(TEXT, TIMESTAMPTZ) CASCADE;
 DROP FUNCTION IF EXISTS protect_intake_provenance() CASCADE;
 DROP FUNCTION IF EXISTS validate_registration_document_change() CASCADE;
+DROP FUNCTION IF EXISTS can_participate_in_event(UUID) CASCADE;
+DROP FUNCTION IF EXISTS can_organize_event(UUID) CASCADE;
 DROP FUNCTION IF EXISTS validate_client_intake_provenance() CASCADE;
 DROP FUNCTION IF EXISTS can_access_invoice_mutation(UUID, TEXT) CASCADE;
 DROP FUNCTION IF EXISTS can_access_invoice_payment_operation(UUID) CASCADE;
