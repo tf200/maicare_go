@@ -17,7 +17,7 @@ SELECT COUNT(*) as total_count
 FROM incident i
 JOIN client_details c ON i.client_id = c.id
 WHERE (
-    $1::boolean IS NULL 
+    $1::boolean IS NULL
     OR i.is_confirmed = $1::boolean
 )
 AND (
@@ -29,7 +29,7 @@ AND (
 `
 
 type CountAllIncidentsParams struct {
-	IsConfirmed bool    `json:"is_confirmed"`
+	IsConfirmed *bool   `json:"is_confirmed"`
 	Search      *string `json:"search"`
 }
 
@@ -70,6 +70,7 @@ func (q *Queries) GetIncidentCounts(ctx context.Context) (GetIncidentCountsRow, 
 const listAllIncidents = `-- name: ListAllIncidents :many
 SELECT 
     i.id,
+    i.client_id,
     i.occurred_at,
     i.incident_type,
     i.severity_of_incident,
@@ -90,7 +91,7 @@ JOIN
     location l ON i.location_id = l.id
 WHERE 
     (
-        $3::boolean IS NULL 
+        $3::boolean IS NULL
         OR i.is_confirmed = $3::boolean
     )
     AND (
@@ -108,12 +109,13 @@ OFFSET $2
 type ListAllIncidentsParams struct {
 	Limit       int32   `json:"limit"`
 	Offset      int32   `json:"offset"`
-	IsConfirmed bool    `json:"is_confirmed"`
+	IsConfirmed *bool   `json:"is_confirmed"`
 	Search      *string `json:"search"`
 }
 
 type ListAllIncidentsRow struct {
 	ID                 uuid.UUID              `json:"id"`
+	ClientID           uuid.UUID              `json:"client_id"`
 	OccurredAt         pgtype.Timestamptz     `json:"occurred_at"`
 	IncidentType       IncidentTypeEnum       `json:"incident_type"`
 	SeverityOfIncident SeverityOfIncidentEnum `json:"severity_of_incident"`
@@ -142,6 +144,7 @@ func (q *Queries) ListAllIncidents(ctx context.Context, arg ListAllIncidentsPara
 		var i ListAllIncidentsRow
 		if err := rows.Scan(
 			&i.ID,
+			&i.ClientID,
 			&i.OccurredAt,
 			&i.IncidentType,
 			&i.SeverityOfIncident,

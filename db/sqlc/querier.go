@@ -36,14 +36,16 @@ type Querier interface {
 	CancelCalendarEvent(ctx context.Context, id uuid.UUID) error
 	CancelClientGoalByID(ctx context.Context, arg CancelClientGoalByIDParams) (ClientGoal, error)
 	CheckAllShiftsExist(ctx context.Context, arg CheckAllShiftsExistParams) (bool, error)
+	ClaimIncidentConfirmationEmail(ctx context.Context, incidentID uuid.UUID) (uuid.UUID, error)
 	CloneHandbookTemplateToDraft(ctx context.Context, arg CloneHandbookTemplateToDraftParams) (CloneHandbookTemplateToDraftRow, error)
 	CompleteEmployeeHandbookStep(ctx context.Context, arg CompleteEmployeeHandbookStepParams) (EmployeeHandbookStepProgress, error)
-	ConfirmIncident(ctx context.Context, arg ConfirmIncidentParams) (int64, error)
+	ConfirmIncident(ctx context.Context, incidentID uuid.UUID) (int64, error)
 	ConsumeRegistrationUploadSession(ctx context.Context, id uuid.UUID) error
 	ContractEndCount(ctx context.Context) (int64, error)
 	CountActiveGoalsByClientID(ctx context.Context, clientID uuid.UUID) (int64, error)
 	CountAllIncidents(ctx context.Context, arg CountAllIncidentsParams) (int64, error)
 	CountBilledCalendarEventsByInvoice(ctx context.Context, invoiceID uuid.UUID) (int64, error)
+	CountClientIncidents(ctx context.Context, clientID uuid.UUID) (int64, error)
 	CountEligibleEmployeesForHandbookAssignment(ctx context.Context, arg CountEligibleEmployeesForHandbookAssignmentParams) (int64, error)
 	CountEmployeeHandbookAssignments(ctx context.Context, arg CountEmployeeHandbookAssignmentsParams) (int64, error)
 	CountEmployeeProfile(ctx context.Context, arg CountEmployeeProfileParams) (int64, error)
@@ -134,7 +136,7 @@ type Querier interface {
 	DeleteEmployeeEducation(ctx context.Context, id uuid.UUID) (EmployeeEducation, error)
 	DeleteEmployeeExperience(ctx context.Context, id uuid.UUID) (EmployeeExperience, error)
 	DeleteHandbookStepByID(ctx context.Context, id uuid.UUID) error
-	DeleteIncident(ctx context.Context, id uuid.UUID) error
+	DeleteIncident(ctx context.Context, id uuid.UUID) (uuid.UUID, error)
 	DeleteIntakeForm(ctx context.Context, id uuid.UUID) error
 	DeleteIntakeTopicAssessmentsByIntakeForm(ctx context.Context, intakeFormID uuid.UUID) error
 	DeleteIntakeTopicsAssessment(ctx context.Context, id uuid.UUID) error
@@ -394,19 +396,21 @@ type Querier interface {
 	LockShiftSwapRequestForAdminDecision(ctx context.Context, id uuid.UUID) (ShiftSwapRequest, error)
 	MarkEmployeeHandbookCompleted(ctx context.Context, id uuid.UUID) (EmployeeHandbook, error)
 	MarkEmployeeHandbookStarted(ctx context.Context, id uuid.UUID) (EmployeeHandbook, error)
-	MarkIncidentConfirmationEmailSent(ctx context.Context, id uuid.UUID) (int64, error)
+	MarkIncidentConfirmationEmailSent(ctx context.Context, arg MarkIncidentConfirmationEmailSentParams) (int64, error)
 	MarkNotificationAsRead(ctx context.Context, id uuid.UUID) (Notification, error)
 	MarkShiftSwapConfirmed(ctx context.Context, arg MarkShiftSwapConfirmedParams) (ShiftSwapRequest, error)
 	PublishHandbookTemplate(ctx context.Context, arg PublishHandbookTemplateParams) (HandbookTemplate, error)
 	PutClientInCare(ctx context.Context, arg PutClientInCareParams) (ClientDetail, error)
 	PutClientOutOfCare(ctx context.Context, arg PutClientOutOfCareParams) (ClientDetail, error)
 	RegistrationUploadSessionHasAttachments(ctx context.Context, arg RegistrationUploadSessionHasAttachmentsParams) (bool, error)
+	ReleaseIncidentConfirmationEmail(ctx context.Context, arg ReleaseIncidentConfirmationEmailParams) (int64, error)
 	// Removes *all* permissions from the given role.
 	RemovePermissionsFromRole(ctx context.Context, roleID uuid.UUID) error
 	ReplaceRegistrationFormDocument(ctx context.Context, arg ReplaceRegistrationFormDocumentParams) (RegistrationForm, error)
 	SearchEmployeesByNameOrEmail(ctx context.Context, search *string) ([]SearchEmployeesByNameOrEmailRow, error)
 	SeedClientDiagnosis(ctx context.Context, arg SeedClientDiagnosisParams) (ClientDiagnosis, error)
 	SeedClientMedicationOrder(ctx context.Context, arg SeedClientMedicationOrderParams) (ClientMedicationOrder, error)
+	SeedIncident(ctx context.Context, arg SeedIncidentParams) (uuid.UUID, error)
 	SetAttachmentAsUsedorUnused(ctx context.Context, arg SetAttachmentAsUsedorUnusedParams) (AttachmentFile, error)
 	SetAttachmentsAsUsedorUnusedByUUIDs(ctx context.Context, arg SetAttachmentsAsUsedorUnusedByUUIDsParams) ([]AttachmentFile, error)
 	SetEmployeeProfilePicture(ctx context.Context, arg SetEmployeeProfilePictureParams) (CustomUser, error)

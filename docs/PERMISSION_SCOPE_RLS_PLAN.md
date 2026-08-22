@@ -772,10 +772,10 @@ Likely tables and files:
 
 Permissions include `CLIENT.INCIDENT.*` and any top-level incident permissions whose semantics must be reconciled.
 
-- [ ] Resolve duplicate or overlapping incident permission meanings.
-- [ ] Map operations.
-- [ ] Implement policies.
-- [ ] Test confirmation and file access.
+- [x] Resolve duplicate or overlapping incident permission meanings.
+- [x] Map operations.
+- [x] Implement policies.
+- [x] Test confirmation and file access.
 
 ### Group E: Documents, Care Plans, Goals, And Evaluations
 
@@ -989,7 +989,7 @@ Complete this tracker before converting each table. Add rows as tables are disco
 | `client_medication_order` | `client_id` | `CLIENT.MEDICATION.VIEW` | `CLIENT.MEDICATION.CREATE` | `CLIENT.MEDICATION.UPDATE` | `CLIENT.MEDICATION.DELETE` | Phase 9 Group C completed |
 | `client_emergency_contact` | `client_id` | `CLIENT.EMERGENCY_CONTACT.VIEW` | `CLIENT.EMERGENCY_CONTACT.CREATE` | `CLIENT.EMERGENCY_CONTACT.UPDATE` | `CLIENT.EMERGENCY_CONTACT.DELETE` | Phase 9 Group A completed |
 | `assigned_employee` | `client_id` | `CLIENT.INVOLVED_EMPLOYEE.VIEW` | `CLIENT.INVOLVED_EMPLOYEE.CREATE` (`all` only) | `CLIENT.INVOLVED_EMPLOYEE.UPDATE` (`all` only) | `CLIENT.INVOLVED_EMPLOYEE.DELETE` (`all` only) | Phase 9 Group A completed |
-| `incident` | `client_id` | `CLIENT.INCIDENT.VIEW` | `CLIENT.INCIDENT.CREATE` | `CLIENT.INCIDENT.UPDATE` | `CLIENT.INCIDENT.DELETE` | Pending review |
+| `incident` | `client_id` | `CLIENT.INCIDENT.VIEW` | `CLIENT.INCIDENT.CREATE` | `CLIENT.INCIDENT.UPDATE` | `CLIENT.INCIDENT.DELETE` | Completed; confirmation uses `CLIENT.INCIDENT.CONFIRM` through a narrow DB function |
 | `ai_generated_reports` | `client_id` | `CLIENT.AI_PROGRESS_REPORT.VIEW` | `CLIENT.AI_PROGRESS_REPORT.CONFIRM` | No operation or permission | No operation or permission | Phase 9 Group B completed |
 | `client_documents` | `client_id` | `CLIENT.DOCUMENTS.VIEW` | `CLIENT.DOCUMENTS.UPLOAD` | To decide | `CLIENT.DOCUMENTS.DELETE` | Pending review |
 
@@ -1034,10 +1034,42 @@ Record finalized decisions here. Do not silently change an earlier decision; add
 | 2026-08-20 | Derive medical creator/updater attribution from the database transaction actor. | Request parameters and direct repository callers must not be able to forge medical provenance. | Confirmed |
 | 2026-08-20 | Enforce medication diagnosis ownership with a composite `(diagnosis_id, client_id)` foreign key. | A medication order must not reference a diagnosis belonging to another client. | Confirmed |
 | 2026-08-20 | Restrict deletion of diagnoses referenced by medication orders. | Referential cascades must not mutate medication data without medication permission and audit coverage. | Confirmed |
+| 2026-08-22 | Remove the unused top-level `INCIDENT.VIEW` permission and standardize on scoped `CLIENT.INCIDENT.*`. | All incident routes and role grants already use the client-scoped permission family; retaining an unused duplicate leaves its meaning ambiguous. | Confirmed |
+| 2026-08-22 | Require matching `CLIENT.VIEW`, `CLIENT.INCIDENT.VIEW`, and `CLIENT.INCIDENT.CONFIRM` scope for confirmation. | Confirmation delegates a protected report read to the email worker, so the initiating actor must be able to load the same incident and client identity. | Confirmed |
+| 2026-08-22 | Treat incident UPDATE as requiring matching incident VIEW visibility. | PostgreSQL applies SELECT visibility to mutation queries that read existing columns and return rows; the route makes this dependency explicit. | Confirmed |
+| 2026-08-22 | Treat incident DELETE as requiring matching incident VIEW visibility. | Returning the owning client for accurate audit attribution applies incident SELECT visibility to the deletion; the route makes this dependency explicit. | Confirmed |
 
 ## Progress Log
 
 Add the newest entry first.
+
+### 2026-08-22 - Phase 9 Group D incident RLS completed
+
+Status: Completed and verified
+
+Changes:
+
+- Replaced legacy role-name incident policies with forced operation-specific `CLIENT.INCIDENT.*` permission-and-scope RLS.
+- Removed the unused top-level `INCIDENT.VIEW` permission and retained the scoped client incident permission family as canonical.
+- Preserved CREATE without broad VIEW through an actor-bound incident creation context and database-enforced reporter attribution.
+- Isolated confirmation and confirmation-email marking behind narrow security-definer functions instead of granting broad UPDATE authority.
+- Added an expiring database claim so concurrent confirmation tasks cannot deliver duplicate incident reports.
+- Required matching client VIEW, incident VIEW, and incident CONFIRM scope so delegated confirmation workers can reload only authorized reports.
+- Corrected nullable confirmation filters and preserved pagination totals for empty pages.
+- Made zero-row incident deletion return not-found instead of false success.
+- Restricted actorless incident seed writes to an explicitly checked superuser/`BYPASSRLS` bootstrap role.
+- Added best-effort incident access, export, confirmation, and mutation audits without narrative or clinical payloads.
+
+Verification:
+
+- Applied and rolled back the initial migration on a clean PostgreSQL 17 database.
+- Tested through a temporary `NOSUPERUSER NOBYPASSRLS` non-owner runtime role.
+- Verified assigned/all visibility, forced policy state, scoped aggregates, production CREATE, unforgeable creation context, reporter attribution, update/delete separation, confirmation isolation, and PDF source visibility.
+- Verified incident audit classification and sensitive-payload exclusion.
+
+Next action:
+
+- Convert Phase 9 Group E documents, care plans, goals, and evaluations.
 
 ### 2026-08-20 - Phase 9 Group C medical RLS completed
 

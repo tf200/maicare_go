@@ -183,7 +183,7 @@ type confirmIncidentResponse struct {
 
 type listAllIncidentsRequest struct {
 	httpapi.PageRequest
-	IsConfirmed bool    `form:"is_confirmed" json:"is_confirmed"`
+	IsConfirmed *bool   `form:"is_confirmed" json:"is_confirmed"`
 	Search      *string `form:"search" json:"search" binding:"omitempty,max=120"`
 }
 

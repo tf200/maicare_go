@@ -141,13 +141,43 @@ func (processor *AsynqServer) ProcessIncidentConfirmedEmailTask(ctx context.Cont
 		log.Printf("Incident %s confirmation email already sent at %s", incident.ID.String(), incident.ConfirmationEmailSentAt.Time.Format(time.RFC3339))
 		return nil
 	}
+	var claimToken uuid.UUID
+	err = processor.store.ExecActorTx(ctx, func(q *db.Queries) error {
+		var err error
+		claimToken, err = q.ClaimIncidentConfirmationEmail(ctx, incident.ID)
+		return err
+	})
+	if err != nil {
+		return fmt.Errorf("failed to claim incident confirmation email: %w", err)
+	}
+	if claimToken == uuid.Nil {
+		return nil
+	}
+	releaseClaim := func() {
+		if releaseErr := processor.store.ExecActorTx(ctx, func(q *db.Queries) error {
+			_, err := q.ReleaseIncidentConfirmationEmail(ctx, db.ReleaseIncidentConfirmationEmailParams{IncidentID: incident.ID, ClaimToken: claimToken})
+			return err
+		}); releaseErr != nil {
+			log.Printf("Failed to release incident confirmation email claim for %s: %v", incident.ID.String(), releaseErr)
+		}
+	}
 
 	if len(recipients) == 0 {
 		log.Printf("No incident report recipients for client %s; marking as sent", incident.ClientID.String())
-		_ = processor.store.ExecActorTx(ctx, func(q *db.Queries) error {
-			_, err := q.MarkIncidentConfirmationEmailSent(ctx, incident.ID)
+		var marked int64
+		err = processor.store.ExecActorTx(ctx, func(q *db.Queries) error {
+			var err error
+			marked, err = q.MarkIncidentConfirmationEmailSent(ctx, db.MarkIncidentConfirmationEmailSentParams{IncidentID: incident.ID, ClaimToken: claimToken})
 			return err
 		})
+		if err != nil {
+			releaseClaim()
+			return fmt.Errorf("failed to mark recipientless incident confirmation complete: %w", err)
+		}
+		if marked != 1 {
+			releaseClaim()
+			return fmt.Errorf("failed to mark recipientless incident confirmation complete: affected=%d", marked)
+		}
 		return nil
 	}
 
@@ -200,6 +230,7 @@ func (processor *AsynqServer) ProcessIncidentConfirmedEmailTask(ctx context.Cont
 
 	pdfBytes, err := processor.pdfSvc.GenerateIncidentPDF(ctx, incidentData)
 	if err != nil {
+		releaseClaim()
 		log.Printf("Failed to generate incident PDF for %s: %v", incident.ID.String(), err)
 		return fmt.Errorf("failed to generate incident pdf: %w", err)
 	}
@@ -218,17 +249,25 @@ func (processor *AsynqServer) ProcessIncidentConfirmedEmailTask(ctx context.Cont
 		DocumentLink: "",
 	}, attachmentName, pdfBytes)
 	if err != nil {
+		releaseClaim()
 		log.Printf("Failed to send confirmed incident email to %v: %v", recipients, err)
 		return fmt.Errorf("failed to send incident email: %w", err)
 	}
 
+	var marked int64
 	err = processor.store.ExecActorTx(ctx, func(q *db.Queries) error {
-		_, err := q.MarkIncidentConfirmationEmailSent(ctx, incident.ID)
+		var err error
+		marked, err = q.MarkIncidentConfirmationEmailSent(ctx, db.MarkIncidentConfirmationEmailSentParams{IncidentID: incident.ID, ClaimToken: claimToken})
 		return err
 	})
 	if err != nil {
+		releaseClaim()
 		log.Printf("Failed to mark incident confirmation email sent for %s: %v", incident.ID.String(), err)
 		return fmt.Errorf("failed to mark email sent: %w", err)
+	}
+	if marked != 1 {
+		releaseClaim()
+		return fmt.Errorf("failed to mark email sent: affected=%d", marked)
 	}
 
 	return nil

@@ -16,6 +16,13 @@ func (s *Seeder) SeedIncidentsForClients(ctx context.Context, maxIncidentsPerCli
 	if maxIncidentsPerClient <= 0 {
 		return nil
 	}
+	canBypassRLS, err := s.store.CurrentRoleBypassesRLS(ctx)
+	if err != nil {
+		return fmt.Errorf("check incident bootstrap database role: %w", err)
+	}
+	if !canBypassRLS {
+		return fmt.Errorf("incident bootstrap requires a database role with superuser or BYPASSRLS capability")
+	}
 	if len(s.data.ClientIDs) == 0 {
 		return fmt.Errorf("no clients available; seed waiting-list or in-care clients first")
 	}
@@ -54,11 +61,11 @@ func (s *Seeder) seedIncidentsForClient(ctx context.Context, clientID uuid.UUID,
 				return err
 			}
 
-			created, err := q.CreateIncident(ctx, randomIncidentParams(client, employeeID, locationID))
+			createdID, err := q.SeedIncident(ctx, randomIncidentParams(client, employeeID, locationID))
 			if err != nil {
 				return fmt.Errorf("create incident: %w", err)
 			}
-			createdIncidentIDs = append(createdIncidentIDs, created.ID)
+			createdIncidentIDs = append(createdIncidentIDs, createdID)
 		}
 
 		return nil
@@ -93,7 +100,7 @@ func (s *Seeder) resolveIncidentLocation(clientLocationID *uuid.UUID) (uuid.UUID
 	return oneOf(s.data.LocationIDs), nil
 }
 
-func randomIncidentParams(client db.GetClientDetailsRow, employeeID uuid.UUID, locationID uuid.UUID) db.CreateIncidentParams {
+func randomIncidentParams(client db.GetClientDetailsRow, employeeID uuid.UUID, locationID uuid.UUID) db.SeedIncidentParams {
 	reporterInvolvement := oneOf([]db.IncidentReporterInvolvementEnum{
 		db.IncidentReporterInvolvementEnumDirectlyInvolved,
 		db.IncidentReporterInvolvementEnumWitness,
@@ -182,7 +189,7 @@ func randomIncidentParams(client db.GetClientDetailsRow, employeeID uuid.UUID, l
 
 	emails := randomIncidentEmails(client)
 
-	return db.CreateIncidentParams{
+	return db.SeedIncidentParams{
 		EmployeeID:              employeeID,
 		LocationID:              locationID,
 		ReporterInvolvement:     reporterInvolvement,

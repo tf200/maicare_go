@@ -12,32 +12,48 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const confirmIncident = `-- name: ConfirmIncident :execrows
-UPDATE incident
-SET
-    is_confirmed = TRUE,
-    confirmed_at = NOW(),
-    confirmed_by = $2
-WHERE id = $1
-  AND is_confirmed = FALSE
+const claimIncidentConfirmationEmail = `-- name: ClaimIncidentConfirmationEmail :one
+SELECT COALESCE(public.claim_incident_confirmation_email($1), '00000000-0000-0000-0000-000000000000'::UUID)::UUID AS claim_token
 `
 
-type ConfirmIncidentParams struct {
-	ID          uuid.UUID  `json:"id"`
-	ConfirmedBy *uuid.UUID `json:"confirmed_by"`
+func (q *Queries) ClaimIncidentConfirmationEmail(ctx context.Context, incidentID uuid.UUID) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, claimIncidentConfirmationEmail, incidentID)
+	var claim_token uuid.UUID
+	err := row.Scan(&claim_token)
+	return claim_token, err
 }
 
-func (q *Queries) ConfirmIncident(ctx context.Context, arg ConfirmIncidentParams) (int64, error) {
-	result, err := q.db.Exec(ctx, confirmIncident, arg.ID, arg.ConfirmedBy)
-	if err != nil {
-		return 0, err
-	}
-	return result.RowsAffected(), nil
+const confirmIncident = `-- name: ConfirmIncident :one
+SELECT public.confirm_incident($1)::BIGINT AS affected
+`
+
+func (q *Queries) ConfirmIncident(ctx context.Context, incidentID uuid.UUID) (int64, error) {
+	row := q.db.QueryRow(ctx, confirmIncident, incidentID)
+	var affected int64
+	err := row.Scan(&affected)
+	return affected, err
+}
+
+const countClientIncidents = `-- name: CountClientIncidents :one
+SELECT COUNT(*)::BIGINT
+FROM incident
+WHERE client_id = $1
+  AND public.can_access_client(client_id, 'CLIENT.VIEW')
+`
+
+func (q *Queries) CountClientIncidents(ctx context.Context, clientID uuid.UUID) (int64, error) {
+	row := q.db.QueryRow(ctx, countClientIncidents, clientID)
+	var column_1 int64
+	err := row.Scan(&column_1)
+	return column_1, err
 }
 
 const createIncident = `-- name: CreateIncident :one
-WITH inserted_incident AS (
+WITH new_incident AS (
+    SELECT public.begin_incident_creation($23) AS id
+), inserted_incident AS (
     INSERT INTO incident (
+        id,
         employee_id,
         location_id,
         reporter_involvement,
@@ -62,14 +78,17 @@ WITH inserted_incident AS (
         additional_details,
         client_id,
         emails
-    ) VALUES (
+    ) SELECT
+        new_incident.id,
         $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
         $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
         $21, $22, $23, $24
-    ) RETURNING id, employee_id, location_id, client_id, reporter_involvement, informed_parties, occurred_at, incident_type, severity_of_incident, incident_explanation, recurrence_risk, incident_prevent_steps, incident_taken_measures, cause_categories, cause_explanation, physical_injury, physical_injury_desc, psychological_damage, psychological_damage_desc, needed_consultation, follow_up_actions, follow_up_notes, is_employee_absent, additional_details, updated_at, created_at, is_confirmed, file_url, emails, confirmed_at, confirmed_by, confirmation_email_sent_at
+    FROM new_incident
+    WHERE new_incident.id IS NOT NULL
+    RETURNING id, employee_id, location_id, client_id, reporter_involvement, informed_parties, occurred_at, incident_type, severity_of_incident, incident_explanation, recurrence_risk, incident_prevent_steps, incident_taken_measures, cause_categories, cause_explanation, physical_injury, physical_injury_desc, psychological_damage, psychological_damage_desc, needed_consultation, follow_up_actions, follow_up_notes, is_employee_absent, additional_details, updated_at, created_at, is_confirmed, file_url, emails, confirmed_at, confirmed_by, confirmation_email_claim_token, confirmation_email_claimed_at, confirmation_email_sent_at
 )
 SELECT 
-    i.id, i.employee_id, i.location_id, i.client_id, i.reporter_involvement, i.informed_parties, i.occurred_at, i.incident_type, i.severity_of_incident, i.incident_explanation, i.recurrence_risk, i.incident_prevent_steps, i.incident_taken_measures, i.cause_categories, i.cause_explanation, i.physical_injury, i.physical_injury_desc, i.psychological_damage, i.psychological_damage_desc, i.needed_consultation, i.follow_up_actions, i.follow_up_notes, i.is_employee_absent, i.additional_details, i.updated_at, i.created_at, i.is_confirmed, i.file_url, i.emails, i.confirmed_at, i.confirmed_by, i.confirmation_email_sent_at,
+    i.id, i.employee_id, i.location_id, i.client_id, i.reporter_involvement, i.informed_parties, i.occurred_at, i.incident_type, i.severity_of_incident, i.incident_explanation, i.recurrence_risk, i.incident_prevent_steps, i.incident_taken_measures, i.cause_categories, i.cause_explanation, i.physical_injury, i.physical_injury_desc, i.psychological_damage, i.psychological_damage_desc, i.needed_consultation, i.follow_up_actions, i.follow_up_notes, i.is_employee_absent, i.additional_details, i.updated_at, i.created_at, i.is_confirmed, i.file_url, i.emails, i.confirmed_at, i.confirmed_by, i.confirmation_email_claim_token, i.confirmation_email_claimed_at, i.confirmation_email_sent_at,
     e.first_name AS employee_first_name,
     e.last_name AS employee_last_name,
     c.first_name AS client_first_name,
@@ -109,43 +128,45 @@ type CreateIncidentParams struct {
 }
 
 type CreateIncidentRow struct {
-	ID                      uuid.UUID                       `json:"id"`
-	EmployeeID              uuid.UUID                       `json:"employee_id"`
-	LocationID              uuid.UUID                       `json:"location_id"`
-	ClientID                uuid.UUID                       `json:"client_id"`
-	ReporterInvolvement     IncidentReporterInvolvementEnum `json:"reporter_involvement"`
-	InformedParties         []InformedPartyEnum             `json:"informed_parties"`
-	OccurredAt              pgtype.Timestamptz              `json:"occurred_at"`
-	IncidentType            IncidentTypeEnum                `json:"incident_type"`
-	SeverityOfIncident      SeverityOfIncidentEnum          `json:"severity_of_incident"`
-	IncidentExplanation     *string                         `json:"incident_explanation"`
-	RecurrenceRisk          RecurrenceRiskEnum              `json:"recurrence_risk"`
-	IncidentPreventSteps    *string                         `json:"incident_prevent_steps"`
-	IncidentTakenMeasures   *string                         `json:"incident_taken_measures"`
-	CauseCategories         []IncidentCauseCategoryEnum     `json:"cause_categories"`
-	CauseExplanation        *string                         `json:"cause_explanation"`
-	PhysicalInjury          PhysicalInjuryEnum              `json:"physical_injury"`
-	PhysicalInjuryDesc      *string                         `json:"physical_injury_desc"`
-	PsychologicalDamage     PsychologicalDamageEnum         `json:"psychological_damage"`
-	PsychologicalDamageDesc *string                         `json:"psychological_damage_desc"`
-	NeededConsultation      NeededConsultationEnum          `json:"needed_consultation"`
-	FollowUpActions         []IncidentFollowUpActionEnum    `json:"follow_up_actions"`
-	FollowUpNotes           *string                         `json:"follow_up_notes"`
-	IsEmployeeAbsent        bool                            `json:"is_employee_absent"`
-	AdditionalDetails       *string                         `json:"additional_details"`
-	UpdatedAt               pgtype.Timestamptz              `json:"updated_at"`
-	CreatedAt               pgtype.Timestamptz              `json:"created_at"`
-	IsConfirmed             bool                            `json:"is_confirmed"`
-	FileUrl                 *string                         `json:"file_url"`
-	Emails                  []string                        `json:"emails"`
-	ConfirmedAt             pgtype.Timestamptz              `json:"confirmed_at"`
-	ConfirmedBy             *uuid.UUID                      `json:"confirmed_by"`
-	ConfirmationEmailSentAt pgtype.Timestamptz              `json:"confirmation_email_sent_at"`
-	EmployeeFirstName       *string                         `json:"employee_first_name"`
-	EmployeeLastName        *string                         `json:"employee_last_name"`
-	ClientFirstName         *string                         `json:"client_first_name"`
-	ClientLastName          *string                         `json:"client_last_name"`
-	LocationName            *string                         `json:"location_name"`
+	ID                          uuid.UUID                       `json:"id"`
+	EmployeeID                  uuid.UUID                       `json:"employee_id"`
+	LocationID                  uuid.UUID                       `json:"location_id"`
+	ClientID                    uuid.UUID                       `json:"client_id"`
+	ReporterInvolvement         IncidentReporterInvolvementEnum `json:"reporter_involvement"`
+	InformedParties             []InformedPartyEnum             `json:"informed_parties"`
+	OccurredAt                  pgtype.Timestamptz              `json:"occurred_at"`
+	IncidentType                IncidentTypeEnum                `json:"incident_type"`
+	SeverityOfIncident          SeverityOfIncidentEnum          `json:"severity_of_incident"`
+	IncidentExplanation         *string                         `json:"incident_explanation"`
+	RecurrenceRisk              RecurrenceRiskEnum              `json:"recurrence_risk"`
+	IncidentPreventSteps        *string                         `json:"incident_prevent_steps"`
+	IncidentTakenMeasures       *string                         `json:"incident_taken_measures"`
+	CauseCategories             []IncidentCauseCategoryEnum     `json:"cause_categories"`
+	CauseExplanation            *string                         `json:"cause_explanation"`
+	PhysicalInjury              PhysicalInjuryEnum              `json:"physical_injury"`
+	PhysicalInjuryDesc          *string                         `json:"physical_injury_desc"`
+	PsychologicalDamage         PsychologicalDamageEnum         `json:"psychological_damage"`
+	PsychologicalDamageDesc     *string                         `json:"psychological_damage_desc"`
+	NeededConsultation          NeededConsultationEnum          `json:"needed_consultation"`
+	FollowUpActions             []IncidentFollowUpActionEnum    `json:"follow_up_actions"`
+	FollowUpNotes               *string                         `json:"follow_up_notes"`
+	IsEmployeeAbsent            bool                            `json:"is_employee_absent"`
+	AdditionalDetails           *string                         `json:"additional_details"`
+	UpdatedAt                   pgtype.Timestamptz              `json:"updated_at"`
+	CreatedAt                   pgtype.Timestamptz              `json:"created_at"`
+	IsConfirmed                 bool                            `json:"is_confirmed"`
+	FileUrl                     *string                         `json:"file_url"`
+	Emails                      []string                        `json:"emails"`
+	ConfirmedAt                 pgtype.Timestamptz              `json:"confirmed_at"`
+	ConfirmedBy                 *uuid.UUID                      `json:"confirmed_by"`
+	ConfirmationEmailClaimToken *uuid.UUID                      `json:"confirmation_email_claim_token"`
+	ConfirmationEmailClaimedAt  pgtype.Timestamptz              `json:"confirmation_email_claimed_at"`
+	ConfirmationEmailSentAt     pgtype.Timestamptz              `json:"confirmation_email_sent_at"`
+	EmployeeFirstName           *string                         `json:"employee_first_name"`
+	EmployeeLastName            *string                         `json:"employee_last_name"`
+	ClientFirstName             *string                         `json:"client_first_name"`
+	ClientLastName              *string                         `json:"client_last_name"`
+	LocationName                *string                         `json:"location_name"`
 }
 
 func (q *Queries) CreateIncident(ctx context.Context, arg CreateIncidentParams) (CreateIncidentRow, error) {
@@ -208,6 +229,8 @@ func (q *Queries) CreateIncident(ctx context.Context, arg CreateIncidentParams) 
 		&i.Emails,
 		&i.ConfirmedAt,
 		&i.ConfirmedBy,
+		&i.ConfirmationEmailClaimToken,
+		&i.ConfirmationEmailClaimedAt,
 		&i.ConfirmationEmailSentAt,
 		&i.EmployeeFirstName,
 		&i.EmployeeLastName,
@@ -218,19 +241,22 @@ func (q *Queries) CreateIncident(ctx context.Context, arg CreateIncidentParams) 
 	return i, err
 }
 
-const deleteIncident = `-- name: DeleteIncident :exec
+const deleteIncident = `-- name: DeleteIncident :one
 DELETE FROM incident
 WHERE id = $1
+RETURNING client_id
 `
 
-func (q *Queries) DeleteIncident(ctx context.Context, id uuid.UUID) error {
-	_, err := q.db.Exec(ctx, deleteIncident, id)
-	return err
+func (q *Queries) DeleteIncident(ctx context.Context, id uuid.UUID) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, deleteIncident, id)
+	var client_id uuid.UUID
+	err := row.Scan(&client_id)
+	return client_id, err
 }
 
 const getIncident = `-- name: GetIncident :one
 SELECT 
-    i.id, i.employee_id, i.location_id, i.client_id, i.reporter_involvement, i.informed_parties, i.occurred_at, i.incident_type, i.severity_of_incident, i.incident_explanation, i.recurrence_risk, i.incident_prevent_steps, i.incident_taken_measures, i.cause_categories, i.cause_explanation, i.physical_injury, i.physical_injury_desc, i.psychological_damage, i.psychological_damage_desc, i.needed_consultation, i.follow_up_actions, i.follow_up_notes, i.is_employee_absent, i.additional_details, i.updated_at, i.created_at, i.is_confirmed, i.file_url, i.emails, i.confirmed_at, i.confirmed_by, i.confirmation_email_sent_at,
+    i.id, i.employee_id, i.location_id, i.client_id, i.reporter_involvement, i.informed_parties, i.occurred_at, i.incident_type, i.severity_of_incident, i.incident_explanation, i.recurrence_risk, i.incident_prevent_steps, i.incident_taken_measures, i.cause_categories, i.cause_explanation, i.physical_injury, i.physical_injury_desc, i.psychological_damage, i.psychological_damage_desc, i.needed_consultation, i.follow_up_actions, i.follow_up_notes, i.is_employee_absent, i.additional_details, i.updated_at, i.created_at, i.is_confirmed, i.file_url, i.emails, i.confirmed_at, i.confirmed_by, i.confirmation_email_claim_token, i.confirmation_email_claimed_at, i.confirmation_email_sent_at,
     e.first_name AS employee_first_name,
     e.last_name AS employee_last_name,
     l.name AS location_name,
@@ -244,43 +270,45 @@ WHERE i.id = $1 LIMIT 1
 `
 
 type GetIncidentRow struct {
-	ID                      uuid.UUID                       `json:"id"`
-	EmployeeID              uuid.UUID                       `json:"employee_id"`
-	LocationID              uuid.UUID                       `json:"location_id"`
-	ClientID                uuid.UUID                       `json:"client_id"`
-	ReporterInvolvement     IncidentReporterInvolvementEnum `json:"reporter_involvement"`
-	InformedParties         []InformedPartyEnum             `json:"informed_parties"`
-	OccurredAt              pgtype.Timestamptz              `json:"occurred_at"`
-	IncidentType            IncidentTypeEnum                `json:"incident_type"`
-	SeverityOfIncident      SeverityOfIncidentEnum          `json:"severity_of_incident"`
-	IncidentExplanation     *string                         `json:"incident_explanation"`
-	RecurrenceRisk          RecurrenceRiskEnum              `json:"recurrence_risk"`
-	IncidentPreventSteps    *string                         `json:"incident_prevent_steps"`
-	IncidentTakenMeasures   *string                         `json:"incident_taken_measures"`
-	CauseCategories         []IncidentCauseCategoryEnum     `json:"cause_categories"`
-	CauseExplanation        *string                         `json:"cause_explanation"`
-	PhysicalInjury          PhysicalInjuryEnum              `json:"physical_injury"`
-	PhysicalInjuryDesc      *string                         `json:"physical_injury_desc"`
-	PsychologicalDamage     PsychologicalDamageEnum         `json:"psychological_damage"`
-	PsychologicalDamageDesc *string                         `json:"psychological_damage_desc"`
-	NeededConsultation      NeededConsultationEnum          `json:"needed_consultation"`
-	FollowUpActions         []IncidentFollowUpActionEnum    `json:"follow_up_actions"`
-	FollowUpNotes           *string                         `json:"follow_up_notes"`
-	IsEmployeeAbsent        bool                            `json:"is_employee_absent"`
-	AdditionalDetails       *string                         `json:"additional_details"`
-	UpdatedAt               pgtype.Timestamptz              `json:"updated_at"`
-	CreatedAt               pgtype.Timestamptz              `json:"created_at"`
-	IsConfirmed             bool                            `json:"is_confirmed"`
-	FileUrl                 *string                         `json:"file_url"`
-	Emails                  []string                        `json:"emails"`
-	ConfirmedAt             pgtype.Timestamptz              `json:"confirmed_at"`
-	ConfirmedBy             *uuid.UUID                      `json:"confirmed_by"`
-	ConfirmationEmailSentAt pgtype.Timestamptz              `json:"confirmation_email_sent_at"`
-	EmployeeFirstName       string                          `json:"employee_first_name"`
-	EmployeeLastName        string                          `json:"employee_last_name"`
-	LocationName            string                          `json:"location_name"`
-	ClientFirstName         string                          `json:"client_first_name"`
-	ClientLastName          string                          `json:"client_last_name"`
+	ID                          uuid.UUID                       `json:"id"`
+	EmployeeID                  uuid.UUID                       `json:"employee_id"`
+	LocationID                  uuid.UUID                       `json:"location_id"`
+	ClientID                    uuid.UUID                       `json:"client_id"`
+	ReporterInvolvement         IncidentReporterInvolvementEnum `json:"reporter_involvement"`
+	InformedParties             []InformedPartyEnum             `json:"informed_parties"`
+	OccurredAt                  pgtype.Timestamptz              `json:"occurred_at"`
+	IncidentType                IncidentTypeEnum                `json:"incident_type"`
+	SeverityOfIncident          SeverityOfIncidentEnum          `json:"severity_of_incident"`
+	IncidentExplanation         *string                         `json:"incident_explanation"`
+	RecurrenceRisk              RecurrenceRiskEnum              `json:"recurrence_risk"`
+	IncidentPreventSteps        *string                         `json:"incident_prevent_steps"`
+	IncidentTakenMeasures       *string                         `json:"incident_taken_measures"`
+	CauseCategories             []IncidentCauseCategoryEnum     `json:"cause_categories"`
+	CauseExplanation            *string                         `json:"cause_explanation"`
+	PhysicalInjury              PhysicalInjuryEnum              `json:"physical_injury"`
+	PhysicalInjuryDesc          *string                         `json:"physical_injury_desc"`
+	PsychologicalDamage         PsychologicalDamageEnum         `json:"psychological_damage"`
+	PsychologicalDamageDesc     *string                         `json:"psychological_damage_desc"`
+	NeededConsultation          NeededConsultationEnum          `json:"needed_consultation"`
+	FollowUpActions             []IncidentFollowUpActionEnum    `json:"follow_up_actions"`
+	FollowUpNotes               *string                         `json:"follow_up_notes"`
+	IsEmployeeAbsent            bool                            `json:"is_employee_absent"`
+	AdditionalDetails           *string                         `json:"additional_details"`
+	UpdatedAt                   pgtype.Timestamptz              `json:"updated_at"`
+	CreatedAt                   pgtype.Timestamptz              `json:"created_at"`
+	IsConfirmed                 bool                            `json:"is_confirmed"`
+	FileUrl                     *string                         `json:"file_url"`
+	Emails                      []string                        `json:"emails"`
+	ConfirmedAt                 pgtype.Timestamptz              `json:"confirmed_at"`
+	ConfirmedBy                 *uuid.UUID                      `json:"confirmed_by"`
+	ConfirmationEmailClaimToken *uuid.UUID                      `json:"confirmation_email_claim_token"`
+	ConfirmationEmailClaimedAt  pgtype.Timestamptz              `json:"confirmation_email_claimed_at"`
+	ConfirmationEmailSentAt     pgtype.Timestamptz              `json:"confirmation_email_sent_at"`
+	EmployeeFirstName           string                          `json:"employee_first_name"`
+	EmployeeLastName            string                          `json:"employee_last_name"`
+	LocationName                string                          `json:"location_name"`
+	ClientFirstName             string                          `json:"client_first_name"`
+	ClientLastName              string                          `json:"client_last_name"`
 }
 
 func (q *Queries) GetIncident(ctx context.Context, id uuid.UUID) (GetIncidentRow, error) {
@@ -318,6 +346,8 @@ func (q *Queries) GetIncident(ctx context.Context, id uuid.UUID) (GetIncidentRow
 		&i.Emails,
 		&i.ConfirmedAt,
 		&i.ConfirmedBy,
+		&i.ConfirmationEmailClaimToken,
+		&i.ConfirmationEmailClaimedAt,
 		&i.ConfirmationEmailSentAt,
 		&i.EmployeeFirstName,
 		&i.EmployeeLastName,
@@ -345,6 +375,7 @@ JOIN employee_profile e ON i.employee_id = e.id
 JOIN custom_user u ON e.user_id = u.id
 JOIN location l ON i.location_id = l.id
 WHERE i.client_id = $1
+  AND public.can_access_client(i.client_id, 'CLIENT.VIEW')
 ORDER BY i.occurred_at DESC
 LIMIT $2 OFFSET $3
 `
@@ -399,19 +430,129 @@ func (q *Queries) ListIncidents(ctx context.Context, arg ListIncidentsParams) ([
 	return items, nil
 }
 
-const markIncidentConfirmationEmailSent = `-- name: MarkIncidentConfirmationEmailSent :execrows
-UPDATE incident
-SET confirmation_email_sent_at = NOW()
-WHERE id = $1
-  AND confirmation_email_sent_at IS NULL
+const markIncidentConfirmationEmailSent = `-- name: MarkIncidentConfirmationEmailSent :one
+SELECT public.mark_incident_confirmation_email_sent($1, $2)::BIGINT AS affected
 `
 
-func (q *Queries) MarkIncidentConfirmationEmailSent(ctx context.Context, id uuid.UUID) (int64, error) {
-	result, err := q.db.Exec(ctx, markIncidentConfirmationEmailSent, id)
-	if err != nil {
-		return 0, err
-	}
-	return result.RowsAffected(), nil
+type MarkIncidentConfirmationEmailSentParams struct {
+	IncidentID uuid.UUID `json:"incident_id"`
+	ClaimToken uuid.UUID `json:"claim_token"`
+}
+
+func (q *Queries) MarkIncidentConfirmationEmailSent(ctx context.Context, arg MarkIncidentConfirmationEmailSentParams) (int64, error) {
+	row := q.db.QueryRow(ctx, markIncidentConfirmationEmailSent, arg.IncidentID, arg.ClaimToken)
+	var affected int64
+	err := row.Scan(&affected)
+	return affected, err
+}
+
+const releaseIncidentConfirmationEmail = `-- name: ReleaseIncidentConfirmationEmail :one
+SELECT public.release_incident_confirmation_email($1, $2)::BIGINT AS affected
+`
+
+type ReleaseIncidentConfirmationEmailParams struct {
+	IncidentID uuid.UUID `json:"incident_id"`
+	ClaimToken uuid.UUID `json:"claim_token"`
+}
+
+func (q *Queries) ReleaseIncidentConfirmationEmail(ctx context.Context, arg ReleaseIncidentConfirmationEmailParams) (int64, error) {
+	row := q.db.QueryRow(ctx, releaseIncidentConfirmationEmail, arg.IncidentID, arg.ClaimToken)
+	var affected int64
+	err := row.Scan(&affected)
+	return affected, err
+}
+
+const seedIncident = `-- name: SeedIncident :one
+INSERT INTO incident (
+    employee_id,
+    location_id,
+    reporter_involvement,
+    informed_parties,
+    occurred_at,
+    incident_type,
+    severity_of_incident,
+    incident_explanation,
+    recurrence_risk,
+    incident_prevent_steps,
+    incident_taken_measures,
+    cause_categories,
+    cause_explanation,
+    physical_injury,
+    physical_injury_desc,
+    psychological_damage,
+    psychological_damage_desc,
+    needed_consultation,
+    follow_up_actions,
+    follow_up_notes,
+    is_employee_absent,
+    additional_details,
+    client_id,
+    emails
+) VALUES (
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
+    $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
+    $21, $22, $23, $24
+)
+RETURNING id
+`
+
+type SeedIncidentParams struct {
+	EmployeeID              uuid.UUID                       `json:"employee_id"`
+	LocationID              uuid.UUID                       `json:"location_id"`
+	ReporterInvolvement     IncidentReporterInvolvementEnum `json:"reporter_involvement"`
+	InformedParties         []InformedPartyEnum             `json:"informed_parties"`
+	OccurredAt              pgtype.Timestamptz              `json:"occurred_at"`
+	IncidentType            IncidentTypeEnum                `json:"incident_type"`
+	SeverityOfIncident      SeverityOfIncidentEnum          `json:"severity_of_incident"`
+	IncidentExplanation     *string                         `json:"incident_explanation"`
+	RecurrenceRisk          RecurrenceRiskEnum              `json:"recurrence_risk"`
+	IncidentPreventSteps    *string                         `json:"incident_prevent_steps"`
+	IncidentTakenMeasures   *string                         `json:"incident_taken_measures"`
+	CauseCategories         []IncidentCauseCategoryEnum     `json:"cause_categories"`
+	CauseExplanation        *string                         `json:"cause_explanation"`
+	PhysicalInjury          PhysicalInjuryEnum              `json:"physical_injury"`
+	PhysicalInjuryDesc      *string                         `json:"physical_injury_desc"`
+	PsychologicalDamage     PsychologicalDamageEnum         `json:"psychological_damage"`
+	PsychologicalDamageDesc *string                         `json:"psychological_damage_desc"`
+	NeededConsultation      NeededConsultationEnum          `json:"needed_consultation"`
+	FollowUpActions         []IncidentFollowUpActionEnum    `json:"follow_up_actions"`
+	FollowUpNotes           *string                         `json:"follow_up_notes"`
+	IsEmployeeAbsent        bool                            `json:"is_employee_absent"`
+	AdditionalDetails       *string                         `json:"additional_details"`
+	ClientID                uuid.UUID                       `json:"client_id"`
+	Emails                  []string                        `json:"emails"`
+}
+
+func (q *Queries) SeedIncident(ctx context.Context, arg SeedIncidentParams) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, seedIncident,
+		arg.EmployeeID,
+		arg.LocationID,
+		arg.ReporterInvolvement,
+		arg.InformedParties,
+		arg.OccurredAt,
+		arg.IncidentType,
+		arg.SeverityOfIncident,
+		arg.IncidentExplanation,
+		arg.RecurrenceRisk,
+		arg.IncidentPreventSteps,
+		arg.IncidentTakenMeasures,
+		arg.CauseCategories,
+		arg.CauseExplanation,
+		arg.PhysicalInjury,
+		arg.PhysicalInjuryDesc,
+		arg.PsychologicalDamage,
+		arg.PsychologicalDamageDesc,
+		arg.NeededConsultation,
+		arg.FollowUpActions,
+		arg.FollowUpNotes,
+		arg.IsEmployeeAbsent,
+		arg.AdditionalDetails,
+		arg.ClientID,
+		arg.Emails,
+	)
+	var id uuid.UUID
+	err := row.Scan(&id)
+	return id, err
 }
 
 const updateIncident = `-- name: UpdateIncident :one
@@ -441,7 +582,7 @@ SET
     additional_details = COALESCE($23, additional_details),
     emails = COALESCE($24, emails)
 WHERE id = $1
-RETURNING id, employee_id, location_id, client_id, reporter_involvement, informed_parties, occurred_at, incident_type, severity_of_incident, incident_explanation, recurrence_risk, incident_prevent_steps, incident_taken_measures, cause_categories, cause_explanation, physical_injury, physical_injury_desc, psychological_damage, psychological_damage_desc, needed_consultation, follow_up_actions, follow_up_notes, is_employee_absent, additional_details, updated_at, created_at, is_confirmed, file_url, emails, confirmed_at, confirmed_by, confirmation_email_sent_at
+RETURNING id, employee_id, location_id, client_id, reporter_involvement, informed_parties, occurred_at, incident_type, severity_of_incident, incident_explanation, recurrence_risk, incident_prevent_steps, incident_taken_measures, cause_categories, cause_explanation, physical_injury, physical_injury_desc, psychological_damage, psychological_damage_desc, needed_consultation, follow_up_actions, follow_up_notes, is_employee_absent, additional_details, updated_at, created_at, is_confirmed, file_url, emails, confirmed_at, confirmed_by, confirmation_email_claim_token, confirmation_email_claimed_at, confirmation_email_sent_at
 `
 
 type UpdateIncidentParams struct {
@@ -531,6 +672,8 @@ func (q *Queries) UpdateIncident(ctx context.Context, arg UpdateIncidentParams) 
 		&i.Emails,
 		&i.ConfirmedAt,
 		&i.ConfirmedBy,
+		&i.ConfirmationEmailClaimToken,
+		&i.ConfirmationEmailClaimedAt,
 		&i.ConfirmationEmailSentAt,
 	)
 	return i, err

@@ -2162,6 +2162,8 @@ CREATE TABLE incident (
     emails TEXT[] NULL DEFAULT '{}',
     confirmed_at TIMESTAMPTZ NULL,
     confirmed_by UUID NULL REFERENCES custom_user(id) ON DELETE SET NULL,
+    confirmation_email_claim_token UUID NULL,
+    confirmation_email_claimed_at TIMESTAMPTZ NULL,
     confirmation_email_sent_at TIMESTAMPTZ NULL
 );
 
@@ -2172,6 +2174,50 @@ CREATE TRIGGER trigger_set_updated_at_incident
 BEFORE UPDATE ON incident
 FOR EACH ROW
 EXECUTE FUNCTION set_updated_at();
+
+CREATE OR REPLACE FUNCTION set_incident_reporter_actor()
+RETURNS TRIGGER AS $$
+DECLARE
+    actor_employee_id UUID := public.get_current_employee_id();
+    policy_owner_name TEXT := 'maicare_rls_policy_owner_' || (
+        SELECT oid::TEXT FROM pg_catalog.pg_database WHERE datname = current_database()
+    );
+BEGIN
+    IF actor_employee_id IS NULL THEN
+        RETURN NEW;
+    END IF;
+
+    IF TG_OP = 'INSERT' THEN
+        NEW.employee_id = actor_employee_id;
+        NEW.is_confirmed = FALSE;
+        NEW.confirmed_at = NULL;
+        NEW.confirmed_by = NULL;
+        NEW.confirmation_email_claim_token = NULL;
+        NEW.confirmation_email_claimed_at = NULL;
+        NEW.confirmation_email_sent_at = NULL;
+    ELSE
+        NEW.employee_id = OLD.employee_id;
+        IF current_user <> policy_owner_name
+           AND (
+               NEW.is_confirmed IS DISTINCT FROM OLD.is_confirmed
+               OR NEW.confirmed_at IS DISTINCT FROM OLD.confirmed_at
+               OR NEW.confirmed_by IS DISTINCT FROM OLD.confirmed_by
+               OR NEW.confirmation_email_claim_token IS DISTINCT FROM OLD.confirmation_email_claim_token
+               OR NEW.confirmation_email_claimed_at IS DISTINCT FROM OLD.confirmation_email_claimed_at
+               OR NEW.confirmation_email_sent_at IS DISTINCT FROM OLD.confirmation_email_sent_at
+           ) THEN
+            RAISE EXCEPTION 'incident confirmation state requires the dedicated operation'
+                USING ERRCODE = '42501';
+        END IF;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_set_incident_reporter_actor
+BEFORE INSERT OR UPDATE ON incident
+FOR EACH ROW
+EXECUTE FUNCTION set_incident_reporter_actor();
 
 -- Employee assignments
 CREATE TABLE assignment (
@@ -3019,7 +3065,7 @@ REVOKE ALL ON TABLE public.rls_client_creation_context FROM PUBLIC;
 CREATE TABLE public.rls_report_creation_context (
     backend_pid INTEGER NOT NULL,
     transaction_id XID8 NOT NULL,
-    report_kind TEXT NOT NULL CHECK (report_kind IN ('progress', 'ai', 'diagnosis', 'medication')),
+    report_kind TEXT NOT NULL CHECK (report_kind IN ('progress', 'ai', 'diagnosis', 'medication', 'incident')),
     report_id UUID NOT NULL,
     user_id UUID NOT NULL,
     employee_id UUID NOT NULL,
@@ -3279,6 +3325,57 @@ AS $$
     ), FALSE);
 $$;
 
+CREATE OR REPLACE FUNCTION public.begin_incident_creation(client_id UUID)
+RETURNS UUID
+LANGUAGE plpgsql
+VOLATILE
+SECURITY DEFINER
+PARALLEL UNSAFE
+SET search_path = pg_catalog, public
+AS $$
+DECLARE
+    new_incident_id UUID;
+BEGIN
+    IF NOT public.can_access_client($1, 'CLIENT.INCIDENT.CREATE') THEN
+        RETURN NULL;
+    END IF;
+
+    DELETE FROM public.rls_report_creation_context
+    WHERE backend_pid = pg_backend_pid()
+      AND report_kind = 'incident';
+
+    new_incident_id := gen_random_uuid();
+    INSERT INTO public.rls_report_creation_context (
+        backend_pid, transaction_id, report_kind, report_id, user_id, employee_id
+    ) VALUES (
+        pg_backend_pid(), pg_current_xact_id(), 'incident', new_incident_id,
+        public.get_current_user_id(), public.get_current_employee_id()
+    );
+
+    RETURN new_incident_id;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.can_read_created_incident(incident_id UUID)
+RETURNS BOOLEAN
+LANGUAGE sql
+VOLATILE
+SECURITY DEFINER
+PARALLEL UNSAFE
+SET search_path = pg_catalog, public
+AS $$
+    SELECT COALESCE(EXISTS (
+        SELECT 1
+        FROM public.rls_report_creation_context AS context
+        WHERE context.backend_pid = pg_backend_pid()
+          AND context.transaction_id = pg_current_xact_id_if_assigned()
+          AND context.report_kind = 'incident'
+          AND context.report_id = $1
+          AND context.user_id = public.get_current_user_id()
+          AND context.employee_id = public.get_current_employee_id()
+    ), FALSE);
+$$;
+
 CREATE OR REPLACE FUNCTION public.get_permission_scope(permission_name TEXT)
 RETURNS public.permission_scope_enum
 LANGUAGE sql
@@ -3395,6 +3492,146 @@ AS $$
     ORDER BY cec.created_at ASC;
 $$;
 
+CREATE OR REPLACE FUNCTION public.confirm_incident(incident_id UUID)
+RETURNS BIGINT
+LANGUAGE plpgsql
+VOLATILE
+SECURITY DEFINER
+PARALLEL UNSAFE
+SET search_path = pg_catalog, public
+AS $$
+DECLARE
+    owning_client_id UUID;
+    affected BIGINT;
+BEGIN
+    SELECT client_id INTO owning_client_id
+    FROM public.incident
+    WHERE id = $1;
+
+    IF owning_client_id IS NULL
+       OR NOT public.can_access_client(owning_client_id, 'CLIENT.VIEW')
+       OR NOT public.can_access_client(owning_client_id, 'CLIENT.INCIDENT.VIEW')
+       OR NOT public.can_access_client(owning_client_id, 'CLIENT.INCIDENT.CONFIRM') THEN
+        RETURN 0;
+    END IF;
+
+    UPDATE public.incident
+    SET is_confirmed = TRUE,
+        confirmed_at = NOW(),
+        confirmed_by = public.get_current_user_id()
+    WHERE id = $1
+      AND is_confirmed = FALSE;
+    GET DIAGNOSTICS affected = ROW_COUNT;
+    RETURN affected;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.mark_incident_confirmation_email_sent(incident_id UUID, claim_token UUID)
+RETURNS BIGINT
+LANGUAGE plpgsql
+VOLATILE
+SECURITY DEFINER
+PARALLEL UNSAFE
+SET search_path = pg_catalog, public
+AS $$
+DECLARE
+    owning_client_id UUID;
+    affected BIGINT;
+BEGIN
+    SELECT client_id INTO owning_client_id
+    FROM public.incident
+    WHERE id = $1;
+
+    IF owning_client_id IS NULL
+       OR NOT public.can_access_client(owning_client_id, 'CLIENT.VIEW')
+       OR NOT public.can_access_client(owning_client_id, 'CLIENT.INCIDENT.VIEW')
+       OR NOT public.can_access_client(owning_client_id, 'CLIENT.INCIDENT.CONFIRM') THEN
+        RETURN 0;
+    END IF;
+
+    UPDATE public.incident
+    SET confirmation_email_sent_at = NOW(),
+        confirmation_email_claimed_at = NULL,
+        confirmation_email_claim_token = NULL
+    WHERE id = $1
+      AND is_confirmed
+      AND confirmation_email_claim_token = $2
+      AND confirmation_email_claimed_at IS NOT NULL
+      AND confirmation_email_sent_at IS NULL;
+    GET DIAGNOSTICS affected = ROW_COUNT;
+    RETURN affected;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.claim_incident_confirmation_email(incident_id UUID)
+RETURNS UUID
+LANGUAGE plpgsql
+VOLATILE
+SECURITY DEFINER
+PARALLEL UNSAFE
+SET search_path = pg_catalog, public
+AS $$
+DECLARE
+    owning_client_id UUID;
+    new_claim_token UUID := gen_random_uuid();
+BEGIN
+    SELECT client_id INTO owning_client_id FROM public.incident WHERE id = $1;
+    IF owning_client_id IS NULL
+       OR NOT public.can_access_client(owning_client_id, 'CLIENT.VIEW')
+       OR NOT public.can_access_client(owning_client_id, 'CLIENT.INCIDENT.VIEW')
+       OR NOT public.can_access_client(owning_client_id, 'CLIENT.INCIDENT.CONFIRM') THEN
+        RETURN NULL;
+    END IF;
+
+    UPDATE public.incident
+    SET confirmation_email_claimed_at = NOW(),
+        confirmation_email_claim_token = new_claim_token
+    WHERE id = $1
+      AND is_confirmed
+      AND confirmation_email_sent_at IS NULL
+      AND (
+          confirmation_email_claimed_at IS NULL
+          OR confirmation_email_claimed_at < NOW() - INTERVAL '15 minutes'
+      );
+    IF FOUND THEN
+        RETURN new_claim_token;
+    END IF;
+    RETURN NULL;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.release_incident_confirmation_email(incident_id UUID, claim_token UUID)
+RETURNS BIGINT
+LANGUAGE plpgsql
+VOLATILE
+SECURITY DEFINER
+PARALLEL UNSAFE
+SET search_path = pg_catalog, public
+AS $$
+DECLARE
+    owning_client_id UUID;
+    affected BIGINT;
+BEGIN
+    SELECT client_id INTO owning_client_id FROM public.incident WHERE id = $1;
+    IF owning_client_id IS NULL
+       OR NOT public.can_access_client(owning_client_id, 'CLIENT.VIEW')
+       OR NOT public.can_access_client(owning_client_id, 'CLIENT.INCIDENT.VIEW')
+       OR NOT public.can_access_client(owning_client_id, 'CLIENT.INCIDENT.CONFIRM') THEN
+        RETURN 0;
+    END IF;
+
+    UPDATE public.incident
+    SET confirmation_email_claimed_at = NULL,
+        confirmation_email_claim_token = NULL
+    WHERE id = $1
+      AND confirmation_email_claim_token = $2
+      AND confirmation_email_sent_at IS NULL
+      AND confirmation_email_claimed_at IS NOT NULL;
+    GET DIAGNOSTICS affected = ROW_COUNT;
+    RETURN affected;
+END;
+$$;
+
 DO $$
 DECLARE
     policy_owner_name TEXT := 'maicare_rls_policy_owner_' || (
@@ -3403,10 +3640,16 @@ DECLARE
 BEGIN
     EXECUTE format('ALTER FUNCTION public.get_authorized_client_related_emails(UUID) OWNER TO %I', policy_owner_name);
     EXECUTE format('ALTER FUNCTION public.get_authorized_incident_recipient_emails(UUID) OWNER TO %I', policy_owner_name);
+    EXECUTE format('ALTER FUNCTION public.confirm_incident(UUID) OWNER TO %I', policy_owner_name);
+    EXECUTE format('ALTER FUNCTION public.mark_incident_confirmation_email_sent(UUID, UUID) OWNER TO %I', policy_owner_name);
+    EXECUTE format('ALTER FUNCTION public.claim_incident_confirmation_email(UUID) OWNER TO %I', policy_owner_name);
+    EXECUTE format('ALTER FUNCTION public.release_incident_confirmation_email(UUID, UUID) OWNER TO %I', policy_owner_name);
     EXECUTE format(
         'GRANT SELECT ON public.assigned_employee, public.employee_profile, public.client_emergency_contact TO %I',
         policy_owner_name
     );
+    EXECUTE format('GRANT SELECT, UPDATE ON public.incident TO %I', policy_owner_name);
+    EXECUTE format('GRANT EXECUTE ON FUNCTION public.get_current_user_id() TO %I', policy_owner_name);
     EXECUTE format('GRANT EXECUTE ON FUNCTION public.get_current_employee_id() TO %I', policy_owner_name);
     EXECUTE format('GRANT EXECUTE ON FUNCTION public.can_access_client(UUID, TEXT) TO %I', policy_owner_name);
     EXECUTE format('REVOKE %I FROM %I', policy_owner_name, current_user);
@@ -3416,6 +3659,10 @@ $$;
 GRANT EXECUTE ON FUNCTION public.is_assigned_to_client(UUID) TO CURRENT_USER;
 GRANT EXECUTE ON FUNCTION public.get_authorized_client_related_emails(UUID) TO CURRENT_USER;
 GRANT EXECUTE ON FUNCTION public.get_authorized_incident_recipient_emails(UUID) TO CURRENT_USER;
+GRANT EXECUTE ON FUNCTION public.confirm_incident(UUID) TO CURRENT_USER;
+GRANT EXECUTE ON FUNCTION public.mark_incident_confirmation_email_sent(UUID, UUID) TO CURRENT_USER;
+GRANT EXECUTE ON FUNCTION public.claim_incident_confirmation_email(UUID) TO CURRENT_USER;
+GRANT EXECUTE ON FUNCTION public.release_incident_confirmation_email(UUID, UUID) TO CURRENT_USER;
 
 REVOKE ALL ON FUNCTION public.get_current_user_id() FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.get_current_employee_id() FROM PUBLIC;
@@ -3433,8 +3680,14 @@ REVOKE ALL ON FUNCTION public.begin_client_diagnosis_creation(UUID) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.can_read_created_client_diagnosis(UUID) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.begin_client_medication_creation(UUID) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.can_read_created_client_medication(UUID) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.begin_incident_creation(UUID) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.can_read_created_incident(UUID) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.get_authorized_client_related_emails(UUID) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.get_authorized_incident_recipient_emails(UUID) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.confirm_incident(UUID) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.mark_incident_confirmation_email_sent(UUID, UUID) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.claim_incident_confirmation_email(UUID) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.release_incident_confirmation_email(UUID, UUID) FROM PUBLIC;
 
 GRANT EXECUTE ON FUNCTION public.get_current_user_id() TO CURRENT_USER;
 GRANT EXECUTE ON FUNCTION public.get_current_employee_id() TO CURRENT_USER;
@@ -3444,6 +3697,8 @@ GRANT EXECUTE ON FUNCTION public.is_assigned_to_client(UUID) TO CURRENT_USER;
 GRANT EXECUTE ON FUNCTION public.can_access_client(UUID, TEXT) TO CURRENT_USER;
 GRANT EXECUTE ON FUNCTION public.begin_client_creation() TO CURRENT_USER;
 GRANT EXECUTE ON FUNCTION public.can_read_created_client(UUID) TO CURRENT_USER;
+GRANT EXECUTE ON FUNCTION public.begin_incident_creation(UUID) TO CURRENT_USER;
+GRANT EXECUTE ON FUNCTION public.can_read_created_incident(UUID) TO CURRENT_USER;
 
 -- Check if current employee is Admin
 CREATE OR REPLACE FUNCTION is_admin() RETURNS BOOLEAN AS $$
@@ -3692,8 +3947,30 @@ CREATE POLICY client_medication_order_delete ON public.client_medication_order
     FOR DELETE
     USING (public.can_access_client(client_id, 'CLIENT.MEDICATION.DELETE'));
 
+ALTER TABLE public.incident ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.incident FORCE ROW LEVEL SECURITY;
+
+CREATE POLICY incident_select ON public.incident
+    FOR SELECT
+    USING (
+        public.can_access_client(client_id, 'CLIENT.INCIDENT.VIEW')
+        OR public.can_read_created_incident(id)
+    );
+
+CREATE POLICY incident_insert ON public.incident
+    FOR INSERT
+    WITH CHECK (public.can_access_client(client_id, 'CLIENT.INCIDENT.CREATE'));
+
+CREATE POLICY incident_update ON public.incident
+    FOR UPDATE
+    USING (public.can_access_client(client_id, 'CLIENT.INCIDENT.UPDATE'))
+    WITH CHECK (public.can_access_client(client_id, 'CLIENT.INCIDENT.UPDATE'));
+
+CREATE POLICY incident_delete ON public.incident
+    FOR DELETE
+    USING (public.can_access_client(client_id, 'CLIENT.INCIDENT.DELETE'));
+
 -- Apply legacy RLS to related tables until they are converted in Phase 9.
-SELECT apply_client_rls('incident');
 SELECT apply_client_rls('client_documents');
 SELECT apply_client_rls('client_status_history');
 SELECT apply_client_rls('client_location_transfer');

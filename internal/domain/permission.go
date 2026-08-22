@@ -156,11 +156,6 @@ const (
 	PermHandbookEligibleEmployees PermissionKey = "HANDBOOK.ELIGIBLE_EMPLOYEES.VIEW_ALL"
 )
 
-// Incident Permissions
-const (
-	PermIncidentView PermissionKey = "INCIDENT.VIEW"
-)
-
 // Late Arrival Permissions
 const (
 	PermLateArrivalCreate    PermissionKey = "LATE_ARRIVAL.CREATE"
@@ -428,8 +423,6 @@ var AllPermissionKeys = []PermissionKey{
 
 	PermHandbookAssign,
 	PermHandbookEligibleEmployees,
-
-	PermIncidentView,
 
 	PermLateArrivalCreate,
 	PermLateArrivalCreateAll,

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -19,19 +20,19 @@ func RegisterIncidentRoutes(
 ) {
 	// Client-specific incident routes
 	clientsGroup := rg.Group("/clients")
-	clientsGroup.GET("/:id/incidents", auth, requirePermission("CLIENT.INCIDENT.VIEW"), handler.ListClientIncidents)
+	clientsGroup.GET("/:id/incidents", auth, requirePermission("CLIENT.VIEW"), requirePermission("CLIENT.INCIDENT.VIEW"), handler.ListClientIncidents)
 
 	// Top-level incident routes
 	incidentsGroup := rg.Group("/incidents")
 	{
 		incidentsGroup.POST("", auth, requirePermission("CLIENT.INCIDENT.CREATE"), handler.CreateIncident)
-		incidentsGroup.GET("", auth, requirePermission("CLIENT.INCIDENT.VIEW"), handler.ListAllIncidents)
+		incidentsGroup.GET("", auth, requirePermission("CLIENT.VIEW"), requirePermission("CLIENT.INCIDENT.VIEW"), handler.ListAllIncidents)
 		incidentsGroup.GET("/counts", auth, requirePermission("CLIENT.INCIDENT.VIEW"), handler.GetIncidentCounts)
-		incidentsGroup.GET("/:incident_id", auth, requirePermission("CLIENT.INCIDENT.VIEW"), handler.GetIncident)
-		incidentsGroup.PUT("/:incident_id", auth, requirePermission("CLIENT.INCIDENT.UPDATE"), handler.UpdateIncident)
-		incidentsGroup.DELETE("/:incident_id", auth, requirePermission("CLIENT.INCIDENT.DELETE"), handler.DeleteIncident)
-		incidentsGroup.GET("/:incident_id/file", auth, requirePermission("CLIENT.INCIDENT.VIEW"), handler.GenerateIncidentFile)
-		incidentsGroup.PUT("/:incident_id/confirm", auth, requirePermission("CLIENT.INCIDENT.CONFIRM"), handler.ConfirmIncident)
+		incidentsGroup.GET("/:incident_id", auth, requirePermission("CLIENT.VIEW"), requirePermission("CLIENT.INCIDENT.VIEW"), handler.GetIncident)
+		incidentsGroup.PUT("/:incident_id", auth, requirePermission("CLIENT.INCIDENT.VIEW"), requirePermission("CLIENT.INCIDENT.UPDATE"), handler.UpdateIncident)
+		incidentsGroup.DELETE("/:incident_id", auth, requirePermission("CLIENT.INCIDENT.VIEW"), requirePermission("CLIENT.INCIDENT.DELETE"), handler.DeleteIncident)
+		incidentsGroup.GET("/:incident_id/file", auth, requirePermission("CLIENT.VIEW"), requirePermission("CLIENT.INCIDENT.VIEW"), handler.GenerateIncidentFile)
+		incidentsGroup.PUT("/:incident_id/confirm", auth, requirePermission("CLIENT.VIEW"), requirePermission("CLIENT.INCIDENT.VIEW"), requirePermission("CLIENT.INCIDENT.CONFIRM"), handler.ConfirmIncident)
 	}
 }
 
@@ -66,6 +67,10 @@ func (h *IncidentHandler) CreateIncident(ctx *gin.Context) {
 
 	result, err := h.service.CreateIncident(ctx.Request.Context(), toCreateIncidentParams(req))
 	if err != nil {
+		if errors.Is(err, domain.ErrIncidentNotFound) {
+			ctx.JSON(http.StatusNotFound, httpapi.Fail("client not found", ""))
+			return
+		}
 		ctx.JSON(http.StatusInternalServerError, httpapi.Fail("failed to create incident", ""))
 		return
 	}
@@ -132,6 +137,10 @@ func (h *IncidentHandler) GetIncident(ctx *gin.Context) {
 
 	result, err := h.service.GetIncident(ctx.Request.Context(), incidentID)
 	if err != nil {
+		if errors.Is(err, domain.ErrIncidentNotFound) {
+			ctx.JSON(http.StatusNotFound, httpapi.Fail("incident not found", ""))
+			return
+		}
 		ctx.JSON(http.StatusInternalServerError, httpapi.Fail("failed to retrieve incident", ""))
 		return
 	}
@@ -163,6 +172,10 @@ func (h *IncidentHandler) UpdateIncident(ctx *gin.Context) {
 
 	result, err := h.service.UpdateIncident(ctx.Request.Context(), toUpdateIncidentParams(req, incidentID))
 	if err != nil {
+		if errors.Is(err, domain.ErrIncidentNotFound) {
+			ctx.JSON(http.StatusNotFound, httpapi.Fail("incident not found", ""))
+			return
+		}
 		ctx.JSON(http.StatusInternalServerError, httpapi.Fail("failed to update incident", ""))
 		return
 	}
@@ -186,6 +199,10 @@ func (h *IncidentHandler) DeleteIncident(ctx *gin.Context) {
 	}
 
 	if err := h.service.DeleteIncident(ctx.Request.Context(), incidentID); err != nil {
+		if errors.Is(err, domain.ErrIncidentNotFound) {
+			ctx.JSON(http.StatusNotFound, httpapi.Fail("incident not found", ""))
+			return
+		}
 		ctx.JSON(http.StatusInternalServerError, httpapi.Fail("failed to delete incident", ""))
 		return
 	}
@@ -210,6 +227,10 @@ func (h *IncidentHandler) GenerateIncidentFile(ctx *gin.Context) {
 
 	pdfBytes, fileName, err := h.service.GenerateIncidentFile(ctx.Request.Context(), incidentID)
 	if err != nil {
+		if errors.Is(err, domain.ErrIncidentNotFound) {
+			ctx.JSON(http.StatusNotFound, httpapi.Fail("incident not found", ""))
+			return
+		}
 		ctx.JSON(http.StatusInternalServerError, httpapi.Fail("failed to generate incident file", ""))
 		return
 	}
@@ -241,6 +262,10 @@ func (h *IncidentHandler) ConfirmIncident(ctx *gin.Context) {
 
 	result, err := h.service.ConfirmIncident(ctx.Request.Context(), incidentID, userID)
 	if err != nil {
+		if errors.Is(err, domain.ErrIncidentNotFound) {
+			ctx.JSON(http.StatusNotFound, httpapi.Fail("incident not found", ""))
+			return
+		}
 		ctx.JSON(http.StatusInternalServerError, httpapi.Fail("failed to confirm incident", ""))
 		return
 	}

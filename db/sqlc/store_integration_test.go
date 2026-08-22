@@ -9,6 +9,7 @@ import (
 	"maicare_go/internal/ctxkeys"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -92,6 +93,9 @@ func openIntegrationStore(t *testing.T) *Store {
 		t.Fatalf("parse TEST_DATABASE_URL: %v", err)
 	}
 	config.MaxConns = 1
+	config.AfterConnect = func(ctx context.Context, conn *pgx.Conn) error {
+		return RegisterEnumTypes(ctx, conn)
+	}
 	pool, err := pgxpool.NewWithConfig(context.Background(), config)
 	if err != nil {
 		t.Fatalf("connect TEST_DATABASE_URL: %v", err)

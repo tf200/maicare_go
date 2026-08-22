@@ -356,7 +356,7 @@ func wireServicesAndHandlers(store *db.Store, logger domain.Logger, tokenMaker d
 	dashboardSvc := service.NewDashboardService(dashboardRepo, logger, auditLogger)
 	employeeSvc := service.NewEmployeeService(employeeRepo, logger)
 	handbookSvc := service.NewHandbookService(handbookRepo, logger)
-	incidentSvc := service.NewIncidentService(incidentRepo, incidentPDFGenerator, taskQueue, logger)
+	incidentSvc := service.NewIncidentService(incidentRepo, incidentPDFGenerator, taskQueue, logger, auditLogger)
 	intakeSvc := service.NewIntakeFormService(intakeRepo, logger, aiService, auditLogger)
 	lateArrivalSvc := service.NewLateArrivalService(lateArrivalRepo, logger)
 	leaveSvc := service.NewLeaveService(leaveRepo, logger)

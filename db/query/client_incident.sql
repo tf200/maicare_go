@@ -1,6 +1,9 @@
 -- name: CreateIncident :one
-WITH inserted_incident AS (
+WITH new_incident AS (
+    SELECT public.begin_incident_creation($23) AS id
+), inserted_incident AS (
     INSERT INTO incident (
+        id,
         employee_id,
         location_id,
         reporter_involvement,
@@ -25,11 +28,14 @@ WITH inserted_incident AS (
         additional_details,
         client_id,
         emails
-    ) VALUES (
+    ) SELECT
+        new_incident.id,
         $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
         $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
         $21, $22, $23, $24
-    ) RETURNING *
+    FROM new_incident
+    WHERE new_incident.id IS NOT NULL
+    RETURNING *
 )
 SELECT 
     i.*,
@@ -61,8 +67,15 @@ JOIN employee_profile e ON i.employee_id = e.id
 JOIN custom_user u ON e.user_id = u.id
 JOIN location l ON i.location_id = l.id
 WHERE i.client_id = $1
+  AND public.can_access_client(i.client_id, 'CLIENT.VIEW')
 ORDER BY i.occurred_at DESC
 LIMIT $2 OFFSET $3;
+
+-- name: CountClientIncidents :one
+SELECT COUNT(*)::BIGINT
+FROM incident
+WHERE client_id = $1
+  AND public.can_access_client(client_id, 'CLIENT.VIEW');
 
 
 -- name: GetIncident :one
@@ -78,7 +91,6 @@ JOIN employee_profile e ON i.employee_id = e.id
 JOIN client_details c ON i.client_id = c.id
 JOIN location l ON i.location_id = l.id
 WHERE i.id = $1 LIMIT 1;
-
 
 -- name: UpdateIncident :one
 UPDATE incident
@@ -110,26 +122,57 @@ WHERE id = $1
 RETURNING *;
 
 
--- name: DeleteIncident :exec
+-- name: DeleteIncident :one
 DELETE FROM incident
-WHERE id = $1;
-
-
--- name: ConfirmIncident :execrows
-UPDATE incident
-SET
-    is_confirmed = TRUE,
-    confirmed_at = NOW(),
-    confirmed_by = $2
 WHERE id = $1
-  AND is_confirmed = FALSE;
+RETURNING client_id;
 
 
--- name: MarkIncidentConfirmationEmailSent :execrows
-UPDATE incident
-SET confirmation_email_sent_at = NOW()
-WHERE id = $1
-  AND confirmation_email_sent_at IS NULL;
+-- name: ConfirmIncident :one
+SELECT public.confirm_incident($1)::BIGINT AS affected;
+
+
+-- name: MarkIncidentConfirmationEmailSent :one
+SELECT public.mark_incident_confirmation_email_sent($1, $2)::BIGINT AS affected;
+
+-- name: ClaimIncidentConfirmationEmail :one
+SELECT COALESCE(public.claim_incident_confirmation_email($1), '00000000-0000-0000-0000-000000000000'::UUID)::UUID AS claim_token;
+
+-- name: ReleaseIncidentConfirmationEmail :one
+SELECT public.release_incident_confirmation_email($1, $2)::BIGINT AS affected;
+
+-- name: SeedIncident :one
+INSERT INTO incident (
+    employee_id,
+    location_id,
+    reporter_involvement,
+    informed_parties,
+    occurred_at,
+    incident_type,
+    severity_of_incident,
+    incident_explanation,
+    recurrence_risk,
+    incident_prevent_steps,
+    incident_taken_measures,
+    cause_categories,
+    cause_explanation,
+    physical_injury,
+    physical_injury_desc,
+    psychological_damage,
+    psychological_damage_desc,
+    needed_consultation,
+    follow_up_actions,
+    follow_up_notes,
+    is_employee_absent,
+    additional_details,
+    client_id,
+    emails
+) VALUES (
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
+    $11, $12, $13, $14, $15, $16, $17, $18, $19, $20,
+    $21, $22, $23, $24
+)
+RETURNING id;
 
 
 -- name: UpdateIncidentFileUrl :one

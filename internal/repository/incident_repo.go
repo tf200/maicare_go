@@ -2,12 +2,14 @@ package repository
 
 import (
 	"context"
+	"errors"
 
 	db "maicare_go/db/sqlc"
 	"maicare_go/internal/domain"
 	"maicare_go/pkg/conv"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 )
 
 type incidentRepository struct {
@@ -52,6 +54,9 @@ func (r *incidentRepository) CreateIncident(ctx context.Context, params domain.C
 		return err
 	})
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, domain.ErrIncidentNotFound
+		}
 		return nil, err
 	}
 
@@ -60,6 +65,7 @@ func (r *incidentRepository) CreateIncident(ctx context.Context, params domain.C
 
 func (r *incidentRepository) ListIncidents(ctx context.Context, params domain.ListIncidentsParams) (*domain.ListIncidentsResult, error) {
 	var rows []db.ListIncidentsRow
+	var totalCount int64
 	err := r.store.ExecActorTx(ctx, func(q *db.Queries) error {
 		var err error
 		rows, err = q.ListIncidents(ctx, db.ListIncidentsParams{
@@ -67,6 +73,14 @@ func (r *incidentRepository) ListIncidents(ctx context.Context, params domain.Li
 			Limit:    params.Limit,
 			Offset:   params.Offset,
 		})
+		if err != nil {
+			return err
+		}
+		if len(rows) == 0 {
+			totalCount, err = q.CountClientIncidents(ctx, params.ClientID)
+		} else {
+			totalCount = rows[0].TotalCount
+		}
 		return err
 	})
 	if err != nil {
@@ -76,7 +90,7 @@ func (r *incidentRepository) ListIncidents(ctx context.Context, params domain.Li
 	if len(rows) == 0 {
 		return &domain.ListIncidentsResult{
 			Items:      []domain.IncidentListItem{},
-			TotalCount: 0,
+			TotalCount: totalCount,
 		}, nil
 	}
 
@@ -97,7 +111,7 @@ func (r *incidentRepository) ListIncidents(ctx context.Context, params domain.Li
 
 	return &domain.ListIncidentsResult{
 		Items:      items,
-		TotalCount: rows[0].TotalCount,
+		TotalCount: totalCount,
 	}, nil
 }
 
@@ -109,6 +123,9 @@ func (r *incidentRepository) GetIncident(ctx context.Context, id uuid.UUID) (*do
 		return err
 	})
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, domain.ErrIncidentNotFound
+		}
 		return nil, err
 	}
 
@@ -149,26 +166,33 @@ func (r *incidentRepository) UpdateIncident(ctx context.Context, params domain.U
 		return err
 	})
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, domain.ErrIncidentNotFound
+		}
 		return nil, err
 	}
 
 	return toDomainIncidentFromUpdate(incident), nil
 }
 
-func (r *incidentRepository) DeleteIncident(ctx context.Context, id uuid.UUID) error {
-	return r.store.ExecActorTx(ctx, func(q *db.Queries) error {
-		return q.DeleteIncident(ctx, id)
+func (r *incidentRepository) DeleteIncident(ctx context.Context, id uuid.UUID) (uuid.UUID, error) {
+	var clientID uuid.UUID
+	err := r.store.ExecActorTx(ctx, func(q *db.Queries) error {
+		var err error
+		clientID, err = q.DeleteIncident(ctx, id)
+		return err
 	})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return uuid.Nil, domain.ErrIncidentNotFound
+	}
+	return clientID, err
 }
 
-func (r *incidentRepository) ConfirmIncident(ctx context.Context, id uuid.UUID, confirmedBy *uuid.UUID) (int64, error) {
+func (r *incidentRepository) ConfirmIncident(ctx context.Context, id uuid.UUID) (int64, error) {
 	var affected int64
 	err := r.store.ExecActorTx(ctx, func(q *db.Queries) error {
 		var err error
-		affected, err = q.ConfirmIncident(ctx, db.ConfirmIncidentParams{
-			ID:          id,
-			ConfirmedBy: confirmedBy,
-		})
+		affected, err = q.ConfirmIncident(ctx, id)
 		return err
 	})
 	return affected, err
@@ -203,7 +227,7 @@ func (r *incidentRepository) ListAllIncidents(ctx context.Context, params domain
 	if len(items) == 0 {
 		return &domain.ListAllIncidentsResult{
 			Items:      []domain.IncidentSummary{},
-			TotalCount: 0,
+			TotalCount: totalCount,
 		}, nil
 	}
 
@@ -211,6 +235,7 @@ func (r *incidentRepository) ListAllIncidents(ctx context.Context, params domain
 	for i, row := range items {
 		result[i] = domain.IncidentSummary{
 			ID:                 row.ID,
+			ClientID:           row.ClientID,
 			OccurredAt:         conv.TimeFromPgTimestamptz(row.OccurredAt),
 			IncidentType:       string(row.IncidentType),
 			SeverityOfIncident: string(row.SeverityOfIncident),

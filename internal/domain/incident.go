@@ -67,6 +67,7 @@ type IncidentListItem struct {
 // IncidentSummary represents an incident in the global list.
 type IncidentSummary struct {
 	ID                 uuid.UUID
+	ClientID           uuid.UUID
 	OccurredAt         time.Time
 	IncidentType       string
 	SeverityOfIncident string
@@ -159,7 +160,7 @@ type ListIncidentsResult struct {
 type ListAllIncidentsParams struct {
 	Limit       int32
 	Offset      int32
-	IsConfirmed bool
+	IsConfirmed *bool
 	Search      *string
 }
 
@@ -219,8 +220,8 @@ type IncidentRepository interface {
 	ListIncidents(ctx context.Context, params ListIncidentsParams) (*ListIncidentsResult, error)
 	GetIncident(ctx context.Context, id uuid.UUID) (*Incident, error)
 	UpdateIncident(ctx context.Context, params UpdateIncidentParams) (*Incident, error)
-	DeleteIncident(ctx context.Context, id uuid.UUID) error
-	ConfirmIncident(ctx context.Context, id uuid.UUID, confirmedBy *uuid.UUID) (int64, error)
+	DeleteIncident(ctx context.Context, id uuid.UUID) (uuid.UUID, error)
+	ConfirmIncident(ctx context.Context, id uuid.UUID) (int64, error)
 	ListAllIncidents(ctx context.Context, params ListAllIncidentsParams) (*ListAllIncidentsResult, error)
 	GetIncidentCounts(ctx context.Context) (*IncidentCounts, error)
 	GetAllAdminUsers(ctx context.Context) ([]uuid.UUID, error)

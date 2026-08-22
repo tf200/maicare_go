@@ -1,6 +1,7 @@
 -- name: ListAllIncidents :many
 SELECT 
     i.id,
+    i.client_id,
     i.occurred_at,
     i.incident_type,
     i.severity_of_incident,
@@ -21,8 +22,8 @@ JOIN
     location l ON i.location_id = l.id
 WHERE 
     (
-        sqlc.arg('is_confirmed')::boolean IS NULL 
-        OR i.is_confirmed = sqlc.arg('is_confirmed')::boolean
+        sqlc.narg('is_confirmed')::boolean IS NULL
+        OR i.is_confirmed = sqlc.narg('is_confirmed')::boolean
     )
     AND (
         sqlc.narg('search')::text IS NULL
@@ -41,8 +42,8 @@ SELECT COUNT(*) as total_count
 FROM incident i
 JOIN client_details c ON i.client_id = c.id
 WHERE (
-    sqlc.arg('is_confirmed')::boolean IS NULL 
-    OR i.is_confirmed = sqlc.arg('is_confirmed')::boolean
+    sqlc.narg('is_confirmed')::boolean IS NULL
+    OR i.is_confirmed = sqlc.narg('is_confirmed')::boolean
 )
 AND (
     sqlc.narg('search')::text IS NULL
