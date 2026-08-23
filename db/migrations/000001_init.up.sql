@@ -573,9 +573,6 @@ CREATE TABLE custom_user (
     recovery_codes TEXT[] NOT NULL DEFAULT '{}'
 );
 
-CREATE INDEX custom_user_email_idx ON custom_user(email);
-CREATE INDEX custom_user_id_idx ON custom_user(id);
-
 -- Track which role templates were given to a user
 CREATE TABLE user_roles (
     user_id UUID NOT NULL PRIMARY KEY,
@@ -685,7 +682,6 @@ CREATE TABLE departments (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX departments_name_idx ON departments(name);
 CREATE INDEX departments_department_head_employee_id_idx ON departments(department_head_employee_id);
 
 -- Employee profile (linked to custom_user)
@@ -725,7 +721,6 @@ CREATE TABLE employee_profile (
         CHECK (manager_employee_id IS NULL OR manager_employee_id <> id)
 );
 
-CREATE INDEX employee_profile_user_id_idx ON employee_profile(user_id);
 CREATE INDEX employee_profile_location_id_idx ON employee_profile(location_id);
 CREATE INDEX idx_employee_profile_department_id ON employee_profile(department_id);
 CREATE INDEX idx_employee_profile_manager_employee_id ON employee_profile(manager_employee_id);
@@ -877,9 +872,6 @@ CREATE TABLE employee_handbook_step_progress (
     PRIMARY KEY (employee_handbook_id, step_id)
 );
 
-CREATE INDEX idx_employee_handbook_step_progress_handbook_id
-    ON employee_handbook_step_progress(employee_handbook_id);
-
 -- ==========================================
 -- CLIENT MANAGEMENT & INTAKE
 -- ==========================================
@@ -1018,9 +1010,6 @@ CREATE TABLE registration_form (
     addmission_type admission_type_enum NOT NULL DEFAULT 'regular_placement',
     rejection_reason TEXT NULL
 );
-
-CREATE INDEX registration_form_intake_token_idx ON registration_form(intake_token);
-
 
 -- Care type ENUM
 CREATE TYPE intake_care_type_enum AS ENUM ('protected_living', 'training_center', 'supported_independent_living', 'ambulatory_support', 'other');
@@ -1927,7 +1916,6 @@ CREATE TABLE invoice (
     CHECK (invoice_type <> 'credit_note' OR original_invoice_id IS NOT NULL)
 );
 
-CREATE INDEX invoice_invoice_number_idx ON invoice(invoice_number);
 CREATE INDEX invoice_client_id_idx ON invoice(client_id);
 CREATE INDEX invoice_status_idx ON invoice(status);
 CREATE INDEX invoice_sender_id_idx ON invoice(sender_id);
@@ -2389,7 +2377,6 @@ CREATE TABLE late_arrivals (
     CONSTRAINT late_arrivals_unique_schedule UNIQUE (schedule_id)
 );
 
-CREATE INDEX idx_late_arrivals_employee_id ON late_arrivals(employee_id);
 CREATE INDEX idx_late_arrivals_arrival_date_desc ON late_arrivals(arrival_date DESC);
 CREATE INDEX idx_late_arrivals_employee_date ON late_arrivals(employee_id, arrival_date DESC);
 
@@ -2527,8 +2514,6 @@ CREATE TABLE leave_balances (
     )
 );
 
-CREATE INDEX idx_leave_balances_employee_year ON leave_balances(employee_id, year);
-
 CREATE TABLE leave_balance_adjustments (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     leave_balance_id UUID NOT NULL REFERENCES leave_balances(id) ON DELETE CASCADE,
@@ -2621,7 +2606,7 @@ CREATE TYPE reminder_channel_enum AS ENUM ('in_app');
 CREATE TABLE calendar_events (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     organizer_employee_id UUID NOT NULL REFERENCES employee_profile(id) ON DELETE CASCADE,
-    created_by_employee_id UUID NOT NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
+    created_by_employee_id UUID NULL REFERENCES employee_profile(id) ON DELETE SET NULL,
     kind calendar_event_kind_enum NOT NULL,
     status calendar_event_status_enum NOT NULL DEFAULT 'confirmed',
     work_approval_status calendar_event_work_approval_status_enum NOT NULL DEFAULT 'pending',
