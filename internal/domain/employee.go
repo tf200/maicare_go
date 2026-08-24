@@ -86,10 +86,12 @@ type EmployeeProfile struct {
 }
 
 type Permission struct {
-	ID       uuid.UUID
-	Name     string
-	Resource string
-	Method   string
+	ID       uuid.UUID        `json:"id"`
+	Name     string           `json:"name"`
+	Resource string           `json:"resource"`
+	Method   string           `json:"method"`
+	IsScoped bool             `json:"is_scoped"`
+	Scope    *PermissionScope `json:"scope"`
 }
 
 // EmployeeCounts is the domain struct for employee count statistics.

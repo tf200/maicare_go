@@ -93,7 +93,9 @@ SELECT
     (
         SELECT COALESCE(json_agg(json_build_object(
 			'id',   p.id,
-			'name', p.name
+			'name', p.name,
+			'is_scoped', p.is_scoped,
+			'scope', rp.scope
         )), '[]'::json)
 		FROM user_roles ur
 		JOIN role_permissions rp ON rp.role_id = ur.role_id

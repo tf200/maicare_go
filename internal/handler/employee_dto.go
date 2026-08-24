@@ -184,10 +184,12 @@ type employeeListItemResponse struct {
 }
 
 type permissionResponse struct {
-	ID       uuid.UUID `json:"id"`
-	Name     string    `json:"name"`
-	Resource string    `json:"resource"`
-	Method   string    `json:"method"`
+	ID       uuid.UUID               `json:"id"`
+	Name     string                  `json:"name"`
+	Resource string                  `json:"resource"`
+	Method   string                  `json:"method"`
+	IsScoped bool                    `json:"is_scoped"`
+	Scope    *domain.PermissionScope `json:"scope"`
 }
 
 type employeeProfileResponse struct {
@@ -576,6 +578,8 @@ func toEmployeeProfileResponse(profile *domain.EmployeeProfile) employeeProfileR
 			Name:     permission.Name,
 			Resource: permission.Resource,
 			Method:   permission.Method,
+			IsScoped: permission.IsScoped,
+			Scope:    permission.Scope,
 		}
 	}
 

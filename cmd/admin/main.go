@@ -12,6 +12,7 @@ import (
 	"time"
 
 	db "maicare_go/db/sqlc"
+	"maicare_go/internal/ctxkeys"
 	"maicare_go/pkg/password"
 
 	"github.com/brianvoe/gofakeit/v7"
@@ -22,6 +23,23 @@ import (
 )
 
 func seedOrganisations(ctx context.Context, store *db.Store) (*db.Organisation, error) {
+	orgs, err := store.ListOrganisations(ctx)
+	if err == nil && len(orgs) > 0 {
+		return &db.Organisation{
+			ID:          orgs[0].ID,
+			Name:        orgs[0].Name,
+			Street:      orgs[0].Street,
+			HouseNumber: orgs[0].HouseNumber,
+			PostalCode:  orgs[0].PostalCode,
+			City:        orgs[0].City,
+			PhoneNumber: orgs[0].PhoneNumber,
+			Email:       orgs[0].Email,
+			KvkNumber:   orgs[0].KvkNumber,
+			BtwNumber:   orgs[0].BtwNumber,
+			CreatedAt:   orgs[0].CreatedAt,
+			UpdatedAt:   orgs[0].UpdatedAt,
+		}, nil
+	}
 
 	phone := gofakeit.Phone()
 	email := gofakeit.Email()
@@ -47,6 +65,23 @@ func seedOrganisations(ctx context.Context, store *db.Store) (*db.Organisation, 
 }
 
 func seedLocations(ctx context.Context, store *db.Store, organisation *db.Organisation) (*db.Location, error) {
+	locs, err := store.ListLocations(ctx, organisation.ID)
+	if err == nil && len(locs) > 0 {
+		return &db.Location{
+			ID:                  locs[0].ID,
+			OrganisationID:      locs[0].OrganisationID,
+			Name:                locs[0].Name,
+			Street:              locs[0].Street,
+			HouseNumber:         locs[0].HouseNumber,
+			HouseNumberAddition: locs[0].HouseNumberAddition,
+			PostalCode:          locs[0].PostalCode,
+			City:                locs[0].City,
+			Capacity:            locs[0].Capacity,
+			CreatedAt:           locs[0].CreatedAt,
+			UpdatedAt:           locs[0].UpdatedAt,
+		}, nil
+	}
+
 	locationTypes := []db.LocationTypeEnum{
 		db.LocationTypeEnumCareHome,
 		db.LocationTypeEnumOffice,
@@ -83,7 +118,23 @@ func seedLocations(ctx context.Context, store *db.Store, organisation *db.Organi
 	return &location, nil
 }
 
-func createCustomUser(ctx context.Context, store *db.Store, email string, plainPassword string) (*db.CustomUser, error) {
+func createCustomUser(ctx context.Context, pool *pgxpool.Pool, store *db.Store, email string, plainPassword string) (*db.CustomUser, error) {
+	var existingID uuid.UUID
+	err := pool.QueryRow(ctx, "SELECT id FROM custom_user WHERE email = $1", email).Scan(&existingID)
+	if err == nil {
+		hashedPassword, hashErr := password.HashPassword(plainPassword)
+		if hashErr == nil {
+			_ = store.UpdatePassword(ctx, db.UpdatePasswordParams{
+				ID:       existingID,
+				Password: hashedPassword,
+			})
+		}
+		return &db.CustomUser{
+			ID:       existingID,
+			Email:    email,
+			IsActive: true,
+		}, nil
+	}
 
 	// Hash a default password for all users
 	hashedPassword, err := password.HashPassword(plainPassword)
@@ -102,7 +153,15 @@ func createCustomUser(ctx context.Context, store *db.Store, email string, plainP
 	return &user, nil
 }
 
-func seedEmployeeProfiles(ctx context.Context, store *db.Store, user *db.CustomUser, location *db.Location) (*db.EmployeeProfile, error) {
+func seedEmployeeProfiles(ctx context.Context, pool *pgxpool.Pool, store *db.Store, user *db.CustomUser, location *db.Location) (*db.EmployeeProfile, error) {
+	var existingEmpID uuid.UUID
+	err := pool.QueryRow(ctx, "SELECT id FROM employee_profile WHERE user_id = $1", user.ID).Scan(&existingEmpID)
+	if err == nil {
+		return &db.EmployeeProfile{
+			ID:     existingEmpID,
+			UserID: user.ID,
+		}, nil
+	}
 
 	genders := []db.GenderEnum{
 		db.GenderEnumMale,
@@ -188,6 +247,82 @@ func seedEmployeeProfiles(ctx context.Context, store *db.Store, user *db.CustomU
 	return &employee, nil
 }
 
+func seedSystemActor(ctx context.Context, pool *pgxpool.Pool, store *db.Store) error {
+	systemUserUUIDStr := strings.TrimSpace(os.Getenv("SYSTEM_ACTOR_USER_ID"))
+	if systemUserUUIDStr == "" {
+		systemUserUUIDStr = "00000000-0000-0000-0000-000000000001"
+	}
+	systemUserID, err := uuid.Parse(systemUserUUIDStr)
+	if err != nil {
+		return fmt.Errorf("invalid SYSTEM_ACTOR_USER_ID %q: %w", systemUserUUIDStr, err)
+	}
+
+	systemEmpUUIDStr := strings.TrimSpace(os.Getenv("SYSTEM_ACTOR_EMPLOYEE_ID"))
+	if systemEmpUUIDStr == "" {
+		systemEmpUUIDStr = "00000000-0000-0000-0000-000000000002"
+	}
+	systemEmployeeID, err := uuid.Parse(systemEmpUUIDStr)
+	if err != nil {
+		return fmt.Errorf("invalid SYSTEM_ACTOR_EMPLOYEE_ID %q: %w", systemEmpUUIDStr, err)
+	}
+
+	systemEmail := strings.TrimSpace(os.Getenv("SYSTEM_ACTOR_EMAIL"))
+	if systemEmail == "" {
+		systemEmail = "system@maicare.internal"
+	}
+
+	systemPassword, err := password.HashPassword(uuid.NewString() + uuid.NewString())
+	if err != nil {
+		return fmt.Errorf("hash system password: %w", err)
+	}
+
+	fmt.Printf("Seeding System Actor (User: %s, Employee: %s)...\n", systemUserID, systemEmployeeID)
+
+	// 1. Upsert custom_user
+	_, err = pool.Exec(ctx, `
+		INSERT INTO custom_user (id, email, password, is_active)
+		VALUES ($1, $2, $3, true)
+		ON CONFLICT (id) DO UPDATE
+		SET is_active = true,
+		    email = EXCLUDED.email
+	`, systemUserID, systemEmail, systemPassword)
+	if err != nil {
+		return fmt.Errorf("upsert system custom_user: %w", err)
+	}
+
+	// 2. Upsert employee_profile
+	_, err = pool.Exec(ctx, `
+		INSERT INTO employee_profile (
+			id, user_id, first_name, last_name, bsn, street, house_number,
+			postal_code, city, position, employee_number, work_email_address,
+			gender, is_archived, out_of_service, contract_type
+		) VALUES (
+			$1, $2, 'System', 'Actor', '000000000', 'System Street', '1',
+			'0000AA', 'System City', 'System Service Actor', 'SYS00001', $3,
+			'other', false, false, 'none'
+		)
+		ON CONFLICT (id) DO UPDATE
+		SET user_id = EXCLUDED.user_id,
+		    is_archived = false,
+		    out_of_service = false
+	`, systemEmployeeID, systemUserID, systemEmail)
+	if err != nil {
+		return fmt.Errorf("upsert system employee_profile: %w", err)
+	}
+
+	// 3. Grant admin role
+	grantPermissions(ctx, store, systemUserID)
+
+	// 4. Validate actor identity check
+	systemActor := ctxkeys.ActorIdentity{UserID: systemUserID, EmployeeID: systemEmployeeID}
+	if err := store.ValidateActorIdentity(ctx, systemActor); err != nil {
+		return fmt.Errorf("validate system actor identity: %w", err)
+	}
+
+	fmt.Println("System Actor Seeded & Validated Successfully")
+	return nil
+}
+
 func grantPermissions(ctx context.Context, store *db.Store, userID uuid.UUID) {
 	roleID, err := store.GetAdminRoleId(ctx)
 	if err != nil {
@@ -268,9 +403,14 @@ func main() {
 	defer connPool.Close()
 
 	store := db.NewStore(connPool)
+
+	if err := seedSystemActor(ctx, connPool, store); err != nil {
+		log.Fatalf("Failed to seed system actor: %v", err)
+	}
+
 	fmt.Println("Seeding Admin User...")
 
-	user, err := createCustomUser(ctx, store, adminEmail, adminPassword)
+	user, err := createCustomUser(ctx, connPool, store, adminEmail, adminPassword)
 	if err != nil {
 		log.Fatalf("Failed to create admin user: %v", err)
 	}
@@ -285,7 +425,7 @@ func main() {
 		log.Fatalf("Failed to seed location: %v", err)
 	}
 
-	_, err = seedEmployeeProfiles(ctx, store, user, location)
+	_, err = seedEmployeeProfiles(ctx, connPool, store, user, location)
 	if err != nil {
 		log.Fatalf("Failed to seed employee profile: %v", err)
 	}
