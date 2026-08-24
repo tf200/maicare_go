@@ -104,6 +104,7 @@ type Querier interface {
 	CreateLeaveBalanceAdjustmentAudit(ctx context.Context, arg CreateLeaveBalanceAdjustmentAuditParams) (LeaveBalanceAdjustment, error)
 	CreateLeaveRequest(ctx context.Context, arg CreateLeaveRequestParams) (LeaveRequest, error)
 	CreateLocation(ctx context.Context, arg CreateLocationParams) (Location, error)
+	CreateMainCoordinator(ctx context.Context, arg CreateMainCoordinatorParams) (AssignedEmployee, error)
 	CreateManualClientGoal(ctx context.Context, arg CreateManualClientGoalParams) (ClientGoal, error)
 	CreateNotification(ctx context.Context, arg CreateNotificationParams) (Notification, error)
 	CreateOrganisation(ctx context.Context, arg CreateOrganisationParams) (Organisation, error)
@@ -161,6 +162,7 @@ type Querier interface {
 	Enable2Fa(ctx context.Context, arg Enable2FaParams) (int64, error)
 	EnsureLeaveBalanceForYear(ctx context.Context, arg EnsureLeaveBalanceForYearParams) error
 	ExpirePendingShiftSwapRequests(ctx context.Context) error
+	GetActiveEmployeeForCare(ctx context.Context, id uuid.UUID) (uuid.UUID, error)
 	GetActiveEmployeeHandbookByEmployeeID(ctx context.Context, employeeID uuid.UUID) (GetActiveEmployeeHandbookByEmployeeIDRow, error)
 	GetActiveHandbookTemplateByDepartment(ctx context.Context, departmentID uuid.UUID) (HandbookTemplate, error)
 	GetActiveLeavePolicyByType(ctx context.Context, leaveType LeaveRequestTypeEnum) (LeavePolicy, error)
@@ -190,6 +192,7 @@ type Querier interface {
 	GetClientCoordinator(ctx context.Context, clientID uuid.UUID) ([]GetClientCoordinatorRow, error)
 	GetClientCounts(ctx context.Context) (GetClientCountsRow, error)
 	GetClientDetails(ctx context.Context, id uuid.UUID) (GetClientDetailsRow, error)
+	GetClientDetailsForUpdate(ctx context.Context, id uuid.UUID) (ClientDetail, error)
 	GetClientDiagnosis(ctx context.Context, arg GetClientDiagnosisParams) (ClientDiagnosis, error)
 	GetClientGoalByIDAndClientID(ctx context.Context, arg GetClientGoalByIDAndClientIDParams) (ClientGoal, error)
 	GetClientLatestStatusHistory(ctx context.Context, clientID uuid.UUID) (GetClientLatestStatusHistoryRow, error)
@@ -236,6 +239,7 @@ type Querier interface {
 	GetLatestDraftEvaluationByClient(ctx context.Context, clientID uuid.UUID) (GetLatestDraftEvaluationByClientRow, error)
 	GetLeaveRequestStats(ctx context.Context) (GetLeaveRequestStatsRow, error)
 	GetLocation(ctx context.Context, id uuid.UUID) (Location, error)
+	GetMainCoordinator(ctx context.Context, clientID uuid.UUID) (AssignedEmployee, error)
 	GetMissingClientDocuments(ctx context.Context, clientID uuid.UUID) ([]string, error)
 	GetMyLeaveRequestStats(ctx context.Context, employeeID uuid.UUID) (GetMyLeaveRequestStatsRow, error)
 	GetNextActiveClientGoalSortOrder(ctx context.Context, clientID uuid.UUID) (int32, error)

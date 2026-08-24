@@ -3128,7 +3128,7 @@ func (r *ClientRepository) UpdateClientStatus(ctx context.Context, clientID uuid
 func (r *ClientRepository) PutClientInCare(ctx context.Context, clientID uuid.UUID, targetStatus db.ClientStatusEnum, careStartDay time.Time, params domain.PutClientInCareParams) (*domain.PutClientInCareResult, error) {
 	var result domain.PutClientInCareResult
 	err := r.store.ExecActorTx(ctx, func(q *db.Queries) error {
-		existingClient, err := q.GetClientDetails(ctx, clientID)
+		existingClient, err := q.GetClientDetailsForUpdate(ctx, clientID)
 		if err != nil {
 			return fmt.Errorf("failed to get client details: %w", err)
 		}
@@ -3144,13 +3144,32 @@ func (r *ClientRepository) PutClientInCare(ctx context.Context, clientID uuid.UU
 			return fmt.Errorf("client cannot be put in care without at least one active goal")
 		}
 
-		coordinatorAssignment, err := q.UpsertMainCoordinator(ctx, db.UpsertMainCoordinatorParams{
-			ClientID:   clientID,
-			EmployeeID: params.CoordinatorEmployeeID,
-			StartDate:  pgtype.Date{Time: careStartDay, Valid: true},
-		})
-		if err != nil {
-			return fmt.Errorf("failed to assign main coordinator: %w", err)
+		if _, err := q.GetActiveEmployeeForCare(ctx, params.CoordinatorEmployeeID); err != nil {
+			return fmt.Errorf("selected coordinator is not available: %w", err)
+		}
+
+		coordinatorAssignment, err := q.GetMainCoordinator(ctx, clientID)
+		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+			return fmt.Errorf("failed to get main coordinator: %w", err)
+		}
+		if errors.Is(err, pgx.ErrNoRows) {
+			coordinatorAssignment, err = q.CreateMainCoordinator(ctx, db.CreateMainCoordinatorParams{
+				ClientID:   clientID,
+				EmployeeID: params.CoordinatorEmployeeID,
+				StartDate:  pgtype.Date{Time: careStartDay, Valid: true},
+			})
+			if err != nil {
+				return fmt.Errorf("failed to assign main coordinator: %w", err)
+			}
+		} else if coordinatorAssignment.EmployeeID != params.CoordinatorEmployeeID {
+			coordinatorAssignment, err = q.UpdateAssignedEmployee(ctx, db.UpdateAssignedEmployeeParams{
+				ID:         coordinatorAssignment.ID,
+				EmployeeID: &params.CoordinatorEmployeeID,
+				StartDate:  pgtype.Date{Time: careStartDay, Valid: true},
+			})
+			if err != nil {
+				return fmt.Errorf("failed to update main coordinator: %w", err)
+			}
 		}
 
 		placedInCareAt := pgtype.Timestamptz{Valid: false}

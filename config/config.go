@@ -10,6 +10,7 @@ import (
 
 type Config struct {
 	DbSource              string        `mapstructure:"DB_SOURCE"`
+	MigrationsDbSource    string        `mapstructure:"MIGRATIONS_DB_SOURCE"`
 	ServerAddress         string        `mapstructure:"SERVER_ADDRESS"`
 	AccessTokenSecretKey  string        `mapstructure:"ACCESS_TOKEN_SECRET_KEY"`
 	AccessTokenDuration   time.Duration `mapstructure:"ACCESS_TOKEN_DURATION"`
@@ -56,7 +57,7 @@ func Load(path string) (cfg Config, err error) {
 	viper.AutomaticEnv()
 
 	envVars := []string{
-		"DB_SOURCE", "SERVER_ADDRESS", "ACCESS_TOKEN_SECRET_KEY",
+		"DB_SOURCE", "MIGRATIONS_DB_SOURCE", "SERVER_ADDRESS", "ACCESS_TOKEN_SECRET_KEY",
 		"ACCESS_TOKEN_DURATION", "REFRESH_TOKEN_SECRET_KEY",
 		"REFRESH_TOKEN_DURATION", "TWO_FA_TOKEN_SECRET_KEY",
 		"TWO_FA_TOKEN_DURATION", "B2_ENDPOINT", "B2_KEY", "B2_KEY_ID", "B2_BUCKET",
@@ -91,6 +92,9 @@ func Load(path string) (cfg Config, err error) {
 
 	if err := validate(&cfg); err != nil {
 		return cfg, fmt.Errorf("invalid configuration: %w", err)
+	}
+	if strings.TrimSpace(cfg.MigrationsDbSource) == "" {
+		cfg.MigrationsDbSource = cfg.DbSource
 	}
 
 	return cfg, nil

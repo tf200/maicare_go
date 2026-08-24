@@ -847,6 +847,79 @@ func (q *Queries) GetClientDetails(ctx context.Context, id uuid.UUID) (GetClient
 	return i, err
 }
 
+const getClientDetailsForUpdate = `-- name: GetClientDetailsForUpdate :one
+SELECT id, intake_form_id, registration_form_id, first_name, last_name, date_of_birth, identity, status, bsn, bsn_verified_by, evaluation_intervals_weeks, care_type, email, phone_number, gender, filenumber, created_at, placed_in_care_at, care_start_date, last_evaluation_anchor_date, next_evaluation_date, discharge_date, discharge_reason, final_evaluation, sender_id, location_id, street, house_number, house_number_addition, postal_code, city, education_currently_enrolled, education_institution, education_mentor_name, education_mentor_phone, education_mentor_email, education_additional_notes, education_level, work_currently_employed, work_current_employer, work_current_employer_phone, work_current_employer_email, work_current_position, work_start_date, work_additional_notes, nationality, risk_aggressive_behavior, risk_suicidal_selfharm, risk_substance_abuse, risk_psychiatric_issues, risk_criminal_history, risk_flight_behavior, risk_weapon_possession, risk_sexual_behavior, risk_day_night_rhythm, risk_other, risk_other_description, risk_additional_notes
+FROM client_details
+WHERE id = $1
+FOR UPDATE
+`
+
+func (q *Queries) GetClientDetailsForUpdate(ctx context.Context, id uuid.UUID) (ClientDetail, error) {
+	row := q.db.QueryRow(ctx, getClientDetailsForUpdate, id)
+	var i ClientDetail
+	err := row.Scan(
+		&i.ID,
+		&i.IntakeFormID,
+		&i.RegistrationFormID,
+		&i.FirstName,
+		&i.LastName,
+		&i.DateOfBirth,
+		&i.Identity,
+		&i.Status,
+		&i.Bsn,
+		&i.BsnVerifiedBy,
+		&i.EvaluationIntervalsWeeks,
+		&i.CareType,
+		&i.Email,
+		&i.PhoneNumber,
+		&i.Gender,
+		&i.Filenumber,
+		&i.CreatedAt,
+		&i.PlacedInCareAt,
+		&i.CareStartDate,
+		&i.LastEvaluationAnchorDate,
+		&i.NextEvaluationDate,
+		&i.DischargeDate,
+		&i.DischargeReason,
+		&i.FinalEvaluation,
+		&i.SenderID,
+		&i.LocationID,
+		&i.Street,
+		&i.HouseNumber,
+		&i.HouseNumberAddition,
+		&i.PostalCode,
+		&i.City,
+		&i.EducationCurrentlyEnrolled,
+		&i.EducationInstitution,
+		&i.EducationMentorName,
+		&i.EducationMentorPhone,
+		&i.EducationMentorEmail,
+		&i.EducationAdditionalNotes,
+		&i.EducationLevel,
+		&i.WorkCurrentlyEmployed,
+		&i.WorkCurrentEmployer,
+		&i.WorkCurrentEmployerPhone,
+		&i.WorkCurrentEmployerEmail,
+		&i.WorkCurrentPosition,
+		&i.WorkStartDate,
+		&i.WorkAdditionalNotes,
+		&i.Nationality,
+		&i.RiskAggressiveBehavior,
+		&i.RiskSuicidalSelfharm,
+		&i.RiskSubstanceAbuse,
+		&i.RiskPsychiatricIssues,
+		&i.RiskCriminalHistory,
+		&i.RiskFlightBehavior,
+		&i.RiskWeaponPossession,
+		&i.RiskSexualBehavior,
+		&i.RiskDayNightRhythm,
+		&i.RiskOther,
+		&i.RiskOtherDescription,
+		&i.RiskAdditionalNotes,
+	)
+	return i, err
+}
+
 const getClientLatestStatusHistory = `-- name: GetClientLatestStatusHistory :one
 SELECT
     (

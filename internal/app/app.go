@@ -56,7 +56,7 @@ type App struct {
 }
 
 func New(ctx context.Context, cfg config.Config) (*App, error) {
-	if err := runMigrations(cfg.DbSource, cfg.MigrationsPath); err != nil {
+	if err := runMigrations(cfg.MigrationsDbSource, cfg.MigrationsPath); err != nil {
 		return nil, err
 	}
 

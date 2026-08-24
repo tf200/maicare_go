@@ -229,6 +229,38 @@ func (q *Queries) CreateEmemrgencyContact(ctx context.Context, arg CreateEmemrge
 	return i, err
 }
 
+const createMainCoordinator = `-- name: CreateMainCoordinator :one
+INSERT INTO assigned_employee (
+    client_id,
+    employee_id,
+    start_date,
+    role
+) VALUES (
+    $1, $2, $3, 'coordinator'
+)
+RETURNING id, client_id, employee_id, start_date, role, created_at
+`
+
+type CreateMainCoordinatorParams struct {
+	ClientID   uuid.UUID   `json:"client_id"`
+	EmployeeID uuid.UUID   `json:"employee_id"`
+	StartDate  pgtype.Date `json:"start_date"`
+}
+
+func (q *Queries) CreateMainCoordinator(ctx context.Context, arg CreateMainCoordinatorParams) (AssignedEmployee, error) {
+	row := q.db.QueryRow(ctx, createMainCoordinator, arg.ClientID, arg.EmployeeID, arg.StartDate)
+	var i AssignedEmployee
+	err := row.Scan(
+		&i.ID,
+		&i.ClientID,
+		&i.EmployeeID,
+		&i.StartDate,
+		&i.Role,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const deleteAssignedEmployee = `-- name: DeleteAssignedEmployee :one
 DELETE FROM assigned_employee
 WHERE id = $1
@@ -275,6 +307,22 @@ func (q *Queries) DeleteEmergencyContact(ctx context.Context, id uuid.UUID) (Cli
 		&i.GoalsReports,
 	)
 	return i, err
+}
+
+const getActiveEmployeeForCare = `-- name: GetActiveEmployeeForCare :one
+SELECT id
+FROM employee_profile
+WHERE id = $1
+  AND NOT is_archived
+  AND NOT COALESCE(out_of_service, false)
+FOR SHARE
+`
+
+func (q *Queries) GetActiveEmployeeForCare(ctx context.Context, id uuid.UUID) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, getActiveEmployeeForCare, id)
+	var id_2 uuid.UUID
+	err := row.Scan(&id_2)
+	return id_2, err
 }
 
 const getAssignedEmployee = `-- name: GetAssignedEmployee :one
@@ -396,6 +444,28 @@ func (q *Queries) GetEmergencyContact(ctx context.Context, id uuid.UUID) (Client
 		&i.MedicalReports,
 		&i.IncidentsReports,
 		&i.GoalsReports,
+	)
+	return i, err
+}
+
+const getMainCoordinator = `-- name: GetMainCoordinator :one
+SELECT id, client_id, employee_id, start_date, role, created_at
+FROM assigned_employee
+WHERE client_id = $1
+  AND role = 'coordinator'
+LIMIT 1
+`
+
+func (q *Queries) GetMainCoordinator(ctx context.Context, clientID uuid.UUID) (AssignedEmployee, error) {
+	row := q.db.QueryRow(ctx, getMainCoordinator, clientID)
+	var i AssignedEmployee
+	err := row.Scan(
+		&i.ID,
+		&i.ClientID,
+		&i.EmployeeID,
+		&i.StartDate,
+		&i.Role,
+		&i.CreatedAt,
 	)
 	return i, err
 }

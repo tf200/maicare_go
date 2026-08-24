@@ -253,6 +253,12 @@ LEFT JOIN sender s ON c.sender_id = s.id
 LEFT JOIN intake_forms i ON c.intake_form_id = i.id
 WHERE c.id = $1 LIMIT 1;
 
+-- name: GetClientDetailsForUpdate :one
+SELECT *
+FROM client_details
+WHERE id = $1
+FOR UPDATE;
+
 
 -- name: ListActiveGoalSummariesByClientID :many
 SELECT

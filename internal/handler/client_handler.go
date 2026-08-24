@@ -32,7 +32,7 @@ func RegisterClientRoutes(
 		clientsGroup.PUT("/:id", auth, requirePermission("CLIENT.UPDATE"), handler.UpdateClient)
 		clientsGroup.GET("/:id/addresses", auth, requirePermission("CLIENT.VIEW"), handler.GetClientAddresses)
 		clientsGroup.PUT("/:id/status", auth, requirePermission("CLIENT.STATUS.UPDATE"), handler.UpdateClientStatus)
-		clientsGroup.PUT("/:id/put-in-care", auth, requirePermission("CLIENT.STATUS.UPDATE"), handler.PutClientInCare)
+		clientsGroup.PUT("/:id/put-in-care", auth, requirePermission("CLIENT.STATUS.UPDATE"), requirePermission("CLIENT.INVOLVED_EMPLOYEE.VIEW"), handler.PutClientInCare)
 		clientsGroup.PUT("/:id/put-out-of-care", auth, requirePermission("CLIENT.STATUS.UPDATE"), handler.PutClientOutOfCare)
 		clientsGroup.GET("/:id/status_history", auth, requirePermission("CLIENT.VIEW"), handler.ListStatusHistory)
 		clientsGroup.POST("/:id/documents", auth, requirePermission(domain.PermClientDocumentsUpload.String()), handler.AddClientDocument)
