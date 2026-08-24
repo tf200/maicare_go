@@ -258,6 +258,7 @@ FROM employee_profile ep
 LEFT JOIN departments d ON d.id = ep.department_id
 LEFT JOIN active_assignments aa ON aa.employee_id = ep.id
 WHERE
+    ep.id <> sqlc.arg('system_employee_id') AND
     NOT ep.is_archived AND
     NOT COALESCE(ep.out_of_service, false) AND
     aa.employee_id IS NULL AND
@@ -278,6 +279,7 @@ SELECT COUNT(*)
 FROM employee_profile ep
 LEFT JOIN active_assignments aa ON aa.employee_id = ep.id
 WHERE
+    ep.id <> sqlc.arg('system_employee_id') AND
     NOT ep.is_archived AND
     NOT COALESCE(ep.out_of_service, false) AND
     aa.employee_id IS NULL AND

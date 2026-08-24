@@ -17,11 +17,12 @@ import (
 )
 
 type EmployeeRepository struct {
-	store *db.Store
+	store            *db.Store
+	systemEmployeeID uuid.UUID
 }
 
-func NewEmployeeRepository(store *db.Store) domain.EmployeeRepository {
-	return &EmployeeRepository{store: store}
+func NewEmployeeRepository(store *db.Store, systemEmployeeID uuid.UUID) domain.EmployeeRepository {
+	return &EmployeeRepository{store: store, systemEmployeeID: systemEmployeeID}
 }
 
 func (r *EmployeeRepository) GetEmployeeByID(ctx context.Context, id uuid.UUID) (*domain.EmployeeDetail, error) {
@@ -195,6 +196,7 @@ func (r *EmployeeRepository) ListEmployees(ctx context.Context, params domain.Li
 		LocationID:          params.LocationID,
 		ContractType:        nullContractTypeFromPtr(params.ContractType),
 		Search:              params.Search,
+		SystemEmployeeID:    r.systemEmployeeID,
 	})
 	if err != nil {
 		return nil, err
@@ -223,6 +225,8 @@ func (r *EmployeeRepository) CountEmployees(ctx context.Context, params domain.L
 		IncludeOutOfService: params.IncludeOutOfService,
 		LocationID:          params.LocationID,
 		ContractType:        nullContractTypeFromPtr(params.ContractType),
+		Search:              params.Search,
+		SystemEmployeeID:    r.systemEmployeeID,
 	})
 }
 
@@ -326,7 +330,7 @@ func (r *EmployeeRepository) UpdateEmployeePassword(ctx context.Context, employe
 }
 
 func (r *EmployeeRepository) GetEmployeeCounts(ctx context.Context) (*domain.EmployeeCounts, error) {
-	row, err := r.store.GetEmployeeCounts(ctx)
+	row, err := r.store.GetEmployeeCounts(ctx, r.systemEmployeeID)
 	if err != nil {
 		return nil, err
 	}
@@ -335,7 +339,10 @@ func (r *EmployeeRepository) GetEmployeeCounts(ctx context.Context) (*domain.Emp
 }
 
 func (r *EmployeeRepository) SearchEmployeesByNameOrEmail(ctx context.Context, search *string) ([]domain.EmployeeSearchResult, error) {
-	rows, err := r.store.SearchEmployeesByNameOrEmail(ctx, search)
+	rows, err := r.store.SearchEmployeesByNameOrEmail(ctx, db.SearchEmployeesByNameOrEmailParams{
+		Search:           search,
+		SystemEmployeeID: r.systemEmployeeID,
+	})
 	if err != nil {
 		return nil, err
 	}

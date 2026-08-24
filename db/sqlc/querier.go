@@ -167,7 +167,7 @@ type Querier interface {
 	GetActiveRegistrationUploadSession(ctx context.Context, tokenHash string) (RegistrationUploadSession, error)
 	GetActorAttachmentById(ctx context.Context, argUuid uuid.UUID) (AttachmentFile, error)
 	GetActorAttachmentsByUUIDs(ctx context.Context, dollar_1 []uuid.UUID) ([]AttachmentFile, error)
-	GetAdminDashboardStatCards(ctx context.Context) (GetAdminDashboardStatCardsRow, error)
+	GetAdminDashboardStatCards(ctx context.Context, systemEmployeeID uuid.UUID) (GetAdminDashboardStatCardsRow, error)
 	// Returns the ID of the admin role.
 	GetAdminRoleId(ctx context.Context) (uuid.UUID, error)
 	GetAiGeneratedReport(ctx context.Context, id uuid.UUID) (AiGeneratedReport, error)
@@ -208,7 +208,7 @@ type Querier interface {
 	GetEffectiveUserPermission(ctx context.Context, arg GetEffectiveUserPermissionParams) (GetEffectiveUserPermissionRow, error)
 	GetEmergencyContact(ctx context.Context, id uuid.UUID) (ClientEmergencyContact, error)
 	GetEmployeeContractDetails(ctx context.Context, id uuid.UUID) (GetEmployeeContractDetailsRow, error)
-	GetEmployeeCounts(ctx context.Context) (GetEmployeeCountsRow, error)
+	GetEmployeeCounts(ctx context.Context, systemEmployeeID uuid.UUID) (GetEmployeeCountsRow, error)
 	GetEmployeeHandbookByID(ctx context.Context, id uuid.UUID) (EmployeeHandbook, error)
 	GetEmployeeHandbookDetailsByID(ctx context.Context, id uuid.UUID) (GetEmployeeHandbookDetailsByIDRow, error)
 	GetEmployeeProfileByID(ctx context.Context, id uuid.UUID) (GetEmployeeProfileByIDRow, error)
@@ -414,7 +414,7 @@ type Querier interface {
 	// Removes *all* permissions from the given role.
 	RemovePermissionsFromRole(ctx context.Context, roleID uuid.UUID) error
 	ReplaceRegistrationFormDocument(ctx context.Context, arg ReplaceRegistrationFormDocumentParams) (RegistrationForm, error)
-	SearchEmployeesByNameOrEmail(ctx context.Context, search *string) ([]SearchEmployeesByNameOrEmailRow, error)
+	SearchEmployeesByNameOrEmail(ctx context.Context, arg SearchEmployeesByNameOrEmailParams) ([]SearchEmployeesByNameOrEmailRow, error)
 	SeedClientDiagnosis(ctx context.Context, arg SeedClientDiagnosisParams) (ClientDiagnosis, error)
 	SeedClientMedicationOrder(ctx context.Context, arg SeedClientMedicationOrderParams) (ClientMedicationOrder, error)
 	SeedIncident(ctx context.Context, arg SeedIncidentParams) (uuid.UUID, error)

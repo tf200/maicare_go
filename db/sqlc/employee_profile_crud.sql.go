@@ -16,33 +16,41 @@ const countEmployeeProfile = `-- name: CountEmployeeProfile :one
 SELECT COUNT(*)
 FROM employee_profile ep
 WHERE
-    (CASE
-        WHEN $1::boolean IS NULL THEN true
-        WHEN $1::boolean = false THEN NOT ep.is_archived
-        ELSE true
-    END) AND
+    ep.id <> $1 AND
     (CASE
         WHEN $2::boolean IS NULL THEN true
-        WHEN $2::boolean = false THEN NOT COALESCE(ep.out_of_service, false)
+        WHEN $2::boolean = false THEN NOT ep.is_archived
         ELSE true
     END) AND
-    (location_id = $3 OR $3 IS NULL) AND
-    (contract_type = $4 OR $4 IS NULL)
+    (CASE
+        WHEN $3::boolean IS NULL THEN true
+        WHEN $3::boolean = false THEN NOT COALESCE(ep.out_of_service, false)
+        ELSE true
+    END) AND
+    (location_id = $4 OR $4 IS NULL) AND
+    (contract_type = $5 OR $5 IS NULL) AND
+    ($6::TEXT IS NULL OR
+        ep.first_name ILIKE '%' || $6 || '%' OR
+        ep.last_name ILIKE '%' || $6 || '%')
 `
 
 type CountEmployeeProfileParams struct {
+	SystemEmployeeID    uuid.UUID                 `json:"system_employee_id"`
 	IncludeArchived     *bool                     `json:"include_archived"`
 	IncludeOutOfService *bool                     `json:"include_out_of_service"`
 	LocationID          *uuid.UUID                `json:"location_id"`
 	ContractType        *EmployeeContractTypeEnum `json:"contract_type"`
+	Search              *string                   `json:"search"`
 }
 
 func (q *Queries) CountEmployeeProfile(ctx context.Context, arg CountEmployeeProfileParams) (int64, error) {
 	row := q.db.QueryRow(ctx, countEmployeeProfile,
+		arg.SystemEmployeeID,
 		arg.IncludeArchived,
 		arg.IncludeOutOfService,
 		arg.LocationID,
 		arg.ContractType,
+		arg.Search,
 	)
 	var count int64
 	err := row.Scan(&count)
@@ -349,21 +357,22 @@ FROM employee_profile ep
 LEFT JOIN location l ON l.id = ep.location_id
 LEFT JOIN departments d ON d.id = ep.department_id
 WHERE
-    (CASE
-        WHEN $3::boolean IS NULL THEN true
-        WHEN $3::boolean = false THEN NOT ep.is_archived
-        ELSE true
-    END) AND
+    ep.id <> $3 AND
     (CASE
         WHEN $4::boolean IS NULL THEN true
-        WHEN $4::boolean = false THEN NOT COALESCE(ep.out_of_service, false)
+        WHEN $4::boolean = false THEN NOT ep.is_archived
         ELSE true
     END) AND
-    (ep.location_id = $5 OR $5 IS NULL) AND
-    (ep.contract_type = $6 OR $6 IS NULL) AND
-    ($7::TEXT IS NULL OR
-        ep.first_name ILIKE '%' || $7 || '%' OR
-        ep.last_name ILIKE '%' || $7 || '%')
+    (CASE
+        WHEN $5::boolean IS NULL THEN true
+        WHEN $5::boolean = false THEN NOT COALESCE(ep.out_of_service, false)
+        ELSE true
+    END) AND
+    (ep.location_id = $6 OR $6 IS NULL) AND
+    (ep.contract_type = $7 OR $7 IS NULL) AND
+    ($8::TEXT IS NULL OR
+        ep.first_name ILIKE '%' || $8 || '%' OR
+        ep.last_name ILIKE '%' || $8 || '%')
 ORDER BY ep.created_at DESC
 LIMIT $1 OFFSET $2
 `
@@ -371,6 +380,7 @@ LIMIT $1 OFFSET $2
 type ListEmployeeProfileParams struct {
 	Limit               int32                     `json:"limit"`
 	Offset              int32                     `json:"offset"`
+	SystemEmployeeID    uuid.UUID                 `json:"system_employee_id"`
 	IncludeArchived     *bool                     `json:"include_archived"`
 	IncludeOutOfService *bool                     `json:"include_out_of_service"`
 	LocationID          *uuid.UUID                `json:"location_id"`
@@ -393,6 +403,7 @@ func (q *Queries) ListEmployeeProfile(ctx context.Context, arg ListEmployeeProfi
 	rows, err := q.db.Query(ctx, listEmployeeProfile,
 		arg.Limit,
 		arg.Offset,
+		arg.SystemEmployeeID,
 		arg.IncludeArchived,
 		arg.IncludeOutOfService,
 		arg.LocationID,

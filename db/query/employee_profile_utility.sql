@@ -19,15 +19,17 @@ RETURNING *;
 
 -- name: SearchEmployeesByNameOrEmail :many
 SELECT
-    id,
-    first_name,
-    last_name,
-    work_email_address
+    employee_profile.id,
+    employee_profile.first_name,
+    employee_profile.last_name,
+    employee_profile.work_email_address
 FROM employee_profile
+JOIN custom_user cu ON cu.id = employee_profile.user_id
 WHERE
-    first_name ILIKE '%' || @search || '%' OR
-    last_name ILIKE '%' || @search || '%' OR
-    email ILIKE '%' || @search || '%'
+    employee_profile.id <> sqlc.arg('system_employee_id') AND
+    (employee_profile.first_name ILIKE '%' || @search || '%' OR
+     employee_profile.last_name ILIKE '%' || @search || '%' OR
+     cu.email ILIKE '%' || @search || '%')
 LIMIT 10;
 
 -- name: GetEmployeeCounts :one
@@ -37,7 +39,8 @@ SELECT
     COUNT(*) FILTER (WHERE is_archived = TRUE) AS total_archived,
     COUNT(*) FILTER (WHERE out_of_service = TRUE) AS total_out_of_service
 FROM
-    employee_profile;
+    employee_profile
+WHERE id <> sqlc.arg('system_employee_id');
 
 -- name: ListEmployeesWithContractHours :many
 SELECT

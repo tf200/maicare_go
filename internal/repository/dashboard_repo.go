@@ -7,14 +7,17 @@ import (
 
 	db "maicare_go/db/sqlc"
 	"maicare_go/internal/domain"
+
+	"github.com/google/uuid"
 )
 
 type dashboardRepository struct {
-	store *db.Store
+	store            *db.Store
+	systemEmployeeID uuid.UUID
 }
 
-func NewDashboardRepository(store *db.Store) domain.DashboardRepository {
-	return &dashboardRepository{store: store}
+func NewDashboardRepository(store *db.Store, systemEmployeeID uuid.UUID) domain.DashboardRepository {
+	return &dashboardRepository{store: store, systemEmployeeID: systemEmployeeID}
 }
 
 func (r *dashboardRepository) GetAdminDashboardStats(ctx context.Context) (*domain.AdminDashboardStats, error) {
@@ -40,7 +43,7 @@ func (r *dashboardRepository) GetAdminDashboardStats(ctx context.Context) (*doma
 
 func (r *dashboardRepository) getAdminDashboardStatCards(ctx context.Context) (*domain.AdminDashboardStats, error) {
 	row, err := actorQuery(ctx, r.store, func(q *db.Queries) (db.GetAdminDashboardStatCardsRow, error) {
-		return q.GetAdminDashboardStatCards(ctx)
+		return q.GetAdminDashboardStatCards(ctx, r.systemEmployeeID)
 	})
 	if err != nil {
 		return nil, err

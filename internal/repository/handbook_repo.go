@@ -20,12 +20,14 @@ import (
 )
 
 type HandbookRepository struct {
-	store *db.Store
+	store            *db.Store
+	systemEmployeeID uuid.UUID
 }
 
-func NewHandbookRepository(store *db.Store) domain.HandbookRepository {
+func NewHandbookRepository(store *db.Store, systemEmployeeID uuid.UUID) domain.HandbookRepository {
 	return &HandbookRepository{
-		store: store,
+		store:            store,
+		systemEmployeeID: systemEmployeeID,
 	}
 }
 
@@ -36,7 +38,8 @@ func (r *HandbookRepository) WithTx(ctx context.Context, fn func(tx domain.Handb
 
 	return r.store.ExecTx(ctx, func(q *db.Queries) error {
 		return fn(&HandbookRepository{
-			store: &db.Store{Queries: q, ConnPool: r.store.ConnPool},
+			store:            &db.Store{Queries: q, ConnPool: r.store.ConnPool},
+			systemEmployeeID: r.systemEmployeeID,
 		})
 	})
 }
@@ -467,18 +470,20 @@ func (r *HandbookRepository) GetEmployeeProfileByID(ctx context.Context, employe
 func (r *HandbookRepository) ListEligibleEmployeesForHandbookAssignment(ctx context.Context, params domain.ListEligibleEmployeesParams) (*domain.EligibleEmployeePage, error) {
 	search := handbookTrimStringPtr(params.Search)
 	rows, err := r.store.ListEligibleEmployeesForHandbookAssignment(ctx, db.ListEligibleEmployeesForHandbookAssignmentParams{
-		Limit:        params.Limit,
-		Offset:       params.Offset,
-		DepartmentID: params.DepartmentID,
-		Search:       search,
+		Limit:            params.Limit,
+		Offset:           params.Offset,
+		DepartmentID:     params.DepartmentID,
+		Search:           search,
+		SystemEmployeeID: r.systemEmployeeID,
 	})
 	if err != nil {
 		return nil, err
 	}
 
 	totalCount, err := r.store.CountEligibleEmployeesForHandbookAssignment(ctx, db.CountEligibleEmployeesForHandbookAssignmentParams{
-		DepartmentID: params.DepartmentID,
-		Search:       search,
+		DepartmentID:     params.DepartmentID,
+		Search:           search,
+		SystemEmployeeID: r.systemEmployeeID,
 	})
 	if err != nil {
 		return nil, err

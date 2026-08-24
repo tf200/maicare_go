@@ -19,6 +19,7 @@ SELECT
     COUNT(*) FILTER (WHERE out_of_service = TRUE) AS total_out_of_service
 FROM
     employee_profile
+WHERE id <> $1
 `
 
 type GetEmployeeCountsRow struct {
@@ -28,8 +29,8 @@ type GetEmployeeCountsRow struct {
 	TotalOutOfService   int64 `json:"total_out_of_service"`
 }
 
-func (q *Queries) GetEmployeeCounts(ctx context.Context) (GetEmployeeCountsRow, error) {
-	row := q.db.QueryRow(ctx, getEmployeeCounts)
+func (q *Queries) GetEmployeeCounts(ctx context.Context, systemEmployeeID uuid.UUID) (GetEmployeeCountsRow, error) {
+	row := q.db.QueryRow(ctx, getEmployeeCounts, systemEmployeeID)
 	var i GetEmployeeCountsRow
 	err := row.Scan(
 		&i.TotalEmployees,
@@ -159,17 +160,24 @@ func (q *Queries) ListUserIDsByEmployeeIDs(ctx context.Context, dollar_1 []uuid.
 
 const searchEmployeesByNameOrEmail = `-- name: SearchEmployeesByNameOrEmail :many
 SELECT
-    id,
-    first_name,
-    last_name,
-    work_email_address
+    employee_profile.id,
+    employee_profile.first_name,
+    employee_profile.last_name,
+    employee_profile.work_email_address
 FROM employee_profile
+JOIN custom_user cu ON cu.id = employee_profile.user_id
 WHERE
-    first_name ILIKE '%' || $1 || '%' OR
-    last_name ILIKE '%' || $1 || '%' OR
-    email ILIKE '%' || $1 || '%'
+    employee_profile.id <> $1 AND
+    (employee_profile.first_name ILIKE '%' || $2 || '%' OR
+     employee_profile.last_name ILIKE '%' || $2 || '%' OR
+     cu.email ILIKE '%' || $2 || '%')
 LIMIT 10
 `
+
+type SearchEmployeesByNameOrEmailParams struct {
+	SystemEmployeeID uuid.UUID `json:"system_employee_id"`
+	Search           *string   `json:"search"`
+}
 
 type SearchEmployeesByNameOrEmailRow struct {
 	ID               uuid.UUID `json:"id"`
@@ -178,8 +186,8 @@ type SearchEmployeesByNameOrEmailRow struct {
 	WorkEmailAddress *string   `json:"work_email_address"`
 }
 
-func (q *Queries) SearchEmployeesByNameOrEmail(ctx context.Context, search *string) ([]SearchEmployeesByNameOrEmailRow, error) {
-	rows, err := q.db.Query(ctx, searchEmployeesByNameOrEmail, search)
+func (q *Queries) SearchEmployeesByNameOrEmail(ctx context.Context, arg SearchEmployeesByNameOrEmailParams) ([]SearchEmployeesByNameOrEmailRow, error) {
+	rows, err := q.db.Query(ctx, searchEmployeesByNameOrEmail, arg.SystemEmployeeID, arg.Search)
 	if err != nil {
 		return nil, err
 	}

@@ -29,7 +29,8 @@ SELECT
     (
         SELECT COUNT(*)::bigint
         FROM employee_profile ep
-        WHERE NOT ep.is_archived
+        WHERE ep.id <> $1
+          AND NOT ep.is_archived
           AND NOT COALESCE(ep.out_of_service, false)
     ) AS total_employees,
     (
@@ -56,8 +57,8 @@ type GetAdminDashboardStatCardsRow struct {
 	OverdueInvoices    int64 `json:"overdue_invoices"`
 }
 
-func (q *Queries) GetAdminDashboardStatCards(ctx context.Context) (GetAdminDashboardStatCardsRow, error) {
-	row := q.db.QueryRow(ctx, getAdminDashboardStatCards)
+func (q *Queries) GetAdminDashboardStatCards(ctx context.Context, systemEmployeeID uuid.UUID) (GetAdminDashboardStatCardsRow, error) {
+	row := q.db.QueryRow(ctx, getAdminDashboardStatCards, systemEmployeeID)
 	var i GetAdminDashboardStatCardsRow
 	err := row.Scan(
 		&i.ClientsInCare,

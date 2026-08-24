@@ -149,22 +149,24 @@ SELECT COUNT(*)
 FROM employee_profile ep
 LEFT JOIN active_assignments aa ON aa.employee_id = ep.id
 WHERE
+    ep.id <> $1 AND
     NOT ep.is_archived AND
     NOT COALESCE(ep.out_of_service, false) AND
     aa.employee_id IS NULL AND
-    (ep.department_id = $1 OR $1 IS NULL) AND
-    ($2::TEXT IS NULL OR
-        ep.first_name ILIKE '%' || $2 || '%' OR
-        ep.last_name ILIKE '%' || $2 || '%')
+    (ep.department_id = $2 OR $2 IS NULL) AND
+    ($3::TEXT IS NULL OR
+        ep.first_name ILIKE '%' || $3 || '%' OR
+        ep.last_name ILIKE '%' || $3 || '%')
 `
 
 type CountEligibleEmployeesForHandbookAssignmentParams struct {
-	DepartmentID *uuid.UUID `json:"department_id"`
-	Search       *string    `json:"search"`
+	SystemEmployeeID uuid.UUID  `json:"system_employee_id"`
+	DepartmentID     *uuid.UUID `json:"department_id"`
+	Search           *string    `json:"search"`
 }
 
 func (q *Queries) CountEligibleEmployeesForHandbookAssignment(ctx context.Context, arg CountEligibleEmployeesForHandbookAssignmentParams) (int64, error) {
-	row := q.db.QueryRow(ctx, countEligibleEmployeesForHandbookAssignment, arg.DepartmentID, arg.Search)
+	row := q.db.QueryRow(ctx, countEligibleEmployeesForHandbookAssignment, arg.SystemEmployeeID, arg.DepartmentID, arg.Search)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
@@ -719,22 +721,24 @@ FROM employee_profile ep
 LEFT JOIN departments d ON d.id = ep.department_id
 LEFT JOIN active_assignments aa ON aa.employee_id = ep.id
 WHERE
+    ep.id <> $3 AND
     NOT ep.is_archived AND
     NOT COALESCE(ep.out_of_service, false) AND
     aa.employee_id IS NULL AND
-    (ep.department_id = $3 OR $3 IS NULL) AND
-    ($4::TEXT IS NULL OR
-        ep.first_name ILIKE '%' || $4 || '%' OR
-        ep.last_name ILIKE '%' || $4 || '%')
+    (ep.department_id = $4 OR $4 IS NULL) AND
+    ($5::TEXT IS NULL OR
+        ep.first_name ILIKE '%' || $5 || '%' OR
+        ep.last_name ILIKE '%' || $5 || '%')
 ORDER BY ep.first_name ASC, ep.last_name ASC, ep.id ASC
 LIMIT $1 OFFSET $2
 `
 
 type ListEligibleEmployeesForHandbookAssignmentParams struct {
-	Limit        int32      `json:"limit"`
-	Offset       int32      `json:"offset"`
-	DepartmentID *uuid.UUID `json:"department_id"`
-	Search       *string    `json:"search"`
+	Limit            int32      `json:"limit"`
+	Offset           int32      `json:"offset"`
+	SystemEmployeeID uuid.UUID  `json:"system_employee_id"`
+	DepartmentID     *uuid.UUID `json:"department_id"`
+	Search           *string    `json:"search"`
 }
 
 type ListEligibleEmployeesForHandbookAssignmentRow struct {
@@ -749,6 +753,7 @@ func (q *Queries) ListEligibleEmployeesForHandbookAssignment(ctx context.Context
 	rows, err := q.db.Query(ctx, listEligibleEmployeesForHandbookAssignment,
 		arg.Limit,
 		arg.Offset,
+		arg.SystemEmployeeID,
 		arg.DepartmentID,
 		arg.Search,
 	)

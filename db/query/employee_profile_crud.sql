@@ -46,6 +46,7 @@ FROM employee_profile ep
 LEFT JOIN location l ON l.id = ep.location_id
 LEFT JOIN departments d ON d.id = ep.department_id
 WHERE
+    ep.id <> sqlc.arg('system_employee_id') AND
     (CASE
         WHEN sqlc.narg('include_archived')::boolean IS NULL THEN true
         WHEN sqlc.narg('include_archived')::boolean = false THEN NOT ep.is_archived
@@ -68,6 +69,7 @@ LIMIT $1 OFFSET $2;
 SELECT COUNT(*)
 FROM employee_profile ep
 WHERE
+    ep.id <> sqlc.arg('system_employee_id') AND
     (CASE
         WHEN sqlc.narg('include_archived')::boolean IS NULL THEN true
         WHEN sqlc.narg('include_archived')::boolean = false THEN NOT ep.is_archived
@@ -79,7 +81,10 @@ WHERE
         ELSE true
     END) AND
     (location_id = sqlc.narg('location_id') OR sqlc.narg('location_id') IS NULL) AND
-    (contract_type = sqlc.narg('contract_type') OR sqlc.narg('contract_type') IS NULL);
+    (contract_type = sqlc.narg('contract_type') OR sqlc.narg('contract_type') IS NULL) AND
+    (sqlc.narg('search')::TEXT IS NULL OR
+        ep.first_name ILIKE '%' || sqlc.narg('search') || '%' OR
+        ep.last_name ILIKE '%' || sqlc.narg('search') || '%');
 
 -- name: GetEmployeeProfileByUserID :one
 SELECT
