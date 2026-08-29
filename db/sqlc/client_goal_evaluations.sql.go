@@ -139,6 +139,39 @@ func (q *Queries) GetDraftGoalEvaluationByClientAndDate(ctx context.Context, arg
 	return i, err
 }
 
+const getGoalEvaluationByClientAndDate = `-- name: GetGoalEvaluationByClientAndDate :one
+SELECT id, client_id, evaluation_date, period_start, period_end, evaluation_interval_weeks, status, overall_notes, created_by_employee_id, created_at, updated_at
+FROM client_goal_evaluations
+WHERE client_id = $1
+  AND evaluation_date = $2
+ORDER BY updated_at DESC
+LIMIT 1
+`
+
+type GetGoalEvaluationByClientAndDateParams struct {
+	ClientID       uuid.UUID   `json:"client_id"`
+	EvaluationDate pgtype.Date `json:"evaluation_date"`
+}
+
+func (q *Queries) GetGoalEvaluationByClientAndDate(ctx context.Context, arg GetGoalEvaluationByClientAndDateParams) (ClientGoalEvaluation, error) {
+	row := q.db.QueryRow(ctx, getGoalEvaluationByClientAndDate, arg.ClientID, arg.EvaluationDate)
+	var i ClientGoalEvaluation
+	err := row.Scan(
+		&i.ID,
+		&i.ClientID,
+		&i.EvaluationDate,
+		&i.PeriodStart,
+		&i.PeriodEnd,
+		&i.EvaluationIntervalWeeks,
+		&i.Status,
+		&i.OverallNotes,
+		&i.CreatedByEmployeeID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getGoalEvaluationByID = `-- name: GetGoalEvaluationByID :one
 SELECT
     e.id, e.client_id, e.evaluation_date, e.period_start, e.period_end, e.evaluation_interval_weeks, e.status, e.overall_notes, e.created_by_employee_id, e.created_at, e.updated_at,

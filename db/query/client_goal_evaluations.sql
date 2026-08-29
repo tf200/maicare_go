@@ -21,6 +21,14 @@ WHERE client_id = $1
 ORDER BY updated_at DESC
 LIMIT 1;
 
+-- name: GetGoalEvaluationByClientAndDate :one
+SELECT *
+FROM client_goal_evaluations
+WHERE client_id = $1
+  AND evaluation_date = $2
+ORDER BY updated_at DESC
+LIMIT 1;
+
 -- name: UpdateGoalEvaluation :one
 UPDATE client_goal_evaluations
 SET

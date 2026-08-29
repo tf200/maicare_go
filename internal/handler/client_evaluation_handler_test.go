@@ -15,6 +15,7 @@ import (
 
 type goalEvaluationServiceStub struct {
 	domain.ClientService
+	createErr          error
 	updateEvaluationID uuid.UUID
 	updateEmployeeID   uuid.UUID
 	updateParams       domain.UpdateGoalEvaluationDraftParams
@@ -26,6 +27,10 @@ type goalEvaluationServiceStub struct {
 	submitResult       *domain.GoalEvaluation
 	submitErr          error
 	submitCalls        int
+}
+
+func (s *goalEvaluationServiceStub) CreateGoalEvaluation(_ context.Context, _ uuid.UUID, _ uuid.UUID, _ domain.CreateGoalEvaluationParams) (*domain.GoalEvaluation, error) {
+	return nil, s.createErr
 }
 
 func (s *goalEvaluationServiceStub) UpdateGoalEvaluationDraft(_ context.Context, evaluationID uuid.UUID, employeeID uuid.UUID, params domain.UpdateGoalEvaluationDraftParams) (*domain.GoalEvaluation, error) {
@@ -126,5 +131,56 @@ func TestSubmitGoalEvaluationDraftRequiresNoBody(t *testing.T) {
 	}
 	if service.submitCalls != 1 || service.submitEvaluationID != evaluationID || service.submitEmployeeID != employeeID {
 		t.Fatal("handler did not pass exact evaluation and employee IDs")
+	}
+}
+
+func TestGoalEvaluationMutationErrorCodes(t *testing.T) {
+	tests := []struct {
+		name       string
+		err        error
+		wantStatus int
+		wantCode   string
+	}{
+		{name: "not found", err: domain.ErrGoalEvaluationNotFound, wantStatus: http.StatusNotFound, wantCode: "EVALUATION_NOT_FOUND"},
+		{name: "not owner", err: domain.ErrGoalEvaluationOwnedByOther, wantStatus: http.StatusConflict, wantCode: "EVALUATION_NOT_OWNER"},
+		{name: "completed", err: domain.ErrGoalEvaluationNotDraft, wantStatus: http.StatusConflict, wantCode: "EVALUATION_ALREADY_COMPLETED"},
+		{name: "historical", err: domain.ErrGoalEvaluationNotCurrentCycle, wantStatus: http.StatusConflict, wantCode: "EVALUATION_NOT_CURRENT_CYCLE"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			response := httptest.NewRecorder()
+			ctx, _ := gin.CreateTestContext(response)
+
+			handleGoalEvaluationMutationError(ctx, test.err)
+
+			if response.Code != test.wantStatus {
+				t.Fatalf("status = %d, want %d", response.Code, test.wantStatus)
+			}
+			if !bytes.Contains(response.Body.Bytes(), []byte(`"code":"`+test.wantCode+`"`)) {
+				t.Fatalf("body = %s, want code %s", response.Body.String(), test.wantCode)
+			}
+		})
+	}
+}
+
+func TestCreateGoalEvaluationUsesStableConflictCode(t *testing.T) {
+	gimMode := gin.Mode()
+	gin.SetMode(gin.TestMode)
+	t.Cleanup(func() { gin.SetMode(gimMode) })
+
+	service := &goalEvaluationServiceStub{createErr: domain.ErrGoalEvaluationOwnedByOther}
+	router := gin.New()
+	router.POST("/clients/:id/evaluations", evaluationActor(uuid.New()), NewClientHandler(service).CreateGoalEvaluation)
+	request := httptest.NewRequest(http.MethodPost, "/clients/"+uuid.NewString()+"/evaluations", bytes.NewBufferString(`{"items":[]}`))
+	request.Header.Set("Content-Type", "application/json")
+	response := httptest.NewRecorder()
+
+	router.ServeHTTP(response, request)
+	if response.Code != http.StatusConflict {
+		t.Fatalf("status = %d, want %d; body = %s", response.Code, http.StatusConflict, response.Body.String())
+	}
+	if !bytes.Contains(response.Body.Bytes(), []byte(`"code":"EVALUATION_NOT_OWNER"`)) {
+		t.Fatalf("body = %s, want stable ownership code", response.Body.String())
 	}
 }

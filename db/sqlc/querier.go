@@ -218,6 +218,7 @@ type Querier interface {
 	GetEmployeeProfileByUserID(ctx context.Context, userID uuid.UUID) (GetEmployeeProfileByUserIDRow, error)
 	GetEmployeeSchedules(ctx context.Context, arg GetEmployeeSchedulesParams) ([]GetEmployeeSchedulesRow, error)
 	GetGlobalOrganisationCounts(ctx context.Context) (GetGlobalOrganisationCountsRow, error)
+	GetGoalEvaluationByClientAndDate(ctx context.Context, arg GetGoalEvaluationByClientAndDateParams) (ClientGoalEvaluation, error)
 	GetGoalEvaluationByID(ctx context.Context, id uuid.UUID) (GetGoalEvaluationByIDRow, error)
 	GetGoalEvaluationItems(ctx context.Context, evaluationID uuid.UUID) ([]GetGoalEvaluationItemsRow, error)
 	GetHandbookStepByID(ctx context.Context, id uuid.UUID) (HandbookStep, error)

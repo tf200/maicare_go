@@ -167,9 +167,12 @@ Acceptance criteria:
 
 ### P1.1 Stable Evaluation Error Codes
 
-- [ ] Return stable codes instead of requiring clients to parse raw messages.
-- [ ] Localize messages in the frontend based on codes.
-- [ ] Keep raw backend messages as diagnostics, not primary user copy.
+**Status:** `[~]` Lifecycle conflict codes are complete; validation-specific codes remain pending.
+
+- [x] Return stable lifecycle codes for missing, non-owner, completed, and historical evaluations.
+- [x] Localize lifecycle messages in the frontend based on codes.
+- [x] Keep raw backend messages as diagnostics, not primary user copy.
+- [ ] Add stable codes for create validation and submission-window failures.
 
 Proposed codes:
 

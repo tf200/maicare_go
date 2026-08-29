@@ -198,6 +198,27 @@ func TestSubmitGoalEvaluationDraftAdvancesScheduleOnce(t *testing.T) {
 	assertClientSchedule(t, fixture.clientID, fixture.currentDate, wantNextDate)
 }
 
+func TestCreateGoalEvaluationRejectsCompletedCurrentCycle(t *testing.T) {
+	fixture := seedEvaluationLifecycleFixture(t)
+	if _, err := evaluationIntegrationPool.Exec(context.Background(), `UPDATE client_goal_evaluations SET status = 'completed' WHERE id = $1`, fixture.currentEvaluationID); err != nil {
+		t.Fatalf("complete current evaluation: %v", err)
+	}
+	if _, err := evaluationIntegrationPool.Exec(context.Background(), `UPDATE client_details SET next_evaluation_date = $2 WHERE id = $1`, fixture.clientID, fixture.currentDate); err != nil {
+		t.Fatalf("restore current evaluation date: %v", err)
+	}
+	repository := &ClientRepository{store: db.NewStore(evaluationIntegrationPool)}
+
+	_, err := repository.CreateGoalEvaluation(
+		fixture.ownerContext(),
+		fixture.clientID,
+		fixture.owner.employeeID,
+		domain.CreateGoalEvaluationParams{Items: []domain.GoalEvaluationItemParams{{GoalID: fixture.goalID, Progress: "achieved"}}},
+	)
+	if !errors.Is(err, domain.ErrGoalEvaluationNotDraft) {
+		t.Fatalf("CreateGoalEvaluation() error = %v, want ErrGoalEvaluationNotDraft", err)
+	}
+}
+
 type evaluationActor struct {
 	userID     uuid.UUID
 	employeeID uuid.UUID

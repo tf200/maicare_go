@@ -990,11 +990,7 @@ func (h *ClientHandler) CreateGoalEvaluation(ctx *gin.Context) {
 
 	result, err := h.service.CreateGoalEvaluation(ctx.Request.Context(), clientID, employeeID, toCreateGoalEvaluationParams(req))
 	if err != nil {
-		if errors.Is(err, domain.ErrGoalEvaluationOwnedByOther) {
-			ctx.JSON(http.StatusConflict, httpapi.Fail(err.Error(), ""))
-			return
-		}
-		ctx.JSON(http.StatusBadRequest, httpapi.Fail(err.Error(), ""))
+		handleGoalEvaluationMutationError(ctx, err)
 		return
 	}
 
@@ -1118,7 +1114,7 @@ func (h *ClientHandler) GetGoalEvaluation(ctx *gin.Context) {
 	result, err := h.service.GetGoalEvaluation(ctx.Request.Context(), evaluationID)
 	if err != nil {
 		if errors.Is(err, domain.ErrGoalEvaluationNotFound) {
-			ctx.JSON(http.StatusNotFound, httpapi.Fail(err.Error(), ""))
+			ctx.JSON(http.StatusNotFound, httpapi.Fail(err.Error(), "EVALUATION_NOT_FOUND"))
 			return
 		}
 		ctx.JSON(http.StatusInternalServerError, httpapi.Fail(err.Error(), ""))

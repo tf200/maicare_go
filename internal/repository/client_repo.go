@@ -1647,13 +1647,13 @@ func (r *ClientRepository) CreateGoalEvaluation(ctx context.Context, clientID uu
 			intervalWeeks = 12
 		}
 
-		evaluation, err = q.GetDraftGoalEvaluationByClientAndDate(ctx, db.GetDraftGoalEvaluationByClientAndDateParams{
+		evaluation, err = q.GetGoalEvaluationByClientAndDate(ctx, db.GetGoalEvaluationByClientAndDateParams{
 			ClientID:       clientID,
 			EvaluationDate: evaluationDate,
 		})
 		if err != nil {
 			if !errors.Is(err, pgx.ErrNoRows) {
-				return fmt.Errorf("failed to get current draft evaluation: %w", err)
+				return fmt.Errorf("failed to get current evaluation: %w", err)
 			}
 
 			evaluation, err = q.CreateGoalEvaluation(ctx, db.CreateGoalEvaluationParams{
@@ -1669,13 +1669,13 @@ func (r *ClientRepository) CreateGoalEvaluation(ctx context.Context, clientID uu
 			if err != nil {
 				var pgErr *pgconn.PgError
 				if errors.As(err, &pgErr) && pgErr.Code == "23505" {
-					evaluation, err = q.GetDraftGoalEvaluationByClientAndDate(ctx, db.GetDraftGoalEvaluationByClientAndDateParams{
+					evaluation, err = q.GetGoalEvaluationByClientAndDate(ctx, db.GetGoalEvaluationByClientAndDateParams{
 						ClientID:       clientID,
 						EvaluationDate: evaluationDate,
 					})
 					if err != nil {
 						if errors.Is(err, pgx.ErrNoRows) {
-							return fmt.Errorf("current evaluation already exists and is not editable")
+							return domain.ErrGoalEvaluationNotDraft
 						}
 						return fmt.Errorf("failed to load concurrent draft evaluation: %w", err)
 					}
@@ -1683,6 +1683,9 @@ func (r *ClientRepository) CreateGoalEvaluation(ctx context.Context, clientID uu
 					return fmt.Errorf("failed to create evaluation header: %w", err)
 				}
 			}
+		}
+		if evaluation.Status != db.EvaluationStatusEnumDraft {
+			return domain.ErrGoalEvaluationNotDraft
 		}
 		if evaluation.CreatedByEmployeeID == nil || *evaluation.CreatedByEmployeeID != employeeID {
 			return domain.ErrGoalEvaluationOwnedByOther
