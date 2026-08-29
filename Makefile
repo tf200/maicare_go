@@ -64,6 +64,9 @@ sqlc:
 test:
 	go test -v -cover ./...
 
+test-integration:
+	go test -count=1 ./db/sqlc/... ./internal/repository
+
 docker-up:
 	@infisical export --env=$(INFISICAL_ENV) --format=dotenv > .env 2>/dev/null || \
 	(echo "⚠️ Infisical unreachable / offline. Falling back to local app.env" && cp app.env .env)
@@ -83,7 +86,7 @@ mockdb:
 	mockgen -package mockdb -destination=db/mock/store.go github.com/rokunisan/chat_app/db/sqlc Store
 
 swagger:
-	swag init --parseDependency --output ./docs --generalInfo server.go --dir ./api
+	swag init --parseDependency --parseInternal --output ./docs --generalInfo main.go
 
 roles:
 	$(MAKE) roles-sync-local

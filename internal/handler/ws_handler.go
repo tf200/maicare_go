@@ -44,7 +44,7 @@ func NewWebSocketHandler(hub *ws.Hub, ticketManager *ws.TicketManager, config *c
 // @Produce json
 // @Param ticket query string true "WebSocket ticket"
 // @Success 101 {object} httpapi.Envelope[any]
-// @Failure 401 {object} httpapi.Envelope[struct{}]
+// @Failure 401 {object} httpapi.Envelope[any]
 // @Router /ws [get]
 func (h *WebSocketHandler) HandleWebSocket(ctx *gin.Context) {
 	localUpgrader := wsUpgrader
@@ -84,7 +84,7 @@ func (h *WebSocketHandler) HandleWebSocket(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Success 200 {object} httpapi.Envelope[createWebSocketTicketResponse]
-// @Failure 401,500 {object} httpapi.Envelope[struct{}]
+// @Failure 401,500 {object} httpapi.Envelope[any]
 // @Router /auth/ws-ticket [post]
 func (h *WebSocketHandler) CreateWebSocketTicket(ctx *gin.Context) {
 	payload, err := GetAuthPayload(ctx)

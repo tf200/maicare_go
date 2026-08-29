@@ -1794,6 +1794,191 @@ func (r *ClientRepository) CreateGoalEvaluation(ctx context.Context, clientID uu
 	return res, nil
 }
 
+// UpdateGoalEvaluationDraft updates the exact draft identified by evaluationID.
+func (r *ClientRepository) UpdateGoalEvaluationDraft(ctx context.Context, evaluationID uuid.UUID, employeeID uuid.UUID, params domain.UpdateGoalEvaluationDraftParams) (*domain.GoalEvaluation, error) {
+	var evaluation db.ClientGoalEvaluation
+	var items []db.GetGoalEvaluationItemsRow
+
+	err := r.store.ExecActorTx(ctx, func(q *db.Queries) error {
+		row, err := q.GetGoalEvaluationByID(ctx, evaluationID)
+		if err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				return domain.ErrGoalEvaluationNotFound
+			}
+			return fmt.Errorf("failed to load goal evaluation: %w", err)
+		}
+		if row.Status != db.EvaluationStatusEnumDraft {
+			return domain.ErrGoalEvaluationNotDraft
+		}
+		if row.CreatedByEmployeeID == nil || *row.CreatedByEmployeeID != employeeID {
+			return domain.ErrGoalEvaluationOwnedByOther
+		}
+		if err := ensureCurrentCycleEvaluation(ctx, q, row.ClientID, row.EvaluationDate); err != nil {
+			return err
+		}
+
+		activeGoals, err := q.ListActiveGoalsByClientID(ctx, row.ClientID)
+		if err != nil {
+			return fmt.Errorf("failed to list active goals: %w", err)
+		}
+		if len(activeGoals) == 0 {
+			return fmt.Errorf("client must have at least one active goal to update an evaluation")
+		}
+
+		evaluation, err = q.UpdateGoalEvaluation(ctx, db.UpdateGoalEvaluationParams{
+			ID:           evaluationID,
+			OverallNotes: params.OverallNotes,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to update evaluation header: %w", err)
+		}
+
+		items, err = saveGoalEvaluationDraftItems(ctx, q, evaluationID, row.ClientID, activeGoals, params.Items)
+		return err
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return toDomainGoalEvaluation(evaluation, items, nil), nil
+}
+
+// SubmitGoalEvaluationDraft submits the exact saved draft identified by evaluationID.
+func (r *ClientRepository) SubmitGoalEvaluationDraft(ctx context.Context, evaluationID uuid.UUID, employeeID uuid.UUID) (*domain.GoalEvaluation, error) {
+	var evaluation db.ClientGoalEvaluation
+	var items []db.GetGoalEvaluationItemsRow
+
+	err := r.store.ExecActorTx(ctx, func(q *db.Queries) error {
+		row, err := q.GetGoalEvaluationByID(ctx, evaluationID)
+		if err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				return domain.ErrGoalEvaluationNotFound
+			}
+			return fmt.Errorf("failed to load goal evaluation: %w", err)
+		}
+		if row.Status != db.EvaluationStatusEnumDraft {
+			return domain.ErrGoalEvaluationNotDraft
+		}
+		if row.CreatedByEmployeeID == nil || *row.CreatedByEmployeeID != employeeID {
+			return domain.ErrGoalEvaluationOwnedByOther
+		}
+		if err := ensureCurrentCycleEvaluation(ctx, q, row.ClientID, row.EvaluationDate); err != nil {
+			return err
+		}
+		if err := ensureAllGoalsEvaluated(ctx, q, evaluationID); err != nil {
+			return &goalEvaluationSubmitBlockedError{message: err.Error()}
+		}
+
+		completedStatus := db.EvaluationStatusEnumCompleted
+		evaluation, err = q.UpdateGoalEvaluation(ctx, db.UpdateGoalEvaluationParams{
+			ID:     evaluationID,
+			Status: &completedStatus,
+		})
+		if err != nil {
+			var pgErr *pgconn.PgError
+			if errors.As(err, &pgErr) && pgErr.Code == "P0001" {
+				return &goalEvaluationSubmitBlockedError{message: fmt.Sprintf("cannot submit evaluation yet: %s", pgErr.Message)}
+			}
+			return fmt.Errorf("failed to submit evaluation: %w", err)
+		}
+
+		items, err = q.GetGoalEvaluationItems(ctx, evaluationID)
+		if err != nil {
+			return fmt.Errorf("failed to reload evaluation items: %w", err)
+		}
+		return nil
+	})
+	if err != nil {
+		var blockedErr *goalEvaluationSubmitBlockedError
+		if !errors.As(err, &blockedErr) {
+			return nil, err
+		}
+
+		result, loadErr := r.GetGoalEvaluation(ctx, evaluationID)
+		if loadErr != nil {
+			return nil, loadErr
+		}
+		message := blockedErr.Error()
+		result.SubmitError = &message
+		return result, nil
+	}
+
+	return toDomainGoalEvaluation(evaluation, items, nil), nil
+}
+
+func ensureCurrentCycleEvaluation(ctx context.Context, q *db.Queries, clientID uuid.UUID, evaluationDate pgtype.Date) error {
+	client, err := q.GetClientDetails(ctx, clientID)
+	if err != nil {
+		return fmt.Errorf("failed to get client details: %w", err)
+	}
+	if !evaluationDate.Valid || !client.NextEvaluationDate.Valid || !evaluationDate.Time.Equal(client.NextEvaluationDate.Time) {
+		return domain.ErrGoalEvaluationNotCurrentCycle
+	}
+	return nil
+}
+
+func saveGoalEvaluationDraftItems(ctx context.Context, q *db.Queries, evaluationID, clientID uuid.UUID, activeGoals []db.ClientGoal, requestItems []domain.GoalEvaluationItemParams) ([]db.GetGoalEvaluationItemsRow, error) {
+	requestByGoalID, err := mapDraftItemsByGoalID(requestItems)
+	if err != nil {
+		return nil, err
+	}
+
+	activeGoalIDs := make(map[uuid.UUID]struct{}, len(activeGoals))
+	for _, goal := range activeGoals {
+		activeGoalIDs[goal.ID] = struct{}{}
+	}
+
+	existingItems, err := q.GetGoalEvaluationItems(ctx, evaluationID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load evaluation items: %w", err)
+	}
+	existingByGoalID := make(map[uuid.UUID]struct{}, len(existingItems))
+	for _, item := range existingItems {
+		existingByGoalID[item.GoalID] = struct{}{}
+	}
+
+	for _, goal := range activeGoals {
+		if _, exists := existingByGoalID[goal.ID]; exists {
+			continue
+		}
+		progress := db.ClientGoalProgressEnumNoProgress
+		var notes *string
+		if requestItem, ok := requestByGoalID[goal.ID]; ok {
+			progress, err = parseProgress(requestItem.Progress)
+			if err != nil {
+				return nil, err
+			}
+			notes = requestItem.Notes
+		}
+		if _, err := q.UpsertGoalEvaluationItem(ctx, db.UpsertGoalEvaluationItemParams{
+			ClientID: clientID, EvaluationID: evaluationID, GoalID: goal.ID, Progress: progress, Notes: notes,
+		}); err != nil {
+			return nil, fmt.Errorf("failed to ensure evaluation item for goal %s: %w", goal.ID, err)
+		}
+	}
+
+	for _, requestItem := range requestItems {
+		if _, active := activeGoalIDs[requestItem.GoalID]; !active {
+			return nil, fmt.Errorf("goal %s is not an active goal for this client", requestItem.GoalID)
+		}
+		progress, err := parseProgress(requestItem.Progress)
+		if err != nil {
+			return nil, err
+		}
+		if _, err := q.UpsertGoalEvaluationItem(ctx, db.UpsertGoalEvaluationItemParams{
+			ClientID: clientID, EvaluationID: evaluationID, GoalID: requestItem.GoalID, Progress: progress, Notes: requestItem.Notes,
+		}); err != nil {
+			return nil, fmt.Errorf("failed to save item for goal %s: %w", requestItem.GoalID, err)
+		}
+	}
+
+	items, err := q.GetGoalEvaluationItems(ctx, evaluationID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to reload evaluation items: %w", err)
+	}
+	return items, nil
+}
+
 type goalEvaluationSubmitBlockedError struct {
 	message string
 }
@@ -1917,17 +2102,20 @@ func (r *ClientRepository) GetGoalEvaluationBootstrap(ctx context.Context, clien
 			priority = "critical"
 		}
 		response.Priority = &priority
-	}
 
-	latestDraft, err := q.GetLatestDraftEvaluationByClient(ctx, clientID)
-	if err == nil {
-		response.ExistingDraft = &domain.GoalEvaluationBootstrapDraft{
-			ID:             latestDraft.ID,
-			EvaluationDate: conv.TimeFromPgDate(latestDraft.EvaluationDate),
-			UpdatedAt:      conv.TimeFromPgTimestamptz(latestDraft.UpdatedAt),
+		currentDraft, err := q.GetDraftGoalEvaluationByClientAndDate(ctx, db.GetDraftGoalEvaluationByClientAndDateParams{
+			ClientID:       clientID,
+			EvaluationDate: client.NextEvaluationDate,
+		})
+		if err == nil {
+			response.ExistingDraft = &domain.GoalEvaluationBootstrapDraft{
+				ID:             currentDraft.ID,
+				EvaluationDate: conv.TimeFromPgDate(currentDraft.EvaluationDate),
+				UpdatedAt:      conv.TimeFromPgTimestamptz(currentDraft.UpdatedAt),
+			}
+		} else if !errors.Is(err, pgx.ErrNoRows) {
+			return nil, fmt.Errorf("failed to get current cycle draft evaluation: %w", err)
 		}
-	} else if !errors.Is(err, pgx.ErrNoRows) {
-		return nil, fmt.Errorf("failed to get latest draft evaluation: %w", err)
 	}
 
 	latestCompleted, err := q.GetLatestCompletedEvaluationByClient(ctx, clientID)

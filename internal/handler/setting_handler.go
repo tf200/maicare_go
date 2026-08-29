@@ -30,7 +30,7 @@ func NewSettingsHandler(
 // @Tags settings
 // @Produce json
 // @Success 200 {object} httpapi.Envelope[httpapi.PageResponse[departmentResponse]]
-// @Failure 401,403,500 {object} httpapi.Envelope[struct{}]
+// @Failure 401,403,500 {object} httpapi.Envelope[any]
 // @Router /settings/departments [get]
 func (h *SettingsHandler) ListDepartments(ctx *gin.Context) {
 	departments, err := h.departmentService.ListDepartments(ctx.Request.Context())
@@ -62,7 +62,7 @@ func (h *SettingsHandler) ListDepartments(ctx *gin.Context) {
 // @Produce json
 // @Param request body createDepartmentRequest true "Department payload"
 // @Success 201 {object} httpapi.Envelope[departmentResponse]
-// @Failure 400,401,403,500 {object} httpapi.Envelope[struct{}]
+// @Failure 400,401,403,500 {object} httpapi.Envelope[any]
 // @Router /settings/departments [post]
 func (h *SettingsHandler) CreateDepartment(ctx *gin.Context) {
 	var req createDepartmentRequest
@@ -88,7 +88,7 @@ func (h *SettingsHandler) CreateDepartment(ctx *gin.Context) {
 // @Param id path uuid true "Department ID"
 // @Param request body updateDepartmentRequest true "Department payload"
 // @Success 200 {object} httpapi.Envelope[departmentResponse]
-// @Failure 400,401,403,500 {object} httpapi.Envelope[struct{}]
+// @Failure 400,401,403,500 {object} httpapi.Envelope[any]
 // @Router /settings/departments/{id} [put]
 func (h *SettingsHandler) UpdateDepartment(ctx *gin.Context) {
 	departmentID, err := uuid.Parse(ctx.Param("id"))
@@ -117,7 +117,7 @@ func (h *SettingsHandler) UpdateDepartment(ctx *gin.Context) {
 // @Tags settings
 // @Produce json
 // @Success 200 {object} httpapi.Envelope[organizationProfileResponse]
-// @Failure 401,403,500 {object} httpapi.Envelope[struct{}]
+// @Failure 401,403,500 {object} httpapi.Envelope[any]
 // @Router /settings/organization-profile [get]
 func (h *SettingsHandler) GetOrganizationProfile(ctx *gin.Context) {
 	profile, err := h.organizationProfileService.GetOrganizationProfile(ctx.Request.Context())
@@ -136,7 +136,7 @@ func (h *SettingsHandler) GetOrganizationProfile(ctx *gin.Context) {
 // @Produce json
 // @Param request body updateOrganizationProfileRequest true "Organization profile payload"
 // @Success 200 {object} httpapi.Envelope[organizationProfileResponse]
-// @Failure 400,401,403,500 {object} httpapi.Envelope[struct{}]
+// @Failure 400,401,403,500 {object} httpapi.Envelope[any]
 // @Router /settings/organization-profile [put]
 func (h *SettingsHandler) UpdateOrganizationProfile(ctx *gin.Context) {
 	var req updateOrganizationProfileRequest

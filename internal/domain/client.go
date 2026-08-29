@@ -14,6 +14,8 @@ var ErrClientNotFound = errors.New("client not found")
 var ErrClientDocumentNotFound = errors.New("client document not found")
 var ErrGoalEvaluationNotFound = errors.New("goal evaluation not found")
 var ErrGoalEvaluationOwnedByOther = errors.New("goal evaluation draft belongs to another employee")
+var ErrGoalEvaluationNotDraft = errors.New("goal evaluation is not an editable draft")
+var ErrGoalEvaluationNotCurrentCycle = errors.New("goal evaluation belongs to an earlier evaluation cycle")
 var ErrClientMedicationOrderNotFound = errors.New("client medication order not found")
 
 type Client struct {
@@ -497,6 +499,8 @@ type ClientRepository interface {
 	UpdateClientGoal(ctx context.Context, clientID uuid.UUID, goalID uuid.UUID, params UpdateClientGoalParams) (*UpdateClientGoalResult, error)
 	GetClientGoalsForEvaluationPage(ctx context.Context, clientID uuid.UUID, employeeID uuid.UUID) (*ClientGoalsForEvaluationPage, error)
 	CreateGoalEvaluation(ctx context.Context, clientID uuid.UUID, employeeID uuid.UUID, params CreateGoalEvaluationParams) (*GoalEvaluation, error)
+	UpdateGoalEvaluationDraft(ctx context.Context, evaluationID uuid.UUID, employeeID uuid.UUID, params UpdateGoalEvaluationDraftParams) (*GoalEvaluation, error)
+	SubmitGoalEvaluationDraft(ctx context.Context, evaluationID uuid.UUID, employeeID uuid.UUID) (*GoalEvaluation, error)
 	GetGoalEvaluationBootstrap(ctx context.Context, clientID uuid.UUID) (*GoalEvaluationBootstrap, error)
 	ListClientSubmittedEvaluations(ctx context.Context, params ListClientSubmittedEvaluationsParams) (*ListClientSubmittedEvaluationsResult, error)
 	ListGoalEvaluationHistory(ctx context.Context, params ListGoalEvaluationHistoryParams) (*ListGoalEvaluationHistoryResult, error)
@@ -627,6 +631,8 @@ type ClientService interface {
 	UpdateClientGoal(ctx context.Context, clientID uuid.UUID, goalID uuid.UUID, params UpdateClientGoalParams) (*UpdateClientGoalResult, error)
 	GetClientGoalsForEvaluationPage(ctx context.Context, clientID uuid.UUID, employeeID uuid.UUID) (*ClientGoalsForEvaluationPage, error)
 	CreateGoalEvaluation(ctx context.Context, clientID uuid.UUID, employeeID uuid.UUID, params CreateGoalEvaluationParams) (*GoalEvaluation, error)
+	UpdateGoalEvaluationDraft(ctx context.Context, evaluationID uuid.UUID, employeeID uuid.UUID, params UpdateGoalEvaluationDraftParams) (*GoalEvaluation, error)
+	SubmitGoalEvaluationDraft(ctx context.Context, evaluationID uuid.UUID, employeeID uuid.UUID) (*GoalEvaluation, error)
 	GetGoalEvaluationBootstrap(ctx context.Context, clientID uuid.UUID) (*GoalEvaluationBootstrap, error)
 	ListClientSubmittedEvaluations(ctx context.Context, params ListClientSubmittedEvaluationsParams) (*ListClientSubmittedEvaluationsResult, error)
 	ListGoalEvaluationHistory(ctx context.Context, params ListGoalEvaluationHistoryParams) (*ListGoalEvaluationHistoryResult, error)
@@ -770,6 +776,11 @@ type GoalEvaluationItem struct {
 type CreateGoalEvaluationParams struct {
 	OverallNotes *string
 	Submit       bool
+	Items        []GoalEvaluationItemParams
+}
+
+type UpdateGoalEvaluationDraftParams struct {
+	OverallNotes *string
 	Items        []GoalEvaluationItemParams
 }
 

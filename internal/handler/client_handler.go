@@ -137,6 +137,8 @@ func RegisterEvaluationRoutes(
 		evaluationsGroup.GET("/recent-submitted", auth, requirePermission(domain.PermClientView.String()), requirePermission(domain.PermClientEvaluationView.String()), handler.ListRecentSubmittedEvaluations)
 		evaluationsGroup.GET("/recent-drafts", auth, requirePermission(domain.PermClientView.String()), requirePermission(domain.PermClientEvaluationView.String()), handler.ListRecentDraftEvaluations)
 		evaluationsGroup.GET("/:evaluation_id", auth, requirePermission(domain.PermClientView.String()), requirePermission(domain.PermClientEvaluationView.String()), handler.GetGoalEvaluation)
+		evaluationsGroup.PATCH("/:evaluation_id/draft", auth, requirePermission(domain.PermClientView.String()), requirePermission(domain.PermClientEvaluationView.String()), requirePermission(domain.PermClientEvaluationCreate.String()), handler.UpdateGoalEvaluationDraft)
+		evaluationsGroup.POST("/:evaluation_id/submit", auth, requirePermission(domain.PermClientView.String()), requirePermission(domain.PermClientEvaluationView.String()), requirePermission(domain.PermClientEvaluationCreate.String()), handler.SubmitGoalEvaluationDraft)
 	}
 }
 
@@ -1124,6 +1126,89 @@ func (h *ClientHandler) GetGoalEvaluation(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, httpapi.OK(toGoalEvaluationResponse(*result), "Goal evaluation fetched successfully"))
+}
+
+// UpdateGoalEvaluationDraft updates an existing evaluation draft by ID.
+// @Summary Update a goal evaluation draft
+// @Tags evaluations
+// @Accept json
+// @Produce json
+// @Param evaluation_id path string true "Evaluation ID"
+// @Param request body updateGoalEvaluationDraftRequest true "Draft details"
+// @Success 200 {object} httpapi.Envelope[goalEvaluationResponse]
+// @Failure 400,401,404,409,500 {object} httpapi.Envelope[any]
+// @Router /evaluations/{evaluation_id}/draft [patch]
+func (h *ClientHandler) UpdateGoalEvaluationDraft(ctx *gin.Context) {
+	evaluationID, err := uuid.Parse(ctx.Param("evaluation_id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, httpapi.Fail("invalid evaluation ID", ""))
+		return
+	}
+
+	var req updateGoalEvaluationDraftRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, httpapi.Fail(err.Error(), ""))
+		return
+	}
+
+	employeeID, err := getEmployeeIDFromContext(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, httpapi.Fail(err.Error(), ""))
+		return
+	}
+
+	result, err := h.service.UpdateGoalEvaluationDraft(ctx.Request.Context(), evaluationID, employeeID, toUpdateGoalEvaluationDraftParams(req))
+	if err != nil {
+		handleGoalEvaluationMutationError(ctx, err)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, httpapi.OK(toGoalEvaluationResponse(*result), "Goal evaluation draft updated successfully"))
+}
+
+// SubmitGoalEvaluationDraft submits an existing saved evaluation draft by ID.
+// @Summary Submit a goal evaluation draft
+// @Tags evaluations
+// @Produce json
+// @Param evaluation_id path string true "Evaluation ID"
+// @Success 200 {object} httpapi.Envelope[goalEvaluationResponse]
+// @Failure 400,401,404,409,500 {object} httpapi.Envelope[any]
+// @Router /evaluations/{evaluation_id}/submit [post]
+func (h *ClientHandler) SubmitGoalEvaluationDraft(ctx *gin.Context) {
+	evaluationID, err := uuid.Parse(ctx.Param("evaluation_id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, httpapi.Fail("invalid evaluation ID", ""))
+		return
+	}
+
+	employeeID, err := getEmployeeIDFromContext(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, httpapi.Fail(err.Error(), ""))
+		return
+	}
+
+	result, err := h.service.SubmitGoalEvaluationDraft(ctx.Request.Context(), evaluationID, employeeID)
+	if err != nil {
+		handleGoalEvaluationMutationError(ctx, err)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, httpapi.OK(toGoalEvaluationResponse(*result), "Goal evaluation submission processed successfully"))
+}
+
+func handleGoalEvaluationMutationError(ctx *gin.Context, err error) {
+	switch {
+	case errors.Is(err, domain.ErrGoalEvaluationNotFound):
+		ctx.JSON(http.StatusNotFound, httpapi.Fail(err.Error(), "EVALUATION_NOT_FOUND"))
+	case errors.Is(err, domain.ErrGoalEvaluationOwnedByOther):
+		ctx.JSON(http.StatusConflict, httpapi.Fail(err.Error(), "EVALUATION_NOT_OWNER"))
+	case errors.Is(err, domain.ErrGoalEvaluationNotDraft):
+		ctx.JSON(http.StatusConflict, httpapi.Fail(err.Error(), "EVALUATION_ALREADY_COMPLETED"))
+	case errors.Is(err, domain.ErrGoalEvaluationNotCurrentCycle):
+		ctx.JSON(http.StatusConflict, httpapi.Fail(err.Error(), "EVALUATION_NOT_CURRENT_CYCLE"))
+	default:
+		ctx.JSON(http.StatusBadRequest, httpapi.Fail(err.Error(), ""))
+	}
 }
 
 // ListUpcomingEvaluations lists upcoming evaluations for the logged-in coordinator.

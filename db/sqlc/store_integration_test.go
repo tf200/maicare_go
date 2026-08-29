@@ -3,7 +3,6 @@ package db
 import (
 	"context"
 	"errors"
-	"os"
 	"testing"
 
 	"maicare_go/internal/ctxkeys"
@@ -84,13 +83,9 @@ func assertNoActorSettings(t *testing.T, store *Store) {
 
 func openIntegrationStore(t *testing.T) *Store {
 	t.Helper()
-	databaseURL := os.Getenv("TEST_DATABASE_URL")
-	if databaseURL == "" {
-		t.Skip("TEST_DATABASE_URL is not set")
-	}
-	config, err := pgxpool.ParseConfig(databaseURL)
+	config, err := pgxpool.ParseConfig(integrationDatabaseURL)
 	if err != nil {
-		t.Fatalf("parse TEST_DATABASE_URL: %v", err)
+		t.Fatalf("parse integration database URL: %v", err)
 	}
 	config.MaxConns = 1
 	config.AfterConnect = func(ctx context.Context, conn *pgx.Conn) error {
@@ -98,7 +93,7 @@ func openIntegrationStore(t *testing.T) *Store {
 	}
 	pool, err := pgxpool.NewWithConfig(context.Background(), config)
 	if err != nil {
-		t.Fatalf("connect TEST_DATABASE_URL: %v", err)
+		t.Fatalf("connect integration database: %v", err)
 	}
 	t.Cleanup(pool.Close)
 	return NewStore(pool)

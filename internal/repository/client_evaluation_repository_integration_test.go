@@ -1,0 +1,322 @@
+package repository
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"os"
+	"testing"
+	"time"
+
+	db "maicare_go/db/sqlc"
+	"maicare_go/internal/ctxkeys"
+	"maicare_go/internal/domain"
+	"maicare_go/internal/testdatabase"
+
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
+)
+
+var evaluationIntegrationPool *pgxpool.Pool
+
+func TestMain(m *testing.M) {
+	ctx := context.Background()
+	databaseURL, cleanup, err := testdatabase.StartPostgres(ctx)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+
+	config, err := pgxpool.ParseConfig(databaseURL)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "parse integration database URL: %v\n", err)
+		_ = cleanup()
+		os.Exit(1)
+	}
+	config.AfterConnect = func(ctx context.Context, conn *pgx.Conn) error {
+		return db.RegisterEnumTypes(ctx, conn)
+	}
+	evaluationIntegrationPool, err = pgxpool.NewWithConfig(ctx, config)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "connect integration database: %v\n", err)
+		_ = cleanup()
+		os.Exit(1)
+	}
+
+	exitCode := m.Run()
+	evaluationIntegrationPool.Close()
+	if err := cleanup(); err != nil {
+		fmt.Fprintf(os.Stderr, "terminate PostgreSQL test container: %v\n", err)
+		exitCode = 1
+	}
+	os.Exit(exitCode)
+}
+
+func TestGoalEvaluationBootstrapSelectsOnlyCurrentCycleDraft(t *testing.T) {
+	fixture := seedEvaluationLifecycleFixture(t)
+	repository := &ClientRepository{store: db.NewStore(evaluationIntegrationPool)}
+
+	result, err := repository.GetGoalEvaluationBootstrap(fixture.ownerContext(), fixture.clientID)
+	if err != nil {
+		t.Fatalf("GetGoalEvaluationBootstrap() error = %v", err)
+	}
+	if result.ExistingDraft == nil {
+		t.Fatal("GetGoalEvaluationBootstrap() returned no current-cycle draft")
+	}
+	if result.ExistingDraft.ID != fixture.currentEvaluationID {
+		t.Fatalf("existing draft ID = %s, want current-cycle ID %s", result.ExistingDraft.ID, fixture.currentEvaluationID)
+	}
+	if !sameDate(result.ExistingDraft.EvaluationDate, fixture.currentDate) {
+		t.Fatalf("existing draft date = %s, want %s", result.ExistingDraft.EvaluationDate, fixture.currentDate)
+	}
+}
+
+func TestGoalEvaluationBootstrapReturnsNoDraftWithoutScheduledCycle(t *testing.T) {
+	fixture := seedEvaluationLifecycleFixture(t)
+	if _, err := evaluationIntegrationPool.Exec(context.Background(), `UPDATE client_details SET next_evaluation_date = NULL WHERE id = $1`, fixture.clientID); err != nil {
+		t.Fatalf("clear client evaluation date: %v", err)
+	}
+	repository := &ClientRepository{store: db.NewStore(evaluationIntegrationPool)}
+
+	result, err := repository.GetGoalEvaluationBootstrap(fixture.ownerContext(), fixture.clientID)
+	if err != nil {
+		t.Fatalf("GetGoalEvaluationBootstrap() error = %v", err)
+	}
+	if result.NextEvaluationDate != nil || result.ExistingDraft != nil {
+		t.Fatalf("bootstrap without schedule returned next_date=%v existing_draft=%v", result.NextEvaluationDate, result.ExistingDraft)
+	}
+}
+
+func TestUpdateGoalEvaluationDraftMutatesExactID(t *testing.T) {
+	fixture := seedEvaluationLifecycleFixture(t)
+	repository := &ClientRepository{store: db.NewStore(evaluationIntegrationPool)}
+	notes := "updated current evaluation"
+	itemNotes := "updated current goal"
+
+	result, err := repository.UpdateGoalEvaluationDraft(
+		fixture.ownerContext(),
+		fixture.currentEvaluationID,
+		fixture.owner.employeeID,
+		domain.UpdateGoalEvaluationDraftParams{
+			OverallNotes: &notes,
+			Items: []domain.GoalEvaluationItemParams{{
+				GoalID: fixture.goalID, Progress: "achieved", Notes: &itemNotes,
+			}},
+		},
+	)
+	if err != nil {
+		t.Fatalf("UpdateGoalEvaluationDraft() error = %v", err)
+	}
+	if result.ID != fixture.currentEvaluationID {
+		t.Fatalf("updated evaluation ID = %s, want %s", result.ID, fixture.currentEvaluationID)
+	}
+
+	var currentNotes, historicalNotes *string
+	if err := evaluationIntegrationPool.QueryRow(context.Background(), `SELECT overall_notes FROM client_goal_evaluations WHERE id = $1`, fixture.currentEvaluationID).Scan(&currentNotes); err != nil {
+		t.Fatalf("read current evaluation: %v", err)
+	}
+	if err := evaluationIntegrationPool.QueryRow(context.Background(), `SELECT overall_notes FROM client_goal_evaluations WHERE id = $1`, fixture.historicalEvaluationID).Scan(&historicalNotes); err != nil {
+		t.Fatalf("read historical evaluation: %v", err)
+	}
+	if currentNotes == nil || *currentNotes != notes {
+		t.Fatalf("current evaluation notes = %v, want %q", currentNotes, notes)
+	}
+	if historicalNotes == nil || *historicalNotes != "historical notes" {
+		t.Fatalf("historical evaluation notes = %v, want unchanged", historicalNotes)
+	}
+	var currentProgress, historicalProgress string
+	if err := evaluationIntegrationPool.QueryRow(context.Background(), `SELECT progress::text FROM client_goal_evaluation_items WHERE evaluation_id = $1 AND goal_id = $2`, fixture.currentEvaluationID, fixture.goalID).Scan(&currentProgress); err != nil {
+		t.Fatalf("read current evaluation item: %v", err)
+	}
+	if err := evaluationIntegrationPool.QueryRow(context.Background(), `SELECT progress::text FROM client_goal_evaluation_items WHERE evaluation_id = $1 AND goal_id = $2`, fixture.historicalEvaluationID, fixture.goalID).Scan(&historicalProgress); err != nil {
+		t.Fatalf("read historical evaluation item: %v", err)
+	}
+	if currentProgress != "achieved" || historicalProgress != "good_progress" {
+		t.Fatalf("evaluation progress current=%s historical=%s, want achieved/good_progress", currentProgress, historicalProgress)
+	}
+}
+
+func TestHistoricalGoalEvaluationDraftIsReadOnly(t *testing.T) {
+	fixture := seedEvaluationLifecycleFixture(t)
+	repository := &ClientRepository{store: db.NewStore(evaluationIntegrationPool)}
+	notes := "must not be written"
+	params := domain.UpdateGoalEvaluationDraftParams{
+		OverallNotes: &notes,
+		Items:        []domain.GoalEvaluationItemParams{{GoalID: fixture.goalID, Progress: "achieved"}},
+	}
+
+	if _, err := repository.UpdateGoalEvaluationDraft(fixture.ownerContext(), fixture.historicalEvaluationID, fixture.owner.employeeID, params); !errors.Is(err, domain.ErrGoalEvaluationNotCurrentCycle) {
+		t.Fatalf("historical update error = %v, want ErrGoalEvaluationNotCurrentCycle", err)
+	}
+	if _, err := repository.SubmitGoalEvaluationDraft(fixture.ownerContext(), fixture.historicalEvaluationID, fixture.owner.employeeID); !errors.Is(err, domain.ErrGoalEvaluationNotCurrentCycle) {
+		t.Fatalf("historical submit error = %v, want ErrGoalEvaluationNotCurrentCycle", err)
+	}
+
+	var notesAfter *string
+	var status string
+	if err := evaluationIntegrationPool.QueryRow(context.Background(), `SELECT overall_notes, status::text FROM client_goal_evaluations WHERE id = $1`, fixture.historicalEvaluationID).Scan(&notesAfter, &status); err != nil {
+		t.Fatalf("read historical evaluation: %v", err)
+	}
+	if notesAfter == nil || *notesAfter != "historical notes" || status != "draft" {
+		t.Fatalf("historical evaluation changed: notes=%v status=%s", notesAfter, status)
+	}
+}
+
+func TestGoalEvaluationDraftRejectsNonOwner(t *testing.T) {
+	fixture := seedEvaluationLifecycleFixture(t)
+	repository := &ClientRepository{store: db.NewStore(evaluationIntegrationPool)}
+	notes := "must not be written"
+	params := domain.UpdateGoalEvaluationDraftParams{OverallNotes: &notes}
+
+	if _, err := repository.UpdateGoalEvaluationDraft(fixture.otherContext(), fixture.currentEvaluationID, fixture.other.employeeID, params); !errors.Is(err, domain.ErrGoalEvaluationOwnedByOther) {
+		t.Fatalf("non-owner update error = %v, want ErrGoalEvaluationOwnedByOther", err)
+	}
+	if _, err := repository.SubmitGoalEvaluationDraft(fixture.otherContext(), fixture.currentEvaluationID, fixture.other.employeeID); !errors.Is(err, domain.ErrGoalEvaluationOwnedByOther) {
+		t.Fatalf("non-owner submit error = %v, want ErrGoalEvaluationOwnedByOther", err)
+	}
+}
+
+func TestSubmitGoalEvaluationDraftAdvancesScheduleOnce(t *testing.T) {
+	fixture := seedEvaluationLifecycleFixture(t)
+	repository := &ClientRepository{store: db.NewStore(evaluationIntegrationPool)}
+
+	result, err := repository.SubmitGoalEvaluationDraft(fixture.ownerContext(), fixture.currentEvaluationID, fixture.owner.employeeID)
+	if err != nil {
+		t.Fatalf("SubmitGoalEvaluationDraft() error = %v", err)
+	}
+	if result.Status != "completed" || result.SubmitError != nil {
+		t.Fatalf("submit result status=%q submit_error=%v", result.Status, result.SubmitError)
+	}
+
+	wantNextDate := fixture.currentDate.AddDate(0, 0, 28)
+	assertClientSchedule(t, fixture.clientID, fixture.currentDate, wantNextDate)
+
+	if _, err := repository.SubmitGoalEvaluationDraft(fixture.ownerContext(), fixture.currentEvaluationID, fixture.owner.employeeID); !errors.Is(err, domain.ErrGoalEvaluationNotDraft) {
+		t.Fatalf("second submit error = %v, want ErrGoalEvaluationNotDraft", err)
+	}
+	assertClientSchedule(t, fixture.clientID, fixture.currentDate, wantNextDate)
+}
+
+type evaluationActor struct {
+	userID     uuid.UUID
+	employeeID uuid.UUID
+}
+
+type evaluationLifecycleFixture struct {
+	clientID               uuid.UUID
+	goalID                 uuid.UUID
+	currentEvaluationID    uuid.UUID
+	historicalEvaluationID uuid.UUID
+	currentDate            time.Time
+	owner                  evaluationActor
+	other                  evaluationActor
+}
+
+func (f evaluationLifecycleFixture) ownerContext() context.Context {
+	return actorContext(f.owner)
+}
+
+func (f evaluationLifecycleFixture) otherContext() context.Context {
+	return actorContext(f.other)
+}
+
+func actorContext(actor evaluationActor) context.Context {
+	return ctxkeys.WithActorIdentity(context.Background(), ctxkeys.ActorIdentity{
+		UserID: actor.userID, EmployeeID: actor.employeeID,
+	})
+}
+
+func seedEvaluationLifecycleFixture(t *testing.T) evaluationLifecycleFixture {
+	t.Helper()
+	ctx := context.Background()
+	tx, err := evaluationIntegrationPool.Begin(ctx)
+	if err != nil {
+		t.Fatalf("begin fixture transaction: %v", err)
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	currentDate := time.Now().UTC().Truncate(24 * time.Hour)
+	fixture := evaluationLifecycleFixture{
+		clientID:               uuid.New(),
+		goalID:                 uuid.New(),
+		currentEvaluationID:    uuid.New(),
+		historicalEvaluationID: uuid.New(),
+		currentDate:            currentDate,
+		owner:                  seedEvaluationActor(t, ctx, tx),
+		other:                  seedEvaluationActor(t, ctx, tx),
+	}
+
+	if _, err := tx.Exec(ctx, `INSERT INTO client_details (
+		id, first_name, last_name, email, gender, filenumber, street, house_number, postal_code, city
+	) VALUES ($1, 'Evaluation', 'Client', $2, 'unknown', $3, 'Test', '1', '1000AA', 'Test')`,
+		fixture.clientID, uuid.NewString()+"@test.invalid", uuid.NewString()); err != nil {
+		t.Fatalf("seed evaluation client: %v", err)
+	}
+	if _, err := tx.Exec(ctx, `INSERT INTO client_goals (id, client_id, title, source, status)
+		VALUES ($1, $2, 'Evaluation goal', 'manual', 'active')`, fixture.goalID, fixture.clientID); err != nil {
+		t.Fatalf("seed evaluation goal: %v", err)
+	}
+	if _, err := tx.Exec(ctx, `UPDATE client_details SET
+		status = 'in_care', care_start_date = $2::date - 28, placed_in_care_at = NOW() - INTERVAL '28 days',
+		evaluation_intervals_weeks = 4, last_evaluation_anchor_date = $2::date - 28, next_evaluation_date = $2::date
+		WHERE id = $1`, fixture.clientID, currentDate); err != nil {
+		t.Fatalf("place evaluation client in care: %v", err)
+	}
+	for _, actor := range []evaluationActor{fixture.owner, fixture.other} {
+		if _, err := tx.Exec(ctx, `INSERT INTO assigned_employee (client_id, employee_id, start_date, role)
+			VALUES ($1, $2, CURRENT_DATE, 'support')`, fixture.clientID, actor.employeeID); err != nil {
+			t.Fatalf("seed evaluation assignment: %v", err)
+		}
+	}
+	if _, err := tx.Exec(ctx, `INSERT INTO client_goal_evaluations (
+		id, client_id, evaluation_date, evaluation_interval_weeks, status, overall_notes, created_by_employee_id, updated_at
+	) VALUES
+		($1, $3, $5::date, 4, 'draft', 'current notes', $4, NOW() - INTERVAL '1 day'),
+		($2, $3, $5::date - 28, 4, 'draft', 'historical notes', $4, NOW())`,
+		fixture.currentEvaluationID, fixture.historicalEvaluationID, fixture.clientID, fixture.owner.employeeID, currentDate); err != nil {
+		t.Fatalf("seed evaluations: %v", err)
+	}
+	for _, evaluationID := range []uuid.UUID{fixture.currentEvaluationID, fixture.historicalEvaluationID} {
+		if _, err := tx.Exec(ctx, `INSERT INTO client_goal_evaluation_items (client_id, evaluation_id, goal_id, progress, notes)
+			VALUES ($1, $2, $3, 'good_progress', 'seed notes')`, fixture.clientID, evaluationID, fixture.goalID); err != nil {
+			t.Fatalf("seed evaluation item: %v", err)
+		}
+	}
+	if err := tx.Commit(ctx); err != nil {
+		t.Fatalf("commit evaluation fixture: %v", err)
+	}
+	return fixture
+}
+
+func seedEvaluationActor(t *testing.T, ctx context.Context, tx pgx.Tx) evaluationActor {
+	t.Helper()
+	actor := evaluationActor{userID: uuid.New(), employeeID: uuid.New()}
+	if _, err := tx.Exec(ctx, `INSERT INTO custom_user (id, password, email) VALUES ($1, 'disabled', $2)`, actor.userID, uuid.NewString()+"@test.invalid"); err != nil {
+		t.Fatalf("seed evaluation user: %v", err)
+	}
+	if _, err := tx.Exec(ctx, `INSERT INTO employee_profile (
+		id, user_id, first_name, last_name, bsn, street, house_number, postal_code, city, gender
+	) VALUES ($1, $2, 'Evaluation', 'Employee', $3, 'Test', '1', '1000AA', 'Test', 'unknown')`,
+		actor.employeeID, actor.userID, uuid.NewString()); err != nil {
+		t.Fatalf("seed evaluation employee: %v", err)
+	}
+	return actor
+}
+
+func assertClientSchedule(t *testing.T, clientID uuid.UUID, wantAnchor, wantNext time.Time) {
+	t.Helper()
+	var anchor, next time.Time
+	if err := evaluationIntegrationPool.QueryRow(context.Background(), `SELECT last_evaluation_anchor_date, next_evaluation_date FROM client_details WHERE id = $1`, clientID).Scan(&anchor, &next); err != nil {
+		t.Fatalf("read client schedule: %v", err)
+	}
+	if !sameDate(anchor, wantAnchor) || !sameDate(next, wantNext) {
+		t.Fatalf("client schedule anchor=%s next=%s, want anchor=%s next=%s", anchor, next, wantAnchor, wantNext)
+	}
+}
+
+func sameDate(left, right time.Time) bool {
+	leftYear, leftMonth, leftDay := left.Date()
+	rightYear, rightMonth, rightDay := right.Date()
+	return leftYear == rightYear && leftMonth == rightMonth && leftDay == rightDay
+}

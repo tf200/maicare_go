@@ -417,41 +417,41 @@ type getClientResponse struct {
 }
 
 type clientEducationResponse struct {
-	CurrentlyEnrolled bool     `json:"currently_enrolled"`
-	Institution       *string  `json:"institution"`
-	MentorName        *string  `json:"mentor_name"`
-	MentorPhone       *string  `json:"mentor_phone"`
-	MentorEmail       *string  `json:"mentor_email"`
-	AdditionalNotes   *string  `json:"additional_notes"`
-	Level             string   `json:"level"`
+	CurrentlyEnrolled bool    `json:"currently_enrolled"`
+	Institution       *string `json:"institution"`
+	MentorName        *string `json:"mentor_name"`
+	MentorPhone       *string `json:"mentor_phone"`
+	MentorEmail       *string `json:"mentor_email"`
+	AdditionalNotes   *string `json:"additional_notes"`
+	Level             string  `json:"level"`
 }
 
 type clientWorkResponse struct {
-	CurrentlyEmployed  bool      `json:"currently_employed"`
-	CurrentEmployer    *string   `json:"current_employer"`
-	EmployerPhone      *string   `json:"employer_phone"`
-	EmployerEmail      *string   `json:"employer_email"`
-	CurrentPosition    *string   `json:"current_position"`
-	StartDate          time.Time `json:"start_date"`
-	AdditionalNotes    *string   `json:"additional_notes"`
+	CurrentlyEmployed bool      `json:"currently_employed"`
+	CurrentEmployer   *string   `json:"current_employer"`
+	EmployerPhone     *string   `json:"employer_phone"`
+	EmployerEmail     *string   `json:"employer_email"`
+	CurrentPosition   *string   `json:"current_position"`
+	StartDate         time.Time `json:"start_date"`
+	AdditionalNotes   *string   `json:"additional_notes"`
 }
 
 type clientPageClientResponse struct {
-	ID              uuid.UUID               `json:"id"`
-	FirstName       string                  `json:"first_name"`
-	LastName        string                  `json:"last_name"`
-	Bsn             *string                 `json:"bsn"`
-	BsnVerifiedBy   *uuid.UUID              `json:"bsn_verified_by"`
-	BsnVerifiedByName *string               `json:"bsn_verified_by_name"`
-	FileNumber      string                  `json:"file_number"`
-	Gender          string                  `json:"gender"`
-	DateOfBirth     *time.Time              `json:"date_of_birth"`
-	Age             *int32                  `json:"age"`
-	CareType        *string                 `json:"care_type"`
-	Address         clientAddressResponse   `json:"address"`
-	Location        *clientLocationResponse `json:"location"`
-	Education       *clientEducationResponse `json:"education,omitempty"`
-	Work            *clientWorkResponse      `json:"work,omitempty"`
+	ID                uuid.UUID                `json:"id"`
+	FirstName         string                   `json:"first_name"`
+	LastName          string                   `json:"last_name"`
+	Bsn               *string                  `json:"bsn"`
+	BsnVerifiedBy     *uuid.UUID               `json:"bsn_verified_by"`
+	BsnVerifiedByName *string                  `json:"bsn_verified_by_name"`
+	FileNumber        string                   `json:"file_number"`
+	Gender            string                   `json:"gender"`
+	DateOfBirth       *time.Time               `json:"date_of_birth"`
+	Age               *int32                   `json:"age"`
+	CareType          *string                  `json:"care_type"`
+	Address           clientAddressResponse    `json:"address"`
+	Location          *clientLocationResponse  `json:"location"`
+	Education         *clientEducationResponse `json:"education,omitempty"`
+	Work              *clientWorkResponse      `json:"work,omitempty"`
 }
 
 type clientLocationResponse struct {
@@ -829,17 +829,17 @@ func toGetClientResponse(detail *domain.ClientPageDetail) getClientResponse {
 		SchemaVersion: detail.SchemaVersion,
 		Status:        detail.Status,
 		Client: clientPageClientResponse{
-			ID:              detail.Client.ID,
-			FirstName:       detail.Client.FirstName,
-			LastName:        detail.Client.LastName,
-			Bsn:             detail.Client.Bsn,
-			BsnVerifiedBy:   detail.Client.BsnVerifiedBy,
+			ID:                detail.Client.ID,
+			FirstName:         detail.Client.FirstName,
+			LastName:          detail.Client.LastName,
+			Bsn:               detail.Client.Bsn,
+			BsnVerifiedBy:     detail.Client.BsnVerifiedBy,
 			BsnVerifiedByName: detail.Client.BsnVerifiedByName,
-			FileNumber:      detail.Client.FileNumber,
-			Gender:          detail.Client.Gender,
-			DateOfBirth:     detail.Client.DateOfBirth,
-			Age:             detail.Client.Age,
-			CareType:        detail.Client.CareType,
+			FileNumber:        detail.Client.FileNumber,
+			Gender:            detail.Client.Gender,
+			DateOfBirth:       detail.Client.DateOfBirth,
+			Age:               detail.Client.Age,
+			CareType:          detail.Client.CareType,
 			Address: clientAddressResponse{
 				Street:              detail.Client.Address.Street,
 				HouseNumber:         detail.Client.Address.HouseNumber,
@@ -1370,6 +1370,11 @@ type createGoalEvaluationRequest struct {
 	Items        []createGoalEvaluationItemRequest `json:"items"`
 }
 
+type updateGoalEvaluationDraftRequest struct {
+	OverallNotes *string                           `json:"overall_notes"`
+	Items        []createGoalEvaluationItemRequest `json:"items"`
+}
+
 type goalEvaluationItemResponse struct {
 	ID                uuid.UUID `json:"id"`
 	EvaluationID      uuid.UUID `json:"evaluation_id"`
@@ -1414,6 +1419,18 @@ func toCreateGoalEvaluationParams(req createGoalEvaluationRequest) domain.Create
 		Submit:       req.Submit,
 		Items:        items,
 	}
+}
+
+func toUpdateGoalEvaluationDraftParams(req updateGoalEvaluationDraftRequest) domain.UpdateGoalEvaluationDraftParams {
+	items := make([]domain.GoalEvaluationItemParams, 0, len(req.Items))
+	for _, item := range req.Items {
+		items = append(items, domain.GoalEvaluationItemParams{
+			GoalID:   item.GoalID,
+			Progress: item.Progress,
+			Notes:    item.Notes,
+		})
+	}
+	return domain.UpdateGoalEvaluationDraftParams{OverallNotes: req.OverallNotes, Items: items}
 }
 
 func toGoalEvaluationResponse(eval domain.GoalEvaluation) goalEvaluationResponse {

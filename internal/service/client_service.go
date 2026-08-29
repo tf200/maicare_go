@@ -781,15 +781,8 @@ func (s *ClientService) GetClientGoalsForEvaluationPage(ctx context.Context, cli
 }
 
 func (s *ClientService) CreateGoalEvaluation(ctx context.Context, clientID uuid.UUID, employeeID uuid.UUID, params domain.CreateGoalEvaluationParams) (*domain.GoalEvaluation, error) {
-	itemsByGoal := make(map[uuid.UUID]domain.GoalEvaluationItemParams, len(params.Items))
-	for _, item := range params.Items {
-		if _, exists := itemsByGoal[item.GoalID]; exists {
-			return nil, fmt.Errorf("goal %s appears multiple times in request", item.GoalID)
-		}
-		if err := validateProgress(item.Progress); err != nil {
-			return nil, err
-		}
-		itemsByGoal[item.GoalID] = item
+	if err := validateGoalEvaluationItems(params.Items); err != nil {
+		return nil, err
 	}
 
 	result, err := s.repository.CreateGoalEvaluation(ctx, clientID, employeeID, params)
@@ -811,6 +804,43 @@ func (s *ClientService) CreateGoalEvaluation(ctx context.Context, clientID uuid.
 	s.logGroupEAudit(ctx, action, "client_goal_evaluation", result.ID, clientID, domain.PermClientEvaluationCreate.String(), len(result.Items))
 
 	return result, nil
+}
+
+func (s *ClientService) UpdateGoalEvaluationDraft(ctx context.Context, evaluationID uuid.UUID, employeeID uuid.UUID, params domain.UpdateGoalEvaluationDraftParams) (*domain.GoalEvaluation, error) {
+	if err := validateGoalEvaluationItems(params.Items); err != nil {
+		return nil, err
+	}
+
+	result, err := s.repository.UpdateGoalEvaluationDraft(ctx, evaluationID, employeeID, params)
+	if err != nil {
+		return nil, err
+	}
+	s.logGroupEAudit(ctx, "save", "client_goal_evaluation", result.ID, result.ClientID, domain.PermClientEvaluationCreate.String(), len(result.Items))
+	return result, nil
+}
+
+func (s *ClientService) SubmitGoalEvaluationDraft(ctx context.Context, evaluationID uuid.UUID, employeeID uuid.UUID) (*domain.GoalEvaluation, error) {
+	result, err := s.repository.SubmitGoalEvaluationDraft(ctx, evaluationID, employeeID)
+	if err != nil {
+		return nil, err
+	}
+	action := goalEvaluationAuditAction(true, result.SubmitError)
+	s.logGroupEAudit(ctx, action, "client_goal_evaluation", result.ID, result.ClientID, domain.PermClientEvaluationCreate.String(), len(result.Items))
+	return result, nil
+}
+
+func validateGoalEvaluationItems(items []domain.GoalEvaluationItemParams) error {
+	itemsByGoal := make(map[uuid.UUID]struct{}, len(items))
+	for _, item := range items {
+		if _, exists := itemsByGoal[item.GoalID]; exists {
+			return fmt.Errorf("goal %s appears multiple times in request", item.GoalID)
+		}
+		if err := validateProgress(item.Progress); err != nil {
+			return err
+		}
+		itemsByGoal[item.GoalID] = struct{}{}
+	}
+	return nil
 }
 
 func goalEvaluationAuditAction(submitRequested bool, submitError *string) string {
