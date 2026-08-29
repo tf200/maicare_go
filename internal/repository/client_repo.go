@@ -1619,7 +1619,7 @@ func (r *ClientRepository) CreateGoalEvaluation(ctx context.Context, clientID uu
 		}
 
 		if client.Status != db.ClientStatusEnumInCare {
-			return fmt.Errorf("evaluations can only be created for clients in care")
+			return domain.ErrGoalEvaluationClientNotInCare
 		}
 
 		activeGoals, err := q.ListActiveGoalsByClientID(ctx, clientID)
@@ -1627,11 +1627,11 @@ func (r *ClientRepository) CreateGoalEvaluation(ctx context.Context, clientID uu
 			return fmt.Errorf("failed to list active goals: %w", err)
 		}
 		if len(activeGoals) == 0 {
-			return fmt.Errorf("client must have at least one active goal to start an evaluation")
+			return domain.ErrGoalEvaluationNoActiveGoals
 		}
 
 		if !client.NextEvaluationDate.Valid {
-			return fmt.Errorf("client has no next evaluation date configured")
+			return domain.ErrGoalEvaluationNoDueDate
 		}
 
 		reqItemsByGoal, err := mapDraftItemsByGoalID(params.Items)
@@ -1745,7 +1745,7 @@ func (r *ClientRepository) CreateGoalEvaluation(ctx context.Context, clientID uu
 
 		for _, reqItem := range params.Items {
 			if _, isActive := activeGoalIDs[reqItem.GoalID]; !isActive {
-				return fmt.Errorf("goal %s is not an active goal for this client", reqItem.GoalID)
+				return fmt.Errorf("%w: %s", domain.ErrGoalEvaluationGoalNotActive, reqItem.GoalID)
 			}
 
 			parsedProgress, parseErr := parseProgress(reqItem.Progress)
@@ -1776,25 +1776,16 @@ func (r *ClientRepository) CreateGoalEvaluation(ctx context.Context, clientID uu
 		return nil, err
 	}
 
-	var submitErrMessage *string
 	if params.Submit {
 		submittedEvaluation, submitErr := r.trySubmitGoalEvaluationDraft(ctx, evaluation.ID)
 		if submitErr != nil {
-			var blockedErr *goalEvaluationSubmitBlockedError
-			if errors.As(submitErr, &blockedErr) {
-				msg := blockedErr.Error()
-				submitErrMessage = &msg
-			} else {
-				return nil, submitErr
-			}
+			return toDomainGoalEvaluation(evaluation, items, nil), submitErr
 		} else {
 			evaluation = submittedEvaluation
 		}
 	}
 
-	res := toDomainGoalEvaluation(evaluation, items, nil)
-	res.SubmitError = submitErrMessage
-	return res, nil
+	return toDomainGoalEvaluation(evaluation, items, nil), nil
 }
 
 // UpdateGoalEvaluationDraft updates the exact draft identified by evaluationID.
@@ -1825,7 +1816,7 @@ func (r *ClientRepository) UpdateGoalEvaluationDraft(ctx context.Context, evalua
 			return fmt.Errorf("failed to list active goals: %w", err)
 		}
 		if len(activeGoals) == 0 {
-			return fmt.Errorf("client must have at least one active goal to update an evaluation")
+			return domain.ErrGoalEvaluationNoActiveGoals
 		}
 
 		evaluation, err = q.UpdateGoalEvaluation(ctx, db.UpdateGoalEvaluationParams{
@@ -1868,8 +1859,15 @@ func (r *ClientRepository) SubmitGoalEvaluationDraft(ctx context.Context, evalua
 		if err := ensureCurrentCycleEvaluation(ctx, q, row.ClientID, row.EvaluationDate); err != nil {
 			return err
 		}
+		activeGoals, err := q.ListActiveGoalsByClientID(ctx, row.ClientID)
+		if err != nil {
+			return fmt.Errorf("failed to list active goals: %w", err)
+		}
+		if len(activeGoals) == 0 {
+			return domain.ErrGoalEvaluationNoActiveGoals
+		}
 		if err := ensureAllGoalsEvaluated(ctx, q, evaluationID); err != nil {
-			return &goalEvaluationSubmitBlockedError{message: err.Error()}
+			return err
 		}
 
 		completedStatus := db.EvaluationStatusEnumCompleted
@@ -1880,7 +1878,7 @@ func (r *ClientRepository) SubmitGoalEvaluationDraft(ctx context.Context, evalua
 		if err != nil {
 			var pgErr *pgconn.PgError
 			if errors.As(err, &pgErr) && pgErr.Code == "P0001" {
-				return &goalEvaluationSubmitBlockedError{message: fmt.Sprintf("cannot submit evaluation yet: %s", pgErr.Message)}
+				return classifyGoalEvaluationTriggerError(pgErr)
 			}
 			return fmt.Errorf("failed to submit evaluation: %w", err)
 		}
@@ -1892,8 +1890,7 @@ func (r *ClientRepository) SubmitGoalEvaluationDraft(ctx context.Context, evalua
 		return nil
 	})
 	if err != nil {
-		var blockedErr *goalEvaluationSubmitBlockedError
-		if !errors.As(err, &blockedErr) {
+		if !isGoalEvaluationSubmissionValidationError(err) {
 			return nil, err
 		}
 
@@ -1901,9 +1898,7 @@ func (r *ClientRepository) SubmitGoalEvaluationDraft(ctx context.Context, evalua
 		if loadErr != nil {
 			return nil, loadErr
 		}
-		message := blockedErr.Error()
-		result.SubmitError = &message
-		return result, nil
+		return result, err
 	}
 
 	return toDomainGoalEvaluation(evaluation, items, nil), nil
@@ -1914,7 +1909,10 @@ func ensureCurrentCycleEvaluation(ctx context.Context, q *db.Queries, clientID u
 	if err != nil {
 		return fmt.Errorf("failed to get client details: %w", err)
 	}
-	if !evaluationDate.Valid || !client.NextEvaluationDate.Valid || !evaluationDate.Time.Equal(client.NextEvaluationDate.Time) {
+	if !client.NextEvaluationDate.Valid {
+		return domain.ErrGoalEvaluationNoDueDate
+	}
+	if !evaluationDate.Valid || !evaluationDate.Time.Equal(client.NextEvaluationDate.Time) {
 		return domain.ErrGoalEvaluationNotCurrentCycle
 	}
 	return nil
@@ -1962,7 +1960,7 @@ func saveGoalEvaluationDraftItems(ctx context.Context, q *db.Queries, evaluation
 
 	for _, requestItem := range requestItems {
 		if _, active := activeGoalIDs[requestItem.GoalID]; !active {
-			return nil, fmt.Errorf("goal %s is not an active goal for this client", requestItem.GoalID)
+			return nil, fmt.Errorf("%w: %s", domain.ErrGoalEvaluationGoalNotActive, requestItem.GoalID)
 		}
 		progress, err := parseProgress(requestItem.Progress)
 		if err != nil {
@@ -1982,20 +1980,12 @@ func saveGoalEvaluationDraftItems(ctx context.Context, q *db.Queries, evaluation
 	return items, nil
 }
 
-type goalEvaluationSubmitBlockedError struct {
-	message string
-}
-
-func (e *goalEvaluationSubmitBlockedError) Error() string {
-	return e.message
-}
-
 func (r *ClientRepository) trySubmitGoalEvaluationDraft(ctx context.Context, evaluationID uuid.UUID) (db.ClientGoalEvaluation, error) {
 	var evaluation db.ClientGoalEvaluation
 
 	err := r.store.ExecActorTx(ctx, func(q *db.Queries) error {
 		if err := ensureAllGoalsEvaluated(ctx, q, evaluationID); err != nil {
-			return &goalEvaluationSubmitBlockedError{message: err.Error()}
+			return err
 		}
 
 		completedStatus := db.EvaluationStatusEnumCompleted
@@ -2006,7 +1996,7 @@ func (r *ClientRepository) trySubmitGoalEvaluationDraft(ctx context.Context, eva
 		if err != nil {
 			var pgErr *pgconn.PgError
 			if errors.As(err, &pgErr) && pgErr.Code == "P0001" {
-				return &goalEvaluationSubmitBlockedError{message: fmt.Sprintf("cannot submit evaluation yet: %s", pgErr.Message)}
+				return classifyGoalEvaluationTriggerError(pgErr)
 			}
 			return fmt.Errorf("failed to submit evaluation: %w", err)
 		}
@@ -2027,12 +2017,12 @@ func ensureAllGoalsEvaluated(ctx context.Context, q *db.Queries, evaluationID uu
 		return fmt.Errorf("failed to load evaluation items: %w", err)
 	}
 	if len(items) == 0 {
-		return fmt.Errorf("evaluation has no goal items")
+		return domain.ErrGoalEvaluationIncomplete
 	}
 
 	for _, item := range items {
 		if item.Progress == db.ClientGoalProgressEnumNoProgress {
-			return fmt.Errorf("all goals must be evaluated before submit (missing goal: %s)", item.GoalTitle)
+			return fmt.Errorf("%w: %s", domain.ErrGoalEvaluationIncomplete, item.GoalTitle)
 		}
 	}
 
@@ -2043,7 +2033,7 @@ func mapDraftItemsByGoalID(items []domain.GoalEvaluationItemParams) (map[uuid.UU
 	itemsByGoal := make(map[uuid.UUID]domain.GoalEvaluationItemParams, len(items))
 	for _, item := range items {
 		if _, exists := itemsByGoal[item.GoalID]; exists {
-			return nil, fmt.Errorf("goal %s appears multiple times in request", item.GoalID)
+			return nil, fmt.Errorf("%w: %s", domain.ErrGoalEvaluationDuplicateGoal, item.GoalID)
 		}
 		itemsByGoal[item.GoalID] = item
 	}
@@ -2067,9 +2057,26 @@ func parseProgress(value string) (db.ClientGoalProgressEnum, error) {
 
 	parsed, ok := allowed[progress]
 	if !ok {
-		return "", fmt.Errorf("invalid progress value: %s", value)
+		return "", fmt.Errorf("%w: %s", domain.ErrGoalEvaluationInvalidProgress, value)
 	}
 	return parsed, nil
+}
+
+func classifyGoalEvaluationTriggerError(err *pgconn.PgError) error {
+	message := strings.ToLower(err.Message)
+	if strings.Contains(message, "more than 14 days before") {
+		return domain.ErrGoalEvaluationTooEarly
+	}
+	if strings.Contains(message, "active goals must be evaluated") {
+		return domain.ErrGoalEvaluationIncomplete
+	}
+	return fmt.Errorf("goal evaluation submission rejected: %w", err)
+}
+
+func isGoalEvaluationSubmissionValidationError(err error) bool {
+	return errors.Is(err, domain.ErrGoalEvaluationIncomplete) ||
+		errors.Is(err, domain.ErrGoalEvaluationTooEarly) ||
+		errors.Is(err, domain.ErrGoalEvaluationNoActiveGoals)
 }
 
 // GetGoalEvaluationBootstrap returns bootstrap data for the goal evaluation page.

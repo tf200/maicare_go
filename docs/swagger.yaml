@@ -2458,6 +2458,13 @@ definitions:
       updated_at:
         type: string
     type: object
+  handler.goalEvaluationMutationErrorData:
+    properties:
+      draft_saved:
+        type: boolean
+      evaluation:
+        $ref: '#/definitions/handler.goalEvaluationResponse'
+    type: object
   handler.goalEvaluationResponse:
     properties:
       client_id:
@@ -2485,8 +2492,6 @@ definitions:
       period_start:
         type: string
       status:
-        type: string
-      submit_error:
         type: string
       updated_at:
         type: string
@@ -4405,6 +4410,17 @@ definitions:
       success:
         type: boolean
     type: object
+  httpapi.Envelope-handler_goalEvaluationMutationErrorData:
+    properties:
+      code:
+        type: string
+      data:
+        $ref: '#/definitions/handler.goalEvaluationMutationErrorData'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
   httpapi.Envelope-handler_goalEvaluationResponse:
     properties:
       code:
@@ -5815,11 +5831,19 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httpapi.Envelope-any'
+            $ref: '#/definitions/httpapi.Envelope-handler_goalEvaluationMutationErrorData'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/httpapi.Envelope-handler_goalEvaluationMutationErrorData'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/httpapi.Envelope-handler_goalEvaluationMutationErrorData'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/httpapi.Envelope-any'
+            $ref: '#/definitions/httpapi.Envelope-handler_goalEvaluationMutationErrorData'
       summary: Get goal evaluation bootstrap
       tags:
       - evaluations
@@ -7372,23 +7396,27 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httpapi.Envelope-any'
+            $ref: '#/definitions/httpapi.Envelope-handler_goalEvaluationMutationErrorData'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/httpapi.Envelope-any'
+            $ref: '#/definitions/httpapi.Envelope-handler_goalEvaluationMutationErrorData'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/httpapi.Envelope-any'
+            $ref: '#/definitions/httpapi.Envelope-handler_goalEvaluationMutationErrorData'
         "409":
           description: Conflict
           schema:
-            $ref: '#/definitions/httpapi.Envelope-any'
+            $ref: '#/definitions/httpapi.Envelope-handler_goalEvaluationMutationErrorData'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/httpapi.Envelope-handler_goalEvaluationMutationErrorData'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/httpapi.Envelope-any'
+            $ref: '#/definitions/httpapi.Envelope-handler_goalEvaluationMutationErrorData'
       summary: Update a goal evaluation draft
       tags:
       - evaluations
@@ -7410,23 +7438,27 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/httpapi.Envelope-any'
+            $ref: '#/definitions/httpapi.Envelope-handler_goalEvaluationMutationErrorData'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/httpapi.Envelope-any'
+            $ref: '#/definitions/httpapi.Envelope-handler_goalEvaluationMutationErrorData'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/httpapi.Envelope-any'
+            $ref: '#/definitions/httpapi.Envelope-handler_goalEvaluationMutationErrorData'
         "409":
           description: Conflict
           schema:
-            $ref: '#/definitions/httpapi.Envelope-any'
+            $ref: '#/definitions/httpapi.Envelope-handler_goalEvaluationMutationErrorData'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/httpapi.Envelope-handler_goalEvaluationMutationErrorData'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/httpapi.Envelope-any'
+            $ref: '#/definitions/httpapi.Envelope-handler_goalEvaluationMutationErrorData'
       summary: Submit a goal evaluation draft
       tags:
       - evaluations

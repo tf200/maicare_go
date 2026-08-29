@@ -1401,8 +1401,12 @@ type goalEvaluationResponse struct {
 	CreatorName             *string                      `json:"creator_name"`
 	CreatedAt               time.Time                    `json:"created_at"`
 	UpdatedAt               time.Time                    `json:"updated_at"`
-	SubmitError             *string                      `json:"submit_error,omitempty"`
 	Items                   []goalEvaluationItemResponse `json:"items"`
+}
+
+type goalEvaluationMutationErrorData struct {
+	DraftSaved bool                    `json:"draft_saved"`
+	Evaluation *goalEvaluationResponse `json:"evaluation,omitempty"`
 }
 
 func toCreateGoalEvaluationParams(req createGoalEvaluationRequest) domain.CreateGoalEvaluationParams {
@@ -1462,7 +1466,6 @@ func toGoalEvaluationResponse(eval domain.GoalEvaluation) goalEvaluationResponse
 		CreatorName:             eval.CreatorName,
 		CreatedAt:               eval.CreatedAt,
 		UpdatedAt:               eval.UpdatedAt,
-		SubmitError:             eval.SubmitError,
 		Items:                   items,
 	}
 }

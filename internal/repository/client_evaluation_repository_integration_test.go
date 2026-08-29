@@ -185,8 +185,8 @@ func TestSubmitGoalEvaluationDraftAdvancesScheduleOnce(t *testing.T) {
 	if err != nil {
 		t.Fatalf("SubmitGoalEvaluationDraft() error = %v", err)
 	}
-	if result.Status != "completed" || result.SubmitError != nil {
-		t.Fatalf("submit result status=%q submit_error=%v", result.Status, result.SubmitError)
+	if result.Status != "completed" {
+		t.Fatalf("submit result status=%q, want completed", result.Status)
 	}
 
 	wantNextDate := fixture.currentDate.AddDate(0, 0, 28)
@@ -216,6 +216,43 @@ func TestCreateGoalEvaluationRejectsCompletedCurrentCycle(t *testing.T) {
 	)
 	if !errors.Is(err, domain.ErrGoalEvaluationNotDraft) {
 		t.Fatalf("CreateGoalEvaluation() error = %v, want ErrGoalEvaluationNotDraft", err)
+	}
+}
+
+func TestBlockedGoalEvaluationSubmissionReturnsSavedDraft(t *testing.T) {
+	fixture := seedEvaluationLifecycleFixture(t)
+	if _, err := evaluationIntegrationPool.Exec(context.Background(), `UPDATE client_goal_evaluation_items SET progress = 'no_progress', notes = 'saved before submit' WHERE evaluation_id = $1`, fixture.currentEvaluationID); err != nil {
+		t.Fatalf("make evaluation incomplete: %v", err)
+	}
+	repository := &ClientRepository{store: db.NewStore(evaluationIntegrationPool)}
+
+	result, err := repository.SubmitGoalEvaluationDraft(fixture.ownerContext(), fixture.currentEvaluationID, fixture.owner.employeeID)
+	if !errors.Is(err, domain.ErrGoalEvaluationIncomplete) {
+		t.Fatalf("SubmitGoalEvaluationDraft() error = %v, want ErrGoalEvaluationIncomplete", err)
+	}
+	if result == nil || result.Status != "draft" || len(result.Items) != 1 || result.Items[0].Notes == nil || *result.Items[0].Notes != "saved before submit" {
+		t.Fatalf("blocked submission result = %#v, want persisted draft", result)
+	}
+	assertClientSchedule(t, fixture.clientID, fixture.currentDate.AddDate(0, 0, -28), fixture.currentDate)
+}
+
+func TestTooEarlyGoalEvaluationSubmissionReturnsSavedDraft(t *testing.T) {
+	fixture := seedEvaluationLifecycleFixture(t)
+	futureDate := fixture.currentDate.AddDate(0, 0, 30)
+	if _, err := evaluationIntegrationPool.Exec(context.Background(), `UPDATE client_details SET next_evaluation_date = $2 WHERE id = $1`, fixture.clientID, futureDate); err != nil {
+		t.Fatalf("move evaluation schedule: %v", err)
+	}
+	if _, err := evaluationIntegrationPool.Exec(context.Background(), `UPDATE client_goal_evaluations SET evaluation_date = $2 WHERE id = $1`, fixture.currentEvaluationID, futureDate); err != nil {
+		t.Fatalf("move evaluation date: %v", err)
+	}
+	repository := &ClientRepository{store: db.NewStore(evaluationIntegrationPool)}
+
+	result, err := repository.SubmitGoalEvaluationDraft(fixture.ownerContext(), fixture.currentEvaluationID, fixture.owner.employeeID)
+	if !errors.Is(err, domain.ErrGoalEvaluationTooEarly) {
+		t.Fatalf("SubmitGoalEvaluationDraft() error = %v, want ErrGoalEvaluationTooEarly", err)
+	}
+	if result == nil || result.Status != "draft" {
+		t.Fatalf("blocked submission result = %#v, want saved draft", result)
 	}
 }
 

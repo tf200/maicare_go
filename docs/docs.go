@@ -1249,13 +1249,25 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/httpapi.Envelope-any"
+                            "$ref": "#/definitions/httpapi.Envelope-handler_goalEvaluationMutationErrorData"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/httpapi.Envelope-handler_goalEvaluationMutationErrorData"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/httpapi.Envelope-handler_goalEvaluationMutationErrorData"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/httpapi.Envelope-any"
+                            "$ref": "#/definitions/httpapi.Envelope-handler_goalEvaluationMutationErrorData"
                         }
                     }
                 }
@@ -3382,31 +3394,37 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/httpapi.Envelope-any"
+                            "$ref": "#/definitions/httpapi.Envelope-handler_goalEvaluationMutationErrorData"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/httpapi.Envelope-any"
+                            "$ref": "#/definitions/httpapi.Envelope-handler_goalEvaluationMutationErrorData"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/httpapi.Envelope-any"
+                            "$ref": "#/definitions/httpapi.Envelope-handler_goalEvaluationMutationErrorData"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/httpapi.Envelope-any"
+                            "$ref": "#/definitions/httpapi.Envelope-handler_goalEvaluationMutationErrorData"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/httpapi.Envelope-handler_goalEvaluationMutationErrorData"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/httpapi.Envelope-any"
+                            "$ref": "#/definitions/httpapi.Envelope-handler_goalEvaluationMutationErrorData"
                         }
                     }
                 }
@@ -3440,31 +3458,37 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/httpapi.Envelope-any"
+                            "$ref": "#/definitions/httpapi.Envelope-handler_goalEvaluationMutationErrorData"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/httpapi.Envelope-any"
+                            "$ref": "#/definitions/httpapi.Envelope-handler_goalEvaluationMutationErrorData"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/httpapi.Envelope-any"
+                            "$ref": "#/definitions/httpapi.Envelope-handler_goalEvaluationMutationErrorData"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/httpapi.Envelope-any"
+                            "$ref": "#/definitions/httpapi.Envelope-handler_goalEvaluationMutationErrorData"
+                        }
+                    },
+                    "422": {
+                        "description": "Unprocessable Entity",
+                        "schema": {
+                            "$ref": "#/definitions/httpapi.Envelope-handler_goalEvaluationMutationErrorData"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/httpapi.Envelope-any"
+                            "$ref": "#/definitions/httpapi.Envelope-handler_goalEvaluationMutationErrorData"
                         }
                     }
                 }
@@ -8724,6 +8748,17 @@ const docTemplate = `{
                 }
             }
         },
+        "handler.goalEvaluationMutationErrorData": {
+            "type": "object",
+            "properties": {
+                "draft_saved": {
+                    "type": "boolean"
+                },
+                "evaluation": {
+                    "$ref": "#/definitions/handler.goalEvaluationResponse"
+                }
+            }
+        },
         "handler.goalEvaluationResponse": {
             "type": "object",
             "properties": {
@@ -8764,9 +8799,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "status": {
-                    "type": "string"
-                },
-                "submit_error": {
                     "type": "string"
                 },
                 "updated_at": {
@@ -11672,6 +11704,23 @@ const docTemplate = `{
                 },
                 "data": {
                     "$ref": "#/definitions/handler.getWaitingListStatsResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "httpapi.Envelope-handler_goalEvaluationMutationErrorData": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "data": {
+                    "$ref": "#/definitions/handler.goalEvaluationMutationErrorData"
                 },
                 "message": {
                     "type": "string"

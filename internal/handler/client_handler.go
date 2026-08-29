@@ -725,7 +725,7 @@ func (h *ClientHandler) GetMissingClientDocuments(ctx *gin.Context) {
 // @Produce json
 // @Param id path string true "Client ID"
 // @Success 200 {object} httpapi.Envelope[getGoalEvaluationBootstrapResponse]
-// @Failure 400,500 {object} httpapi.Envelope[any]
+// @Failure 400,409,422,500 {object} httpapi.Envelope[goalEvaluationMutationErrorData]
 // @Router /clients/{id}/evaluations/bootstrap [get]
 func (h *ClientHandler) GetGoalEvaluationBootstrap(ctx *gin.Context) {
 	clientID, err := uuid.Parse(ctx.Param("id"))
@@ -990,7 +990,7 @@ func (h *ClientHandler) CreateGoalEvaluation(ctx *gin.Context) {
 
 	result, err := h.service.CreateGoalEvaluation(ctx.Request.Context(), clientID, employeeID, toCreateGoalEvaluationParams(req))
 	if err != nil {
-		handleGoalEvaluationMutationError(ctx, err)
+		handleGoalEvaluationMutationError(ctx, err, result, result != nil)
 		return
 	}
 
@@ -1132,7 +1132,7 @@ func (h *ClientHandler) GetGoalEvaluation(ctx *gin.Context) {
 // @Param evaluation_id path string true "Evaluation ID"
 // @Param request body updateGoalEvaluationDraftRequest true "Draft details"
 // @Success 200 {object} httpapi.Envelope[goalEvaluationResponse]
-// @Failure 400,401,404,409,500 {object} httpapi.Envelope[any]
+// @Failure 400,401,404,409,422,500 {object} httpapi.Envelope[goalEvaluationMutationErrorData]
 // @Router /evaluations/{evaluation_id}/draft [patch]
 func (h *ClientHandler) UpdateGoalEvaluationDraft(ctx *gin.Context) {
 	evaluationID, err := uuid.Parse(ctx.Param("evaluation_id"))
@@ -1155,7 +1155,7 @@ func (h *ClientHandler) UpdateGoalEvaluationDraft(ctx *gin.Context) {
 
 	result, err := h.service.UpdateGoalEvaluationDraft(ctx.Request.Context(), evaluationID, employeeID, toUpdateGoalEvaluationDraftParams(req))
 	if err != nil {
-		handleGoalEvaluationMutationError(ctx, err)
+		handleGoalEvaluationMutationError(ctx, err, result, false)
 		return
 	}
 
@@ -1168,7 +1168,7 @@ func (h *ClientHandler) UpdateGoalEvaluationDraft(ctx *gin.Context) {
 // @Produce json
 // @Param evaluation_id path string true "Evaluation ID"
 // @Success 200 {object} httpapi.Envelope[goalEvaluationResponse]
-// @Failure 400,401,404,409,500 {object} httpapi.Envelope[any]
+// @Failure 400,401,404,409,422,500 {object} httpapi.Envelope[goalEvaluationMutationErrorData]
 // @Router /evaluations/{evaluation_id}/submit [post]
 func (h *ClientHandler) SubmitGoalEvaluationDraft(ctx *gin.Context) {
 	evaluationID, err := uuid.Parse(ctx.Param("evaluation_id"))
@@ -1185,25 +1185,50 @@ func (h *ClientHandler) SubmitGoalEvaluationDraft(ctx *gin.Context) {
 
 	result, err := h.service.SubmitGoalEvaluationDraft(ctx.Request.Context(), evaluationID, employeeID)
 	if err != nil {
-		handleGoalEvaluationMutationError(ctx, err)
+		handleGoalEvaluationMutationError(ctx, err, result, result != nil)
 		return
 	}
 
 	ctx.JSON(http.StatusOK, httpapi.OK(toGoalEvaluationResponse(*result), "Goal evaluation submission processed successfully"))
 }
 
-func handleGoalEvaluationMutationError(ctx *gin.Context, err error) {
+func handleGoalEvaluationMutationError(ctx *gin.Context, err error, evaluation *domain.GoalEvaluation, draftSaved bool) {
+	data := goalEvaluationMutationErrorData{DraftSaved: draftSaved}
+	if evaluation != nil {
+		response := toGoalEvaluationResponse(*evaluation)
+		data.Evaluation = &response
+	}
+	fail := func(status int, code string) {
+		ctx.JSON(status, httpapi.FailWithData(err.Error(), code, data))
+	}
+
 	switch {
 	case errors.Is(err, domain.ErrGoalEvaluationNotFound):
-		ctx.JSON(http.StatusNotFound, httpapi.Fail(err.Error(), "EVALUATION_NOT_FOUND"))
+		fail(http.StatusNotFound, "EVALUATION_NOT_FOUND")
 	case errors.Is(err, domain.ErrGoalEvaluationOwnedByOther):
-		ctx.JSON(http.StatusConflict, httpapi.Fail(err.Error(), "EVALUATION_NOT_OWNER"))
+		fail(http.StatusConflict, "EVALUATION_NOT_OWNER")
 	case errors.Is(err, domain.ErrGoalEvaluationNotDraft):
-		ctx.JSON(http.StatusConflict, httpapi.Fail(err.Error(), "EVALUATION_ALREADY_COMPLETED"))
+		fail(http.StatusConflict, "EVALUATION_ALREADY_COMPLETED")
 	case errors.Is(err, domain.ErrGoalEvaluationNotCurrentCycle):
-		ctx.JSON(http.StatusConflict, httpapi.Fail(err.Error(), "EVALUATION_NOT_CURRENT_CYCLE"))
+		fail(http.StatusConflict, "EVALUATION_NOT_CURRENT_CYCLE")
+	case errors.Is(err, domain.ErrGoalEvaluationClientNotInCare):
+		fail(http.StatusUnprocessableEntity, "EVALUATION_CLIENT_NOT_IN_CARE")
+	case errors.Is(err, domain.ErrGoalEvaluationNoActiveGoals):
+		fail(http.StatusUnprocessableEntity, "EVALUATION_NO_ACTIVE_GOALS")
+	case errors.Is(err, domain.ErrGoalEvaluationNoDueDate):
+		fail(http.StatusUnprocessableEntity, "EVALUATION_NO_DUE_DATE")
+	case errors.Is(err, domain.ErrGoalEvaluationDuplicateGoal):
+		fail(http.StatusUnprocessableEntity, "EVALUATION_DUPLICATE_GOAL")
+	case errors.Is(err, domain.ErrGoalEvaluationGoalNotActive):
+		fail(http.StatusUnprocessableEntity, "EVALUATION_GOAL_NOT_ACTIVE")
+	case errors.Is(err, domain.ErrGoalEvaluationInvalidProgress):
+		fail(http.StatusUnprocessableEntity, "EVALUATION_INVALID_PROGRESS")
+	case errors.Is(err, domain.ErrGoalEvaluationIncomplete):
+		fail(http.StatusUnprocessableEntity, "EVALUATION_INCOMPLETE")
+	case errors.Is(err, domain.ErrGoalEvaluationTooEarly):
+		fail(http.StatusUnprocessableEntity, "EVALUATION_TOO_EARLY")
 	default:
-		ctx.JSON(http.StatusBadRequest, httpapi.Fail(err.Error(), ""))
+		fail(http.StatusBadRequest, "")
 	}
 }
 

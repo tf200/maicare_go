@@ -167,12 +167,12 @@ Acceptance criteria:
 
 ### P1.1 Stable Evaluation Error Codes
 
-**Status:** `[~]` Lifecycle conflict codes are complete; validation-specific codes remain pending.
+**Status:** `[x]` Lifecycle and validation codes are complete and localized.
 
 - [x] Return stable lifecycle codes for missing, non-owner, completed, and historical evaluations.
 - [x] Localize lifecycle messages in the frontend based on codes.
 - [x] Keep raw backend messages as diagnostics, not primary user copy.
-- [ ] Add stable codes for create validation and submission-window failures.
+- [x] Add stable codes for create validation and submission-window failures.
 
 Proposed codes:
 
@@ -194,10 +194,28 @@ EVALUATION_CONFLICT
 
 ### P1.2 Submission Response Semantics
 
-- [ ] Decide whether blocked submission remains HTTP 200 with `submit_error`.
-- [ ] Prefer HTTP 409 or 422 with a stable error code for blocked submission.
-- [ ] Ensure a failed submission clearly communicates whether the draft was saved.
-- [ ] Update frontend success and error handling to match the final contract.
+**Status:** `[x]` Blocked submission uses HTTP 422 with an explicit saved-draft payload.
+
+- [x] Replace HTTP 200 `submit_error` compatibility responses.
+- [x] Return HTTP 422 with a stable code for eligibility failures; reserve HTTP 409 for lifecycle and concurrency conflicts.
+- [x] Return `data.draft_saved` and the persisted evaluation when submission is blocked after saving.
+- [x] Update frontend success and error handling to match the final contract.
+
+Blocked submission contract:
+
+```json
+{
+  "success": false,
+  "code": "EVALUATION_INCOMPLETE",
+  "message": "all active goals must be evaluated before submission",
+  "data": {
+    "draft_saved": true,
+    "evaluation": {
+      "status": "draft"
+    }
+  }
+}
+```
 
 ### P1.3 Optimistic Concurrency
 
@@ -208,9 +226,9 @@ EVALUATION_CONFLICT
 
 ### P1.4 Transaction Boundaries
 
-- [ ] Decide whether save and submit must be one atomic transaction.
+- [x] Keep draft save and submission as separate transactions so a blocked submission preserves the saved draft.
 - [ ] Prevent another request from changing the draft between final save and submission.
-- [ ] Ensure schedule advancement can happen only once.
+- [x] Ensure schedule advancement can happen only once for sequential submissions.
 - [ ] Verify concurrent submission behavior.
 
 ### P1.5 Evaluation Permissions

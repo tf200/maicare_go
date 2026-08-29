@@ -37,13 +37,3 @@ func TestLogGroupEAuditExcludesClinicalPayload(t *testing.T) {
 		t.Fatalf("Group E audit details = %#v, want count only", event.Details)
 	}
 }
-
-func TestGoalEvaluationAuditActionDoesNotReportBlockedSubmission(t *testing.T) {
-	blocked := "all goals must be evaluated"
-	if got := goalEvaluationAuditAction(true, &blocked); got != "save" {
-		t.Fatalf("blocked submission audit action = %q, want save", got)
-	}
-	if got := goalEvaluationAuditAction(true, nil); got != "submit" {
-		t.Fatalf("successful submission audit action = %q, want submit", got)
-	}
-}

@@ -23,3 +23,7 @@ func Fail(message string, code string) Envelope[struct{}] {
 		Data:    struct{}{},
 	}
 }
+
+func FailWithData[T any](message string, code string, data T) Envelope[T] {
+	return Envelope[T]{Success: false, Code: code, Message: message, Data: data}
+}

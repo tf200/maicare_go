@@ -16,6 +16,14 @@ var ErrGoalEvaluationNotFound = errors.New("goal evaluation not found")
 var ErrGoalEvaluationOwnedByOther = errors.New("goal evaluation draft belongs to another employee")
 var ErrGoalEvaluationNotDraft = errors.New("goal evaluation is not an editable draft")
 var ErrGoalEvaluationNotCurrentCycle = errors.New("goal evaluation belongs to an earlier evaluation cycle")
+var ErrGoalEvaluationClientNotInCare = errors.New("evaluations are only available for clients in care")
+var ErrGoalEvaluationNoActiveGoals = errors.New("client has no active goals to evaluate")
+var ErrGoalEvaluationNoDueDate = errors.New("client has no evaluation due date")
+var ErrGoalEvaluationDuplicateGoal = errors.New("evaluation request contains a duplicate goal")
+var ErrGoalEvaluationGoalNotActive = errors.New("evaluation goal is not active for this client")
+var ErrGoalEvaluationInvalidProgress = errors.New("evaluation progress value is invalid")
+var ErrGoalEvaluationIncomplete = errors.New("all active goals must be evaluated before submission")
+var ErrGoalEvaluationTooEarly = errors.New("evaluation cannot be submitted before the submission window")
 var ErrClientMedicationOrderNotFound = errors.New("client medication order not found")
 
 type Client struct {
@@ -756,7 +764,6 @@ type GoalEvaluation struct {
 	CreatorName             *string
 	CreatedAt               time.Time
 	UpdatedAt               time.Time
-	SubmitError             *string
 	Items                   []GoalEvaluationItem
 }
 

@@ -145,6 +145,14 @@ func TestGoalEvaluationMutationErrorCodes(t *testing.T) {
 		{name: "not owner", err: domain.ErrGoalEvaluationOwnedByOther, wantStatus: http.StatusConflict, wantCode: "EVALUATION_NOT_OWNER"},
 		{name: "completed", err: domain.ErrGoalEvaluationNotDraft, wantStatus: http.StatusConflict, wantCode: "EVALUATION_ALREADY_COMPLETED"},
 		{name: "historical", err: domain.ErrGoalEvaluationNotCurrentCycle, wantStatus: http.StatusConflict, wantCode: "EVALUATION_NOT_CURRENT_CYCLE"},
+		{name: "client not in care", err: domain.ErrGoalEvaluationClientNotInCare, wantStatus: http.StatusUnprocessableEntity, wantCode: "EVALUATION_CLIENT_NOT_IN_CARE"},
+		{name: "no active goals", err: domain.ErrGoalEvaluationNoActiveGoals, wantStatus: http.StatusUnprocessableEntity, wantCode: "EVALUATION_NO_ACTIVE_GOALS"},
+		{name: "no due date", err: domain.ErrGoalEvaluationNoDueDate, wantStatus: http.StatusUnprocessableEntity, wantCode: "EVALUATION_NO_DUE_DATE"},
+		{name: "duplicate goal", err: domain.ErrGoalEvaluationDuplicateGoal, wantStatus: http.StatusUnprocessableEntity, wantCode: "EVALUATION_DUPLICATE_GOAL"},
+		{name: "inactive goal", err: domain.ErrGoalEvaluationGoalNotActive, wantStatus: http.StatusUnprocessableEntity, wantCode: "EVALUATION_GOAL_NOT_ACTIVE"},
+		{name: "invalid progress", err: domain.ErrGoalEvaluationInvalidProgress, wantStatus: http.StatusUnprocessableEntity, wantCode: "EVALUATION_INVALID_PROGRESS"},
+		{name: "incomplete", err: domain.ErrGoalEvaluationIncomplete, wantStatus: http.StatusUnprocessableEntity, wantCode: "EVALUATION_INCOMPLETE"},
+		{name: "too early", err: domain.ErrGoalEvaluationTooEarly, wantStatus: http.StatusUnprocessableEntity, wantCode: "EVALUATION_TOO_EARLY"},
 	}
 
 	for _, test := range tests {
@@ -152,7 +160,7 @@ func TestGoalEvaluationMutationErrorCodes(t *testing.T) {
 			response := httptest.NewRecorder()
 			ctx, _ := gin.CreateTestContext(response)
 
-			handleGoalEvaluationMutationError(ctx, test.err)
+			handleGoalEvaluationMutationError(ctx, test.err, nil, false)
 
 			if response.Code != test.wantStatus {
 				t.Fatalf("status = %d, want %d", response.Code, test.wantStatus)
@@ -161,6 +169,26 @@ func TestGoalEvaluationMutationErrorCodes(t *testing.T) {
 				t.Fatalf("body = %s, want code %s", response.Body.String(), test.wantCode)
 			}
 		})
+	}
+}
+
+func TestSubmitGoalEvaluationDraftReturnsSavedDraftOnValidationFailure(t *testing.T) {
+	evaluationID := uuid.New()
+	result := &domain.GoalEvaluation{ID: evaluationID, ClientID: uuid.New(), Status: "draft"}
+	service := &goalEvaluationServiceStub{submitResult: result, submitErr: domain.ErrGoalEvaluationIncomplete}
+	router := gin.New()
+	router.POST("/evaluations/:evaluation_id/submit", evaluationActor(uuid.New()), NewClientHandler(service).SubmitGoalEvaluationDraft)
+	response := httptest.NewRecorder()
+
+	router.ServeHTTP(response, httptest.NewRequest(http.MethodPost, "/evaluations/"+evaluationID.String()+"/submit", nil))
+
+	if response.Code != http.StatusUnprocessableEntity {
+		t.Fatalf("status = %d, want %d; body = %s", response.Code, http.StatusUnprocessableEntity, response.Body.String())
+	}
+	for _, expected := range []string{`"code":"EVALUATION_INCOMPLETE"`, `"draft_saved":true`, `"id":"` + evaluationID.String() + `"`} {
+		if !bytes.Contains(response.Body.Bytes(), []byte(expected)) {
+			t.Fatalf("body = %s, want %s", response.Body.String(), expected)
+		}
 	}
 }
 

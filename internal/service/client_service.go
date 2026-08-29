@@ -787,10 +787,13 @@ func (s *ClientService) CreateGoalEvaluation(ctx context.Context, clientID uuid.
 
 	result, err := s.repository.CreateGoalEvaluation(ctx, clientID, employeeID, params)
 	if err != nil {
+		if result != nil {
+			s.logGroupEAudit(ctx, "save", "client_goal_evaluation", result.ID, result.ClientID, domain.PermClientEvaluationCreate.String(), len(result.Items))
+		}
 		if s.logger != nil {
 			s.logger.LogError(ctx, "ClientService.CreateGoalEvaluation", "failed to create goal evaluation", err, zap.String("client_id", clientID.String()))
 		}
-		return nil, err
+		return result, err
 	}
 
 	if s.logger != nil {
@@ -800,7 +803,10 @@ func (s *ClientService) CreateGoalEvaluation(ctx context.Context, clientID uuid.
 			zap.Bool("submitted", params.Submit),
 		)
 	}
-	action := goalEvaluationAuditAction(params.Submit, result.SubmitError)
+	action := "save"
+	if params.Submit {
+		action = "submit"
+	}
 	s.logGroupEAudit(ctx, action, "client_goal_evaluation", result.ID, clientID, domain.PermClientEvaluationCreate.String(), len(result.Items))
 
 	return result, nil
@@ -822,10 +828,12 @@ func (s *ClientService) UpdateGoalEvaluationDraft(ctx context.Context, evaluatio
 func (s *ClientService) SubmitGoalEvaluationDraft(ctx context.Context, evaluationID uuid.UUID, employeeID uuid.UUID) (*domain.GoalEvaluation, error) {
 	result, err := s.repository.SubmitGoalEvaluationDraft(ctx, evaluationID, employeeID)
 	if err != nil {
-		return nil, err
+		if result != nil {
+			s.logGroupEAudit(ctx, "save", "client_goal_evaluation", result.ID, result.ClientID, domain.PermClientEvaluationCreate.String(), len(result.Items))
+		}
+		return result, err
 	}
-	action := goalEvaluationAuditAction(true, result.SubmitError)
-	s.logGroupEAudit(ctx, action, "client_goal_evaluation", result.ID, result.ClientID, domain.PermClientEvaluationCreate.String(), len(result.Items))
+	s.logGroupEAudit(ctx, "submit", "client_goal_evaluation", result.ID, result.ClientID, domain.PermClientEvaluationCreate.String(), len(result.Items))
 	return result, nil
 }
 
@@ -833,7 +841,7 @@ func validateGoalEvaluationItems(items []domain.GoalEvaluationItemParams) error 
 	itemsByGoal := make(map[uuid.UUID]struct{}, len(items))
 	for _, item := range items {
 		if _, exists := itemsByGoal[item.GoalID]; exists {
-			return fmt.Errorf("goal %s appears multiple times in request", item.GoalID)
+			return fmt.Errorf("%w: %s", domain.ErrGoalEvaluationDuplicateGoal, item.GoalID)
 		}
 		if err := validateProgress(item.Progress); err != nil {
 			return err
@@ -841,13 +849,6 @@ func validateGoalEvaluationItems(items []domain.GoalEvaluationItemParams) error 
 		itemsByGoal[item.GoalID] = struct{}{}
 	}
 	return nil
-}
-
-func goalEvaluationAuditAction(submitRequested bool, submitError *string) string {
-	if submitRequested && submitError == nil {
-		return "submit"
-	}
-	return "save"
 }
 
 func (s *ClientService) GetGoalEvaluationBootstrap(ctx context.Context, clientID uuid.UUID) (*domain.GoalEvaluationBootstrap, error) {
@@ -927,7 +928,7 @@ func validateProgress(value string) error {
 		"blocked":          {},
 	}
 	if _, ok := allowed[progress]; !ok {
-		return fmt.Errorf("invalid progress value: %s", value)
+		return fmt.Errorf("%w: %s", domain.ErrGoalEvaluationInvalidProgress, value)
 	}
 	return nil
 }
