@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"maicare_go/internal/domain"
 
@@ -24,6 +25,7 @@ type goalEvaluationServiceStub struct {
 	updateCalls        int
 	submitEvaluationID uuid.UUID
 	submitEmployeeID   uuid.UUID
+	submitParams       domain.SubmitGoalEvaluationDraftParams
 	submitResult       *domain.GoalEvaluation
 	submitErr          error
 	submitCalls        int
@@ -41,10 +43,11 @@ func (s *goalEvaluationServiceStub) UpdateGoalEvaluationDraft(_ context.Context,
 	return s.updateResult, s.updateErr
 }
 
-func (s *goalEvaluationServiceStub) SubmitGoalEvaluationDraft(_ context.Context, evaluationID uuid.UUID, employeeID uuid.UUID) (*domain.GoalEvaluation, error) {
+func (s *goalEvaluationServiceStub) SubmitGoalEvaluationDraft(_ context.Context, evaluationID uuid.UUID, employeeID uuid.UUID, params domain.SubmitGoalEvaluationDraftParams) (*domain.GoalEvaluation, error) {
 	s.submitCalls++
 	s.submitEvaluationID = evaluationID
 	s.submitEmployeeID = employeeID
+	s.submitParams = params
 	return s.submitResult, s.submitErr
 }
 
@@ -65,6 +68,7 @@ func TestUpdateGoalEvaluationDraftUsesPathIDAndActor(t *testing.T) {
 	router.PATCH("/evaluations/:evaluation_id/draft", evaluationActor(employeeID), NewClientHandler(service).UpdateGoalEvaluationDraft)
 	request := httptest.NewRequest(http.MethodPatch, "/evaluations/"+evaluationID.String()+"/draft", bytes.NewBufferString(`{"items":[{"goal_id":"`+goalID.String()+`","progress":"good_progress"}]}`))
 	request.Header.Set("Content-Type", "application/json")
+	request.Header.Set("If-Match", `"2026-08-29T12:34:56.123456Z"`)
 	response := httptest.NewRecorder()
 
 	router.ServeHTTP(response, request)
@@ -77,6 +81,9 @@ func TestUpdateGoalEvaluationDraftUsesPathIDAndActor(t *testing.T) {
 	if len(service.updateParams.Items) != 1 || service.updateParams.Items[0].GoalID != goalID {
 		t.Fatalf("update params = %#v", service.updateParams)
 	}
+	if service.updateParams.ExpectedUpdatedAt.Format(time.RFC3339Nano) != "2026-08-29T12:34:56.123456Z" {
+		t.Fatalf("revision = %s, want exact If-Match value", service.updateParams.ExpectedUpdatedAt.Format(time.RFC3339Nano))
+	}
 }
 
 func TestUpdateGoalEvaluationDraftMapsOwnershipConflict(t *testing.T) {
@@ -86,6 +93,7 @@ func TestUpdateGoalEvaluationDraftMapsOwnershipConflict(t *testing.T) {
 	router.PATCH("/evaluations/:evaluation_id/draft", evaluationActor(uuid.New()), NewClientHandler(service).UpdateGoalEvaluationDraft)
 	request := httptest.NewRequest(http.MethodPatch, "/evaluations/"+uuid.NewString()+"/draft", bytes.NewBufferString(`{"items":[]}`))
 	request.Header.Set("Content-Type", "application/json")
+	request.Header.Set("If-Match", `"2026-08-29T12:34:56Z"`)
 	response := httptest.NewRecorder()
 
 	router.ServeHTTP(response, request)
@@ -104,6 +112,7 @@ func TestUpdateGoalEvaluationDraftMapsCurrentCycleConflict(t *testing.T) {
 	router.PATCH("/evaluations/:evaluation_id/draft", evaluationActor(uuid.New()), NewClientHandler(service).UpdateGoalEvaluationDraft)
 	request := httptest.NewRequest(http.MethodPatch, "/evaluations/"+uuid.NewString()+"/draft", bytes.NewBufferString(`{"items":[]}`))
 	request.Header.Set("Content-Type", "application/json")
+	request.Header.Set("If-Match", `"2026-08-29T12:34:56Z"`)
 	response := httptest.NewRecorder()
 
 	router.ServeHTTP(response, request)
@@ -123,6 +132,7 @@ func TestSubmitGoalEvaluationDraftRequiresNoBody(t *testing.T) {
 	router := gin.New()
 	router.POST("/evaluations/:evaluation_id/submit", evaluationActor(employeeID), NewClientHandler(service).SubmitGoalEvaluationDraft)
 	request := httptest.NewRequest(http.MethodPost, "/evaluations/"+evaluationID.String()+"/submit", nil)
+	request.Header.Set("If-Match", `"2026-08-29T12:34:56.123456Z"`)
 	response := httptest.NewRecorder()
 
 	router.ServeHTTP(response, request)
@@ -131,6 +141,9 @@ func TestSubmitGoalEvaluationDraftRequiresNoBody(t *testing.T) {
 	}
 	if service.submitCalls != 1 || service.submitEvaluationID != evaluationID || service.submitEmployeeID != employeeID {
 		t.Fatal("handler did not pass exact evaluation and employee IDs")
+	}
+	if service.submitParams.ExpectedUpdatedAt.Format(time.RFC3339Nano) != "2026-08-29T12:34:56.123456Z" {
+		t.Fatalf("submit revision = %s", service.submitParams.ExpectedUpdatedAt.Format(time.RFC3339Nano))
 	}
 }
 
@@ -153,6 +166,7 @@ func TestGoalEvaluationMutationErrorCodes(t *testing.T) {
 		{name: "invalid progress", err: domain.ErrGoalEvaluationInvalidProgress, wantStatus: http.StatusUnprocessableEntity, wantCode: "EVALUATION_INVALID_PROGRESS"},
 		{name: "incomplete", err: domain.ErrGoalEvaluationIncomplete, wantStatus: http.StatusUnprocessableEntity, wantCode: "EVALUATION_INCOMPLETE"},
 		{name: "too early", err: domain.ErrGoalEvaluationTooEarly, wantStatus: http.StatusUnprocessableEntity, wantCode: "EVALUATION_TOO_EARLY"},
+		{name: "conflict", err: domain.ErrGoalEvaluationConflict, wantStatus: http.StatusConflict, wantCode: "EVALUATION_CONFLICT"},
 	}
 
 	for _, test := range tests {
@@ -180,7 +194,9 @@ func TestSubmitGoalEvaluationDraftReturnsSavedDraftOnValidationFailure(t *testin
 	router.POST("/evaluations/:evaluation_id/submit", evaluationActor(uuid.New()), NewClientHandler(service).SubmitGoalEvaluationDraft)
 	response := httptest.NewRecorder()
 
-	router.ServeHTTP(response, httptest.NewRequest(http.MethodPost, "/evaluations/"+evaluationID.String()+"/submit", nil))
+	request := httptest.NewRequest(http.MethodPost, "/evaluations/"+evaluationID.String()+"/submit", nil)
+	request.Header.Set("If-Match", `"2026-08-29T12:34:56Z"`)
+	router.ServeHTTP(response, request)
 
 	if response.Code != http.StatusUnprocessableEntity {
 		t.Fatalf("status = %d, want %d; body = %s", response.Code, http.StatusUnprocessableEntity, response.Body.String())
@@ -189,6 +205,19 @@ func TestSubmitGoalEvaluationDraftReturnsSavedDraftOnValidationFailure(t *testin
 		if !bytes.Contains(response.Body.Bytes(), []byte(expected)) {
 			t.Fatalf("body = %s, want %s", response.Body.String(), expected)
 		}
+	}
+}
+
+func TestGoalEvaluationMutationRequiresRevision(t *testing.T) {
+	service := &goalEvaluationServiceStub{}
+	router := gin.New()
+	router.POST("/evaluations/:evaluation_id/submit", evaluationActor(uuid.New()), NewClientHandler(service).SubmitGoalEvaluationDraft)
+	response := httptest.NewRecorder()
+
+	router.ServeHTTP(response, httptest.NewRequest(http.MethodPost, "/evaluations/"+uuid.NewString()+"/submit", nil))
+
+	if response.Code != http.StatusPreconditionRequired || service.submitCalls != 0 {
+		t.Fatalf("status = %d, calls = %d; want 428 and no service call", response.Code, service.submitCalls)
 	}
 }
 

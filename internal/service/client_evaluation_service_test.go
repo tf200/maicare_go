@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"maicare_go/internal/domain"
 
@@ -20,6 +21,7 @@ type goalEvaluationRepositoryStub struct {
 	updateCalls        int
 	submitEvaluationID uuid.UUID
 	submitEmployeeID   uuid.UUID
+	submitParams       domain.SubmitGoalEvaluationDraftParams
 	submitResult       *domain.GoalEvaluation
 	submitErr          error
 	submitCalls        int
@@ -33,10 +35,11 @@ func (s *goalEvaluationRepositoryStub) UpdateGoalEvaluationDraft(_ context.Conte
 	return s.updateResult, s.updateErr
 }
 
-func (s *goalEvaluationRepositoryStub) SubmitGoalEvaluationDraft(_ context.Context, evaluationID uuid.UUID, employeeID uuid.UUID) (*domain.GoalEvaluation, error) {
+func (s *goalEvaluationRepositoryStub) SubmitGoalEvaluationDraft(_ context.Context, evaluationID uuid.UUID, employeeID uuid.UUID, params domain.SubmitGoalEvaluationDraftParams) (*domain.GoalEvaluation, error) {
 	s.submitCalls++
 	s.submitEvaluationID = evaluationID
 	s.submitEmployeeID = employeeID
+	s.submitParams = params
 	return s.submitResult, s.submitErr
 }
 
@@ -47,7 +50,8 @@ func TestUpdateGoalEvaluationDraftDelegatesExactIDs(t *testing.T) {
 	want := &domain.GoalEvaluation{ID: evaluationID, ClientID: uuid.New()}
 	repository := &goalEvaluationRepositoryStub{updateResult: want}
 	service := NewClientService(repository, nil, nil, nil, nil, nil, nil)
-	params := domain.UpdateGoalEvaluationDraftParams{Items: []domain.GoalEvaluationItemParams{{GoalID: goalID, Progress: "achieved"}}}
+	revision := time.Now().UTC()
+	params := domain.UpdateGoalEvaluationDraftParams{ExpectedUpdatedAt: revision, Items: []domain.GoalEvaluationItemParams{{GoalID: goalID, Progress: "achieved"}}}
 
 	got, err := service.UpdateGoalEvaluationDraft(context.Background(), evaluationID, employeeID, params)
 	if err != nil {
@@ -56,7 +60,7 @@ func TestUpdateGoalEvaluationDraftDelegatesExactIDs(t *testing.T) {
 	if got != want || repository.updateCalls != 1 || repository.updateEvaluationID != evaluationID || repository.updateEmployeeID != employeeID {
 		t.Fatalf("UpdateGoalEvaluationDraft() did not delegate exact evaluation and employee IDs")
 	}
-	if len(repository.updateParams.Items) != 1 || repository.updateParams.Items[0].GoalID != goalID {
+	if !repository.updateParams.ExpectedUpdatedAt.Equal(revision) || len(repository.updateParams.Items) != 1 || repository.updateParams.Items[0].GoalID != goalID {
 		t.Fatalf("UpdateGoalEvaluationDraft() params = %#v", repository.updateParams)
 	}
 }
@@ -80,14 +84,18 @@ func TestSubmitGoalEvaluationDraftDelegatesExactIDsAndError(t *testing.T) {
 	evaluationID := uuid.New()
 	employeeID := uuid.New()
 	wantErr := errors.New("submit failed")
+	revision := time.Now().UTC()
 	repository := &goalEvaluationRepositoryStub{submitErr: wantErr}
 	service := NewClientService(repository, nil, nil, nil, nil, nil, nil)
 
-	_, err := service.SubmitGoalEvaluationDraft(context.Background(), evaluationID, employeeID)
+	_, err := service.SubmitGoalEvaluationDraft(context.Background(), evaluationID, employeeID, domain.SubmitGoalEvaluationDraftParams{ExpectedUpdatedAt: revision})
 	if !errors.Is(err, wantErr) {
 		t.Fatalf("SubmitGoalEvaluationDraft() error = %v, want %v", err, wantErr)
 	}
 	if repository.submitCalls != 1 || repository.submitEvaluationID != evaluationID || repository.submitEmployeeID != employeeID {
 		t.Fatalf("SubmitGoalEvaluationDraft() did not delegate exact evaluation and employee IDs")
+	}
+	if !repository.submitParams.ExpectedUpdatedAt.Equal(revision) {
+		t.Fatalf("submit revision = %s, want %s", repository.submitParams.ExpectedUpdatedAt, revision)
 	}
 }

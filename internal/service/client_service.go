@@ -819,14 +819,14 @@ func (s *ClientService) UpdateGoalEvaluationDraft(ctx context.Context, evaluatio
 
 	result, err := s.repository.UpdateGoalEvaluationDraft(ctx, evaluationID, employeeID, params)
 	if err != nil {
-		return nil, err
+		return result, err
 	}
 	s.logGroupEAudit(ctx, "save", "client_goal_evaluation", result.ID, result.ClientID, domain.PermClientEvaluationCreate.String(), len(result.Items))
 	return result, nil
 }
 
-func (s *ClientService) SubmitGoalEvaluationDraft(ctx context.Context, evaluationID uuid.UUID, employeeID uuid.UUID) (*domain.GoalEvaluation, error) {
-	result, err := s.repository.SubmitGoalEvaluationDraft(ctx, evaluationID, employeeID)
+func (s *ClientService) SubmitGoalEvaluationDraft(ctx context.Context, evaluationID uuid.UUID, employeeID uuid.UUID, params domain.SubmitGoalEvaluationDraftParams) (*domain.GoalEvaluation, error) {
+	result, err := s.repository.SubmitGoalEvaluationDraft(ctx, evaluationID, employeeID, params)
 	if err != nil {
 		if result != nil {
 			s.logGroupEAudit(ctx, "save", "client_goal_evaluation", result.ID, result.ClientID, domain.PermClientEvaluationCreate.String(), len(result.Items))

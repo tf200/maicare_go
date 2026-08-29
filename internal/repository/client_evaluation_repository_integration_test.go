@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"sync"
 	"testing"
 	"time"
 
@@ -99,7 +100,8 @@ func TestUpdateGoalEvaluationDraftMutatesExactID(t *testing.T) {
 		fixture.currentEvaluationID,
 		fixture.owner.employeeID,
 		domain.UpdateGoalEvaluationDraftParams{
-			OverallNotes: &notes,
+			ExpectedUpdatedAt: submitParams(t, fixture.currentEvaluationID).ExpectedUpdatedAt,
+			OverallNotes:      &notes,
 			Items: []domain.GoalEvaluationItemParams{{
 				GoalID: fixture.goalID, Progress: "achieved", Notes: &itemNotes,
 			}},
@@ -149,7 +151,7 @@ func TestHistoricalGoalEvaluationDraftIsReadOnly(t *testing.T) {
 	if _, err := repository.UpdateGoalEvaluationDraft(fixture.ownerContext(), fixture.historicalEvaluationID, fixture.owner.employeeID, params); !errors.Is(err, domain.ErrGoalEvaluationNotCurrentCycle) {
 		t.Fatalf("historical update error = %v, want ErrGoalEvaluationNotCurrentCycle", err)
 	}
-	if _, err := repository.SubmitGoalEvaluationDraft(fixture.ownerContext(), fixture.historicalEvaluationID, fixture.owner.employeeID); !errors.Is(err, domain.ErrGoalEvaluationNotCurrentCycle) {
+	if _, err := repository.SubmitGoalEvaluationDraft(fixture.ownerContext(), fixture.historicalEvaluationID, fixture.owner.employeeID, submitParams(t, fixture.historicalEvaluationID)); !errors.Is(err, domain.ErrGoalEvaluationNotCurrentCycle) {
 		t.Fatalf("historical submit error = %v, want ErrGoalEvaluationNotCurrentCycle", err)
 	}
 
@@ -172,7 +174,7 @@ func TestGoalEvaluationDraftRejectsNonOwner(t *testing.T) {
 	if _, err := repository.UpdateGoalEvaluationDraft(fixture.otherContext(), fixture.currentEvaluationID, fixture.other.employeeID, params); !errors.Is(err, domain.ErrGoalEvaluationOwnedByOther) {
 		t.Fatalf("non-owner update error = %v, want ErrGoalEvaluationOwnedByOther", err)
 	}
-	if _, err := repository.SubmitGoalEvaluationDraft(fixture.otherContext(), fixture.currentEvaluationID, fixture.other.employeeID); !errors.Is(err, domain.ErrGoalEvaluationOwnedByOther) {
+	if _, err := repository.SubmitGoalEvaluationDraft(fixture.otherContext(), fixture.currentEvaluationID, fixture.other.employeeID, submitParams(t, fixture.currentEvaluationID)); !errors.Is(err, domain.ErrGoalEvaluationOwnedByOther) {
 		t.Fatalf("non-owner submit error = %v, want ErrGoalEvaluationOwnedByOther", err)
 	}
 }
@@ -181,7 +183,7 @@ func TestSubmitGoalEvaluationDraftAdvancesScheduleOnce(t *testing.T) {
 	fixture := seedEvaluationLifecycleFixture(t)
 	repository := &ClientRepository{store: db.NewStore(evaluationIntegrationPool)}
 
-	result, err := repository.SubmitGoalEvaluationDraft(fixture.ownerContext(), fixture.currentEvaluationID, fixture.owner.employeeID)
+	result, err := repository.SubmitGoalEvaluationDraft(fixture.ownerContext(), fixture.currentEvaluationID, fixture.owner.employeeID, submitParams(t, fixture.currentEvaluationID))
 	if err != nil {
 		t.Fatalf("SubmitGoalEvaluationDraft() error = %v", err)
 	}
@@ -192,7 +194,7 @@ func TestSubmitGoalEvaluationDraftAdvancesScheduleOnce(t *testing.T) {
 	wantNextDate := fixture.currentDate.AddDate(0, 0, 28)
 	assertClientSchedule(t, fixture.clientID, fixture.currentDate, wantNextDate)
 
-	if _, err := repository.SubmitGoalEvaluationDraft(fixture.ownerContext(), fixture.currentEvaluationID, fixture.owner.employeeID); !errors.Is(err, domain.ErrGoalEvaluationNotDraft) {
+	if _, err := repository.SubmitGoalEvaluationDraft(fixture.ownerContext(), fixture.currentEvaluationID, fixture.owner.employeeID, domain.SubmitGoalEvaluationDraftParams{ExpectedUpdatedAt: result.UpdatedAt}); !errors.Is(err, domain.ErrGoalEvaluationNotDraft) {
 		t.Fatalf("second submit error = %v, want ErrGoalEvaluationNotDraft", err)
 	}
 	assertClientSchedule(t, fixture.clientID, fixture.currentDate, wantNextDate)
@@ -226,7 +228,7 @@ func TestBlockedGoalEvaluationSubmissionReturnsSavedDraft(t *testing.T) {
 	}
 	repository := &ClientRepository{store: db.NewStore(evaluationIntegrationPool)}
 
-	result, err := repository.SubmitGoalEvaluationDraft(fixture.ownerContext(), fixture.currentEvaluationID, fixture.owner.employeeID)
+	result, err := repository.SubmitGoalEvaluationDraft(fixture.ownerContext(), fixture.currentEvaluationID, fixture.owner.employeeID, submitParams(t, fixture.currentEvaluationID))
 	if !errors.Is(err, domain.ErrGoalEvaluationIncomplete) {
 		t.Fatalf("SubmitGoalEvaluationDraft() error = %v, want ErrGoalEvaluationIncomplete", err)
 	}
@@ -247,13 +249,106 @@ func TestTooEarlyGoalEvaluationSubmissionReturnsSavedDraft(t *testing.T) {
 	}
 	repository := &ClientRepository{store: db.NewStore(evaluationIntegrationPool)}
 
-	result, err := repository.SubmitGoalEvaluationDraft(fixture.ownerContext(), fixture.currentEvaluationID, fixture.owner.employeeID)
+	result, err := repository.SubmitGoalEvaluationDraft(fixture.ownerContext(), fixture.currentEvaluationID, fixture.owner.employeeID, submitParams(t, fixture.currentEvaluationID))
 	if !errors.Is(err, domain.ErrGoalEvaluationTooEarly) {
 		t.Fatalf("SubmitGoalEvaluationDraft() error = %v, want ErrGoalEvaluationTooEarly", err)
 	}
 	if result == nil || result.Status != "draft" {
 		t.Fatalf("blocked submission result = %#v, want saved draft", result)
 	}
+}
+
+func TestStaleGoalEvaluationUpdateReturnsCurrentServerDraft(t *testing.T) {
+	fixture := seedEvaluationLifecycleFixture(t)
+	repository := &ClientRepository{store: db.NewStore(evaluationIntegrationPool)}
+	staleRevision := submitParams(t, fixture.currentEvaluationID).ExpectedUpdatedAt
+	winnerNotes := "winner notes"
+	winner, err := repository.UpdateGoalEvaluationDraft(fixture.ownerContext(), fixture.currentEvaluationID, fixture.owner.employeeID, domain.UpdateGoalEvaluationDraftParams{
+		ExpectedUpdatedAt: staleRevision,
+		OverallNotes:      &winnerNotes,
+		Items:             []domain.GoalEvaluationItemParams{{GoalID: fixture.goalID, Progress: "achieved"}},
+	})
+	if err != nil {
+		t.Fatalf("winning update error = %v", err)
+	}
+	loserNotes := "stale overwrite"
+	current, err := repository.UpdateGoalEvaluationDraft(fixture.ownerContext(), fixture.currentEvaluationID, fixture.owner.employeeID, domain.UpdateGoalEvaluationDraftParams{
+		ExpectedUpdatedAt: staleRevision,
+		OverallNotes:      &loserNotes,
+		Items:             []domain.GoalEvaluationItemParams{{GoalID: fixture.goalID, Progress: "regression"}},
+	})
+	if !errors.Is(err, domain.ErrGoalEvaluationConflict) {
+		t.Fatalf("stale update error = %v, want ErrGoalEvaluationConflict", err)
+	}
+	if current == nil || current.OverallNotes == nil || *current.OverallNotes != winnerNotes || current.Items[0].Progress != "achieved" || !current.UpdatedAt.Equal(winner.UpdatedAt) {
+		t.Fatalf("conflict result = %#v, want current winning draft", current)
+	}
+}
+
+func TestStaleGoalEvaluationSubmitDoesNotAdvanceSchedule(t *testing.T) {
+	fixture := seedEvaluationLifecycleFixture(t)
+	repository := &ClientRepository{store: db.NewStore(evaluationIntegrationPool)}
+	staleRevision := submitParams(t, fixture.currentEvaluationID).ExpectedUpdatedAt
+	notes := "newer saved revision"
+	current, err := repository.UpdateGoalEvaluationDraft(fixture.ownerContext(), fixture.currentEvaluationID, fixture.owner.employeeID, domain.UpdateGoalEvaluationDraftParams{
+		ExpectedUpdatedAt: staleRevision,
+		OverallNotes:      &notes,
+		Items:             []domain.GoalEvaluationItemParams{{GoalID: fixture.goalID, Progress: "achieved"}},
+	})
+	if err != nil {
+		t.Fatalf("update before stale submit error = %v", err)
+	}
+
+	conflict, err := repository.SubmitGoalEvaluationDraft(fixture.ownerContext(), fixture.currentEvaluationID, fixture.owner.employeeID, domain.SubmitGoalEvaluationDraftParams{ExpectedUpdatedAt: staleRevision})
+	if !errors.Is(err, domain.ErrGoalEvaluationConflict) {
+		t.Fatalf("stale submit error = %v, want ErrGoalEvaluationConflict", err)
+	}
+	if conflict == nil || conflict.Status != "draft" || !conflict.UpdatedAt.Equal(current.UpdatedAt) {
+		t.Fatalf("stale submit result = %#v, want current draft", conflict)
+	}
+	assertClientSchedule(t, fixture.clientID, fixture.currentDate.AddDate(0, 0, -28), fixture.currentDate)
+}
+
+func TestConcurrentGoalEvaluationSubmissionAdvancesScheduleOnce(t *testing.T) {
+	fixture := seedEvaluationLifecycleFixture(t)
+	repository := &ClientRepository{store: db.NewStore(evaluationIntegrationPool)}
+	params := submitParams(t, fixture.currentEvaluationID)
+	type submitResult struct {
+		evaluation *domain.GoalEvaluation
+		err        error
+	}
+	results := make(chan submitResult, 2)
+	var ready sync.WaitGroup
+	ready.Add(2)
+	start := make(chan struct{})
+	for range 2 {
+		go func() {
+			ready.Done()
+			<-start
+			evaluation, err := repository.SubmitGoalEvaluationDraft(fixture.ownerContext(), fixture.currentEvaluationID, fixture.owner.employeeID, params)
+			results <- submitResult{evaluation: evaluation, err: err}
+		}()
+	}
+	ready.Wait()
+	close(start)
+
+	successes := 0
+	rejections := 0
+	for range 2 {
+		result := <-results
+		switch {
+		case result.err == nil && result.evaluation != nil && result.evaluation.Status == "completed":
+			successes++
+		case errors.Is(result.err, domain.ErrGoalEvaluationConflict), errors.Is(result.err, domain.ErrGoalEvaluationNotDraft):
+			rejections++
+		default:
+			t.Fatalf("unexpected concurrent submit result: evaluation=%#v error=%v", result.evaluation, result.err)
+		}
+	}
+	if successes != 1 || rejections != 1 {
+		t.Fatalf("concurrent submits: successes=%d rejections=%d, want 1/1", successes, rejections)
+	}
+	assertClientSchedule(t, fixture.clientID, fixture.currentDate, fixture.currentDate.AddDate(0, 0, 28))
 }
 
 type evaluationActor struct {
@@ -371,6 +466,15 @@ func assertClientSchedule(t *testing.T, clientID uuid.UUID, wantAnchor, wantNext
 	if !sameDate(anchor, wantAnchor) || !sameDate(next, wantNext) {
 		t.Fatalf("client schedule anchor=%s next=%s, want anchor=%s next=%s", anchor, next, wantAnchor, wantNext)
 	}
+}
+
+func submitParams(t *testing.T, evaluationID uuid.UUID) domain.SubmitGoalEvaluationDraftParams {
+	t.Helper()
+	var updatedAt time.Time
+	if err := evaluationIntegrationPool.QueryRow(context.Background(), `SELECT updated_at FROM client_goal_evaluations WHERE id = $1`, evaluationID).Scan(&updatedAt); err != nil {
+		t.Fatalf("read evaluation revision: %v", err)
+	}
+	return domain.SubmitGoalEvaluationDraftParams{ExpectedUpdatedAt: updatedAt}
 }
 
 func sameDate(left, right time.Time) bool {

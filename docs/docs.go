@@ -3375,6 +3375,13 @@ const docTemplate = `{
                         "required": true
                     },
                     {
+                        "type": "string",
+                        "description": "Quoted evaluation updated_at revision",
+                        "name": "If-Match",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
                         "description": "Draft details",
                         "name": "request",
                         "in": "body",
@@ -3445,6 +3452,13 @@ const docTemplate = `{
                         "description": "Evaluation ID",
                         "name": "evaluation_id",
                         "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Quoted evaluation updated_at revision",
+                        "name": "If-Match",
+                        "in": "header",
                         "required": true
                     }
                 ],

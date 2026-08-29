@@ -42,6 +42,26 @@ SET
 WHERE id = $1
 RETURNING *;
 
+-- name: UpdateGoalEvaluationDraftCAS :one
+UPDATE client_goal_evaluations
+SET
+    overall_notes = COALESCE(sqlc.narg('overall_notes'), overall_notes),
+    updated_at = CURRENT_TIMESTAMP
+WHERE id = $1
+  AND status = 'draft'
+  AND updated_at = sqlc.arg('expected_updated_at')
+RETURNING *;
+
+-- name: SubmitGoalEvaluationDraftCAS :one
+UPDATE client_goal_evaluations
+SET
+    status = 'completed',
+    updated_at = CURRENT_TIMESTAMP
+WHERE id = $1
+  AND status = 'draft'
+  AND updated_at = sqlc.arg('expected_updated_at')
+RETURNING *;
+
 -- name: UpsertGoalEvaluationItem :one
 INSERT INTO client_goal_evaluation_items (
     client_id,

@@ -219,17 +219,19 @@ Blocked submission contract:
 
 ### P1.3 Optimistic Concurrency
 
-- [ ] Add a revision, version, or `updated_at` precondition to draft mutations.
-- [ ] Reject stale writes with HTTP 409 and `EVALUATION_CONFLICT`.
-- [ ] Return the current server revision in the conflict response where safe.
-- [ ] Add frontend conflict UI that preserves the local draft.
+**Status:** `[x]` Draft updates and submissions use an `If-Match` `updated_at` compare-and-swap precondition.
+
+- [x] Add an `updated_at` precondition to draft mutations.
+- [x] Reject missing preconditions with HTTP 428 and stale writes with HTTP 409 `EVALUATION_CONFLICT`.
+- [x] Return the complete current server evaluation, including its revision, in conflict responses.
+- [x] Add frontend conflict UI that preserves local entries until an explicit confirmed reload.
 
 ### P1.4 Transaction Boundaries
 
 - [x] Keep draft save and submission as separate transactions so a blocked submission preserves the saved draft.
-- [ ] Prevent another request from changing the draft between final save and submission.
+- [x] Prevent another request from changing the draft between final save and submission by submitting the revision returned by the final save.
 - [x] Ensure schedule advancement can happen only once for sequential submissions.
-- [ ] Verify concurrent submission behavior.
+- [x] Verify concurrent submission behavior and single schedule advancement with PostgreSQL integration coverage.
 
 ### P1.5 Evaluation Permissions
 
@@ -274,8 +276,8 @@ CLIENT.EVALUATION.CREATE
 
 ### P1.9 Direct Lifecycle Test Coverage
 
-- [ ] Add handler contract tests.
-- [ ] Add service validation tests.
+- [x] Add handler contract tests.
+- [x] Add service validation tests.
 - [x] Add repository/database lifecycle integration tests.
 - [ ] Add frontend workflow tests for create, update, submit, conflict, and read-only states.
 

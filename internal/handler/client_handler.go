@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
+	"time"
 
 	"maicare_go/internal/domain"
 	"maicare_go/internal/httpapi"
@@ -990,7 +992,7 @@ func (h *ClientHandler) CreateGoalEvaluation(ctx *gin.Context) {
 
 	result, err := h.service.CreateGoalEvaluation(ctx.Request.Context(), clientID, employeeID, toCreateGoalEvaluationParams(req))
 	if err != nil {
-		handleGoalEvaluationMutationError(ctx, err, result, result != nil)
+		handleGoalEvaluationMutationError(ctx, err, result, result != nil && !errors.Is(err, domain.ErrGoalEvaluationConflict))
 		return
 	}
 
@@ -1130,6 +1132,7 @@ func (h *ClientHandler) GetGoalEvaluation(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param evaluation_id path string true "Evaluation ID"
+// @Param If-Match header string true "Quoted evaluation updated_at revision"
 // @Param request body updateGoalEvaluationDraftRequest true "Draft details"
 // @Success 200 {object} httpapi.Envelope[goalEvaluationResponse]
 // @Failure 400,401,404,409,422,500 {object} httpapi.Envelope[goalEvaluationMutationErrorData]
@@ -1152,8 +1155,14 @@ func (h *ClientHandler) UpdateGoalEvaluationDraft(ctx *gin.Context) {
 		ctx.JSON(http.StatusUnauthorized, httpapi.Fail(err.Error(), ""))
 		return
 	}
+	expectedUpdatedAt, ok := parseGoalEvaluationRevision(ctx)
+	if !ok {
+		return
+	}
+	params := toUpdateGoalEvaluationDraftParams(req)
+	params.ExpectedUpdatedAt = expectedUpdatedAt
 
-	result, err := h.service.UpdateGoalEvaluationDraft(ctx.Request.Context(), evaluationID, employeeID, toUpdateGoalEvaluationDraftParams(req))
+	result, err := h.service.UpdateGoalEvaluationDraft(ctx.Request.Context(), evaluationID, employeeID, params)
 	if err != nil {
 		handleGoalEvaluationMutationError(ctx, err, result, false)
 		return
@@ -1167,6 +1176,7 @@ func (h *ClientHandler) UpdateGoalEvaluationDraft(ctx *gin.Context) {
 // @Tags evaluations
 // @Produce json
 // @Param evaluation_id path string true "Evaluation ID"
+// @Param If-Match header string true "Quoted evaluation updated_at revision"
 // @Success 200 {object} httpapi.Envelope[goalEvaluationResponse]
 // @Failure 400,401,404,409,422,500 {object} httpapi.Envelope[goalEvaluationMutationErrorData]
 // @Router /evaluations/{evaluation_id}/submit [post]
@@ -1182,10 +1192,14 @@ func (h *ClientHandler) SubmitGoalEvaluationDraft(ctx *gin.Context) {
 		ctx.JSON(http.StatusUnauthorized, httpapi.Fail(err.Error(), ""))
 		return
 	}
+	expectedUpdatedAt, ok := parseGoalEvaluationRevision(ctx)
+	if !ok {
+		return
+	}
 
-	result, err := h.service.SubmitGoalEvaluationDraft(ctx.Request.Context(), evaluationID, employeeID)
+	result, err := h.service.SubmitGoalEvaluationDraft(ctx.Request.Context(), evaluationID, employeeID, domain.SubmitGoalEvaluationDraftParams{ExpectedUpdatedAt: expectedUpdatedAt})
 	if err != nil {
-		handleGoalEvaluationMutationError(ctx, err, result, result != nil)
+		handleGoalEvaluationMutationError(ctx, err, result, result != nil && !errors.Is(err, domain.ErrGoalEvaluationConflict))
 		return
 	}
 
@@ -1211,6 +1225,8 @@ func handleGoalEvaluationMutationError(ctx *gin.Context, err error, evaluation *
 		fail(http.StatusConflict, "EVALUATION_ALREADY_COMPLETED")
 	case errors.Is(err, domain.ErrGoalEvaluationNotCurrentCycle):
 		fail(http.StatusConflict, "EVALUATION_NOT_CURRENT_CYCLE")
+	case errors.Is(err, domain.ErrGoalEvaluationConflict):
+		fail(http.StatusConflict, "EVALUATION_CONFLICT")
 	case errors.Is(err, domain.ErrGoalEvaluationClientNotInCare):
 		fail(http.StatusUnprocessableEntity, "EVALUATION_CLIENT_NOT_IN_CARE")
 	case errors.Is(err, domain.ErrGoalEvaluationNoActiveGoals):
@@ -1230,6 +1246,21 @@ func handleGoalEvaluationMutationError(ctx *gin.Context, err error, evaluation *
 	default:
 		fail(http.StatusBadRequest, "")
 	}
+}
+
+func parseGoalEvaluationRevision(ctx *gin.Context) (time.Time, bool) {
+	revision := strings.TrimSpace(ctx.GetHeader("If-Match"))
+	if revision == "" {
+		ctx.JSON(http.StatusPreconditionRequired, httpapi.Fail("If-Match evaluation revision is required", "EVALUATION_REVISION_REQUIRED"))
+		return time.Time{}, false
+	}
+	revision = strings.Trim(revision, `"`)
+	parsed, err := time.Parse(time.RFC3339Nano, revision)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, httpapi.Fail("If-Match evaluation revision is invalid", "EVALUATION_REVISION_REQUIRED"))
+		return time.Time{}, false
+	}
+	return parsed, true
 }
 
 // ListUpcomingEvaluations lists upcoming evaluations for the logged-in coordinator.

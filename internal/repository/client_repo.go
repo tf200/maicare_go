@@ -1819,11 +1819,15 @@ func (r *ClientRepository) UpdateGoalEvaluationDraft(ctx context.Context, evalua
 			return domain.ErrGoalEvaluationNoActiveGoals
 		}
 
-		evaluation, err = q.UpdateGoalEvaluation(ctx, db.UpdateGoalEvaluationParams{
-			ID:           evaluationID,
-			OverallNotes: params.OverallNotes,
+		evaluation, err = q.UpdateGoalEvaluationDraftCAS(ctx, db.UpdateGoalEvaluationDraftCASParams{
+			ID:                evaluationID,
+			OverallNotes:      params.OverallNotes,
+			ExpectedUpdatedAt: pgtype.Timestamptz{Time: params.ExpectedUpdatedAt, Valid: true},
 		})
 		if err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				return domain.ErrGoalEvaluationConflict
+			}
 			return fmt.Errorf("failed to update evaluation header: %w", err)
 		}
 
@@ -1831,6 +1835,13 @@ func (r *ClientRepository) UpdateGoalEvaluationDraft(ctx context.Context, evalua
 		return err
 	})
 	if err != nil {
+		if errors.Is(err, domain.ErrGoalEvaluationConflict) {
+			current, loadErr := r.GetGoalEvaluation(ctx, evaluationID)
+			if loadErr != nil {
+				return nil, loadErr
+			}
+			return current, err
+		}
 		return nil, err
 	}
 
@@ -1838,7 +1849,7 @@ func (r *ClientRepository) UpdateGoalEvaluationDraft(ctx context.Context, evalua
 }
 
 // SubmitGoalEvaluationDraft submits the exact saved draft identified by evaluationID.
-func (r *ClientRepository) SubmitGoalEvaluationDraft(ctx context.Context, evaluationID uuid.UUID, employeeID uuid.UUID) (*domain.GoalEvaluation, error) {
+func (r *ClientRepository) SubmitGoalEvaluationDraft(ctx context.Context, evaluationID uuid.UUID, employeeID uuid.UUID, params domain.SubmitGoalEvaluationDraftParams) (*domain.GoalEvaluation, error) {
 	var evaluation db.ClientGoalEvaluation
 	var items []db.GetGoalEvaluationItemsRow
 
@@ -1870,12 +1881,14 @@ func (r *ClientRepository) SubmitGoalEvaluationDraft(ctx context.Context, evalua
 			return err
 		}
 
-		completedStatus := db.EvaluationStatusEnumCompleted
-		evaluation, err = q.UpdateGoalEvaluation(ctx, db.UpdateGoalEvaluationParams{
-			ID:     evaluationID,
-			Status: &completedStatus,
+		evaluation, err = q.SubmitGoalEvaluationDraftCAS(ctx, db.SubmitGoalEvaluationDraftCASParams{
+			ID:                evaluationID,
+			ExpectedUpdatedAt: pgtype.Timestamptz{Time: params.ExpectedUpdatedAt, Valid: true},
 		})
 		if err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				return domain.ErrGoalEvaluationConflict
+			}
 			var pgErr *pgconn.PgError
 			if errors.As(err, &pgErr) && pgErr.Code == "P0001" {
 				return classifyGoalEvaluationTriggerError(pgErr)
@@ -1890,6 +1903,13 @@ func (r *ClientRepository) SubmitGoalEvaluationDraft(ctx context.Context, evalua
 		return nil
 	})
 	if err != nil {
+		if errors.Is(err, domain.ErrGoalEvaluationConflict) {
+			current, loadErr := r.GetGoalEvaluation(ctx, evaluationID)
+			if loadErr != nil {
+				return nil, loadErr
+			}
+			return current, err
+		}
 		if !isGoalEvaluationSubmissionValidationError(err) {
 			return nil, err
 		}

@@ -429,6 +429,7 @@ type Querier interface {
 	SetAttachmentAsUsedorUnused(ctx context.Context, arg SetAttachmentAsUsedorUnusedParams) (AttachmentFile, error)
 	SetEmployeeProfilePicture(ctx context.Context, arg SetEmployeeProfilePictureParams) (CustomUser, error)
 	StatusChangeCount(ctx context.Context) (int64, error)
+	SubmitGoalEvaluationDraftCAS(ctx context.Context, arg SubmitGoalEvaluationDraftCASParams) (ClientGoalEvaluation, error)
 	TotalDischargeCount(ctx context.Context) (int64, error)
 	UpdateAppOrganizationProfile(ctx context.Context, arg UpdateAppOrganizationProfileParams) (AppOrganizationProfile, error)
 	UpdateAppointmentCard(ctx context.Context, arg UpdateAppointmentCardParams) (AppointmentCard, error)
@@ -489,6 +490,7 @@ type Querier interface {
 	UpdateEmployeePassword(ctx context.Context, arg UpdateEmployeePasswordParams) (uuid.UUID, error)
 	UpdateEmployeeProfile(ctx context.Context, arg UpdateEmployeeProfileParams) (EmployeeProfile, error)
 	UpdateGoalEvaluation(ctx context.Context, arg UpdateGoalEvaluationParams) (ClientGoalEvaluation, error)
+	UpdateGoalEvaluationDraftCAS(ctx context.Context, arg UpdateGoalEvaluationDraftCASParams) (ClientGoalEvaluation, error)
 	UpdateHandbookStepByID(ctx context.Context, arg UpdateHandbookStepByIDParams) (HandbookStep, error)
 	UpdateHandbookStepSortOrder(ctx context.Context, arg UpdateHandbookStepSortOrderParams) error
 	UpdateHandbookTemplateMetadata(ctx context.Context, arg UpdateHandbookTemplateMetadataParams) (HandbookTemplate, error)

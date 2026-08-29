@@ -811,6 +811,41 @@ func (q *Queries) ListUpcomingEvaluationsForCoordinator(ctx context.Context, arg
 	return items, nil
 }
 
+const submitGoalEvaluationDraftCAS = `-- name: SubmitGoalEvaluationDraftCAS :one
+UPDATE client_goal_evaluations
+SET
+    status = 'completed',
+    updated_at = CURRENT_TIMESTAMP
+WHERE id = $1
+  AND status = 'draft'
+  AND updated_at = $2
+RETURNING id, client_id, evaluation_date, period_start, period_end, evaluation_interval_weeks, status, overall_notes, created_by_employee_id, created_at, updated_at
+`
+
+type SubmitGoalEvaluationDraftCASParams struct {
+	ID                uuid.UUID          `json:"id"`
+	ExpectedUpdatedAt pgtype.Timestamptz `json:"expected_updated_at"`
+}
+
+func (q *Queries) SubmitGoalEvaluationDraftCAS(ctx context.Context, arg SubmitGoalEvaluationDraftCASParams) (ClientGoalEvaluation, error) {
+	row := q.db.QueryRow(ctx, submitGoalEvaluationDraftCAS, arg.ID, arg.ExpectedUpdatedAt)
+	var i ClientGoalEvaluation
+	err := row.Scan(
+		&i.ID,
+		&i.ClientID,
+		&i.EvaluationDate,
+		&i.PeriodStart,
+		&i.PeriodEnd,
+		&i.EvaluationIntervalWeeks,
+		&i.Status,
+		&i.OverallNotes,
+		&i.CreatedByEmployeeID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const updateGoalEvaluation = `-- name: UpdateGoalEvaluation :one
 UPDATE client_goal_evaluations
 SET
@@ -845,6 +880,42 @@ func (q *Queries) UpdateGoalEvaluation(ctx context.Context, arg UpdateGoalEvalua
 		arg.Status,
 		arg.OverallNotes,
 	)
+	var i ClientGoalEvaluation
+	err := row.Scan(
+		&i.ID,
+		&i.ClientID,
+		&i.EvaluationDate,
+		&i.PeriodStart,
+		&i.PeriodEnd,
+		&i.EvaluationIntervalWeeks,
+		&i.Status,
+		&i.OverallNotes,
+		&i.CreatedByEmployeeID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const updateGoalEvaluationDraftCAS = `-- name: UpdateGoalEvaluationDraftCAS :one
+UPDATE client_goal_evaluations
+SET
+    overall_notes = COALESCE($2, overall_notes),
+    updated_at = CURRENT_TIMESTAMP
+WHERE id = $1
+  AND status = 'draft'
+  AND updated_at = $3
+RETURNING id, client_id, evaluation_date, period_start, period_end, evaluation_interval_weeks, status, overall_notes, created_by_employee_id, created_at, updated_at
+`
+
+type UpdateGoalEvaluationDraftCASParams struct {
+	ID                uuid.UUID          `json:"id"`
+	OverallNotes      *string            `json:"overall_notes"`
+	ExpectedUpdatedAt pgtype.Timestamptz `json:"expected_updated_at"`
+}
+
+func (q *Queries) UpdateGoalEvaluationDraftCAS(ctx context.Context, arg UpdateGoalEvaluationDraftCASParams) (ClientGoalEvaluation, error) {
+	row := q.db.QueryRow(ctx, updateGoalEvaluationDraftCAS, arg.ID, arg.OverallNotes, arg.ExpectedUpdatedAt)
 	var i ClientGoalEvaluation
 	err := row.Scan(
 		&i.ID,

@@ -7380,6 +7380,11 @@ paths:
         name: evaluation_id
         required: true
         type: string
+      - description: Quoted evaluation updated_at revision
+        in: header
+        name: If-Match
+        required: true
+        type: string
       - description: Draft details
         in: body
         name: request
@@ -7426,6 +7431,11 @@ paths:
       - description: Evaluation ID
         in: path
         name: evaluation_id
+        required: true
+        type: string
+      - description: Quoted evaluation updated_at revision
+        in: header
+        name: If-Match
         required: true
         type: string
       produces:
