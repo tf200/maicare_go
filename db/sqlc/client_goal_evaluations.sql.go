@@ -12,6 +12,53 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const countRecentDraftEvaluationsByEmployee = `-- name: CountRecentDraftEvaluationsByEmployee :one
+SELECT COUNT(*)::int8
+FROM client_goal_evaluations e
+JOIN client_details c ON c.id = e.client_id
+WHERE e.created_by_employee_id = $1
+  AND e.status = 'draft'
+`
+
+func (q *Queries) CountRecentDraftEvaluationsByEmployee(ctx context.Context, createdByEmployeeID *uuid.UUID) (int64, error) {
+	row := q.db.QueryRow(ctx, countRecentDraftEvaluationsByEmployee, createdByEmployeeID)
+	var column_1 int64
+	err := row.Scan(&column_1)
+	return column_1, err
+}
+
+const countRecentSubmittedEvaluationsByEmployee = `-- name: CountRecentSubmittedEvaluationsByEmployee :one
+SELECT COUNT(*)::int8
+FROM client_goal_evaluations e
+JOIN client_details c ON c.id = e.client_id
+WHERE e.created_by_employee_id = $1
+  AND e.status = 'completed'
+`
+
+func (q *Queries) CountRecentSubmittedEvaluationsByEmployee(ctx context.Context, createdByEmployeeID *uuid.UUID) (int64, error) {
+	row := q.db.QueryRow(ctx, countRecentSubmittedEvaluationsByEmployee, createdByEmployeeID)
+	var column_1 int64
+	err := row.Scan(&column_1)
+	return column_1, err
+}
+
+const countUpcomingEvaluationsForCoordinator = `-- name: CountUpcomingEvaluationsForCoordinator :one
+SELECT COUNT(*)::int8
+FROM assigned_employee ae
+JOIN client_details c ON c.id = ae.client_id
+WHERE ae.employee_id = $1
+  AND ae.role = 'coordinator'
+  AND c.status = 'in_care'
+  AND c.next_evaluation_date IS NOT NULL
+`
+
+func (q *Queries) CountUpcomingEvaluationsForCoordinator(ctx context.Context, employeeID uuid.UUID) (int64, error) {
+	row := q.db.QueryRow(ctx, countUpcomingEvaluationsForCoordinator, employeeID)
+	var column_1 int64
+	err := row.Scan(&column_1)
+	return column_1, err
+}
+
 const createGoalEvaluation = `-- name: CreateGoalEvaluation :one
 INSERT INTO client_goal_evaluations (
     client_id,
@@ -543,11 +590,26 @@ func (q *Queries) ListLatestCompletedGoalProgressByClient(ctx context.Context, c
 }
 
 const listRecentDraftEvaluationsByEmployee = `-- name: ListRecentDraftEvaluationsByEmployee :many
+WITH paged_evaluations AS MATERIALIZED (
+    SELECT
+        e.id,
+        e.client_id,
+        c.first_name AS client_first_name,
+        c.last_name AS client_last_name,
+        e.evaluation_date,
+        e.updated_at
+    FROM client_goal_evaluations e
+    JOIN client_details c ON c.id = e.client_id
+    WHERE e.created_by_employee_id = $1
+      AND e.status = 'draft'
+    ORDER BY e.updated_at DESC, e.id ASC
+    LIMIT $2 OFFSET $3
+)
 SELECT
     e.id,
     e.client_id,
-    c.first_name AS client_first_name,
-    c.last_name AS client_last_name,
+    e.client_first_name,
+    e.client_last_name,
     e.evaluation_date,
     e.updated_at,
     (e.evaluation_date - evaluation_business_date())::int4 AS days_left,
@@ -556,11 +618,8 @@ SELECT
         ELSE 'normal'
     END AS priority,
     COALESCE(di.filled_goals_count, 0)::int4 AS filled_goals_count,
-    COALESCE(di.total_goals_count, 0)::int4 AS total_goals_count,
-    COUNT(*) OVER() AS total_count
-FROM client_goal_evaluations e
-JOIN client_details c
-    ON c.id = e.client_id
+    COALESCE(di.total_goals_count, 0)::int4 AS total_goals_count
+FROM paged_evaluations e
 LEFT JOIN LATERAL (
     SELECT
         COUNT(*) FILTER (WHERE i.progress <> 'no_progress') AS filled_goals_count,
@@ -568,10 +627,7 @@ LEFT JOIN LATERAL (
     FROM client_goal_evaluation_items i
     WHERE i.evaluation_id = e.id
 ) di ON true
-WHERE e.created_by_employee_id = $1
-  AND e.status = 'draft'
-ORDER BY e.updated_at DESC
-LIMIT $2 OFFSET $3
+ORDER BY e.updated_at DESC, e.id ASC
 `
 
 type ListRecentDraftEvaluationsByEmployeeParams struct {
@@ -591,7 +647,6 @@ type ListRecentDraftEvaluationsByEmployeeRow struct {
 	Priority         string             `json:"priority"`
 	FilledGoalsCount int32              `json:"filled_goals_count"`
 	TotalGoalsCount  int32              `json:"total_goals_count"`
-	TotalCount       int64              `json:"total_count"`
 }
 
 func (q *Queries) ListRecentDraftEvaluationsByEmployee(ctx context.Context, arg ListRecentDraftEvaluationsByEmployeeParams) ([]ListRecentDraftEvaluationsByEmployeeRow, error) {
@@ -614,7 +669,6 @@ func (q *Queries) ListRecentDraftEvaluationsByEmployee(ctx context.Context, arg 
 			&i.Priority,
 			&i.FilledGoalsCount,
 			&i.TotalGoalsCount,
-			&i.TotalCount,
 		); err != nil {
 			return nil, err
 		}
@@ -627,20 +681,33 @@ func (q *Queries) ListRecentDraftEvaluationsByEmployee(ctx context.Context, arg 
 }
 
 const listRecentSubmittedEvaluationsByEmployee = `-- name: ListRecentSubmittedEvaluationsByEmployee :many
+WITH paged_evaluations AS MATERIALIZED (
+    SELECT
+        e.id,
+        e.client_id,
+        c.first_name AS client_first_name,
+        c.last_name AS client_last_name,
+        e.evaluation_date,
+        e.updated_at AS submitted_at,
+        c.next_evaluation_date
+    FROM client_goal_evaluations e
+    JOIN client_details c ON c.id = e.client_id
+    WHERE e.created_by_employee_id = $1
+      AND e.status = 'completed'
+    ORDER BY e.updated_at DESC, e.id ASC
+    LIMIT $2 OFFSET $3
+)
 SELECT
     e.id,
     e.client_id,
-    c.first_name AS client_first_name,
-    c.last_name AS client_last_name,
+    e.client_first_name,
+    e.client_last_name,
     e.evaluation_date,
-    e.updated_at AS submitted_at,
-    c.next_evaluation_date,
+    e.submitted_at,
+    e.next_evaluation_date,
     COALESCE(di.filled_goals_count, 0)::int4 AS filled_goals_count,
-    COALESCE(di.total_goals_count, 0)::int4 AS total_goals_count,
-    COUNT(*) OVER() AS total_count
-FROM client_goal_evaluations e
-JOIN client_details c
-    ON c.id = e.client_id
+    COALESCE(di.total_goals_count, 0)::int4 AS total_goals_count
+FROM paged_evaluations e
 LEFT JOIN LATERAL (
     SELECT
         COUNT(*) FILTER (WHERE i.progress <> 'no_progress') AS filled_goals_count,
@@ -648,10 +715,7 @@ LEFT JOIN LATERAL (
     FROM client_goal_evaluation_items i
     WHERE i.evaluation_id = e.id
 ) di ON true
-WHERE e.created_by_employee_id = $1
-  AND e.status = 'completed'
-ORDER BY e.updated_at DESC
-LIMIT $2 OFFSET $3
+ORDER BY e.submitted_at DESC, e.id ASC
 `
 
 type ListRecentSubmittedEvaluationsByEmployeeParams struct {
@@ -670,7 +734,6 @@ type ListRecentSubmittedEvaluationsByEmployeeRow struct {
 	NextEvaluationDate pgtype.Date        `json:"next_evaluation_date"`
 	FilledGoalsCount   int32              `json:"filled_goals_count"`
 	TotalGoalsCount    int32              `json:"total_goals_count"`
-	TotalCount         int64              `json:"total_count"`
 }
 
 func (q *Queries) ListRecentSubmittedEvaluationsByEmployee(ctx context.Context, arg ListRecentSubmittedEvaluationsByEmployeeParams) ([]ListRecentSubmittedEvaluationsByEmployeeRow, error) {
@@ -692,7 +755,6 @@ func (q *Queries) ListRecentSubmittedEvaluationsByEmployee(ctx context.Context, 
 			&i.NextEvaluationDate,
 			&i.FilledGoalsCount,
 			&i.TotalGoalsCount,
-			&i.TotalCount,
 		); err != nil {
 			return nil, err
 		}
@@ -783,10 +845,25 @@ func (q *Queries) ListSubmittedEvaluationsByClient(ctx context.Context, arg List
 }
 
 const listUpcomingEvaluationsForCoordinator = `-- name: ListUpcomingEvaluationsForCoordinator :many
+WITH paged_clients AS MATERIALIZED (
+    SELECT
+        c.id AS client_id,
+        c.first_name AS client_first_name,
+        c.last_name AS client_last_name,
+        c.next_evaluation_date
+    FROM assigned_employee ae
+    JOIN client_details c ON c.id = ae.client_id
+    WHERE ae.employee_id = $1
+      AND ae.role = 'coordinator'
+      AND c.status = 'in_care'
+      AND c.next_evaluation_date IS NOT NULL
+    ORDER BY c.next_evaluation_date ASC, c.first_name ASC, c.last_name ASC, c.id ASC
+    LIMIT $2 OFFSET $3
+)
 SELECT
-    c.id AS client_id,
-    c.first_name AS client_first_name,
-    c.last_name AS client_last_name,
+    c.client_id,
+    c.client_first_name,
+    c.client_last_name,
     c.next_evaluation_date,
     (c.next_evaluation_date - evaluation_business_date())::int4 AS days_left,
     CASE
@@ -795,17 +872,14 @@ SELECT
     END AS priority,
     COALESCE((d.id IS NOT NULL), false)::bool AS has_draft,
     COALESCE(di.filled_goals_count, 0)::int4 AS filled_goals_count,
-    COALESCE(di.total_goals_count, 0)::int4 AS total_goals_count,
-    COUNT(*) OVER() AS total_count
-FROM assigned_employee ae
-JOIN client_details c
-    ON c.id = ae.client_id
+    COALESCE(di.total_goals_count, 0)::int4 AS total_goals_count
+FROM paged_clients c
 LEFT JOIN LATERAL (
     SELECT e.id
     FROM client_goal_evaluations e
-    WHERE e.client_id = c.id
+    WHERE e.client_id = c.client_id
       AND e.status = 'draft'
-    ORDER BY e.updated_at DESC
+    ORDER BY e.updated_at DESC, e.id ASC
     LIMIT 1
 ) d ON true
 LEFT JOIN LATERAL (
@@ -815,12 +889,7 @@ LEFT JOIN LATERAL (
     FROM client_goal_evaluation_items i
     WHERE i.evaluation_id = d.id
 ) di ON true
-WHERE ae.employee_id = $1
-  AND ae.role = 'coordinator'
-  AND c.status = 'in_care'
-  AND c.next_evaluation_date IS NOT NULL
-ORDER BY c.next_evaluation_date ASC, c.first_name ASC, c.last_name ASC
-LIMIT $2 OFFSET $3
+ORDER BY c.next_evaluation_date ASC, c.client_first_name ASC, c.client_last_name ASC, c.client_id ASC
 `
 
 type ListUpcomingEvaluationsForCoordinatorParams struct {
@@ -839,7 +908,6 @@ type ListUpcomingEvaluationsForCoordinatorRow struct {
 	HasDraft           bool        `json:"has_draft"`
 	FilledGoalsCount   int32       `json:"filled_goals_count"`
 	TotalGoalsCount    int32       `json:"total_goals_count"`
-	TotalCount         int64       `json:"total_count"`
 }
 
 func (q *Queries) ListUpcomingEvaluationsForCoordinator(ctx context.Context, arg ListUpcomingEvaluationsForCoordinatorParams) ([]ListUpcomingEvaluationsForCoordinatorRow, error) {
@@ -861,7 +929,6 @@ func (q *Queries) ListUpcomingEvaluationsForCoordinator(ctx context.Context, arg
 			&i.HasDraft,
 			&i.FilledGoalsCount,
 			&i.TotalGoalsCount,
-			&i.TotalCount,
 		); err != nil {
 			return nil, err
 		}

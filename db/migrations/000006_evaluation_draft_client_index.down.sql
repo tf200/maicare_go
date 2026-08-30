@@ -1,0 +1,1 @@
+DROP INDEX CONCURRENTLY IF EXISTS public.client_goal_evaluations_draft_client_updated_idx;

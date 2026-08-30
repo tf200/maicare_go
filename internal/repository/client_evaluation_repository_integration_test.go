@@ -95,6 +95,47 @@ func TestGetEvaluationStatsExecutesAsActorAndReturnsAsOf(t *testing.T) {
 	}
 }
 
+func TestEvaluationListingsKeepTotalsOnOutOfRangePages(t *testing.T) {
+	fixture := seedEvaluationLifecycleFixture(t)
+	if _, err := evaluationIntegrationPool.Exec(context.Background(), `UPDATE client_goal_evaluations SET status = 'completed' WHERE id = $1`, fixture.historicalEvaluationID); err != nil {
+		t.Fatalf("complete historical evaluation: %v", err)
+	}
+	if _, err := evaluationIntegrationPool.Exec(context.Background(), `UPDATE client_details SET last_evaluation_anchor_date = $2::date - 28, next_evaluation_date = $2::date WHERE id = $1`, fixture.clientID, fixture.currentDate); err != nil {
+		t.Fatalf("restore current evaluation cycle: %v", err)
+	}
+	repository := &ClientRepository{store: db.NewStore(evaluationIntegrationPool)}
+
+	upcoming, err := repository.ListUpcomingEvaluations(fixture.ownerContext(), domain.ListUpcomingEvaluationsParams{
+		EmployeeID: fixture.owner.employeeID, Limit: 10, Offset: 100,
+	})
+	if err != nil {
+		t.Fatalf("ListUpcomingEvaluations() error = %v", err)
+	}
+	if len(upcoming.Items) != 0 || upcoming.TotalCount != 1 {
+		t.Fatalf("upcoming = %#v, want empty page with total 1", upcoming)
+	}
+
+	drafts, err := repository.ListRecentDraftEvaluations(fixture.ownerContext(), domain.ListRecentDraftEvaluationsParams{
+		EmployeeID: fixture.owner.employeeID, Limit: 10, Offset: 100,
+	})
+	if err != nil {
+		t.Fatalf("ListRecentDraftEvaluations() error = %v", err)
+	}
+	if len(drafts.Items) != 0 || drafts.TotalCount != 1 {
+		t.Fatalf("drafts = %#v, want empty page with total 1", drafts)
+	}
+
+	submitted, err := repository.ListRecentSubmittedEvaluations(fixture.ownerContext(), domain.ListRecentSubmittedEvaluationsParams{
+		EmployeeID: fixture.owner.employeeID, Limit: 10, Offset: 100,
+	})
+	if err != nil {
+		t.Fatalf("ListRecentSubmittedEvaluations() error = %v", err)
+	}
+	if len(submitted.Items) != 0 || submitted.TotalCount != 1 {
+		t.Fatalf("submitted = %#v, want empty page with total 1", submitted)
+	}
+}
+
 func TestEvaluationBusinessDateUsesConfiguredTimezoneAcrossDST(t *testing.T) {
 	ctx := context.Background()
 	if _, err := evaluationIntegrationPool.Exec(ctx, `UPDATE app_organization_profile SET default_timezone = 'Europe/Amsterdam' WHERE singleton = TRUE`); err != nil {

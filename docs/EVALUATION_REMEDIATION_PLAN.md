@@ -293,10 +293,18 @@ Evaluation calendar fields (`evaluation_date`, `next_evaluation_date`, `last_eva
 
 ### P1.8 Query And Listing Behavior
 
-- [ ] Confirm that Upcoming, Drafts, and Submitted remain independently paginated listings.
-- [ ] Add independent URL state if all three tables require navigation.
-- [ ] Review lateral aggregate query plans at production-like volume.
-- [ ] Add or adjust indexes based on measured query plans.
+**Status:** `[x]` Completed and verified with independent frontend URL state, out-of-range page count coverage, and PostgreSQL 17 query-plan regression tests over 5,000 clients and 25,000 evaluations.
+
+Upcoming, Drafts, and Submitted remain separate listings with independent `upcoming_page`, `drafts_page`, and `submitted_page` URL parameters. Changing one table preserves the state of the other two. Each streamed result retains its own rows, page, page size, total count, and load error.
+
+The listing queries use separate count statements so an out-of-range page still returns the correct total and goal-item lateral aggregates are not evaluated merely to calculate pagination totals. The upcoming query materializes the ordered client page before loading draft and goal aggregates.
+
+Measured PostgreSQL 17 plans showed sequential evaluation scans for employee-owned Draft and Submitted listings and a per-client sort for the latest Upcoming draft. The added partial indexes provide direct employee/update ordering per status and latest-draft lookup. Under a restricted `NOSUPERUSER NOBYPASSRLS` role, the final production-like plans use these indexes, limit lateral aggregate loops to the ten displayed rows, and complete in approximately 17-19 ms for employee listings and 470 ms for Upcoming over 5,000 clients and 25,000 evaluations. The existing `assigned_employee_employee_id_idx` remained the selected assignment access path, so no redundant assignment index was added. Count and page queries run in one repeatable-read actor transaction so their pagination metadata describes one snapshot.
+
+- [x] Confirm that Upcoming, Drafts, and Submitted remain independently paginated listings.
+- [x] Add independent URL state for all three tables.
+- [x] Review lateral aggregate query plans at production-like volume.
+- [x] Add indexes justified by measured query plans.
 
 ### P1.9 Direct Lifecycle Test Coverage
 

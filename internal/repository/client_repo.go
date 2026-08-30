@@ -2525,26 +2525,35 @@ func (r *ClientRepository) GetGoalEvaluation(ctx context.Context, evaluationID u
 }
 
 func (r *ClientRepository) ListUpcomingEvaluations(ctx context.Context, params domain.ListUpcomingEvaluationsParams) (*domain.ListUpcomingEvaluationsResult, error) {
-	rows, err := actorQuery(ctx, r.store, func(q *db.Queries) ([]db.ListUpcomingEvaluationsForCoordinatorRow, error) {
-		return q.ListUpcomingEvaluationsForCoordinator(ctx, db.ListUpcomingEvaluationsForCoordinatorParams{
+	type queryResult struct {
+		rows  []db.ListUpcomingEvaluationsForCoordinatorRow
+		count int64
+	}
+	result, err := actorQueryRepeatableRead(ctx, r.store, func(q *db.Queries) (queryResult, error) {
+		count, err := q.CountUpcomingEvaluationsForCoordinator(ctx, params.EmployeeID)
+		if err != nil {
+			return queryResult{}, err
+		}
+		rows, err := q.ListUpcomingEvaluationsForCoordinator(ctx, db.ListUpcomingEvaluationsForCoordinatorParams{
 			EmployeeID: params.EmployeeID,
 			Limit:      params.Limit,
 			Offset:     params.Offset,
 		})
+		return queryResult{rows: rows, count: count}, err
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list upcoming evaluations: %w", err)
 	}
 
-	if len(rows) == 0 {
+	if len(result.rows) == 0 {
 		return &domain.ListUpcomingEvaluationsResult{
 			Items:      []domain.UpcomingEvaluation{},
-			TotalCount: 0,
+			TotalCount: result.count,
 		}, nil
 	}
 
-	items := make([]domain.UpcomingEvaluation, 0, len(rows))
-	for _, row := range rows {
+	items := make([]domain.UpcomingEvaluation, 0, len(result.rows))
+	for _, row := range result.rows {
 		items = append(items, domain.UpcomingEvaluation{
 			ClientID:         row.ClientID,
 			ClientFirstName:  row.ClientFirstName,
@@ -2560,31 +2569,40 @@ func (r *ClientRepository) ListUpcomingEvaluations(ctx context.Context, params d
 
 	return &domain.ListUpcomingEvaluationsResult{
 		Items:      items,
-		TotalCount: rows[0].TotalCount,
+		TotalCount: result.count,
 	}, nil
 }
 
 func (r *ClientRepository) ListRecentSubmittedEvaluations(ctx context.Context, params domain.ListRecentSubmittedEvaluationsParams) (*domain.ListRecentSubmittedEvaluationsResult, error) {
-	rows, err := actorQuery(ctx, r.store, func(q *db.Queries) ([]db.ListRecentSubmittedEvaluationsByEmployeeRow, error) {
-		return q.ListRecentSubmittedEvaluationsByEmployee(ctx, db.ListRecentSubmittedEvaluationsByEmployeeParams{
+	type queryResult struct {
+		rows  []db.ListRecentSubmittedEvaluationsByEmployeeRow
+		count int64
+	}
+	result, err := actorQueryRepeatableRead(ctx, r.store, func(q *db.Queries) (queryResult, error) {
+		count, err := q.CountRecentSubmittedEvaluationsByEmployee(ctx, &params.EmployeeID)
+		if err != nil {
+			return queryResult{}, err
+		}
+		rows, err := q.ListRecentSubmittedEvaluationsByEmployee(ctx, db.ListRecentSubmittedEvaluationsByEmployeeParams{
 			CreatedByEmployeeID: &params.EmployeeID,
 			Limit:               params.Limit,
 			Offset:              params.Offset,
 		})
+		return queryResult{rows: rows, count: count}, err
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list recent submitted evaluations: %w", err)
 	}
 
-	if len(rows) == 0 {
+	if len(result.rows) == 0 {
 		return &domain.ListRecentSubmittedEvaluationsResult{
 			Items:      []domain.RecentSubmittedEvaluation{},
-			TotalCount: 0,
+			TotalCount: result.count,
 		}, nil
 	}
 
-	items := make([]domain.RecentSubmittedEvaluation, 0, len(rows))
-	for _, row := range rows {
+	items := make([]domain.RecentSubmittedEvaluation, 0, len(result.rows))
+	for _, row := range result.rows {
 		item := domain.RecentSubmittedEvaluation{
 			EvaluationID:     row.ID,
 			ClientID:         row.ClientID,
@@ -2604,31 +2622,40 @@ func (r *ClientRepository) ListRecentSubmittedEvaluations(ctx context.Context, p
 
 	return &domain.ListRecentSubmittedEvaluationsResult{
 		Items:      items,
-		TotalCount: rows[0].TotalCount,
+		TotalCount: result.count,
 	}, nil
 }
 
 func (r *ClientRepository) ListRecentDraftEvaluations(ctx context.Context, params domain.ListRecentDraftEvaluationsParams) (*domain.ListRecentDraftEvaluationsResult, error) {
-	rows, err := actorQuery(ctx, r.store, func(q *db.Queries) ([]db.ListRecentDraftEvaluationsByEmployeeRow, error) {
-		return q.ListRecentDraftEvaluationsByEmployee(ctx, db.ListRecentDraftEvaluationsByEmployeeParams{
+	type queryResult struct {
+		rows  []db.ListRecentDraftEvaluationsByEmployeeRow
+		count int64
+	}
+	result, err := actorQueryRepeatableRead(ctx, r.store, func(q *db.Queries) (queryResult, error) {
+		count, err := q.CountRecentDraftEvaluationsByEmployee(ctx, &params.EmployeeID)
+		if err != nil {
+			return queryResult{}, err
+		}
+		rows, err := q.ListRecentDraftEvaluationsByEmployee(ctx, db.ListRecentDraftEvaluationsByEmployeeParams{
 			CreatedByEmployeeID: &params.EmployeeID,
 			Limit:               params.Limit,
 			Offset:              params.Offset,
 		})
+		return queryResult{rows: rows, count: count}, err
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list recent draft evaluations: %w", err)
 	}
 
-	if len(rows) == 0 {
+	if len(result.rows) == 0 {
 		return &domain.ListRecentDraftEvaluationsResult{
 			Items:      []domain.RecentDraftEvaluation{},
-			TotalCount: 0,
+			TotalCount: result.count,
 		}, nil
 	}
 
-	items := make([]domain.RecentDraftEvaluation, 0, len(rows))
-	for _, row := range rows {
+	items := make([]domain.RecentDraftEvaluation, 0, len(result.rows))
+	for _, row := range result.rows {
 		items = append(items, domain.RecentDraftEvaluation{
 			EvaluationID:     row.ID,
 			ClientID:         row.ClientID,
@@ -2645,7 +2672,7 @@ func (r *ClientRepository) ListRecentDraftEvaluations(ctx context.Context, param
 
 	return &domain.ListRecentDraftEvaluationsResult{
 		Items:      items,
-		TotalCount: rows[0].TotalCount,
+		TotalCount: result.count,
 	}, nil
 }
 

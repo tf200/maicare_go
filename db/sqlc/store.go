@@ -75,11 +75,16 @@ func (store *Store) ExecAsActor(ctx context.Context, actor ctxkeys.ActorIdentity
 // BeginActorTx starts a transaction initialized with authenticated actor identity.
 // Callers are responsible for commit or rollback.
 func (store *Store) BeginActorTx(ctx context.Context) (pgx.Tx, error) {
+	return store.BeginActorTxWithOptions(ctx, pgx.TxOptions{})
+}
+
+// BeginActorTxWithOptions starts an actor transaction with explicit isolation semantics.
+func (store *Store) BeginActorTxWithOptions(ctx context.Context, options pgx.TxOptions) (pgx.Tx, error) {
 	actor, ok := ctxkeys.ActorIdentityFromContext(ctx)
 	if !ok {
 		return nil, ErrMissingActorIdentity
 	}
-	tx, err := store.ConnPool.Begin(ctx)
+	tx, err := store.ConnPool.BeginTx(ctx, options)
 	if err != nil {
 		return nil, err
 	}
