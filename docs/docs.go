@@ -3263,6 +3263,43 @@ const docTemplate = `{
                 }
             }
         },
+        "/evaluations/stats": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "evaluations"
+                ],
+                "summary": "Get evaluation statistics",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/httpapi.Envelope-handler_evaluationStatsResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/httpapi.Envelope-any"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/httpapi.Envelope-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httpapi.Envelope-any"
+                        }
+                    }
+                }
+            }
+        },
         "/evaluations/upcoming": {
             "get": {
                 "produces": [
@@ -8192,6 +8229,23 @@ const docTemplate = `{
                 }
             }
         },
+        "handler.evaluationStatsResponse": {
+            "type": "object",
+            "properties": {
+                "as_of": {
+                    "type": "string"
+                },
+                "attention_required": {
+                    "type": "integer"
+                },
+                "in_progress": {
+                    "type": "integer"
+                },
+                "recently_finalized": {
+                    "type": "integer"
+                }
+            }
+        },
         "handler.generateAutoReportsRequest": {
             "type": "object",
             "required": [
@@ -11463,6 +11517,23 @@ const docTemplate = `{
                 },
                 "data": {
                     "$ref": "#/definitions/handler.departmentResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "httpapi.Envelope-handler_evaluationStatsResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "data": {
+                    "$ref": "#/definitions/handler.evaluationStatsResponse"
                 },
                 "message": {
                     "type": "string"

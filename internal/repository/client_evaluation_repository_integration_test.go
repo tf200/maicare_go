@@ -73,6 +73,28 @@ func TestGoalEvaluationBootstrapSelectsOnlyCurrentCycleDraft(t *testing.T) {
 	}
 }
 
+func TestGetEvaluationStatsExecutesAsActorAndReturnsAsOf(t *testing.T) {
+	fixture := seedEvaluationLifecycleFixture(t)
+	if _, err := evaluationIntegrationPool.Exec(context.Background(), `UPDATE client_goal_evaluations SET status = 'completed', updated_at = CURRENT_TIMESTAMP WHERE id = $1`, fixture.historicalEvaluationID); err != nil {
+		t.Fatalf("complete historical evaluation: %v", err)
+	}
+	if _, err := evaluationIntegrationPool.Exec(context.Background(), `UPDATE client_details SET last_evaluation_anchor_date = $2::date - 28, next_evaluation_date = $2::date WHERE id = $1`, fixture.clientID, fixture.currentDate); err != nil {
+		t.Fatalf("restore current evaluation cycle: %v", err)
+	}
+	repository := &ClientRepository{store: db.NewStore(evaluationIntegrationPool)}
+
+	result, err := repository.GetEvaluationStats(fixture.ownerContext(), fixture.owner.employeeID)
+	if err != nil {
+		t.Fatalf("GetEvaluationStats() error = %v", err)
+	}
+	if result.AsOf.IsZero() {
+		t.Fatal("stats as_of is zero")
+	}
+	if result.AttentionRequired != 1 || result.InProgress != 1 || result.RecentlyFinalized != 1 {
+		t.Fatalf("stats = %#v, want attention_required=1 in_progress=1 recently_finalized=1", result)
+	}
+}
+
 func TestGoalEvaluationBootstrapReturnsNoDraftWithoutScheduledCycle(t *testing.T) {
 	fixture := seedEvaluationLifecycleFixture(t)
 	if _, err := evaluationIntegrationPool.Exec(context.Background(), `UPDATE client_details SET next_evaluation_date = NULL WHERE id = $1`, fixture.clientID); err != nil {
@@ -417,11 +439,16 @@ func seedEvaluationLifecycleFixture(t *testing.T) evaluationLifecycleFixture {
 		t.Fatalf("place evaluation client in care: %v", err)
 	}
 	for _, actor := range []evaluationActor{fixture.owner, fixture.other} {
+		role := "support"
+		if actor.employeeID == fixture.owner.employeeID {
+			role = "coordinator"
+		}
 		if _, err := tx.Exec(ctx, `INSERT INTO assigned_employee (client_id, employee_id, start_date, role)
-			VALUES ($1, $2, CURRENT_DATE, 'support')`, fixture.clientID, actor.employeeID); err != nil {
+			VALUES ($1, $2, CURRENT_DATE, $3)`, fixture.clientID, actor.employeeID, role); err != nil {
 			t.Fatalf("seed evaluation assignment: %v", err)
 		}
 	}
+	grantEvaluationViewPermission(t, ctx, tx, fixture.owner)
 	if _, err := tx.Exec(ctx, `INSERT INTO client_goal_evaluations (
 		id, client_id, evaluation_date, evaluation_interval_weeks, status, overall_notes, created_by_employee_id, updated_at
 	) VALUES
@@ -440,6 +467,27 @@ func seedEvaluationLifecycleFixture(t *testing.T) evaluationLifecycleFixture {
 		t.Fatalf("commit evaluation fixture: %v", err)
 	}
 	return fixture
+}
+
+func grantEvaluationViewPermission(t *testing.T, ctx context.Context, tx pgx.Tx, actor evaluationActor) {
+	t.Helper()
+	roleID := uuid.New()
+	if _, err := tx.Exec(ctx, `INSERT INTO roles (id, name) VALUES ($1, $2)`, roleID, uuid.NewString()); err != nil {
+		t.Fatalf("seed evaluation role: %v", err)
+	}
+	for _, permission := range []string{"CLIENT.VIEW", "CLIENT.EVALUATION.VIEW"} {
+		var permissionID uuid.UUID
+		if err := tx.QueryRow(ctx, `INSERT INTO permissions (id, name, is_scoped) VALUES ($1, $2, true)
+			ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name RETURNING id`, uuid.New(), permission).Scan(&permissionID); err != nil {
+			t.Fatalf("seed evaluation permission %s: %v", permission, err)
+		}
+		if _, err := tx.Exec(ctx, `INSERT INTO role_permissions (role_id, permission_id, scope) VALUES ($1, $2, 'all')`, roleID, permissionID); err != nil {
+			t.Fatalf("grant evaluation permission %s: %v", permission, err)
+		}
+	}
+	if _, err := tx.Exec(ctx, `INSERT INTO user_roles (user_id, role_id) VALUES ($1, $2)`, actor.userID, roleID); err != nil {
+		t.Fatalf("assign evaluation role: %v", err)
+	}
 }
 
 func seedEvaluationActor(t *testing.T, ctx context.Context, tx pgx.Tx) evaluationActor {

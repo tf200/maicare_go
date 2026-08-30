@@ -266,11 +266,16 @@ Final policy:
 
 ### P1.6 Evaluation Statistics
 
-- [ ] Define the intended scope of every KPI: assigned clients, current employee, organization, or active filters.
-- [ ] Add a dedicated `GET /evaluations/stats` endpoint if global or mixed aggregates are required.
-- [ ] Return stable typed counts and `as_of` metadata.
-- [ ] Stop deriving totals from the current page's `results.length`.
-- [ ] Use paginated response `count` only when its endpoint scope matches the displayed metric.
+**Status:** `[x]` Completed and verified with focused service/handler tests, SQLC regeneration, Swagger regeneration, and PostgreSQL repository execution coverage.
+
+- [x] `attention_required` counts distinct assigned coordinator in-care clients due within three calendar days, including overdue clients.
+- [x] `in_progress` counts current-cycle draft evaluations owned by the authenticated employee.
+- [x] `recently_finalized` counts completed, non-archived evaluations owned by the authenticated employee updated in the last 30 days.
+- [x] Return stable typed counts and `as_of` metadata from one SQL statement.
+- [x] Stop deriving totals from the current page's `results.length`.
+- [x] Use the dedicated `GET /evaluations/stats` endpoint for KPI totals.
+
+The endpoint requires `CLIENT.VIEW` and `CLIENT.EVALUATION.VIEW`. The repository passes the employee ID explicitly and executes through the authenticated actor/RLS transaction boundary.
 
 ### P1.7 Date And Timezone Policy
 

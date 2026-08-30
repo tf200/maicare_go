@@ -1093,6 +1093,19 @@ func (s *ClientService) ListRecentDraftEvaluations(ctx context.Context, params d
 	return result, nil
 }
 
+func (s *ClientService) GetEvaluationStats(ctx context.Context, employeeID uuid.UUID) (*domain.EvaluationStats, error) {
+	result, err := s.repository.GetEvaluationStats(ctx, employeeID)
+	if err != nil {
+		if s.logger != nil {
+			s.logger.LogError(ctx, "ClientService.GetEvaluationStats", "failed to get evaluation stats", err,
+				zap.String("employee_id", employeeID.String()),
+			)
+		}
+		return nil, fmt.Errorf("failed to get evaluation stats")
+	}
+	return result, nil
+}
+
 // =====================
 // Medical - Diagnoses
 // =====================

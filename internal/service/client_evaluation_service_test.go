@@ -13,6 +13,10 @@ import (
 
 type goalEvaluationRepositoryStub struct {
 	domain.ClientRepository
+	statsResult        *domain.EvaluationStats
+	statsErr           error
+	statsEmployeeID    uuid.UUID
+	statsCalls         int
 	updateEvaluationID uuid.UUID
 	updateEmployeeID   uuid.UUID
 	updateParams       domain.UpdateGoalEvaluationDraftParams
@@ -25,6 +29,12 @@ type goalEvaluationRepositoryStub struct {
 	submitResult       *domain.GoalEvaluation
 	submitErr          error
 	submitCalls        int
+}
+
+func (s *goalEvaluationRepositoryStub) GetEvaluationStats(_ context.Context, employeeID uuid.UUID) (*domain.EvaluationStats, error) {
+	s.statsCalls++
+	s.statsEmployeeID = employeeID
+	return s.statsResult, s.statsErr
 }
 
 func (s *goalEvaluationRepositoryStub) UpdateGoalEvaluationDraft(_ context.Context, evaluationID uuid.UUID, employeeID uuid.UUID, params domain.UpdateGoalEvaluationDraftParams) (*domain.GoalEvaluation, error) {
@@ -97,5 +107,20 @@ func TestSubmitGoalEvaluationDraftDelegatesExactIDsAndError(t *testing.T) {
 	}
 	if !repository.submitParams.ExpectedUpdatedAt.Equal(revision) {
 		t.Fatalf("submit revision = %s, want %s", repository.submitParams.ExpectedUpdatedAt, revision)
+	}
+}
+
+func TestGetEvaluationStatsDelegatesEmployeeID(t *testing.T) {
+	employeeID := uuid.New()
+	want := &domain.EvaluationStats{AttentionRequired: 2, InProgress: 1, RecentlyFinalized: 3, AsOf: time.Now().UTC()}
+	repository := &goalEvaluationRepositoryStub{statsResult: want}
+	service := NewClientService(repository, nil, nil, nil, nil, nil, nil)
+
+	got, err := service.GetEvaluationStats(context.Background(), employeeID)
+	if err != nil {
+		t.Fatalf("GetEvaluationStats() error = %v", err)
+	}
+	if got != want || repository.statsCalls != 1 || repository.statsEmployeeID != employeeID {
+		t.Fatalf("GetEvaluationStats() did not delegate the exact employee ID")
 	}
 }

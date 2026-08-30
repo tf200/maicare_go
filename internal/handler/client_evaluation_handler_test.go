@@ -16,6 +16,10 @@ import (
 
 type goalEvaluationServiceStub struct {
 	domain.ClientService
+	statsEmployeeID    uuid.UUID
+	statsResult        *domain.EvaluationStats
+	statsErr           error
+	statsCalls         int
 	createErr          error
 	updateEvaluationID uuid.UUID
 	updateEmployeeID   uuid.UUID
@@ -29,6 +33,12 @@ type goalEvaluationServiceStub struct {
 	submitResult       *domain.GoalEvaluation
 	submitErr          error
 	submitCalls        int
+}
+
+func (s *goalEvaluationServiceStub) GetEvaluationStats(_ context.Context, employeeID uuid.UUID) (*domain.EvaluationStats, error) {
+	s.statsCalls++
+	s.statsEmployeeID = employeeID
+	return s.statsResult, s.statsErr
 }
 
 func (s *goalEvaluationServiceStub) CreateGoalEvaluation(_ context.Context, _ uuid.UUID, _ uuid.UUID, _ domain.CreateGoalEvaluationParams) (*domain.GoalEvaluation, error) {
@@ -239,5 +249,24 @@ func TestCreateGoalEvaluationUsesStableConflictCode(t *testing.T) {
 	}
 	if !bytes.Contains(response.Body.Bytes(), []byte(`"code":"EVALUATION_NOT_OWNER"`)) {
 		t.Fatalf("body = %s, want stable ownership code", response.Body.String())
+	}
+}
+
+func TestGetEvaluationStatsUsesAuthenticatedEmployee(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	employeeID := uuid.New()
+	service := &goalEvaluationServiceStub{statsResult: &domain.EvaluationStats{AttentionRequired: 4, InProgress: 2, RecentlyFinalized: 1, AsOf: time.Date(2026, 8, 30, 12, 0, 0, 0, time.UTC)}}
+	router := gin.New()
+	router.GET("/evaluations/stats", evaluationActor(employeeID), NewClientHandler(service).GetEvaluationStats)
+	response := httptest.NewRecorder()
+	router.ServeHTTP(response, httptest.NewRequest(http.MethodGet, "/evaluations/stats", nil))
+
+	if response.Code != http.StatusOK || service.statsCalls != 1 || service.statsEmployeeID != employeeID {
+		t.Fatalf("status=%d calls=%d employee=%s body=%s", response.Code, service.statsCalls, service.statsEmployeeID, response.Body.String())
+	}
+	for _, expected := range []string{`"attention_required":4`, `"in_progress":2`, `"recently_finalized":1`, `"as_of":"2026-08-30T12:00:00Z"`} {
+		if !bytes.Contains(response.Body.Bytes(), []byte(expected)) {
+			t.Fatalf("body=%s, want %s", response.Body.String(), expected)
+		}
 	}
 }

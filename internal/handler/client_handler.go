@@ -135,6 +135,7 @@ func RegisterEvaluationRoutes(
 ) {
 	evaluationsGroup := rg.Group("/evaluations")
 	{
+		evaluationsGroup.GET("/stats", auth, requirePermission(domain.PermClientView.String()), requirePermission(domain.PermClientEvaluationView.String()), handler.GetEvaluationStats)
 		evaluationsGroup.GET("/upcoming", auth, requirePermission(domain.PermClientView.String()), requirePermission(domain.PermClientEvaluationView.String()), handler.ListUpcomingEvaluations)
 		evaluationsGroup.GET("/recent-submitted", auth, requirePermission(domain.PermClientView.String()), requirePermission(domain.PermClientEvaluationView.String()), handler.ListRecentSubmittedEvaluations)
 		evaluationsGroup.GET("/recent-drafts", auth, requirePermission(domain.PermClientView.String()), requirePermission(domain.PermClientEvaluationView.String()), handler.ListRecentDraftEvaluations)
@@ -142,6 +143,29 @@ func RegisterEvaluationRoutes(
 		evaluationsGroup.PATCH("/:evaluation_id/draft", auth, requirePermission(domain.PermClientView.String()), requirePermission(domain.PermClientEvaluationView.String()), requirePermission(domain.PermClientEvaluationCreate.String()), handler.UpdateGoalEvaluationDraft)
 		evaluationsGroup.POST("/:evaluation_id/submit", auth, requirePermission(domain.PermClientView.String()), requirePermission(domain.PermClientEvaluationView.String()), requirePermission(domain.PermClientEvaluationCreate.String()), handler.SubmitGoalEvaluationDraft)
 	}
+}
+
+// GetEvaluationStats returns evaluation KPI counts for the authenticated employee.
+// @Summary Get evaluation statistics
+// @Tags evaluations
+// @Produce json
+// @Success 200 {object} httpapi.Envelope[evaluationStatsResponse]
+// @Failure 401,403,500 {object} httpapi.Envelope[any]
+// @Router /evaluations/stats [get]
+func (h *ClientHandler) GetEvaluationStats(ctx *gin.Context) {
+	employeeID, err := getEmployeeIDFromContext(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, httpapi.Fail(err.Error(), ""))
+		return
+	}
+
+	result, err := h.service.GetEvaluationStats(ctx.Request.Context(), employeeID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, httpapi.Fail(err.Error(), ""))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, httpapi.OK(toEvaluationStatsResponse(*result), "Evaluation statistics fetched successfully"))
 }
 
 type ClientHandler struct {

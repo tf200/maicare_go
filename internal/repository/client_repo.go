@@ -2641,6 +2641,22 @@ func (r *ClientRepository) ListRecentDraftEvaluations(ctx context.Context, param
 	}, nil
 }
 
+func (r *ClientRepository) GetEvaluationStats(ctx context.Context, employeeID uuid.UUID) (*domain.EvaluationStats, error) {
+	row, err := actorQuery(ctx, r.store, func(q *db.Queries) (db.GetEvaluationStatsByEmployeeRow, error) {
+		return q.GetEvaluationStatsByEmployee(ctx, employeeID)
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get evaluation stats: %w", err)
+	}
+
+	return &domain.EvaluationStats{
+		AttentionRequired: row.AttentionRequired,
+		InProgress:        row.InProgress,
+		RecentlyFinalized: row.RecentlyFinalized,
+		AsOf:              conv.TimeFromPgTimestamptz(row.AsOf),
+	}, nil
+}
+
 // =====================
 // Medical - Diagnoses
 // =====================

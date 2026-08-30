@@ -199,6 +199,37 @@ WHERE e.created_by_employee_id = $1
 ORDER BY e.updated_at DESC
 LIMIT $2 OFFSET $3;
 
+-- name: GetEvaluationStatsByEmployee :one
+SELECT
+    (
+        SELECT COUNT(DISTINCT c.id)
+        FROM assigned_employee ae
+        JOIN client_details c ON c.id = ae.client_id
+        WHERE ae.employee_id = sqlc.arg(employee_id)::uuid
+          AND ae.role = 'coordinator'
+          AND c.status = 'in_care'
+          AND c.next_evaluation_date IS NOT NULL
+          AND c.next_evaluation_date <= CURRENT_DATE + 3
+    )::int8 AS attention_required,
+    (
+        SELECT COUNT(DISTINCT e.id)
+        FROM client_goal_evaluations e
+        JOIN client_details c ON c.id = e.client_id
+        WHERE e.created_by_employee_id = sqlc.arg(employee_id)::uuid
+          AND e.status = 'draft'
+          AND c.status = 'in_care'
+          AND c.next_evaluation_date IS NOT NULL
+          AND e.evaluation_date = c.next_evaluation_date
+    )::int8 AS in_progress,
+    (
+        SELECT COUNT(DISTINCT e.id)
+        FROM client_goal_evaluations e
+        WHERE e.created_by_employee_id = sqlc.arg(employee_id)::uuid
+          AND e.status = 'completed'
+          AND e.updated_at >= CURRENT_TIMESTAMP - INTERVAL '30 days'
+    )::int8 AS recently_finalized,
+    CURRENT_TIMESTAMP::timestamptz AS as_of;
+
 -- name: GetLatestDraftEvaluationByClient :one
 SELECT
     e.id,

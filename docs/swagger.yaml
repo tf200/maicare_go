@@ -2084,6 +2084,17 @@ definitions:
       name:
         type: string
     type: object
+  handler.evaluationStatsResponse:
+    properties:
+      as_of:
+        type: string
+      attention_required:
+        type: integer
+      in_progress:
+        type: integer
+      recently_finalized:
+        type: integer
+    type: object
   handler.generateAutoReportsRequest:
     properties:
       end_date:
@@ -4240,6 +4251,17 @@ definitions:
         type: string
       data:
         $ref: '#/definitions/handler.departmentResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  httpapi.Envelope-handler_evaluationStatsResponse:
+    properties:
+      code:
+        type: string
+      data:
+        $ref: '#/definitions/handler.evaluationStatsResponse'
       message:
         type: string
       success:
@@ -7528,6 +7550,30 @@ paths:
           schema:
             $ref: '#/definitions/httpapi.Envelope-any'
       summary: List recent submitted evaluations
+      tags:
+      - evaluations
+  /evaluations/stats:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpapi.Envelope-handler_evaluationStatsResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpapi.Envelope-any'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/httpapi.Envelope-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpapi.Envelope-any'
+      summary: Get evaluation statistics
       tags:
       - evaluations
   /evaluations/upcoming:

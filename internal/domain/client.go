@@ -520,6 +520,7 @@ type ClientRepository interface {
 	ListUpcomingEvaluations(ctx context.Context, params ListUpcomingEvaluationsParams) (*ListUpcomingEvaluationsResult, error)
 	ListRecentSubmittedEvaluations(ctx context.Context, params ListRecentSubmittedEvaluationsParams) (*ListRecentSubmittedEvaluationsResult, error)
 	ListRecentDraftEvaluations(ctx context.Context, params ListRecentDraftEvaluationsParams) (*ListRecentDraftEvaluationsResult, error)
+	GetEvaluationStats(ctx context.Context, employeeID uuid.UUID) (*EvaluationStats, error)
 	CreateClientDiagnosis(ctx context.Context, params CreateClientDiagnosisParams) (*ClientDiagnosis, error)
 	ListClientDiagnoses(ctx context.Context, params ListClientDiagnosesParams) (*ListClientDiagnosesResult, error)
 	GetClientDiagnosis(ctx context.Context, clientID, diagnosisID uuid.UUID) (*ClientDiagnosis, error)
@@ -652,6 +653,7 @@ type ClientService interface {
 	ListUpcomingEvaluations(ctx context.Context, params ListUpcomingEvaluationsParams) (*ListUpcomingEvaluationsResult, error)
 	ListRecentSubmittedEvaluations(ctx context.Context, params ListRecentSubmittedEvaluationsParams) (*ListRecentSubmittedEvaluationsResult, error)
 	ListRecentDraftEvaluations(ctx context.Context, params ListRecentDraftEvaluationsParams) (*ListRecentDraftEvaluationsResult, error)
+	GetEvaluationStats(ctx context.Context, employeeID uuid.UUID) (*EvaluationStats, error)
 	CreateClientDiagnosis(ctx context.Context, clientID uuid.UUID, employeeID uuid.UUID, params CreateClientDiagnosisParams) (*ClientDiagnosis, error)
 	ListClientDiagnoses(ctx context.Context, params ListClientDiagnosesParams) (*ListClientDiagnosesResult, error)
 	GetClientDiagnosis(ctx context.Context, clientID, diagnosisID uuid.UUID) (*ClientDiagnosis, error)
@@ -990,6 +992,13 @@ type RecentDraftEvaluation struct {
 	Priority         string
 	FilledGoalsCount int32
 	TotalGoalsCount  int32
+}
+
+type EvaluationStats struct {
+	AttentionRequired int64
+	InProgress        int64
+	RecentlyFinalized int64
+	AsOf              time.Time
 }
 
 // =====================

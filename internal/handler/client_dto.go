@@ -1734,6 +1734,13 @@ type recentDraftEvaluationResponse struct {
 	TotalGoalsCount  int32     `json:"total_goals_count"`
 }
 
+type evaluationStatsResponse struct {
+	AttentionRequired int64     `json:"attention_required"`
+	InProgress        int64     `json:"in_progress"`
+	RecentlyFinalized int64     `json:"recently_finalized"`
+	AsOf              time.Time `json:"as_of"`
+}
+
 func toUpcomingEvaluationResponse(e domain.UpcomingEvaluation) upcomingEvaluationResponse {
 	return upcomingEvaluationResponse{
 		ClientID:         e.ClientID,
@@ -1774,6 +1781,15 @@ func toRecentDraftEvaluationResponse(e domain.RecentDraftEvaluation) recentDraft
 		Priority:         e.Priority,
 		FilledGoalsCount: e.FilledGoalsCount,
 		TotalGoalsCount:  e.TotalGoalsCount,
+	}
+}
+
+func toEvaluationStatsResponse(stats domain.EvaluationStats) evaluationStatsResponse {
+	return evaluationStatsResponse{
+		AttentionRequired: stats.AttentionRequired,
+		InProgress:        stats.InProgress,
+		RecentlyFinalized: stats.RecentlyFinalized,
+		AsOf:              stats.AsOf,
 	}
 }
 
