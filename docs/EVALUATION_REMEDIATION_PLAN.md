@@ -279,11 +279,17 @@ The endpoint requires `CLIENT.VIEW` and `CLIENT.EVALUATION.VIEW`. The repository
 
 ### P1.7 Date And Timezone Policy
 
-- [ ] Choose the authoritative product timezone for evaluation calendar dates.
-- [ ] Align PostgreSQL `CURRENT_DATE` and Go date calculations.
-- [ ] Document date-only fields in the API contract.
-- [ ] Prevent frontend local-time conversion from shifting evaluation dates.
-- [ ] Verify the 14-day submission boundary around timezone and daylight-saving transitions.
+**Status:** `[x]` Completed and verified with PostgreSQL timezone/DST integration coverage, exact 14-day boundary coverage, date-only response tests, and frontend date utility tests.
+
+Evaluation calendar rules use `app_organization_profile.default_timezone`, which defaults to `Europe/Amsterdam`. The `evaluation_business_date()` database function is the single source for the current evaluation calendar date. Audit fields such as `created_at`, `updated_at`, `submitted_at`, and statistics `as_of` remain RFC 3339 timestamps representing instants.
+
+Evaluation calendar fields (`evaluation_date`, `next_evaluation_date`, `last_evaluation_anchor_date`, `period_start`, `period_end`, and evaluation `due_date`) are serialized as ISO 8601 date-only strings in `YYYY-MM-DD` format. Frontend code parses and formats these values without applying the browser timezone.
+
+- [x] Choose the authoritative product timezone for evaluation calendar dates.
+- [x] Align PostgreSQL `CURRENT_DATE` and Go date calculations.
+- [x] Document date-only fields in the API contract.
+- [x] Prevent frontend local-time conversion from shifting evaluation dates.
+- [x] Verify the 14-day submission boundary around timezone and daylight-saving transitions.
 
 ### P1.8 Query And Listing Behavior
 
@@ -377,8 +383,8 @@ priority: 'critical' | 'normal' | null;
 - [ ] Early submission returns a stable error.
 - [x] Successful submission advances the schedule exactly once.
 - [ ] Stale writes preserve the user's local input and show a conflict.
-- [ ] Evaluation dates render consistently across supported timezones.
-- [ ] KPI labels and values use the same documented scope.
+- [x] Evaluation dates render consistently across supported timezones.
+- [x] KPI labels and values use the same documented scope.
 
 ## Verification Commands
 
@@ -409,7 +415,7 @@ Run the Svelte autofixer on every changed Svelte component before considering fr
 - [ ] Does create return `201`, while returning an existing current draft uses `200`?
 - [ ] Should current-cycle drafts owned by another employee be visible as read-only in bootstrap?
 - [ ] Should blocked submission use HTTP 409 or 422?
-- [ ] What exact scope should each dashboard KPI represent?
-- [ ] What is the authoritative application timezone?
+- [x] Dashboard KPIs use the authenticated employee scope documented in P1.6.
+- [x] Evaluation calendar dates use `app_organization_profile.default_timezone`, defaulting to `Europe/Amsterdam`.
 - [ ] Is the evaluation goal set frozen or dynamic?
 - [ ] Are dedicated evaluation update and submit permissions required?

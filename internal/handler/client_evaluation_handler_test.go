@@ -3,6 +3,7 @@ package handler
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -267,6 +268,30 @@ func TestGetEvaluationStatsUsesAuthenticatedEmployee(t *testing.T) {
 	for _, expected := range []string{`"attention_required":4`, `"in_progress":2`, `"recently_finalized":1`, `"as_of":"2026-08-30T12:00:00Z"`} {
 		if !bytes.Contains(response.Body.Bytes(), []byte(expected)) {
 			t.Fatalf("body=%s, want %s", response.Body.String(), expected)
+		}
+	}
+}
+
+func TestGoalEvaluationResponseUsesDateOnlyCalendarFields(t *testing.T) {
+	date := time.Date(2026, time.March, 29, 0, 0, 0, 0, time.UTC)
+	response := toGoalEvaluationResponse(domain.GoalEvaluation{
+		EvaluationDate: date,
+		PeriodStart:    &date,
+		PeriodEnd:      &date,
+		Items:          []domain.GoalEvaluationItem{},
+	})
+
+	body, err := json.Marshal(response)
+	if err != nil {
+		t.Fatalf("marshal response: %v", err)
+	}
+	for _, expected := range []string{
+		`"evaluation_date":"2026-03-29"`,
+		`"period_start":"2026-03-29"`,
+		`"period_end":"2026-03-29"`,
+	} {
+		if !bytes.Contains(body, []byte(expected)) {
+			t.Fatalf("body=%s, want %s", body, expected)
 		}
 	}
 }

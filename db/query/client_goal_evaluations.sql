@@ -101,15 +101,18 @@ LEFT JOIN employee_profile ep
 WHERE e.id = $1
 LIMIT 1;
 
+-- name: GetEvaluationBusinessDate :one
+SELECT evaluation_business_date()::date;
+
 -- name: ListUpcomingEvaluationsForCoordinator :many
 SELECT
     c.id AS client_id,
     c.first_name AS client_first_name,
     c.last_name AS client_last_name,
     c.next_evaluation_date,
-    (c.next_evaluation_date - CURRENT_DATE)::int4 AS days_left,
+    (c.next_evaluation_date - evaluation_business_date())::int4 AS days_left,
     CASE
-        WHEN (c.next_evaluation_date - CURRENT_DATE) <= 3 THEN 'critical'
+        WHEN (c.next_evaluation_date - evaluation_business_date()) <= 3 THEN 'critical'
         ELSE 'normal'
     END AS priority,
     COALESCE((d.id IS NOT NULL), false)::bool AS has_draft,
@@ -176,9 +179,9 @@ SELECT
     c.last_name AS client_last_name,
     e.evaluation_date,
     e.updated_at,
-    (e.evaluation_date - CURRENT_DATE)::int4 AS days_left,
+    (e.evaluation_date - evaluation_business_date())::int4 AS days_left,
     CASE
-        WHEN (e.evaluation_date - CURRENT_DATE) <= 3 THEN 'critical'
+        WHEN (e.evaluation_date - evaluation_business_date()) <= 3 THEN 'critical'
         ELSE 'normal'
     END AS priority,
     COALESCE(di.filled_goals_count, 0)::int4 AS filled_goals_count,
@@ -209,7 +212,7 @@ SELECT
           AND ae.role = 'coordinator'
           AND c.status = 'in_care'
           AND c.next_evaluation_date IS NOT NULL
-          AND c.next_evaluation_date <= CURRENT_DATE + 3
+          AND c.next_evaluation_date <= evaluation_business_date() + 3
     )::int8 AS attention_required,
     (
         SELECT COUNT(DISTINCT e.id)

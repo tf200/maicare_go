@@ -468,20 +468,20 @@ type clientAddressResponse struct {
 }
 
 type clientInCareResponse struct {
-	CareStartDate            *time.Time `json:"care_start_date"`
-	PlacedInCareAt           *time.Time `json:"placed_in_care_at"`
-	DaysInCare               *int32     `json:"days_in_care"`
-	EvaluationIntervalsWeeks int32      `json:"evaluation_intervals_weeks"`
-	LastEvaluationAnchorDate *time.Time `json:"last_evaluation_anchor_date"`
-	NextEvaluationDate       *time.Time `json:"next_evaluation_date"`
+	CareStartDate            *time.Time      `json:"care_start_date"`
+	PlacedInCareAt           *time.Time      `json:"placed_in_care_at"`
+	DaysInCare               *int32          `json:"days_in_care"`
+	EvaluationIntervalsWeeks int32           `json:"evaluation_intervals_weeks"`
+	LastEvaluationAnchorDate *evaluationDate `json:"last_evaluation_anchor_date" swaggertype:"string" format:"date" example:"2025-12-08"`
+	NextEvaluationDate       *evaluationDate `json:"next_evaluation_date" swaggertype:"string" format:"date" example:"2026-03-01"`
 }
 
 type clientCareScheduleResponse struct {
-	CareStartDate      *time.Time `json:"care_start_date"`
-	PlacedInCareAt     *time.Time `json:"placed_in_care_at"`
-	DaysUntilStart     *int32     `json:"days_until_start"`
-	ShouldBeActiveNow  bool       `json:"should_be_active_now"`
-	NextEvaluationDate *time.Time `json:"next_evaluation_date"`
+	CareStartDate      *time.Time      `json:"care_start_date"`
+	PlacedInCareAt     *time.Time      `json:"placed_in_care_at"`
+	DaysUntilStart     *int32          `json:"days_until_start"`
+	ShouldBeActiveNow  bool            `json:"should_be_active_now"`
+	NextEvaluationDate *evaluationDate `json:"next_evaluation_date" swaggertype:"string" format:"date" example:"2026-03-01"`
 }
 
 type clientDischargeScheduleResponse struct {
@@ -529,7 +529,7 @@ type clientActiveContractResponse struct {
 }
 
 type clientEvaluationSummaryResponse struct {
-	NextEvaluationDate *time.Time                             `json:"next_evaluation_date"`
+	NextEvaluationDate *evaluationDate                        `json:"next_evaluation_date" swaggertype:"string" format:"date" example:"2026-03-01"`
 	DaysLeft           *int32                                 `json:"days_left"`
 	Priority           *string                                `json:"priority"`
 	Draft              *clientEvaluationDraftSummaryResponse  `json:"draft,omitempty"`
@@ -691,8 +691,8 @@ func toGetClientResponse(detail *domain.ClientPageDetail) getClientResponse {
 			PlacedInCareAt:           detail.Care.PlacedInCareAt,
 			DaysInCare:               detail.Care.DaysInCare,
 			EvaluationIntervalsWeeks: detail.Care.EvaluationIntervalsWeeks,
-			LastEvaluationAnchorDate: detail.Care.LastEvaluationAnchorDate,
-			NextEvaluationDate:       detail.Care.NextEvaluationDate,
+			LastEvaluationAnchorDate: toEvaluationDatePtr(detail.Care.LastEvaluationAnchorDate),
+			NextEvaluationDate:       toEvaluationDatePtr(detail.Care.NextEvaluationDate),
 		}
 	}
 
@@ -703,7 +703,7 @@ func toGetClientResponse(detail *domain.ClientPageDetail) getClientResponse {
 			PlacedInCareAt:     detail.CareSchedule.PlacedInCareAt,
 			DaysUntilStart:     detail.CareSchedule.DaysUntilStart,
 			ShouldBeActiveNow:  detail.CareSchedule.ShouldBeActiveNow,
-			NextEvaluationDate: detail.CareSchedule.NextEvaluationDate,
+			NextEvaluationDate: toEvaluationDatePtr(detail.CareSchedule.NextEvaluationDate),
 		}
 	}
 
@@ -778,7 +778,7 @@ func toGetClientResponse(detail *domain.ClientPageDetail) getClientResponse {
 			}
 		}
 		evaluationSummary = &clientEvaluationSummaryResponse{
-			NextEvaluationDate: detail.EvaluationSummary.NextEvaluationDate,
+			NextEvaluationDate: toEvaluationDatePtr(detail.EvaluationSummary.NextEvaluationDate),
 			DaysLeft:           detail.EvaluationSummary.DaysLeft,
 			Priority:           detail.EvaluationSummary.Priority,
 			Draft:              draft,
@@ -1016,13 +1016,13 @@ type putClientInCareRequest struct {
 }
 
 type putClientInCareResponse struct {
-	ID                      uuid.UUID  `json:"id"`
-	Status                  string     `json:"status"`
-	CareStartDate           time.Time  `json:"care_start_date"`
-	PlacedInCareAt          time.Time  `json:"placed_in_care_at"`
-	NextEvaluationDate      *time.Time `json:"next_evaluation_date"`
-	CoordinatorAssignmentID uuid.UUID  `json:"coordinator_assignment_id"`
-	Warning                 *string    `json:"warning,omitempty"`
+	ID                      uuid.UUID       `json:"id"`
+	Status                  string          `json:"status"`
+	CareStartDate           time.Time       `json:"care_start_date"`
+	PlacedInCareAt          time.Time       `json:"placed_in_care_at"`
+	NextEvaluationDate      *evaluationDate `json:"next_evaluation_date" swaggertype:"string" format:"date" example:"2026-03-01"`
+	CoordinatorAssignmentID uuid.UUID       `json:"coordinator_assignment_id"`
+	Warning                 *string         `json:"warning,omitempty"`
 }
 
 func toPutClientInCareParams(req putClientInCareRequest) domain.PutClientInCareParams {
@@ -1040,7 +1040,7 @@ func toPutClientInCareResponse(result *domain.PutClientInCareResult) putClientIn
 		Status:                  result.Status,
 		CareStartDate:           result.CareStartDate,
 		PlacedInCareAt:          result.PlacedInCareAt,
-		NextEvaluationDate:      result.NextEvaluationDate,
+		NextEvaluationDate:      toEvaluationDatePtr(result.NextEvaluationDate),
 		CoordinatorAssignmentID: result.CoordinatorAssignmentID,
 		Warning:                 result.Warning,
 	}
@@ -1327,7 +1327,8 @@ type clientGoalForEvaluationPageResponse struct {
 }
 
 type getClientGoalsForEvaluationPageResponse struct {
-	NextEvaluationDate    *time.Time                            `json:"next_evaluation_date"`
+	NextEvaluationDate    *evaluationDate                       `json:"next_evaluation_date" swaggertype:"string" format:"date" example:"2026-03-01"`
+	DaysLeft              *int32                                `json:"days_left"`
 	MyDraftEvaluationID   *uuid.UUID                            `json:"my_draft_evaluation_id"`
 	IsResponsibleEmployee bool                                  `json:"is_responsible_employee"`
 	CanUpdateGoals        bool                                  `json:"can_update_goals"`
@@ -1347,7 +1348,8 @@ func toGetClientGoalsForEvaluationPageResponse(result *domain.ClientGoalsForEval
 		})
 	}
 	return getClientGoalsForEvaluationPageResponse{
-		NextEvaluationDate:    result.NextEvaluationDate,
+		NextEvaluationDate:    toEvaluationDatePtr(result.NextEvaluationDate),
+		DaysLeft:              result.DaysLeft,
 		MyDraftEvaluationID:   result.MyDraftEvaluationID,
 		IsResponsibleEmployee: result.IsResponsibleEmployee,
 		CanUpdateGoals:        result.CanUpdateGoals,
@@ -1388,12 +1390,26 @@ type goalEvaluationItemResponse struct {
 	UpdatedAt         time.Time `json:"updated_at"`
 }
 
+type evaluationDate string
+
+func toEvaluationDate(value time.Time) evaluationDate {
+	return evaluationDate(value.Format(time.DateOnly))
+}
+
+func toEvaluationDatePtr(value *time.Time) *evaluationDate {
+	if value == nil {
+		return nil
+	}
+	date := toEvaluationDate(*value)
+	return &date
+}
+
 type goalEvaluationResponse struct {
 	ID                      uuid.UUID                    `json:"id"`
 	ClientID                uuid.UUID                    `json:"client_id"`
-	EvaluationDate          time.Time                    `json:"evaluation_date"`
-	PeriodStart             *time.Time                   `json:"period_start"`
-	PeriodEnd               *time.Time                   `json:"period_end"`
+	EvaluationDate          evaluationDate               `json:"evaluation_date" swaggertype:"string" format:"date" example:"2026-03-01"`
+	PeriodStart             *evaluationDate              `json:"period_start" swaggertype:"string" format:"date" example:"2025-12-08"`
+	PeriodEnd               *evaluationDate              `json:"period_end" swaggertype:"string" format:"date" example:"2026-03-01"`
 	EvaluationIntervalWeeks int32                        `json:"evaluation_interval_weeks"`
 	Status                  string                       `json:"status"`
 	OverallNotes            *string                      `json:"overall_notes"`
@@ -1456,9 +1472,9 @@ func toGoalEvaluationResponse(eval domain.GoalEvaluation) goalEvaluationResponse
 	return goalEvaluationResponse{
 		ID:                      eval.ID,
 		ClientID:                eval.ClientID,
-		EvaluationDate:          eval.EvaluationDate,
-		PeriodStart:             eval.PeriodStart,
-		PeriodEnd:               eval.PeriodEnd,
+		EvaluationDate:          toEvaluationDate(eval.EvaluationDate),
+		PeriodStart:             toEvaluationDatePtr(eval.PeriodStart),
+		PeriodEnd:               toEvaluationDatePtr(eval.PeriodEnd),
 		EvaluationIntervalWeeks: eval.EvaluationIntervalWeeks,
 		Status:                  eval.Status,
 		OverallNotes:            eval.OverallNotes,
@@ -1473,18 +1489,18 @@ func toGoalEvaluationResponse(eval domain.GoalEvaluation) goalEvaluationResponse
 // --- Get Goal Evaluation Bootstrap ---
 
 type goalEvaluationBootstrapDraftResponse struct {
-	ID             uuid.UUID `json:"id"`
-	EvaluationDate time.Time `json:"evaluation_date"`
-	UpdatedAt      time.Time `json:"updated_at"`
+	ID             uuid.UUID      `json:"id"`
+	EvaluationDate evaluationDate `json:"evaluation_date" swaggertype:"string" format:"date" example:"2026-03-01"`
+	UpdatedAt      time.Time      `json:"updated_at"`
 }
 
 type goalEvaluationBootstrapCompletedResponse struct {
-	ID                  uuid.UUID  `json:"id"`
-	EvaluationDate      time.Time  `json:"evaluation_date"`
-	SubmittedAt         time.Time  `json:"submitted_at"`
-	OverallNotes        *string    `json:"overall_notes"`
-	CreatedByEmployeeID *uuid.UUID `json:"created_by_employee_id"`
-	CreatorName         *string    `json:"creator_name"`
+	ID                  uuid.UUID      `json:"id"`
+	EvaluationDate      evaluationDate `json:"evaluation_date" swaggertype:"string" format:"date" example:"2026-03-01"`
+	SubmittedAt         time.Time      `json:"submitted_at"`
+	OverallNotes        *string        `json:"overall_notes"`
+	CreatedByEmployeeID *uuid.UUID     `json:"created_by_employee_id"`
+	CreatorName         *string        `json:"creator_name"`
 }
 
 type goalEvaluationBootstrapActiveGoalResponse struct {
@@ -1501,7 +1517,7 @@ type getGoalEvaluationBootstrapResponse struct {
 	ClientID                uuid.UUID                                   `json:"client_id"`
 	ClientFirstName         string                                      `json:"client_first_name"`
 	ClientLastName          string                                      `json:"client_last_name"`
-	NextEvaluationDate      *time.Time                                  `json:"next_evaluation_date"`
+	NextEvaluationDate      *evaluationDate                             `json:"next_evaluation_date" swaggertype:"string" format:"date" example:"2026-03-01"`
 	DaysLeft                *int32                                      `json:"days_left"`
 	Priority                *string                                     `json:"priority"`
 	ExistingDraft           *goalEvaluationBootstrapDraftResponse       `json:"existing_draft"`
@@ -1514,7 +1530,7 @@ func toGetGoalEvaluationBootstrapResponse(result *domain.GoalEvaluationBootstrap
 	if result.ExistingDraft != nil {
 		draft = &goalEvaluationBootstrapDraftResponse{
 			ID:             result.ExistingDraft.ID,
-			EvaluationDate: result.ExistingDraft.EvaluationDate,
+			EvaluationDate: toEvaluationDate(result.ExistingDraft.EvaluationDate),
 			UpdatedAt:      result.ExistingDraft.UpdatedAt,
 		}
 	}
@@ -1523,7 +1539,7 @@ func toGetGoalEvaluationBootstrapResponse(result *domain.GoalEvaluationBootstrap
 	if result.LastCompletedEvaluation != nil {
 		completed = &goalEvaluationBootstrapCompletedResponse{
 			ID:                  result.LastCompletedEvaluation.ID,
-			EvaluationDate:      result.LastCompletedEvaluation.EvaluationDate,
+			EvaluationDate:      toEvaluationDate(result.LastCompletedEvaluation.EvaluationDate),
 			SubmittedAt:         result.LastCompletedEvaluation.SubmittedAt,
 			OverallNotes:        result.LastCompletedEvaluation.OverallNotes,
 			CreatedByEmployeeID: result.LastCompletedEvaluation.CreatedByEmployeeID,
@@ -1548,7 +1564,7 @@ func toGetGoalEvaluationBootstrapResponse(result *domain.GoalEvaluationBootstrap
 		ClientID:                result.ClientID,
 		ClientFirstName:         result.ClientFirstName,
 		ClientLastName:          result.ClientLastName,
-		NextEvaluationDate:      result.NextEvaluationDate,
+		NextEvaluationDate:      toEvaluationDatePtr(result.NextEvaluationDate),
 		DaysLeft:                result.DaysLeft,
 		Priority:                result.Priority,
 		ExistingDraft:           draft,
@@ -1564,19 +1580,19 @@ type listClientSubmittedEvaluationsRequest struct {
 }
 
 type listClientSubmittedEvaluationsResponse struct {
-	EvaluationID        uuid.UUID  `json:"evaluation_id"`
-	EvaluationDate      time.Time  `json:"evaluation_date"`
-	SubmittedAt         time.Time  `json:"submitted_at"`
-	FilledGoalsCount    int32      `json:"filled_goals_count"`
-	TotalGoalsCount     int32      `json:"total_goals_count"`
-	CreatedByEmployeeID *uuid.UUID `json:"created_by_employee_id"`
-	CreatorName         *string    `json:"creator_name"`
+	EvaluationID        uuid.UUID      `json:"evaluation_id"`
+	EvaluationDate      evaluationDate `json:"evaluation_date" swaggertype:"string" format:"date" example:"2026-03-01"`
+	SubmittedAt         time.Time      `json:"submitted_at"`
+	FilledGoalsCount    int32          `json:"filled_goals_count"`
+	TotalGoalsCount     int32          `json:"total_goals_count"`
+	CreatedByEmployeeID *uuid.UUID     `json:"created_by_employee_id"`
+	CreatorName         *string        `json:"creator_name"`
 }
 
 func toListClientSubmittedEvaluationsResponse(item domain.ListClientSubmittedEvaluationsItem) listClientSubmittedEvaluationsResponse {
 	return listClientSubmittedEvaluationsResponse{
 		EvaluationID:        item.EvaluationID,
-		EvaluationDate:      item.EvaluationDate,
+		EvaluationDate:      toEvaluationDate(item.EvaluationDate),
 		SubmittedAt:         item.SubmittedAt,
 		FilledGoalsCount:    item.FilledGoalsCount,
 		TotalGoalsCount:     item.TotalGoalsCount,
@@ -1592,28 +1608,28 @@ type listGoalEvaluationHistoryRequest struct {
 }
 
 type listGoalEvaluationHistoryResponse struct {
-	EvaluationID        uuid.UUID  `json:"evaluation_id"`
-	EvaluationDate      time.Time  `json:"evaluation_date"`
-	SubmittedAt         time.Time  `json:"submitted_at"`
-	Progress            string     `json:"progress"`
-	Notes               *string    `json:"notes"`
-	CreatedByEmployeeID *uuid.UUID `json:"created_by_employee_id"`
-	CreatorName         *string    `json:"creator_name"`
-	PeriodStart         *time.Time `json:"period_start"`
-	PeriodEnd           *time.Time `json:"period_end"`
+	EvaluationID        uuid.UUID       `json:"evaluation_id"`
+	EvaluationDate      evaluationDate  `json:"evaluation_date" swaggertype:"string" format:"date" example:"2026-03-01"`
+	SubmittedAt         time.Time       `json:"submitted_at"`
+	Progress            string          `json:"progress"`
+	Notes               *string         `json:"notes"`
+	CreatedByEmployeeID *uuid.UUID      `json:"created_by_employee_id"`
+	CreatorName         *string         `json:"creator_name"`
+	PeriodStart         *evaluationDate `json:"period_start" swaggertype:"string" format:"date" example:"2025-12-08"`
+	PeriodEnd           *evaluationDate `json:"period_end" swaggertype:"string" format:"date" example:"2026-03-01"`
 }
 
 func toListGoalEvaluationHistoryResponse(item domain.ListGoalEvaluationHistoryItem) listGoalEvaluationHistoryResponse {
 	return listGoalEvaluationHistoryResponse{
 		EvaluationID:        item.EvaluationID,
-		EvaluationDate:      item.EvaluationDate,
+		EvaluationDate:      toEvaluationDate(item.EvaluationDate),
 		SubmittedAt:         item.SubmittedAt,
 		Progress:            item.Progress,
 		Notes:               item.Notes,
 		CreatedByEmployeeID: item.CreatedByEmployeeID,
 		CreatorName:         item.CreatorName,
-		PeriodStart:         item.PeriodStart,
-		PeriodEnd:           item.PeriodEnd,
+		PeriodStart:         toEvaluationDatePtr(item.PeriodStart),
+		PeriodEnd:           toEvaluationDatePtr(item.PeriodEnd),
 	}
 }
 
@@ -1690,15 +1706,15 @@ type listUpcomingEvaluationsRequest struct {
 }
 
 type upcomingEvaluationResponse struct {
-	ClientID         uuid.UUID `json:"client_id"`
-	ClientFirstName  string    `json:"client_first_name"`
-	ClientLastName   string    `json:"client_last_name"`
-	DueDate          time.Time `json:"due_date"`
-	DaysLeft         int32     `json:"days_left"`
-	Priority         string    `json:"priority"`
-	HasDraft         bool      `json:"has_draft"`
-	FilledGoalsCount int32     `json:"filled_goals_count"`
-	TotalGoalsCount  int32     `json:"total_goals_count"`
+	ClientID         uuid.UUID      `json:"client_id"`
+	ClientFirstName  string         `json:"client_first_name"`
+	ClientLastName   string         `json:"client_last_name"`
+	DueDate          evaluationDate `json:"due_date" swaggertype:"string" format:"date" example:"2026-03-01"`
+	DaysLeft         int32          `json:"days_left"`
+	Priority         string         `json:"priority"`
+	HasDraft         bool           `json:"has_draft"`
+	FilledGoalsCount int32          `json:"filled_goals_count"`
+	TotalGoalsCount  int32          `json:"total_goals_count"`
 }
 
 type listRecentSubmittedEvaluationsRequest struct {
@@ -1706,15 +1722,15 @@ type listRecentSubmittedEvaluationsRequest struct {
 }
 
 type recentSubmittedEvaluationResponse struct {
-	EvaluationID       uuid.UUID  `json:"evaluation_id"`
-	ClientID           uuid.UUID  `json:"client_id"`
-	ClientFirstName    string     `json:"client_first_name"`
-	ClientLastName     string     `json:"client_last_name"`
-	EvaluationDate     time.Time  `json:"evaluation_date"`
-	SubmittedAt        time.Time  `json:"submitted_at"`
-	NextEvaluationDate *time.Time `json:"next_evaluation_date"`
-	FilledGoalsCount   int32      `json:"filled_goals_count"`
-	TotalGoalsCount    int32      `json:"total_goals_count"`
+	EvaluationID       uuid.UUID       `json:"evaluation_id"`
+	ClientID           uuid.UUID       `json:"client_id"`
+	ClientFirstName    string          `json:"client_first_name"`
+	ClientLastName     string          `json:"client_last_name"`
+	EvaluationDate     evaluationDate  `json:"evaluation_date" swaggertype:"string" format:"date" example:"2026-03-01"`
+	SubmittedAt        time.Time       `json:"submitted_at"`
+	NextEvaluationDate *evaluationDate `json:"next_evaluation_date" swaggertype:"string" format:"date" example:"2026-05-24"`
+	FilledGoalsCount   int32           `json:"filled_goals_count"`
+	TotalGoalsCount    int32           `json:"total_goals_count"`
 }
 
 type listRecentDraftEvaluationsRequest struct {
@@ -1722,16 +1738,16 @@ type listRecentDraftEvaluationsRequest struct {
 }
 
 type recentDraftEvaluationResponse struct {
-	EvaluationID     uuid.UUID `json:"evaluation_id"`
-	ClientID         uuid.UUID `json:"client_id"`
-	ClientFirstName  string    `json:"client_first_name"`
-	ClientLastName   string    `json:"client_last_name"`
-	DueDate          time.Time `json:"due_date"`
-	UpdatedAt        time.Time `json:"updated_at"`
-	DaysLeft         int32     `json:"days_left"`
-	Priority         string    `json:"priority"`
-	FilledGoalsCount int32     `json:"filled_goals_count"`
-	TotalGoalsCount  int32     `json:"total_goals_count"`
+	EvaluationID     uuid.UUID      `json:"evaluation_id"`
+	ClientID         uuid.UUID      `json:"client_id"`
+	ClientFirstName  string         `json:"client_first_name"`
+	ClientLastName   string         `json:"client_last_name"`
+	DueDate          evaluationDate `json:"due_date" swaggertype:"string" format:"date" example:"2026-03-01"`
+	UpdatedAt        time.Time      `json:"updated_at"`
+	DaysLeft         int32          `json:"days_left"`
+	Priority         string         `json:"priority"`
+	FilledGoalsCount int32          `json:"filled_goals_count"`
+	TotalGoalsCount  int32          `json:"total_goals_count"`
 }
 
 type evaluationStatsResponse struct {
@@ -1746,7 +1762,7 @@ func toUpcomingEvaluationResponse(e domain.UpcomingEvaluation) upcomingEvaluatio
 		ClientID:         e.ClientID,
 		ClientFirstName:  e.ClientFirstName,
 		ClientLastName:   e.ClientLastName,
-		DueDate:          e.DueDate,
+		DueDate:          toEvaluationDate(e.DueDate),
 		DaysLeft:         e.DaysLeft,
 		Priority:         e.Priority,
 		HasDraft:         e.HasDraft,
@@ -1761,9 +1777,9 @@ func toRecentSubmittedEvaluationResponse(e domain.RecentSubmittedEvaluation) rec
 		ClientID:           e.ClientID,
 		ClientFirstName:    e.ClientFirstName,
 		ClientLastName:     e.ClientLastName,
-		EvaluationDate:     e.EvaluationDate,
+		EvaluationDate:     toEvaluationDate(e.EvaluationDate),
 		SubmittedAt:        e.SubmittedAt,
-		NextEvaluationDate: e.NextEvaluationDate,
+		NextEvaluationDate: toEvaluationDatePtr(e.NextEvaluationDate),
 		FilledGoalsCount:   e.FilledGoalsCount,
 		TotalGoalsCount:    e.TotalGoalsCount,
 	}
@@ -1775,7 +1791,7 @@ func toRecentDraftEvaluationResponse(e domain.RecentDraftEvaluation) recentDraft
 		ClientID:         e.ClientID,
 		ClientFirstName:  e.ClientFirstName,
 		ClientLastName:   e.ClientLastName,
-		DueDate:          e.DueDate,
+		DueDate:          toEvaluationDate(e.DueDate),
 		UpdatedAt:        e.UpdatedAt,
 		DaysLeft:         e.DaysLeft,
 		Priority:         e.Priority,

@@ -739,6 +739,7 @@ type UpdateClientGoalResult struct {
 
 type ClientGoalsForEvaluationPage struct {
 	NextEvaluationDate    *time.Time
+	DaysLeft              *int32
 	MyDraftEvaluationID   *uuid.UUID
 	IsResponsibleEmployee bool
 	CanUpdateGoals        bool

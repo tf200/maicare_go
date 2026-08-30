@@ -217,6 +217,7 @@ type Querier interface {
 	GetEmployeeProfileByID(ctx context.Context, id uuid.UUID) (GetEmployeeProfileByIDRow, error)
 	GetEmployeeProfileByUserID(ctx context.Context, userID uuid.UUID) (GetEmployeeProfileByUserIDRow, error)
 	GetEmployeeSchedules(ctx context.Context, arg GetEmployeeSchedulesParams) ([]GetEmployeeSchedulesRow, error)
+	GetEvaluationBusinessDate(ctx context.Context) (pgtype.Date, error)
 	GetEvaluationStatsByEmployee(ctx context.Context, employeeID uuid.UUID) (GetEvaluationStatsByEmployeeRow, error)
 	GetGlobalOrganisationCounts(ctx context.Context) (GetGlobalOrganisationCountsRow, error)
 	GetGoalEvaluationByClientAndDate(ctx context.Context, arg GetGoalEvaluationByClientAndDateParams) (ClientGoalEvaluation, error)

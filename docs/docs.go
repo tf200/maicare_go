@@ -6100,7 +6100,9 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "next_evaluation_date": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-03-01"
                 },
                 "placed_in_care_at": {
                     "type": "string"
@@ -6379,7 +6381,9 @@ const docTemplate = `{
                     "$ref": "#/definitions/handler.clientEvaluationLastCompletedResponse"
                 },
                 "next_evaluation_date": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-03-01"
                 },
                 "priority": {
                     "type": "string"
@@ -6433,10 +6437,14 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "last_evaluation_anchor_date": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date",
+                    "example": "2025-12-08"
                 },
                 "next_evaluation_date": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-03-01"
                 },
                 "placed_in_care_at": {
                     "type": "string"
@@ -8316,6 +8324,9 @@ const docTemplate = `{
                 "can_update_goals": {
                     "type": "boolean"
                 },
+                "days_left": {
+                    "type": "integer"
+                },
                 "goal_update_block_reason": {
                     "type": "string"
                 },
@@ -8332,7 +8343,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "next_evaluation_date": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-03-01"
                 }
             }
         },
@@ -8542,7 +8555,9 @@ const docTemplate = `{
                     "$ref": "#/definitions/handler.goalEvaluationBootstrapCompletedResponse"
                 },
                 "next_evaluation_date": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-03-01"
                 },
                 "priority": {
                     "type": "string"
@@ -8754,7 +8769,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "evaluation_date": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-03-01"
                 },
                 "id": {
                     "type": "string"
@@ -8771,7 +8788,9 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "evaluation_date": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-03-01"
                 },
                 "id": {
                     "type": "string"
@@ -8843,7 +8862,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "evaluation_date": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-03-01"
                 },
                 "evaluation_interval_weeks": {
                     "type": "integer"
@@ -8861,10 +8882,14 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "period_end": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-03-01"
                 },
                 "period_start": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date",
+                    "example": "2025-12-08"
                 },
                 "status": {
                     "type": "string"
@@ -9310,7 +9335,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "evaluation_date": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-03-01"
                 },
                 "evaluation_id": {
                     "type": "string"
@@ -9374,7 +9401,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "evaluation_date": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-03-01"
                 },
                 "evaluation_id": {
                     "type": "string"
@@ -9383,10 +9412,14 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "period_end": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-03-01"
                 },
                 "period_start": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date",
+                    "example": "2025-12-08"
                 },
                 "progress": {
                     "type": "string"
@@ -9698,7 +9731,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "next_evaluation_date": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-03-01"
                 },
                 "placed_in_care_at": {
                     "type": "string"
@@ -9776,7 +9811,9 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "due_date": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-03-01"
                 },
                 "evaluation_id": {
                     "type": "string"
@@ -9808,7 +9845,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "evaluation_date": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-03-01"
                 },
                 "evaluation_id": {
                     "type": "string"
@@ -9817,7 +9856,9 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "next_evaluation_date": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-05-24"
                 },
                 "submitted_at": {
                     "type": "string"
@@ -10046,7 +10087,9 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "due_date": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-03-01"
                 },
                 "filled_goals_count": {
                     "type": "integer"

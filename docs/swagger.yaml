@@ -660,6 +660,8 @@ definitions:
       days_until_start:
         type: integer
       next_evaluation_date:
+        example: "2026-03-01"
+        format: date
         type: string
       placed_in_care_at:
         type: string
@@ -842,6 +844,8 @@ definitions:
       last_completed:
         $ref: '#/definitions/handler.clientEvaluationLastCompletedResponse'
       next_evaluation_date:
+        example: "2026-03-01"
+        format: date
         type: string
       priority:
         type: string
@@ -877,8 +881,12 @@ definitions:
       evaluation_intervals_weeks:
         type: integer
       last_evaluation_anchor_date:
+        example: "2025-12-08"
+        format: date
         type: string
       next_evaluation_date:
+        example: "2026-03-01"
+        format: date
         type: string
       placed_in_care_at:
         type: string
@@ -2141,6 +2149,8 @@ definitions:
     properties:
       can_update_goals:
         type: boolean
+      days_left:
+        type: integer
       goal_update_block_reason:
         type: string
       goals:
@@ -2152,6 +2162,8 @@ definitions:
       my_draft_evaluation_id:
         type: string
       next_evaluation_date:
+        example: "2026-03-01"
+        format: date
         type: string
     type: object
   handler.getClientRelatedEmailsResponse:
@@ -2290,6 +2302,8 @@ definitions:
       last_completed_evaluation:
         $ref: '#/definitions/handler.goalEvaluationBootstrapCompletedResponse'
       next_evaluation_date:
+        example: "2026-03-01"
+        format: date
         type: string
       priority:
         type: string
@@ -2429,6 +2443,8 @@ definitions:
       creator_name:
         type: string
       evaluation_date:
+        example: "2026-03-01"
+        format: date
         type: string
       id:
         type: string
@@ -2440,6 +2456,8 @@ definitions:
   handler.goalEvaluationBootstrapDraftResponse:
     properties:
       evaluation_date:
+        example: "2026-03-01"
+        format: date
         type: string
       id:
         type: string
@@ -2487,6 +2505,8 @@ definitions:
       creator_name:
         type: string
       evaluation_date:
+        example: "2026-03-01"
+        format: date
         type: string
       evaluation_interval_weeks:
         type: integer
@@ -2499,8 +2519,12 @@ definitions:
       overall_notes:
         type: string
       period_end:
+        example: "2026-03-01"
+        format: date
         type: string
       period_start:
+        example: "2025-12-08"
+        format: date
         type: string
       status:
         type: string
@@ -2794,6 +2818,8 @@ definitions:
       creator_name:
         type: string
       evaluation_date:
+        example: "2026-03-01"
+        format: date
         type: string
       evaluation_id:
         type: string
@@ -2836,14 +2862,20 @@ definitions:
       creator_name:
         type: string
       evaluation_date:
+        example: "2026-03-01"
+        format: date
         type: string
       evaluation_id:
         type: string
       notes:
         type: string
       period_end:
+        example: "2026-03-01"
+        format: date
         type: string
       period_start:
+        example: "2025-12-08"
+        format: date
         type: string
       progress:
         type: string
@@ -3049,6 +3081,8 @@ definitions:
       id:
         type: string
       next_evaluation_date:
+        example: "2026-03-01"
+        format: date
         type: string
       placed_in_care_at:
         type: string
@@ -3102,6 +3136,8 @@ definitions:
       days_left:
         type: integer
       due_date:
+        example: "2026-03-01"
+        format: date
         type: string
       evaluation_id:
         type: string
@@ -3123,12 +3159,16 @@ definitions:
       client_last_name:
         type: string
       evaluation_date:
+        example: "2026-03-01"
+        format: date
         type: string
       evaluation_id:
         type: string
       filled_goals_count:
         type: integer
       next_evaluation_date:
+        example: "2026-05-24"
+        format: date
         type: string
       submitted_at:
         type: string
@@ -3280,6 +3320,8 @@ definitions:
       days_left:
         type: integer
       due_date:
+        example: "2026-03-01"
+        format: date
         type: string
       filled_goals_count:
         type: integer

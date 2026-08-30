@@ -139,6 +139,17 @@ func (q *Queries) GetDraftGoalEvaluationByClientAndDate(ctx context.Context, arg
 	return i, err
 }
 
+const getEvaluationBusinessDate = `-- name: GetEvaluationBusinessDate :one
+SELECT evaluation_business_date()::date
+`
+
+func (q *Queries) GetEvaluationBusinessDate(ctx context.Context) (pgtype.Date, error) {
+	row := q.db.QueryRow(ctx, getEvaluationBusinessDate)
+	var column_1 pgtype.Date
+	err := row.Scan(&column_1)
+	return column_1, err
+}
+
 const getEvaluationStatsByEmployee = `-- name: GetEvaluationStatsByEmployee :one
 SELECT
     (
@@ -149,7 +160,7 @@ SELECT
           AND ae.role = 'coordinator'
           AND c.status = 'in_care'
           AND c.next_evaluation_date IS NOT NULL
-          AND c.next_evaluation_date <= CURRENT_DATE + 3
+          AND c.next_evaluation_date <= evaluation_business_date() + 3
     )::int8 AS attention_required,
     (
         SELECT COUNT(DISTINCT e.id)
@@ -539,9 +550,9 @@ SELECT
     c.last_name AS client_last_name,
     e.evaluation_date,
     e.updated_at,
-    (e.evaluation_date - CURRENT_DATE)::int4 AS days_left,
+    (e.evaluation_date - evaluation_business_date())::int4 AS days_left,
     CASE
-        WHEN (e.evaluation_date - CURRENT_DATE) <= 3 THEN 'critical'
+        WHEN (e.evaluation_date - evaluation_business_date()) <= 3 THEN 'critical'
         ELSE 'normal'
     END AS priority,
     COALESCE(di.filled_goals_count, 0)::int4 AS filled_goals_count,
@@ -777,9 +788,9 @@ SELECT
     c.first_name AS client_first_name,
     c.last_name AS client_last_name,
     c.next_evaluation_date,
-    (c.next_evaluation_date - CURRENT_DATE)::int4 AS days_left,
+    (c.next_evaluation_date - evaluation_business_date())::int4 AS days_left,
     CASE
-        WHEN (c.next_evaluation_date - CURRENT_DATE) <= 3 THEN 'critical'
+        WHEN (c.next_evaluation_date - evaluation_business_date()) <= 3 THEN 'critical'
         ELSE 'normal'
     END AS priority,
     COALESCE((d.id IS NOT NULL), false)::bool AS has_draft,

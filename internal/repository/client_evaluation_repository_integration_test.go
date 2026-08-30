@@ -95,6 +95,60 @@ func TestGetEvaluationStatsExecutesAsActorAndReturnsAsOf(t *testing.T) {
 	}
 }
 
+func TestEvaluationBusinessDateUsesConfiguredTimezoneAcrossDST(t *testing.T) {
+	ctx := context.Background()
+	if _, err := evaluationIntegrationPool.Exec(ctx, `UPDATE app_organization_profile SET default_timezone = 'Europe/Amsterdam' WHERE singleton = TRUE`); err != nil {
+		t.Fatalf("set evaluation timezone: %v", err)
+	}
+
+	tests := []struct {
+		name string
+		at   string
+		want string
+	}{
+		{name: "before spring transition", at: "2026-03-28T23:30:00Z", want: "2026-03-29"},
+		{name: "after spring transition local midnight", at: "2026-03-29T22:30:00Z", want: "2026-03-30"},
+		{name: "before autumn transition", at: "2026-10-24T22:30:00Z", want: "2026-10-25"},
+		{name: "after autumn transition local midnight", at: "2026-10-25T23:30:00Z", want: "2026-10-26"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var got time.Time
+			if err := evaluationIntegrationPool.QueryRow(ctx, `SELECT evaluation_business_date($1::timestamptz)`, tt.at).Scan(&got); err != nil {
+				t.Fatalf("evaluation_business_date() error = %v", err)
+			}
+			if got.Format(time.DateOnly) != tt.want {
+				t.Fatalf("evaluation_business_date(%s) = %s, want %s", tt.at, got.Format(time.DateOnly), tt.want)
+			}
+		})
+	}
+}
+
+func TestGoalEvaluationSubmissionAllowsExactFourteenDayBoundary(t *testing.T) {
+	fixture := seedEvaluationLifecycleFixture(t)
+	var businessDate time.Time
+	if err := evaluationIntegrationPool.QueryRow(context.Background(), `SELECT evaluation_business_date()`).Scan(&businessDate); err != nil {
+		t.Fatalf("get evaluation business date: %v", err)
+	}
+	dueDate := businessDate.AddDate(0, 0, 14)
+	if _, err := evaluationIntegrationPool.Exec(context.Background(), `UPDATE client_details SET next_evaluation_date = $2 WHERE id = $1`, fixture.clientID, dueDate); err != nil {
+		t.Fatalf("move evaluation schedule: %v", err)
+	}
+	if _, err := evaluationIntegrationPool.Exec(context.Background(), `UPDATE client_goal_evaluations SET evaluation_date = $2 WHERE id = $1`, fixture.currentEvaluationID, dueDate); err != nil {
+		t.Fatalf("move evaluation date: %v", err)
+	}
+
+	repository := &ClientRepository{store: db.NewStore(evaluationIntegrationPool)}
+	result, err := repository.SubmitGoalEvaluationDraft(fixture.ownerContext(), fixture.currentEvaluationID, fixture.owner.employeeID, submitParams(t, fixture.currentEvaluationID))
+	if err != nil {
+		t.Fatalf("SubmitGoalEvaluationDraft() error = %v", err)
+	}
+	if result.Status != "completed" {
+		t.Fatalf("status = %s, want completed", result.Status)
+	}
+}
+
 func TestGoalEvaluationBootstrapReturnsNoDraftWithoutScheduledCycle(t *testing.T) {
 	fixture := seedEvaluationLifecycleFixture(t)
 	if _, err := evaluationIntegrationPool.Exec(context.Background(), `UPDATE client_details SET next_evaluation_date = NULL WHERE id = $1`, fixture.clientID); err != nil {
@@ -262,7 +316,11 @@ func TestBlockedGoalEvaluationSubmissionReturnsSavedDraft(t *testing.T) {
 
 func TestTooEarlyGoalEvaluationSubmissionReturnsSavedDraft(t *testing.T) {
 	fixture := seedEvaluationLifecycleFixture(t)
-	futureDate := fixture.currentDate.AddDate(0, 0, 30)
+	var businessDate time.Time
+	if err := evaluationIntegrationPool.QueryRow(context.Background(), `SELECT evaluation_business_date()`).Scan(&businessDate); err != nil {
+		t.Fatalf("get evaluation business date: %v", err)
+	}
+	futureDate := businessDate.AddDate(0, 0, 15)
 	if _, err := evaluationIntegrationPool.Exec(context.Background(), `UPDATE client_details SET next_evaluation_date = $2 WHERE id = $1`, fixture.clientID, futureDate); err != nil {
 		t.Fatalf("move evaluation schedule: %v", err)
 	}

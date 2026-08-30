@@ -6089,7 +6089,9 @@
                     "type": "integer"
                 },
                 "next_evaluation_date": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-03-01"
                 },
                 "placed_in_care_at": {
                     "type": "string"
@@ -6368,7 +6370,9 @@
                     "$ref": "#/definitions/handler.clientEvaluationLastCompletedResponse"
                 },
                 "next_evaluation_date": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-03-01"
                 },
                 "priority": {
                     "type": "string"
@@ -6422,10 +6426,14 @@
                     "type": "integer"
                 },
                 "last_evaluation_anchor_date": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date",
+                    "example": "2025-12-08"
                 },
                 "next_evaluation_date": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-03-01"
                 },
                 "placed_in_care_at": {
                     "type": "string"
@@ -8305,6 +8313,9 @@
                 "can_update_goals": {
                     "type": "boolean"
                 },
+                "days_left": {
+                    "type": "integer"
+                },
                 "goal_update_block_reason": {
                     "type": "string"
                 },
@@ -8321,7 +8332,9 @@
                     "type": "string"
                 },
                 "next_evaluation_date": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-03-01"
                 }
             }
         },
@@ -8531,7 +8544,9 @@
                     "$ref": "#/definitions/handler.goalEvaluationBootstrapCompletedResponse"
                 },
                 "next_evaluation_date": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-03-01"
                 },
                 "priority": {
                     "type": "string"
@@ -8743,7 +8758,9 @@
                     "type": "string"
                 },
                 "evaluation_date": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-03-01"
                 },
                 "id": {
                     "type": "string"
@@ -8760,7 +8777,9 @@
             "type": "object",
             "properties": {
                 "evaluation_date": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-03-01"
                 },
                 "id": {
                     "type": "string"
@@ -8832,7 +8851,9 @@
                     "type": "string"
                 },
                 "evaluation_date": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-03-01"
                 },
                 "evaluation_interval_weeks": {
                     "type": "integer"
@@ -8850,10 +8871,14 @@
                     "type": "string"
                 },
                 "period_end": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-03-01"
                 },
                 "period_start": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date",
+                    "example": "2025-12-08"
                 },
                 "status": {
                     "type": "string"
@@ -9299,7 +9324,9 @@
                     "type": "string"
                 },
                 "evaluation_date": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-03-01"
                 },
                 "evaluation_id": {
                     "type": "string"
@@ -9363,7 +9390,9 @@
                     "type": "string"
                 },
                 "evaluation_date": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-03-01"
                 },
                 "evaluation_id": {
                     "type": "string"
@@ -9372,10 +9401,14 @@
                     "type": "string"
                 },
                 "period_end": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-03-01"
                 },
                 "period_start": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date",
+                    "example": "2025-12-08"
                 },
                 "progress": {
                     "type": "string"
@@ -9687,7 +9720,9 @@
                     "type": "string"
                 },
                 "next_evaluation_date": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-03-01"
                 },
                 "placed_in_care_at": {
                     "type": "string"
@@ -9765,7 +9800,9 @@
                     "type": "integer"
                 },
                 "due_date": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-03-01"
                 },
                 "evaluation_id": {
                     "type": "string"
@@ -9797,7 +9834,9 @@
                     "type": "string"
                 },
                 "evaluation_date": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-03-01"
                 },
                 "evaluation_id": {
                     "type": "string"
@@ -9806,7 +9845,9 @@
                     "type": "integer"
                 },
                 "next_evaluation_date": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-05-24"
                 },
                 "submitted_at": {
                     "type": "string"
@@ -10035,7 +10076,9 @@
                     "type": "integer"
                 },
                 "due_date": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "date",
+                    "example": "2026-03-01"
                 },
                 "filled_goals_count": {
                     "type": "integer"

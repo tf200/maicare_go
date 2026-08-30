@@ -1539,6 +1539,12 @@ func (r *ClientRepository) GetClientGoalsForEvaluationPage(ctx context.Context, 
 	if client.NextEvaluationDate.Valid {
 		nextDate := client.NextEvaluationDate.Time
 		response.NextEvaluationDate = &nextDate
+		businessDate, err := q.GetEvaluationBusinessDate(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get evaluation business date: %w", err)
+		}
+		daysLeft := int32(nextDate.Sub(businessDate.Time).Hours() / 24)
+		response.DaysLeft = &daysLeft
 	}
 
 	coordinatorRows, err := q.GetClientCoordinator(ctx, clientID)
@@ -2123,9 +2129,11 @@ func (r *ClientRepository) GetGoalEvaluationBootstrap(ctx context.Context, clien
 	if client.NextEvaluationDate.Valid {
 		nextDate := client.NextEvaluationDate.Time
 		response.NextEvaluationDate = &nextDate
-		today := time.Now().UTC().Truncate(24 * time.Hour)
-		due := nextDate.UTC().Truncate(24 * time.Hour)
-		daysLeft := int32(due.Sub(today).Hours() / 24)
+		businessDate, err := q.GetEvaluationBusinessDate(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get evaluation business date: %w", err)
+		}
+		daysLeft := int32(nextDate.Sub(businessDate.Time).Hours() / 24)
 		response.DaysLeft = &daysLeft
 		priority := "normal"
 		if daysLeft <= 3 {
