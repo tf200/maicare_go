@@ -235,6 +235,8 @@ Blocked submission contract:
 
 ### P1.5 Evaluation Permissions
 
+**Status:** `[x]` Backend policy documented and frontend routes/actions aligned with the evaluation permissions.
+
 Backend permissions currently used:
 
 ```text
@@ -243,13 +245,24 @@ CLIENT.EVALUATION.VIEW
 CLIENT.EVALUATION.CREATE
 ```
 
-- [ ] Document which roles receive evaluation view and create permissions.
-- [ ] Document `assigned` versus `all` permission scopes.
-- [ ] Confirm whether view and mutation need separate update/submit permissions.
-- [ ] Add matching constants to the frontend if missing.
-- [ ] Protect evaluation routes before API calls.
-- [ ] Protect create, update, submit, and history controls with `PermissionGuard`.
-- [ ] Do not use `CARE_COORDINATION.VIEW` as a substitute unless backend policy explicitly maps it.
+Final policy:
+
+- Admin receives evaluation view and create permissions with `all` scope.
+- Coordinator receives evaluation view and create permissions with `assigned` scope.
+- `assigned` permits access only when the employee is assigned to the client; `all` permits access to every client allowed by the organization context.
+- Evaluation routes also require `CLIENT.VIEW` where they expose general client details.
+- `CLIENT.EVALUATION.VIEW` controls bootstrap, goals, listings, history, and detail access.
+- `CLIENT.EVALUATION.CREATE` remains the mutation permission for create, update, and submit.
+- Draft updates and submissions remain restricted to the employee who created the draft.
+- Separate update and submit permissions are deferred until a distinct reviewer or approver workflow is required.
+
+- [x] Document which roles receive evaluation view and create permissions.
+- [x] Document `assigned` versus `all` permission scopes.
+- [x] Confirm whether view and mutation need separate update/submit permissions.
+- [x] Add matching constants to the frontend if missing.
+- [x] Protect evaluation routes before API calls.
+- [x] Protect create, update, submit, and history controls with `PermissionGuard`.
+- [x] Do not use `CARE_COORDINATION.VIEW` as a substitute unless backend policy explicitly maps it.
 
 ### P1.6 Evaluation Statistics
 

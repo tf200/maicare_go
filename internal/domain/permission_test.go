@@ -32,3 +32,35 @@ func TestClientEvaluationPermissionsAreRegistered(t *testing.T) {
 		}
 	}
 }
+
+func TestDefaultRolesIncludeEvaluationPermissionsWithExpectedScopes(t *testing.T) {
+	want := map[string]PermissionScope{
+		"admin":       PermissionScopeAll,
+		"coordinator": PermissionScopeAssigned,
+	}
+
+	for _, role := range DefaultRoleSeeds() {
+		wantScope, ok := want[role.Name]
+		if !ok {
+			continue
+		}
+		if role.Scope != wantScope {
+			t.Errorf("role %s: scope = %s, want %s", role.Name, role.Scope, wantScope)
+		}
+
+		permissions := make(map[PermissionKey]bool, len(role.Permissions))
+		for _, permission := range role.Permissions {
+			permissions[permission] = true
+		}
+		for _, permission := range []PermissionKey{PermClientEvaluationView, PermClientEvaluationCreate} {
+			if !permissions[permission] {
+				t.Errorf("role %s does not include %s", role.Name, permission)
+			}
+		}
+		delete(want, role.Name)
+	}
+
+	for role := range want {
+		t.Errorf("default role %s was not found", role)
+	}
+}
