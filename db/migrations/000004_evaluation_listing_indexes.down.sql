@@ -1,1 +1,0 @@
-DROP INDEX CONCURRENTLY IF EXISTS public.client_goal_evaluations_employee_completed_updated_idx;

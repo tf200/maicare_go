@@ -141,6 +141,7 @@ DROP FUNCTION IF EXISTS get_client_id_from_goal_evaluation(UUID) CASCADE;
 DROP FUNCTION IF EXISTS get_client_id_from_goal(UUID) CASCADE;
 DROP FUNCTION IF EXISTS update_client_evaluation_cadence() CASCADE;
 DROP FUNCTION IF EXISTS enforce_evaluation_submission_window() CASCADE;
+DROP FUNCTION IF EXISTS evaluation_business_date(TIMESTAMPTZ) CASCADE;
 DROP FUNCTION IF EXISTS initialize_client_evaluation_dates() CASCADE;
 DROP FUNCTION IF EXISTS ensure_client_has_active_goals_before_care_status() CASCADE;
 DROP FUNCTION IF EXISTS is_assigned_coordinator(UUID) CASCADE;
