@@ -1251,17 +1251,8 @@ CREATE TABLE client_goal_evaluations (
 
 CREATE INDEX client_goal_evaluations_client_date_idx ON client_goal_evaluations(client_id, evaluation_date DESC);
 CREATE INDEX client_goal_evaluations_client_created_idx ON client_goal_evaluations(client_id, created_at DESC);
-CREATE INDEX client_goal_evaluations_employee_completed_updated_idx
-    ON client_goal_evaluations(created_by_employee_id, updated_at DESC, id)
-    WHERE status = 'completed';
-CREATE INDEX client_goal_evaluations_employee_draft_updated_idx
-    ON client_goal_evaluations(created_by_employee_id, updated_at DESC, id)
-    WHERE status = 'draft';
 CREATE UNIQUE INDEX client_goal_evaluations_unique_draft_client_date_idx
     ON client_goal_evaluations(client_id, evaluation_date)
-    WHERE status = 'draft';
-CREATE INDEX client_goal_evaluations_draft_client_updated_idx
-    ON client_goal_evaluations(client_id, updated_at DESC, id)
     WHERE status = 'draft';
 
 CREATE TABLE client_goal_evaluation_items (
@@ -1315,21 +1306,6 @@ FOR EACH ROW
 EXECUTE FUNCTION initialize_client_evaluation_dates();
 
 -- Function to prevent premature evaluation completion
-CREATE OR REPLACE FUNCTION evaluation_business_date(
-    p_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
-)
-RETURNS DATE
-LANGUAGE sql
-STABLE
-SECURITY DEFINER
-SET search_path = pg_catalog, public
-AS $$
-    SELECT (p_at AT TIME ZONE COALESCE(
-        (SELECT default_timezone FROM public.app_organization_profile WHERE singleton = TRUE),
-        'Europe/Amsterdam'
-    ))::date;
-$$;
-
 CREATE OR REPLACE FUNCTION enforce_evaluation_submission_window()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -1357,11 +1333,11 @@ BEGIN
         END IF;
 
         SELECT next_evaluation_date INTO v_next_eval_date
-        FROM public.client_details
+        FROM client_details
         WHERE id = NEW.client_id;
 
         -- Refuse if more than 14 days before the due date
-        IF public.evaluation_business_date() < (v_next_eval_date - 14) THEN
+        IF CURRENT_DATE < (v_next_eval_date - INTERVAL '14 days') THEN
             RAISE EXCEPTION 'Evaluation cannot be completed more than 14 days before the due date (%)', v_next_eval_date;
         END IF;
     END IF;
@@ -5087,7 +5063,6 @@ GRANT EXECUTE ON FUNCTION public.goal_has_evaluation_history_for_update(UUID, UU
 GRANT EXECUTE ON FUNCTION public.can_mutate_goal_evaluation(UUID, UUID) TO CURRENT_USER;
 GRANT EXECUTE ON FUNCTION public.attachment_file_is_referenced(UUID) TO CURRENT_USER;
 GRANT EXECUTE ON FUNCTION public.can_access_actor_attachment(UUID) TO CURRENT_USER;
-GRANT EXECUTE ON FUNCTION public.evaluation_business_date(TIMESTAMPTZ) TO CURRENT_USER;
 GRANT EXECUTE ON FUNCTION public.begin_invoice_payment_operation(UUID, TEXT, UUID) TO CURRENT_USER;
 GRANT EXECUTE ON FUNCTION public.can_access_invoice_payment_operation(UUID) TO CURRENT_USER;
 GRANT EXECUTE ON FUNCTION public.can_access_invoice_payment_record(UUID, UUID, UUID) TO CURRENT_USER;
@@ -5133,7 +5108,6 @@ REVOKE ALL ON FUNCTION public.goal_has_evaluation_history_for_update(UUID, UUID)
 REVOKE ALL ON FUNCTION public.can_mutate_goal_evaluation(UUID, UUID) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.attachment_file_is_referenced(UUID) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.can_access_actor_attachment(UUID) FROM PUBLIC;
-REVOKE ALL ON FUNCTION public.enforce_evaluation_submission_window() FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.release_deleted_client_document_attachment() FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.begin_invoice_payment_operation(UUID, TEXT, UUID) FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.can_access_invoice_payment_operation(UUID) FROM PUBLIC;
