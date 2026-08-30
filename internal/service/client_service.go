@@ -920,6 +920,7 @@ func validateProgress(value string) error {
 		return nil
 	}
 	allowed := map[string]struct{}{
+		"not_evaluated":    {},
 		"no_progress":      {},
 		"regression":       {},
 		"limited_progress": {},

@@ -364,6 +364,7 @@ func (ns NullClientGoalPriorityEnum) Value() (driver.Value, error) {
 type ClientGoalProgressEnum string
 
 const (
+	ClientGoalProgressEnumNotEvaluated    ClientGoalProgressEnum = "not_evaluated"
 	ClientGoalProgressEnumNoProgress      ClientGoalProgressEnum = "no_progress"
 	ClientGoalProgressEnumRegression      ClientGoalProgressEnum = "regression"
 	ClientGoalProgressEnumLimitedProgress ClientGoalProgressEnum = "limited_progress"

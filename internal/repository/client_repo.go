@@ -1726,7 +1726,7 @@ func (r *ClientRepository) CreateGoalEvaluation(ctx context.Context, clientID uu
 				continue
 			}
 
-			progress := db.ClientGoalProgressEnumNoProgress
+			progress := db.ClientGoalProgressEnumNotEvaluated
 			var notes *string
 			if reqItem, ok := reqItemsByGoal[goal.ID]; ok {
 				parsedProgress, parseErr := parseProgress(reqItem.Progress)
@@ -1968,7 +1968,7 @@ func saveGoalEvaluationDraftItems(ctx context.Context, q *db.Queries, evaluation
 		if _, exists := existingByGoalID[goal.ID]; exists {
 			continue
 		}
-		progress := db.ClientGoalProgressEnumNoProgress
+		progress := db.ClientGoalProgressEnumNotEvaluated
 		var notes *string
 		if requestItem, ok := requestByGoalID[goal.ID]; ok {
 			progress, err = parseProgress(requestItem.Progress)
@@ -2047,7 +2047,7 @@ func ensureAllGoalsEvaluated(ctx context.Context, q *db.Queries, evaluationID uu
 	}
 
 	for _, item := range items {
-		if item.Progress == db.ClientGoalProgressEnumNoProgress {
+		if item.Progress == db.ClientGoalProgressEnumNotEvaluated {
 			return fmt.Errorf("%w: %s", domain.ErrGoalEvaluationIncomplete, item.GoalTitle)
 		}
 	}
@@ -2069,10 +2069,11 @@ func mapDraftItemsByGoalID(items []domain.GoalEvaluationItemParams) (map[uuid.UU
 func parseProgress(value string) (db.ClientGoalProgressEnum, error) {
 	progress := strings.TrimSpace(value)
 	if progress == "" {
-		return db.ClientGoalProgressEnumNoProgress, nil
+		return db.ClientGoalProgressEnumNotEvaluated, nil
 	}
 
 	allowed := map[string]db.ClientGoalProgressEnum{
+		string(db.ClientGoalProgressEnumNotEvaluated):     db.ClientGoalProgressEnumNotEvaluated,
 		string(db.ClientGoalProgressEnumNoProgress):      db.ClientGoalProgressEnumNoProgress,
 		string(db.ClientGoalProgressEnumRegression):      db.ClientGoalProgressEnumRegression,
 		string(db.ClientGoalProgressEnumLimitedProgress): db.ClientGoalProgressEnumLimitedProgress,

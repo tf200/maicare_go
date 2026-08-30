@@ -338,9 +338,9 @@ func TestCreateGoalEvaluationRejectsCompletedCurrentCycle(t *testing.T) {
 	}
 }
 
-func TestBlockedGoalEvaluationSubmissionReturnsSavedDraft(t *testing.T) {
+func TestNotEvaluatedGoalSubmissionReturnsSavedDraft(t *testing.T) {
 	fixture := seedEvaluationLifecycleFixture(t)
-	if _, err := evaluationIntegrationPool.Exec(context.Background(), `UPDATE client_goal_evaluation_items SET progress = 'no_progress', notes = 'saved before submit' WHERE evaluation_id = $1`, fixture.currentEvaluationID); err != nil {
+	if _, err := evaluationIntegrationPool.Exec(context.Background(), `UPDATE client_goal_evaluation_items SET progress = 'not_evaluated', notes = 'saved before submit' WHERE evaluation_id = $1`, fixture.currentEvaluationID); err != nil {
 		t.Fatalf("make evaluation incomplete: %v", err)
 	}
 	repository := &ClientRepository{store: db.NewStore(evaluationIntegrationPool)}
@@ -353,6 +353,22 @@ func TestBlockedGoalEvaluationSubmissionReturnsSavedDraft(t *testing.T) {
 		t.Fatalf("blocked submission result = %#v, want persisted draft", result)
 	}
 	assertClientSchedule(t, fixture.clientID, fixture.currentDate.AddDate(0, 0, -28), fixture.currentDate)
+}
+
+func TestNoProgressGoalEvaluationCanBeSubmitted(t *testing.T) {
+	fixture := seedEvaluationLifecycleFixture(t)
+	if _, err := evaluationIntegrationPool.Exec(context.Background(), `UPDATE client_goal_evaluation_items SET progress = 'no_progress' WHERE evaluation_id = $1`, fixture.currentEvaluationID); err != nil {
+		t.Fatalf("set no-progress assessment: %v", err)
+	}
+	repository := &ClientRepository{store: db.NewStore(evaluationIntegrationPool)}
+
+	result, err := repository.SubmitGoalEvaluationDraft(fixture.ownerContext(), fixture.currentEvaluationID, fixture.owner.employeeID, submitParams(t, fixture.currentEvaluationID))
+	if err != nil {
+		t.Fatalf("SubmitGoalEvaluationDraft() error = %v", err)
+	}
+	if result.Status != string(db.EvaluationStatusEnumCompleted) {
+		t.Fatalf("submit result status=%q, want completed", result.Status)
+	}
 }
 
 func TestTooEarlyGoalEvaluationSubmissionReturnsSavedDraft(t *testing.T) {

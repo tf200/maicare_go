@@ -622,7 +622,7 @@ SELECT
 FROM paged_evaluations e
 LEFT JOIN LATERAL (
     SELECT
-        COUNT(*) FILTER (WHERE i.progress <> 'no_progress') AS filled_goals_count,
+        COUNT(*) FILTER (WHERE i.progress <> 'not_evaluated') AS filled_goals_count,
         COUNT(*) AS total_goals_count
     FROM client_goal_evaluation_items i
     WHERE i.evaluation_id = e.id
@@ -710,7 +710,7 @@ SELECT
 FROM paged_evaluations e
 LEFT JOIN LATERAL (
     SELECT
-        COUNT(*) FILTER (WHERE i.progress <> 'no_progress') AS filled_goals_count,
+        COUNT(*) FILTER (WHERE i.progress <> 'not_evaluated') AS filled_goals_count,
         COUNT(*) AS total_goals_count
     FROM client_goal_evaluation_items i
     WHERE i.evaluation_id = e.id
@@ -783,7 +783,7 @@ LEFT JOIN employee_profile ep
     ON ep.id = e.created_by_employee_id
 LEFT JOIN LATERAL (
     SELECT
-        COUNT(*) FILTER (WHERE i.progress <> 'no_progress') AS filled_goals_count,
+        COUNT(*) FILTER (WHERE i.progress <> 'not_evaluated') AS filled_goals_count,
         COUNT(*) AS total_goals_count
     FROM client_goal_evaluation_items i
     WHERE i.evaluation_id = e.id
@@ -884,7 +884,7 @@ LEFT JOIN LATERAL (
 ) d ON true
 LEFT JOIN LATERAL (
     SELECT
-        COUNT(*) FILTER (WHERE i.progress <> 'no_progress') AS filled_goals_count,
+        COUNT(*) FILTER (WHERE i.progress <> 'not_evaluated') AS filled_goals_count,
         COUNT(*) AS total_goals_count
     FROM client_goal_evaluation_items i
     WHERE i.evaluation_id = d.id
