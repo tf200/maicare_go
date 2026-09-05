@@ -315,6 +315,26 @@ func (q *Queries) DeleteEmergencyContact(ctx context.Context, id uuid.UUID) (Cli
 	return i, err
 }
 
+const deleteMainCoordinator = `-- name: DeleteMainCoordinator :one
+DELETE FROM assigned_employee
+WHERE client_id = $1 AND role = 'coordinator'
+RETURNING id, client_id, employee_id, start_date, role, created_at
+`
+
+func (q *Queries) DeleteMainCoordinator(ctx context.Context, clientID uuid.UUID) (AssignedEmployee, error) {
+	row := q.db.QueryRow(ctx, deleteMainCoordinator, clientID)
+	var i AssignedEmployee
+	err := row.Scan(
+		&i.ID,
+		&i.ClientID,
+		&i.EmployeeID,
+		&i.StartDate,
+		&i.Role,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const getActiveEmployeeForCare = `-- name: GetActiveEmployeeForCare :one
 SELECT id
 FROM employee_profile

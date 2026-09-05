@@ -547,6 +547,7 @@ type ClientRepository interface {
 	DeleteAssignedEmployee(ctx context.Context, assignmentID uuid.UUID) (*DeleteAssignedEmployeeResult, error)
 	UpsertMainCoordinator(ctx context.Context, params AssignMainCoordinatorParams) (*AssignedEmployee, error)
 	GetMainCoordinator(ctx context.Context, clientID uuid.UUID) (*AssignedEmployee, error)
+	DeleteMainCoordinator(ctx context.Context, clientID uuid.UUID) (*DeleteAssignedEmployeeResult, error)
 	GetClientRelatedEmails(ctx context.Context, clientID uuid.UUID) (*ClientRelatedEmails, error)
 	CreateProgressReport(ctx context.Context, params CreateProgressReportParams) (*ProgressReport, error)
 	ListProgressReports(ctx context.Context, params ListProgressReportsParams) (*ListProgressReportsResult, error)
@@ -682,6 +683,7 @@ type ClientService interface {
 	DeleteAssignedEmployee(ctx context.Context, assignmentID uuid.UUID) (*DeleteAssignedEmployeeResult, error)
 	SetMainCoordinator(ctx context.Context, clientID uuid.UUID, params AssignMainCoordinatorParams) (*AssignedEmployee, error)
 	GetMainCoordinator(ctx context.Context, clientID uuid.UUID) (*AssignedEmployee, error)
+	DeleteMainCoordinator(ctx context.Context, clientID uuid.UUID) (*DeleteAssignedEmployeeResult, error)
 	ListInvolvedEmployeeRoles() []InvolvedEmployeeRoleDefinition
 	GetClientRelatedEmails(ctx context.Context, clientID uuid.UUID) (*ClientRelatedEmails, error)
 	CreateProgressReport(ctx context.Context, clientID uuid.UUID, params CreateProgressReportParams) (*ProgressReport, error)

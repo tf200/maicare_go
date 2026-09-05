@@ -217,7 +217,10 @@ DELETE FROM assigned_employee
 WHERE id = $1
 RETURNING *;
 
-
+-- name: DeleteMainCoordinator :one
+DELETE FROM assigned_employee
+WHERE client_id = $1 AND role = 'coordinator'
+RETURNING *;
 
 -- name: GetClientRelatedEmails :many
 SELECT authorized.email::TEXT AS email

@@ -152,6 +152,7 @@ type Querier interface {
 	DeleteInvoice(ctx context.Context, id uuid.UUID) error
 	DeleteInvoiceLinesByInvoice(ctx context.Context, invoiceID uuid.UUID) error
 	DeleteLocation(ctx context.Context, id uuid.UUID) (Location, error)
+	DeleteMainCoordinator(ctx context.Context, clientID uuid.UUID) (AssignedEmployee, error)
 	DeleteOrganisation(ctx context.Context, id uuid.UUID) (Organisation, error)
 	DeletePayment(ctx context.Context, arg DeletePaymentParams) (InvoicePaymentHistory, error)
 	DeleteProgressReport(ctx context.Context, id uuid.UUID) error

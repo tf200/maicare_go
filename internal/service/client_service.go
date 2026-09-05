@@ -1588,6 +1588,19 @@ func (s *ClientService) GetMainCoordinator(ctx context.Context, clientID uuid.UU
 	return result, nil
 }
 
+func (s *ClientService) DeleteMainCoordinator(ctx context.Context, clientID uuid.UUID) (*domain.DeleteAssignedEmployeeResult, error) {
+	result, err := s.repository.DeleteMainCoordinator(ctx, clientID)
+	if err != nil {
+		if s.logger != nil {
+			s.logger.LogError(ctx, "ClientService.DeleteMainCoordinator", "failed to delete main coordinator", err,
+				zap.String("client_id", clientID.String()),
+			)
+		}
+		return nil, err
+	}
+	return result, nil
+}
+
 func (s *ClientService) ListInvolvedEmployeeRoles() []domain.InvolvedEmployeeRoleDefinition {
 	return domain.GetAllInvolvedEmployeeRoles()
 }

@@ -3373,6 +3373,24 @@ func (r *ClientRepository) GetMainCoordinator(ctx context.Context, clientID uuid
 	return toDomainAssignedEmployeeFromCoordinatorRow(row), nil
 }
 
+func (r *ClientRepository) DeleteMainCoordinator(ctx context.Context, clientID uuid.UUID) (*domain.DeleteAssignedEmployeeResult, error) {
+	var deleted db.AssignedEmployee
+
+	err := r.store.ExecActorTx(ctx, func(q *db.Queries) error {
+		var err error
+		deleted, err = q.DeleteMainCoordinator(ctx, clientID)
+		return err
+	})
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, domain.ErrMainCoordinatorNotFound
+		}
+		return nil, err
+	}
+
+	return &domain.DeleteAssignedEmployeeResult{ID: deleted.ID}, nil
+}
+
 // =====================
 // Network - Related Emails
 // =====================

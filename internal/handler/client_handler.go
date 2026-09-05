@@ -106,6 +106,7 @@ func RegisterClientRoutes(
 		clientsGroup.DELETE("/:id/emergency_contacts/:contact_id", auth, requirePermission("CLIENT.EMERGENCY_CONTACT.DELETE"), handler.DeleteClientEmergencyContact)
 		clientsGroup.PUT("/:id/coordinator", auth, requirePermission("CLIENT.INVOLVED_EMPLOYEE.CREATE"), requirePermission("CLIENT.INVOLVED_EMPLOYEE.UPDATE"), handler.SetMainCoordinator)
 		clientsGroup.GET("/:id/coordinator", auth, requirePermission("CLIENT.INVOLVED_EMPLOYEE.VIEW"), handler.GetMainCoordinator)
+		clientsGroup.DELETE("/:id/coordinator", auth, requirePermission("CLIENT.INVOLVED_EMPLOYEE.DELETE"), handler.DeleteMainCoordinator)
 		clientsGroup.POST("/:id/involved_employees", auth, requirePermission("CLIENT.INVOLVED_EMPLOYEE.CREATE"), handler.CreateAssignedEmployee)
 		clientsGroup.GET("/:id/involved_employees", auth, requirePermission("CLIENT.INVOLVED_EMPLOYEE.VIEW"), handler.ListAssignedEmployees)
 		clientsGroup.GET("/:id/involved_employees/:assign_id", auth, requirePermission("CLIENT.INVOLVED_EMPLOYEE.VIEW"), handler.GetAssignedEmployee)
@@ -2100,6 +2101,34 @@ func (h *ClientHandler) GetMainCoordinator(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, httpapi.OK(toAssignedEmployeeResponse(*result), "Main coordinator fetched successfully"))
+}
+
+// DeleteMainCoordinator unassigns the main coordinator for a client
+// @Summary Unassign the main coordinator for a client
+// @Tags client_network
+// @Produce json
+// @Param id path uuid true "Client ID"
+// @Success 200 {object} httpapi.Envelope[deleteAssignedEmployeeResponse]
+// @Failure 400,404,500 {object} httpapi.Envelope[any]
+// @Router /clients/{id}/coordinator [delete]
+func (h *ClientHandler) DeleteMainCoordinator(ctx *gin.Context) {
+	clientID, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, httpapi.Fail("invalid client ID", ""))
+		return
+	}
+
+	result, err := h.service.DeleteMainCoordinator(ctx.Request.Context(), clientID)
+	if err != nil {
+		if errors.Is(err, domain.ErrMainCoordinatorNotFound) {
+			ctx.JSON(http.StatusNotFound, httpapi.Fail("main coordinator not found for client", ""))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, httpapi.Fail("failed to delete main coordinator", ""))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, httpapi.OK(deleteAssignedEmployeeResponse{ID: result.ID}, "Main coordinator unassigned successfully"))
 }
 
 // CreateAssignedEmployee assigns an employee to a client
