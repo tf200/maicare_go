@@ -245,7 +245,7 @@ type Querier interface {
 	GetLatestDraftEvaluationByClient(ctx context.Context, clientID uuid.UUID) (GetLatestDraftEvaluationByClientRow, error)
 	GetLeaveRequestStats(ctx context.Context) (GetLeaveRequestStatsRow, error)
 	GetLocation(ctx context.Context, id uuid.UUID) (Location, error)
-	GetMainCoordinator(ctx context.Context, clientID uuid.UUID) (AssignedEmployee, error)
+	GetMainCoordinator(ctx context.Context, clientID uuid.UUID) (GetMainCoordinatorRow, error)
 	GetMissingClientDocuments(ctx context.Context, clientID uuid.UUID) ([]string, error)
 	GetMyLeaveRequestStats(ctx context.Context, employeeID uuid.UUID) (GetMyLeaveRequestStatsRow, error)
 	GetNextActiveClientGoalSortOrder(ctx context.Context, clientID uuid.UUID) (int32, error)

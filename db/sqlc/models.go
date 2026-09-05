@@ -494,6 +494,53 @@ func (ns NullClientGoalStatusEnum) Value() (driver.Value, error) {
 	return string(ns.ClientGoalStatusEnum), nil
 }
 
+type ClientInvolvedRoleEnum string
+
+const (
+	ClientInvolvedRoleEnumCoordinator         ClientInvolvedRoleEnum = "coordinator"
+	ClientInvolvedRoleEnumPrimaryCounselor    ClientInvolvedRoleEnum = "primary_counselor"
+	ClientInvolvedRoleEnumSecondaryCounselor  ClientInvolvedRoleEnum = "secondary_counselor"
+	ClientInvolvedRoleEnumBehavioralScientist ClientInvolvedRoleEnum = "behavioral_scientist"
+	ClientInvolvedRoleEnumCaseManager         ClientInvolvedRoleEnum = "case_manager"
+	ClientInvolvedRoleEnumSpecialist          ClientInvolvedRoleEnum = "specialist"
+	ClientInvolvedRoleEnumOther               ClientInvolvedRoleEnum = "other"
+)
+
+func (e *ClientInvolvedRoleEnum) Scan(src interface{}) error {
+	switch s := src.(type) {
+	case []byte:
+		*e = ClientInvolvedRoleEnum(s)
+	case string:
+		*e = ClientInvolvedRoleEnum(s)
+	default:
+		return fmt.Errorf("unsupported scan type for ClientInvolvedRoleEnum: %T", src)
+	}
+	return nil
+}
+
+type NullClientInvolvedRoleEnum struct {
+	ClientInvolvedRoleEnum ClientInvolvedRoleEnum `json:"client_involved_role_enum"`
+	Valid                  bool                   `json:"valid"` // Valid is true if ClientInvolvedRoleEnum is not NULL
+}
+
+// Scan implements the Scanner interface.
+func (ns *NullClientInvolvedRoleEnum) Scan(value interface{}) error {
+	if value == nil {
+		ns.ClientInvolvedRoleEnum, ns.Valid = "", false
+		return nil
+	}
+	ns.Valid = true
+	return ns.ClientInvolvedRoleEnum.Scan(value)
+}
+
+// Value implements the driver Valuer interface.
+func (ns NullClientInvolvedRoleEnum) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return string(ns.ClientInvolvedRoleEnum), nil
+}
+
 type ClientLivingSituationEnum string
 
 const (
@@ -3114,12 +3161,12 @@ type AppointmentCard struct {
 }
 
 type AssignedEmployee struct {
-	ID         uuid.UUID          `json:"id"`
-	ClientID   uuid.UUID          `json:"client_id"`
-	EmployeeID uuid.UUID          `json:"employee_id"`
-	StartDate  pgtype.Date        `json:"start_date"`
-	Role       string             `json:"role"`
-	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+	ID         uuid.UUID              `json:"id"`
+	ClientID   uuid.UUID              `json:"client_id"`
+	EmployeeID uuid.UUID              `json:"employee_id"`
+	StartDate  pgtype.Date            `json:"start_date"`
+	Role       ClientInvolvedRoleEnum `json:"role"`
+	CreatedAt  pgtype.Timestamptz     `json:"created_at"`
 }
 
 type Assignment struct {

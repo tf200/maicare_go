@@ -87,6 +87,8 @@ WITH inserted_assignment AS (
 SELECT
     ia.*,  -- Select all columns from the inserted_assignment CTE
     ep.user_id, -- Select the user_id from the employee_profile table
+    ep.first_name AS employee_first_name,
+    ep.last_name AS employee_last_name,
     cl.first_name AS client_first_name,
     cl.last_name AS client_last_name,
     l.name AS client_location_name
@@ -120,6 +122,8 @@ WITH upserted_assignment AS (
 SELECT
     ua.*,
     ep.user_id,
+    ep.first_name AS employee_first_name,
+    ep.last_name AS employee_last_name,
     cl.first_name AS client_first_name,
     cl.last_name AS client_last_name,
     l.name AS client_location_name
@@ -129,10 +133,15 @@ JOIN client_details cl ON ua.client_id = cl.id
 LEFT JOIN location l ON cl.location_id = l.id;
 
 -- name: GetMainCoordinator :one
-SELECT *
-FROM assigned_employee
-WHERE client_id = $1
-  AND role = 'coordinator'
+SELECT
+    ae.*,
+    ep.user_id,
+    ep.first_name AS employee_first_name,
+    ep.last_name AS employee_last_name
+FROM assigned_employee ae
+JOIN employee_profile ep ON ae.employee_id = ep.id
+WHERE ae.client_id = $1
+  AND ae.role = 'coordinator'
 LIMIT 1;
 
 -- name: GetActiveEmployeeForCare :one

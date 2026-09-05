@@ -41,6 +41,24 @@ definitions:
     - IntakeParticipantsEnumParentsGuardians
     - IntakeParticipantsEnumCareCoordinator
     - IntakeParticipantsEnumOther
+  domain.ClientInvolvedRole:
+    enum:
+    - coordinator
+    - primary_counselor
+    - secondary_counselor
+    - behavioral_scientist
+    - case_manager
+    - specialist
+    - other
+    type: string
+    x-enum-varnames:
+    - ClientInvolvedRoleCoordinator
+    - ClientInvolvedRolePrimaryCounselor
+    - ClientInvolvedRoleSecondaryCounselor
+    - ClientInvolvedRoleBehavioralScientist
+    - ClientInvolvedRoleCaseManager
+    - ClientInvolvedRoleSpecialist
+    - ClientInvolvedRoleOther
   domain.CreateEventRequest:
     properties:
       attendee_client_ids:
@@ -595,7 +613,7 @@ definitions:
       id:
         type: string
       role:
-        type: string
+        $ref: '#/definitions/domain.ClientInvolvedRole'
       start_date:
         type: string
     type: object
@@ -1334,7 +1352,16 @@ definitions:
       employee_id:
         type: string
       role:
-        type: string
+        allOf:
+        - $ref: '#/definitions/domain.ClientInvolvedRole'
+        enum:
+        - coordinator
+        - primary_counselor
+        - secondary_counselor
+        - behavioral_scientist
+        - case_manager
+        - specialist
+        - other
       start_date:
         type: string
     required:
@@ -2759,6 +2786,15 @@ definitions:
       topic_name:
         type: string
     type: object
+  handler.involvedEmployeeRoleResponse:
+    properties:
+      description:
+        type: string
+      label:
+        type: string
+      role:
+        $ref: '#/definitions/domain.ClientInvolvedRole'
+    type: object
   handler.listAllIncidentsResponse:
     properties:
       client_bsn:
@@ -3296,6 +3332,15 @@ definitions:
       updated_at:
         type: string
     type: object
+  handler.setClientCoordinatorRequest:
+    properties:
+      employee_id:
+        type: string
+      start_date:
+        type: string
+    required:
+    - employee_id
+    type: object
   handler.templateItemResponse:
     properties:
       description:
@@ -3337,7 +3382,16 @@ definitions:
       employee_id:
         type: string
       role:
-        type: string
+        allOf:
+        - $ref: '#/definitions/domain.ClientInvolvedRole'
+        enum:
+        - coordinator
+        - primary_counselor
+        - secondary_counselor
+        - behavioral_scientist
+        - case_manager
+        - specialist
+        - other
       start_date:
         type: string
     type: object
@@ -4015,6 +4069,19 @@ definitions:
       data:
         items:
           $ref: '#/definitions/handler.contractTypeResponse'
+        type: array
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  httpapi.Envelope-array_handler_involvedEmployeeRoleResponse:
+    properties:
+      code:
+        type: string
+      data:
+        items:
+          $ref: '#/definitions/handler.involvedEmployeeRoleResponse'
         type: array
       message:
         type: string
@@ -5626,6 +5693,62 @@ paths:
       summary: List contracts for a client
       tags:
       - contracts
+  /clients/{id}/coordinator:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpapi.Envelope-handler_assignedEmployeeResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpapi.Envelope-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httpapi.Envelope-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpapi.Envelope-any'
+      summary: Get the main coordinator for a client
+      tags:
+      - client_network
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Coordinator assignment data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.setClientCoordinatorRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpapi.Envelope-handler_assignedEmployeeResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httpapi.Envelope-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/httpapi.Envelope-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpapi.Envelope-any'
+      summary: Assign or update the main coordinator for a client
+      tags:
+      - client_network
   /clients/{id}/documents:
     get:
       parameters:
@@ -6973,6 +7096,18 @@ paths:
       summary: Get in-care statistics
       tags:
       - clients
+  /clients/involved_employees/roles:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpapi.Envelope-array_handler_involvedEmployeeRoleResponse'
+      summary: List available care roles for involved employees
+      tags:
+      - client_network
   /clients/location_transfer:
     get:
       parameters:

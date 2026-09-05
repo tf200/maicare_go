@@ -1523,6 +1523,75 @@ func (s *ClientService) DeleteAssignedEmployee(ctx context.Context, assignmentID
 	return result, nil
 }
 
+func (s *ClientService) SetMainCoordinator(ctx context.Context, clientID uuid.UUID, params domain.AssignMainCoordinatorParams) (*domain.AssignedEmployee, error) {
+	params.ClientID = clientID
+	if params.StartDate.IsZero() {
+		params.StartDate = time.Now().UTC().Truncate(24 * time.Hour)
+	}
+
+	result, err := s.repository.UpsertMainCoordinator(ctx, params)
+	if err != nil {
+		if s.logger != nil {
+			s.logger.LogError(ctx, "ClientService.SetMainCoordinator", "failed to set main coordinator", err,
+				zap.String("client_id", clientID.String()),
+				zap.String("employee_id", params.EmployeeID.String()),
+			)
+		}
+		return nil, err
+	}
+
+	if s.taskQueue != nil && result.UserID != uuid.Nil {
+		err = s.taskQueue.EnqueueNotificationTask(ctx, domain.NotificationTaskPayload{
+			RecipientUserIDs: []uuid.UUID{result.UserID},
+			Type:             "new_client_assignment",
+			Data: domain.NotificationTaskData{
+				NewClientAssignment: &domain.NewClientAssignmentTaskData{
+					ClientID:        result.ClientID,
+					ClientFirstName: result.ClientFirstName,
+					ClientLastName:  result.ClientLastName,
+					ClientLocation:  result.ClientLocationName,
+				},
+			},
+			CreatedAt: time.Now(),
+			Message:   "You have been assigned as care coordinator to a client",
+		}, nil)
+		if err != nil {
+			if s.logger != nil {
+				s.logger.LogError(ctx, "ClientService.SetMainCoordinator", "failed to enqueue notification task", err,
+					zap.String("client_id", clientID.String()),
+					zap.String("assignment_id", result.ID.String()),
+				)
+			}
+		}
+	}
+
+	if s.logger != nil {
+		s.logger.LogInfo(ctx, "ClientService.SetMainCoordinator", "main coordinator set successfully",
+			zap.String("client_id", clientID.String()),
+			zap.String("employee_id", params.EmployeeID.String()),
+		)
+	}
+
+	return result, nil
+}
+
+func (s *ClientService) GetMainCoordinator(ctx context.Context, clientID uuid.UUID) (*domain.AssignedEmployee, error) {
+	result, err := s.repository.GetMainCoordinator(ctx, clientID)
+	if err != nil {
+		if s.logger != nil {
+			s.logger.LogError(ctx, "ClientService.GetMainCoordinator", "failed to get main coordinator", err,
+				zap.String("client_id", clientID.String()),
+			)
+		}
+		return nil, err
+	}
+	return result, nil
+}
+
+func (s *ClientService) ListInvolvedEmployeeRoles() []domain.InvolvedEmployeeRoleDefinition {
+	return domain.GetAllInvolvedEmployeeRoles()
+}
+
 // =====================
 // Network - Related Emails
 // =====================

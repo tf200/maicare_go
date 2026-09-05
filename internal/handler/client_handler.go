@@ -30,6 +30,7 @@ func RegisterClientRoutes(
 		clientsGroup.GET("/counts", auth, requirePermission("CLIENT.VIEW"), handler.GetClientsCount)
 		clientsGroup.GET("/incare/stats", auth, requirePermission("CLIENT.VIEW"), handler.GetInCareStats)
 		clientsGroup.GET("/status-counts", auth, requirePermission("CLIENT.VIEW"), handler.GetClientStatusCounts)
+		clientsGroup.GET("/involved_employees/roles", auth, requirePermission("CLIENT.INVOLVED_EMPLOYEE.VIEW"), handler.ListInvolvedEmployeeRoles)
 		clientsGroup.GET("/:id", auth, requirePermission("CLIENT.VIEW"), handler.GetClient)
 		clientsGroup.PUT("/:id", auth, requirePermission("CLIENT.UPDATE"), handler.UpdateClient)
 		clientsGroup.GET("/:id/addresses", auth, requirePermission("CLIENT.VIEW"), handler.GetClientAddresses)
@@ -102,7 +103,8 @@ func RegisterClientRoutes(
 		clientsGroup.GET("/:id/emergency_contacts", auth, requirePermission("CLIENT.EMERGENCY_CONTACT.VIEW"), handler.ListClientEmergencyContacts)
 		clientsGroup.GET("/:id/emergency_contacts/:contact_id", auth, requirePermission("CLIENT.EMERGENCY_CONTACT.VIEW"), handler.GetClientEmergencyContact)
 		clientsGroup.PUT("/:id/emergency_contacts/:contact_id", auth, requirePermission("CLIENT.EMERGENCY_CONTACT.UPDATE"), handler.UpdateClientEmergencyContact)
-		clientsGroup.DELETE("/:id/emergency_contacts/:contact_id", auth, requirePermission("CLIENT.EMERGENCY_CONTACT.DELETE"), handler.DeleteClientEmergencyContact)
+		clientsGroup.PUT("/:id/coordinator", auth, requirePermission("CLIENT.INVOLVED_EMPLOYEE.CREATE"), requirePermission("CLIENT.INVOLVED_EMPLOYEE.UPDATE"), handler.SetMainCoordinator)
+		clientsGroup.GET("/:id/coordinator", auth, requirePermission("CLIENT.INVOLVED_EMPLOYEE.VIEW"), handler.GetMainCoordinator)
 		clientsGroup.POST("/:id/involved_employees", auth, requirePermission("CLIENT.INVOLVED_EMPLOYEE.CREATE"), handler.CreateAssignedEmployee)
 		clientsGroup.GET("/:id/involved_employees", auth, requirePermission("CLIENT.INVOLVED_EMPLOYEE.VIEW"), handler.ListAssignedEmployees)
 		clientsGroup.GET("/:id/involved_employees/:assign_id", auth, requirePermission("CLIENT.INVOLVED_EMPLOYEE.VIEW"), handler.GetAssignedEmployee)
@@ -2023,6 +2025,73 @@ func (h *ClientHandler) DeleteClientEmergencyContact(ctx *gin.Context) {
 // =====================
 // Network - Assigned Employees
 // =====================
+
+// ListInvolvedEmployeeRoles lists available care roles for involved employees
+// @Summary List available care roles for involved employees
+// @Tags client_network
+// @Produce json
+// @Success 200 {object} httpapi.Envelope[[]involvedEmployeeRoleResponse]
+// @Router /clients/involved_employees/roles [get]
+func (h *ClientHandler) ListInvolvedEmployeeRoles(ctx *gin.Context) {
+	roles := h.service.ListInvolvedEmployeeRoles()
+	ctx.JSON(http.StatusOK, httpapi.OK(toInvolvedEmployeeRoleResponses(roles), "Involved employee roles fetched successfully"))
+}
+
+// SetMainCoordinator assigns or updates the main coordinator for a client
+// @Summary Assign or update the main coordinator for a client
+// @Tags client_network
+// @Accept json
+// @Produce json
+// @Param id path uuid true "Client ID"
+// @Param request body setClientCoordinatorRequest true "Coordinator assignment data"
+// @Success 200 {object} httpapi.Envelope[assignedEmployeeResponse]
+// @Failure 400,404,500 {object} httpapi.Envelope[any]
+// @Router /clients/{id}/coordinator [put]
+func (h *ClientHandler) SetMainCoordinator(ctx *gin.Context) {
+	clientID, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, httpapi.Fail("invalid client ID", ""))
+		return
+	}
+
+	var req setClientCoordinatorRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, httpapi.Fail("invalid request body", ""))
+		return
+	}
+
+	result, err := h.service.SetMainCoordinator(ctx.Request.Context(), clientID, toDomainSetCoordinatorParams(req, clientID))
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, httpapi.Fail("failed to set main coordinator", ""))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, httpapi.OK(toAssignedEmployeeResponse(*result), "Main coordinator assigned successfully"))
+}
+
+// GetMainCoordinator gets the main coordinator for a client
+// @Summary Get the main coordinator for a client
+// @Tags client_network
+// @Produce json
+// @Param id path uuid true "Client ID"
+// @Success 200 {object} httpapi.Envelope[assignedEmployeeResponse]
+// @Failure 400,404,500 {object} httpapi.Envelope[any]
+// @Router /clients/{id}/coordinator [get]
+func (h *ClientHandler) GetMainCoordinator(ctx *gin.Context) {
+	clientID, err := uuid.Parse(ctx.Param("id"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, httpapi.Fail("invalid client ID", ""))
+		return
+	}
+
+	result, err := h.service.GetMainCoordinator(ctx.Request.Context(), clientID)
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, httpapi.Fail("main coordinator not found for client", ""))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, httpapi.OK(toAssignedEmployeeResponse(*result), "Main coordinator fetched successfully"))
+}
 
 // CreateAssignedEmployee assigns an employee to a client
 // @Summary Assign an employee to a client

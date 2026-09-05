@@ -3242,7 +3242,7 @@ func (r *ClientRepository) CreateAssignedEmployee(ctx context.Context, params do
 			ClientID:   params.ClientID,
 			EmployeeID: params.EmployeeID,
 			StartDate:  conv.PgDateFromTime(params.StartDate),
-			Role:       params.Role,
+			Role:       db.ClientInvolvedRoleEnum(params.Role),
 		})
 		return err
 	})
@@ -3296,13 +3296,19 @@ func (r *ClientRepository) GetAssignedEmployee(ctx context.Context, assignmentID
 func (r *ClientRepository) UpdateAssignedEmployee(ctx context.Context, params domain.UpdateAssignedEmployeeParams) (*domain.AssignedEmployee, error) {
 	var row db.AssignedEmployee
 
+	var dbRole *db.ClientInvolvedRoleEnum
+	if params.Role != nil {
+		r := db.ClientInvolvedRoleEnum(*params.Role)
+		dbRole = &r
+	}
+
 	err := r.store.ExecActorTx(ctx, func(q *db.Queries) error {
 		var err error
 		row, err = q.UpdateAssignedEmployee(ctx, db.UpdateAssignedEmployeeParams{
 			ID:         params.ID,
 			EmployeeID: params.EmployeeID,
 			StartDate:  conv.PgDateFromTime(params.StartDate),
-			Role:       params.Role,
+			Role:       dbRole,
 		})
 		return err
 	})
@@ -3326,6 +3332,39 @@ func (r *ClientRepository) DeleteAssignedEmployee(ctx context.Context, assignmen
 	}
 
 	return &domain.DeleteAssignedEmployeeResult{ID: deleted.ID}, nil
+}
+
+func (r *ClientRepository) UpsertMainCoordinator(ctx context.Context, params domain.AssignMainCoordinatorParams) (*domain.AssignedEmployee, error) {
+	var row db.UpsertMainCoordinatorRow
+
+	err := r.store.ExecActorTx(ctx, func(q *db.Queries) error {
+		if _, err := q.GetActiveEmployeeForCare(ctx, params.EmployeeID); err != nil {
+			return fmt.Errorf("selected coordinator is not available: %w", err)
+		}
+
+		var err error
+		row, err = q.UpsertMainCoordinator(ctx, db.UpsertMainCoordinatorParams{
+			ClientID:   params.ClientID,
+			EmployeeID: params.EmployeeID,
+			StartDate:  conv.PgDateFromTime(params.StartDate),
+		})
+		return err
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return toDomainAssignedEmployeeFromUpsertRow(row), nil
+}
+
+func (r *ClientRepository) GetMainCoordinator(ctx context.Context, clientID uuid.UUID) (*domain.AssignedEmployee, error) {
+	row, err := actorQuery(ctx, r.store, func(q *db.Queries) (db.GetMainCoordinatorRow, error) {
+		return q.GetMainCoordinator(ctx, clientID)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return toDomainAssignedEmployeeFromCoordinatorRow(row), nil
 }
 
 // =====================
@@ -3418,28 +3457,13 @@ func (r *ClientRepository) PutClientInCare(ctx context.Context, clientID uuid.UU
 			return fmt.Errorf("selected coordinator is not available: %w", err)
 		}
 
-		coordinatorAssignment, err := q.GetMainCoordinator(ctx, clientID)
-		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
-			return fmt.Errorf("failed to get main coordinator: %w", err)
-		}
-		if errors.Is(err, pgx.ErrNoRows) {
-			coordinatorAssignment, err = q.CreateMainCoordinator(ctx, db.CreateMainCoordinatorParams{
-				ClientID:   clientID,
-				EmployeeID: params.CoordinatorEmployeeID,
-				StartDate:  pgtype.Date{Time: careStartDay, Valid: true},
-			})
-			if err != nil {
-				return fmt.Errorf("failed to assign main coordinator: %w", err)
-			}
-		} else if coordinatorAssignment.EmployeeID != params.CoordinatorEmployeeID {
-			coordinatorAssignment, err = q.UpdateAssignedEmployee(ctx, db.UpdateAssignedEmployeeParams{
-				ID:         coordinatorAssignment.ID,
-				EmployeeID: &params.CoordinatorEmployeeID,
-				StartDate:  pgtype.Date{Time: careStartDay, Valid: true},
-			})
-			if err != nil {
-				return fmt.Errorf("failed to update main coordinator: %w", err)
-			}
+		coordinatorAssignment, err := q.UpsertMainCoordinator(ctx, db.UpsertMainCoordinatorParams{
+			ClientID:   clientID,
+			EmployeeID: params.CoordinatorEmployeeID,
+			StartDate:  pgtype.Date{Time: careStartDay, Valid: true},
+		})
+		if err != nil {
+			return fmt.Errorf("failed to assign main coordinator: %w", err)
 		}
 
 		placedInCareAt := pgtype.Timestamptz{Valid: false}
@@ -3638,14 +3662,48 @@ func toDomainAssignedEmployeeFromAssignRow(row db.AssignEmployeeRow) *domain.Ass
 		ClientID:           row.ClientID,
 		EmployeeID:         row.EmployeeID,
 		StartDate:          conv.TimeFromPgDate(row.StartDate),
-		Role:               row.Role,
+		Role:               domain.ClientInvolvedRole(row.Role),
 		CreatedAt:          conv.TimeFromPgTimestamptz(row.CreatedAt),
-		EmployeeFirstName:  "",
-		EmployeeLastName:   "",
+		EmployeeFirstName:  row.EmployeeFirstName,
+		EmployeeLastName:   row.EmployeeLastName,
 		UserID:             row.UserID,
 		ClientFirstName:    row.ClientFirstName,
 		ClientLastName:     row.ClientLastName,
 		ClientLocationName: row.ClientLocationName,
+	}
+}
+
+func toDomainAssignedEmployeeFromUpsertRow(row db.UpsertMainCoordinatorRow) *domain.AssignedEmployee {
+	return &domain.AssignedEmployee{
+		ID:                 row.ID,
+		ClientID:           row.ClientID,
+		EmployeeID:         row.EmployeeID,
+		StartDate:          conv.TimeFromPgDate(row.StartDate),
+		Role:               domain.ClientInvolvedRole(row.Role),
+		CreatedAt:          conv.TimeFromPgTimestamptz(row.CreatedAt),
+		EmployeeFirstName:  row.EmployeeFirstName,
+		EmployeeLastName:   row.EmployeeLastName,
+		UserID:             row.UserID,
+		ClientFirstName:    row.ClientFirstName,
+		ClientLastName:     row.ClientLastName,
+		ClientLocationName: row.ClientLocationName,
+	}
+}
+
+func toDomainAssignedEmployeeFromCoordinatorRow(row db.GetMainCoordinatorRow) *domain.AssignedEmployee {
+	return &domain.AssignedEmployee{
+		ID:                 row.ID,
+		ClientID:           row.ClientID,
+		EmployeeID:         row.EmployeeID,
+		StartDate:          conv.TimeFromPgDate(row.StartDate),
+		Role:               domain.ClientInvolvedRole(row.Role),
+		CreatedAt:          conv.TimeFromPgTimestamptz(row.CreatedAt),
+		EmployeeFirstName:  row.EmployeeFirstName,
+		EmployeeLastName:   row.EmployeeLastName,
+		UserID:             row.UserID,
+		ClientFirstName:    "",
+		ClientLastName:     "",
+		ClientLocationName: nil,
 	}
 }
 
@@ -3655,7 +3713,7 @@ func toDomainAssignedEmployeeFromListRow(row db.ListAssignedEmployeesRow) domain
 		ClientID:           row.ClientID,
 		EmployeeID:         row.EmployeeID,
 		StartDate:          conv.TimeFromPgDate(row.StartDate),
-		Role:               row.Role,
+		Role:               domain.ClientInvolvedRole(row.Role),
 		CreatedAt:          conv.TimeFromPgTimestamptz(row.CreatedAt),
 		EmployeeFirstName:  row.EmployeeFirstName,
 		EmployeeLastName:   row.EmployeeLastName,
@@ -3672,7 +3730,7 @@ func toDomainAssignedEmployeeFromGetRow(row db.GetAssignedEmployeeRow) *domain.A
 		ClientID:           row.ClientID,
 		EmployeeID:         row.EmployeeID,
 		StartDate:          conv.TimeFromPgDate(row.StartDate),
-		Role:               row.Role,
+		Role:               domain.ClientInvolvedRole(row.Role),
 		CreatedAt:          conv.TimeFromPgTimestamptz(row.CreatedAt),
 		EmployeeFirstName:  row.EmployeeFirstName,
 		EmployeeLastName:   row.EmployeeLastName,
@@ -3689,7 +3747,7 @@ func toDomainAssignedEmployee(d db.AssignedEmployee) *domain.AssignedEmployee {
 		ClientID:           d.ClientID,
 		EmployeeID:         d.EmployeeID,
 		StartDate:          conv.TimeFromPgDate(d.StartDate),
-		Role:               d.Role,
+		Role:               domain.ClientInvolvedRole(d.Role),
 		CreatedAt:          conv.TimeFromPgTimestamptz(d.CreatedAt),
 		EmployeeFirstName:  "",
 		EmployeeLastName:   "",

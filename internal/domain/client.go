@@ -543,6 +543,8 @@ type ClientRepository interface {
 	GetAssignedEmployee(ctx context.Context, assignmentID uuid.UUID) (*AssignedEmployee, error)
 	UpdateAssignedEmployee(ctx context.Context, params UpdateAssignedEmployeeParams) (*AssignedEmployee, error)
 	DeleteAssignedEmployee(ctx context.Context, assignmentID uuid.UUID) (*DeleteAssignedEmployeeResult, error)
+	UpsertMainCoordinator(ctx context.Context, params AssignMainCoordinatorParams) (*AssignedEmployee, error)
+	GetMainCoordinator(ctx context.Context, clientID uuid.UUID) (*AssignedEmployee, error)
 	GetClientRelatedEmails(ctx context.Context, clientID uuid.UUID) (*ClientRelatedEmails, error)
 	CreateProgressReport(ctx context.Context, params CreateProgressReportParams) (*ProgressReport, error)
 	ListProgressReports(ctx context.Context, params ListProgressReportsParams) (*ListProgressReportsResult, error)
@@ -676,6 +678,9 @@ type ClientService interface {
 	GetAssignedEmployee(ctx context.Context, assignmentID uuid.UUID) (*AssignedEmployee, error)
 	UpdateAssignedEmployee(ctx context.Context, assignmentID uuid.UUID, params UpdateAssignedEmployeeParams) (*AssignedEmployee, error)
 	DeleteAssignedEmployee(ctx context.Context, assignmentID uuid.UUID) (*DeleteAssignedEmployeeResult, error)
+	SetMainCoordinator(ctx context.Context, clientID uuid.UUID, params AssignMainCoordinatorParams) (*AssignedEmployee, error)
+	GetMainCoordinator(ctx context.Context, clientID uuid.UUID) (*AssignedEmployee, error)
+	ListInvolvedEmployeeRoles() []InvolvedEmployeeRoleDefinition
 	GetClientRelatedEmails(ctx context.Context, clientID uuid.UUID) (*ClientRelatedEmails, error)
 	CreateProgressReport(ctx context.Context, clientID uuid.UUID, params CreateProgressReportParams) (*ProgressReport, error)
 	ListProgressReports(ctx context.Context, params ListProgressReportsParams) (*ListProgressReportsResult, error)
@@ -1283,33 +1288,97 @@ type DeleteClientEmergencyContactResult struct {
 // Network - Assigned Employees
 // =====================
 
+type ClientInvolvedRole string
+
+const (
+	ClientInvolvedRoleCoordinator         ClientInvolvedRole = "coordinator"
+	ClientInvolvedRolePrimaryCounselor    ClientInvolvedRole = "primary_counselor"
+	ClientInvolvedRoleSecondaryCounselor  ClientInvolvedRole = "secondary_counselor"
+	ClientInvolvedRoleBehavioralScientist ClientInvolvedRole = "behavioral_scientist"
+	ClientInvolvedRoleCaseManager         ClientInvolvedRole = "case_manager"
+	ClientInvolvedRoleSpecialist          ClientInvolvedRole = "specialist"
+	ClientInvolvedRoleOther               ClientInvolvedRole = "other"
+)
+
+type InvolvedEmployeeRoleDefinition struct {
+	Role        ClientInvolvedRole `json:"role"`
+	Label       string             `json:"label"`
+	Description string             `json:"description"`
+}
+
+func GetAllInvolvedEmployeeRoles() []InvolvedEmployeeRoleDefinition {
+	return []InvolvedEmployeeRoleDefinition{
+		{
+			Role:        ClientInvolvedRoleCoordinator,
+			Label:       "Zorgcoördinator",
+			Description: "Hoofdverantwoordelijke zorgcoördinator voor de cliënt",
+		},
+		{
+			Role:        ClientInvolvedRolePrimaryCounselor,
+			Label:       "Eerst Verantwoordelijke Begeleider (EVB)",
+			Description: "Eerste aanspreekpunt en primaire begeleider",
+		},
+		{
+			Role:        ClientInvolvedRoleSecondaryCounselor,
+			Label:       "Tweede Begeleider / Medebegeleider",
+			Description: "Ondersteunende of tweede begeleider",
+		},
+		{
+			Role:        ClientInvolvedRoleBehavioralScientist,
+			Label:       "Gedragswetenschapper",
+			Description: "Gedragswetenschapper of orthopedagoog",
+		},
+		{
+			Role:        ClientInvolvedRoleCaseManager,
+			Label:       "Casemanager",
+			Description: "Casemanager voor externe afstemming en regie",
+		},
+		{
+			Role:        ClientInvolvedRoleSpecialist,
+			Label:       "Vaktherapeut / Specialist",
+			Description: "Vaktherapeut of specialistische behandelaar",
+		},
+		{
+			Role:        ClientInvolvedRoleOther,
+			Label:       "Overig",
+			Description: "Overige betrokken medewerker of ondersteunende rol",
+		},
+	}
+}
+
 type AssignedEmployee struct {
-	ID                 uuid.UUID
-	ClientID           uuid.UUID
-	EmployeeID         uuid.UUID
-	StartDate          time.Time
-	Role               string
-	CreatedAt          time.Time
-	EmployeeFirstName  string
-	EmployeeLastName   string
-	UserID             uuid.UUID
-	ClientFirstName    string
-	ClientLastName     string
-	ClientLocationName *string
+	ID                 uuid.UUID          `json:"id"`
+	ClientID           uuid.UUID          `json:"client_id"`
+	EmployeeID         uuid.UUID          `json:"employee_id"`
+	StartDate          time.Time          `json:"start_date"`
+	Role               ClientInvolvedRole `json:"role"`
+	CreatedAt          time.Time          `json:"created_at"`
+	EmployeeFirstName  string             `json:"employee_first_name"`
+	EmployeeLastName   string             `json:"employee_last_name"`
+	UserID             uuid.UUID          `json:"user_id"`
+	ClientFirstName    string             `json:"client_first_name"`
+	ClientLastName     string             `json:"client_last_name"`
+	ClientLocationName *string            `json:"client_location_name"`
 }
 
 type CreateAssignedEmployeeParams struct {
-	ClientID   uuid.UUID
-	EmployeeID uuid.UUID
-	StartDate  time.Time
-	Role       string
+	ClientID   uuid.UUID          `json:"client_id"`
+	EmployeeID uuid.UUID          `json:"employee_id"`
+	StartDate  time.Time          `json:"start_date"`
+	Role       ClientInvolvedRole `json:"role"`
 }
 
 type UpdateAssignedEmployeeParams struct {
-	ID         uuid.UUID
-	EmployeeID *uuid.UUID
-	StartDate  time.Time
-	Role       *string
+	ID         uuid.UUID           `json:"id"`
+	EmployeeID *uuid.UUID          `json:"employee_id"`
+	StartDate  time.Time           `json:"start_date"`
+	Role       *ClientInvolvedRole `json:"role"`
+}
+
+type AssignMainCoordinatorParams struct {
+	ClientID   uuid.UUID `json:"client_id"`
+	EmployeeID uuid.UUID `json:"employee_id"`
+	StartDate  time.Time `json:"start_date"`
 }
 
 type ListAssignedEmployeesParams struct {

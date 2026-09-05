@@ -28,6 +28,8 @@ WITH inserted_assignment AS (
 SELECT
     ia.id, ia.client_id, ia.employee_id, ia.start_date, ia.role, ia.created_at,  -- Select all columns from the inserted_assignment CTE
     ep.user_id, -- Select the user_id from the employee_profile table
+    ep.first_name AS employee_first_name,
+    ep.last_name AS employee_last_name,
     cl.first_name AS client_first_name,
     cl.last_name AS client_last_name,
     l.name AS client_location_name
@@ -42,23 +44,25 @@ LEFT JOIN
 `
 
 type AssignEmployeeParams struct {
-	ClientID   uuid.UUID   `json:"client_id"`
-	EmployeeID uuid.UUID   `json:"employee_id"`
-	StartDate  pgtype.Date `json:"start_date"`
-	Role       string      `json:"role"`
+	ClientID   uuid.UUID              `json:"client_id"`
+	EmployeeID uuid.UUID              `json:"employee_id"`
+	StartDate  pgtype.Date            `json:"start_date"`
+	Role       ClientInvolvedRoleEnum `json:"role"`
 }
 
 type AssignEmployeeRow struct {
-	ID                 uuid.UUID          `json:"id"`
-	ClientID           uuid.UUID          `json:"client_id"`
-	EmployeeID         uuid.UUID          `json:"employee_id"`
-	StartDate          pgtype.Date        `json:"start_date"`
-	Role               string             `json:"role"`
-	CreatedAt          pgtype.Timestamptz `json:"created_at"`
-	UserID             uuid.UUID          `json:"user_id"`
-	ClientFirstName    string             `json:"client_first_name"`
-	ClientLastName     string             `json:"client_last_name"`
-	ClientLocationName *string            `json:"client_location_name"`
+	ID                 uuid.UUID              `json:"id"`
+	ClientID           uuid.UUID              `json:"client_id"`
+	EmployeeID         uuid.UUID              `json:"employee_id"`
+	StartDate          pgtype.Date            `json:"start_date"`
+	Role               ClientInvolvedRoleEnum `json:"role"`
+	CreatedAt          pgtype.Timestamptz     `json:"created_at"`
+	UserID             uuid.UUID              `json:"user_id"`
+	EmployeeFirstName  string                 `json:"employee_first_name"`
+	EmployeeLastName   string                 `json:"employee_last_name"`
+	ClientFirstName    string                 `json:"client_first_name"`
+	ClientLastName     string                 `json:"client_last_name"`
+	ClientLocationName *string                `json:"client_location_name"`
 }
 
 // Select the columns from the inserted row AND join to get the user_id
@@ -78,6 +82,8 @@ func (q *Queries) AssignEmployee(ctx context.Context, arg AssignEmployeeParams) 
 		&i.Role,
 		&i.CreatedAt,
 		&i.UserID,
+		&i.EmployeeFirstName,
+		&i.EmployeeLastName,
 		&i.ClientFirstName,
 		&i.ClientLastName,
 		&i.ClientLocationName,
@@ -336,14 +342,14 @@ WHERE ae.id = $1 LIMIT 1
 `
 
 type GetAssignedEmployeeRow struct {
-	ID                uuid.UUID          `json:"id"`
-	ClientID          uuid.UUID          `json:"client_id"`
-	EmployeeID        uuid.UUID          `json:"employee_id"`
-	StartDate         pgtype.Date        `json:"start_date"`
-	Role              string             `json:"role"`
-	CreatedAt         pgtype.Timestamptz `json:"created_at"`
-	EmployeeFirstName string             `json:"employee_first_name"`
-	EmployeeLastName  string             `json:"employee_last_name"`
+	ID                uuid.UUID              `json:"id"`
+	ClientID          uuid.UUID              `json:"client_id"`
+	EmployeeID        uuid.UUID              `json:"employee_id"`
+	StartDate         pgtype.Date            `json:"start_date"`
+	Role              ClientInvolvedRoleEnum `json:"role"`
+	CreatedAt         pgtype.Timestamptz     `json:"created_at"`
+	EmployeeFirstName string                 `json:"employee_first_name"`
+	EmployeeLastName  string                 `json:"employee_last_name"`
 }
 
 func (q *Queries) GetAssignedEmployee(ctx context.Context, id uuid.UUID) (GetAssignedEmployeeRow, error) {
@@ -449,16 +455,33 @@ func (q *Queries) GetEmergencyContact(ctx context.Context, id uuid.UUID) (Client
 }
 
 const getMainCoordinator = `-- name: GetMainCoordinator :one
-SELECT id, client_id, employee_id, start_date, role, created_at
-FROM assigned_employee
-WHERE client_id = $1
-  AND role = 'coordinator'
+SELECT
+    ae.id, ae.client_id, ae.employee_id, ae.start_date, ae.role, ae.created_at,
+    ep.user_id,
+    ep.first_name AS employee_first_name,
+    ep.last_name AS employee_last_name
+FROM assigned_employee ae
+JOIN employee_profile ep ON ae.employee_id = ep.id
+WHERE ae.client_id = $1
+  AND ae.role = 'coordinator'
 LIMIT 1
 `
 
-func (q *Queries) GetMainCoordinator(ctx context.Context, clientID uuid.UUID) (AssignedEmployee, error) {
+type GetMainCoordinatorRow struct {
+	ID                uuid.UUID              `json:"id"`
+	ClientID          uuid.UUID              `json:"client_id"`
+	EmployeeID        uuid.UUID              `json:"employee_id"`
+	StartDate         pgtype.Date            `json:"start_date"`
+	Role              ClientInvolvedRoleEnum `json:"role"`
+	CreatedAt         pgtype.Timestamptz     `json:"created_at"`
+	UserID            uuid.UUID              `json:"user_id"`
+	EmployeeFirstName string                 `json:"employee_first_name"`
+	EmployeeLastName  string                 `json:"employee_last_name"`
+}
+
+func (q *Queries) GetMainCoordinator(ctx context.Context, clientID uuid.UUID) (GetMainCoordinatorRow, error) {
 	row := q.db.QueryRow(ctx, getMainCoordinator, clientID)
-	var i AssignedEmployee
+	var i GetMainCoordinatorRow
 	err := row.Scan(
 		&i.ID,
 		&i.ClientID,
@@ -466,6 +489,9 @@ func (q *Queries) GetMainCoordinator(ctx context.Context, clientID uuid.UUID) (A
 		&i.StartDate,
 		&i.Role,
 		&i.CreatedAt,
+		&i.UserID,
+		&i.EmployeeFirstName,
+		&i.EmployeeLastName,
 	)
 	return i, err
 }
@@ -490,15 +516,15 @@ type ListAssignedEmployeesParams struct {
 }
 
 type ListAssignedEmployeesRow struct {
-	ID                uuid.UUID          `json:"id"`
-	ClientID          uuid.UUID          `json:"client_id"`
-	EmployeeID        uuid.UUID          `json:"employee_id"`
-	StartDate         pgtype.Date        `json:"start_date"`
-	Role              string             `json:"role"`
-	CreatedAt         pgtype.Timestamptz `json:"created_at"`
-	EmployeeFirstName string             `json:"employee_first_name"`
-	EmployeeLastName  string             `json:"employee_last_name"`
-	TotalCount        int64              `json:"total_count"`
+	ID                uuid.UUID              `json:"id"`
+	ClientID          uuid.UUID              `json:"client_id"`
+	EmployeeID        uuid.UUID              `json:"employee_id"`
+	StartDate         pgtype.Date            `json:"start_date"`
+	Role              ClientInvolvedRoleEnum `json:"role"`
+	CreatedAt         pgtype.Timestamptz     `json:"created_at"`
+	EmployeeFirstName string                 `json:"employee_first_name"`
+	EmployeeLastName  string                 `json:"employee_last_name"`
+	TotalCount        int64                  `json:"total_count"`
 }
 
 func (q *Queries) ListAssignedEmployees(ctx context.Context, arg ListAssignedEmployeesParams) ([]ListAssignedEmployeesRow, error) {
@@ -647,10 +673,10 @@ RETURNING id, client_id, employee_id, start_date, role, created_at
 `
 
 type UpdateAssignedEmployeeParams struct {
-	ID         uuid.UUID   `json:"id"`
-	EmployeeID *uuid.UUID  `json:"employee_id"`
-	StartDate  pgtype.Date `json:"start_date"`
-	Role       *string     `json:"role"`
+	ID         uuid.UUID               `json:"id"`
+	EmployeeID *uuid.UUID              `json:"employee_id"`
+	StartDate  pgtype.Date             `json:"start_date"`
+	Role       *ClientInvolvedRoleEnum `json:"role"`
 }
 
 func (q *Queries) UpdateAssignedEmployee(ctx context.Context, arg UpdateAssignedEmployeeParams) (AssignedEmployee, error) {
@@ -759,6 +785,8 @@ WITH upserted_assignment AS (
 SELECT
     ua.id, ua.client_id, ua.employee_id, ua.start_date, ua.role, ua.created_at,
     ep.user_id,
+    ep.first_name AS employee_first_name,
+    ep.last_name AS employee_last_name,
     cl.first_name AS client_first_name,
     cl.last_name AS client_last_name,
     l.name AS client_location_name
@@ -775,16 +803,18 @@ type UpsertMainCoordinatorParams struct {
 }
 
 type UpsertMainCoordinatorRow struct {
-	ID                 uuid.UUID          `json:"id"`
-	ClientID           uuid.UUID          `json:"client_id"`
-	EmployeeID         uuid.UUID          `json:"employee_id"`
-	StartDate          pgtype.Date        `json:"start_date"`
-	Role               string             `json:"role"`
-	CreatedAt          pgtype.Timestamptz `json:"created_at"`
-	UserID             uuid.UUID          `json:"user_id"`
-	ClientFirstName    string             `json:"client_first_name"`
-	ClientLastName     string             `json:"client_last_name"`
-	ClientLocationName *string            `json:"client_location_name"`
+	ID                 uuid.UUID              `json:"id"`
+	ClientID           uuid.UUID              `json:"client_id"`
+	EmployeeID         uuid.UUID              `json:"employee_id"`
+	StartDate          pgtype.Date            `json:"start_date"`
+	Role               ClientInvolvedRoleEnum `json:"role"`
+	CreatedAt          pgtype.Timestamptz     `json:"created_at"`
+	UserID             uuid.UUID              `json:"user_id"`
+	EmployeeFirstName  string                 `json:"employee_first_name"`
+	EmployeeLastName   string                 `json:"employee_last_name"`
+	ClientFirstName    string                 `json:"client_first_name"`
+	ClientLastName     string                 `json:"client_last_name"`
+	ClientLocationName *string                `json:"client_location_name"`
 }
 
 // Join to get the client location name
@@ -799,6 +829,8 @@ func (q *Queries) UpsertMainCoordinator(ctx context.Context, arg UpsertMainCoord
 		&i.Role,
 		&i.CreatedAt,
 		&i.UserID,
+		&i.EmployeeFirstName,
+		&i.EmployeeLastName,
 		&i.ClientFirstName,
 		&i.ClientLastName,
 		&i.ClientLocationName,

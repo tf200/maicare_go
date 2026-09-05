@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"strings"
 	"time"
 
 	"github.com/goccy/go-json"
@@ -2264,19 +2265,30 @@ func toClientEmergencyContactResponse(c domain.ClientEmergencyContact) clientEme
 // =====================
 
 type createAssignedEmployeeRequest struct {
-	EmployeeID uuid.UUID `json:"employee_id" binding:"required"`
-	StartDate  time.Time `json:"start_date" binding:"required"`
-	Role       string    `json:"role" binding:"required"`
+	EmployeeID uuid.UUID                 `json:"employee_id" binding:"required"`
+	StartDate  time.Time                 `json:"start_date" binding:"required"`
+	Role       domain.ClientInvolvedRole `json:"role" binding:"required,oneof=coordinator primary_counselor secondary_counselor behavioral_scientist case_manager specialist other"`
+}
+
+type setClientCoordinatorRequest struct {
+	EmployeeID uuid.UUID  `json:"employee_id" binding:"required"`
+	StartDate  *time.Time `json:"start_date"`
 }
 
 type assignedEmployeeResponse struct {
-	ID           uuid.UUID `json:"id"`
-	ClientID     uuid.UUID `json:"client_id"`
-	EmployeeID   uuid.UUID `json:"employee_id"`
-	StartDate    time.Time `json:"start_date"`
-	Role         string    `json:"role"`
-	EmployeeName string    `json:"employee_name"`
-	CreatedAt    time.Time `json:"created_at"`
+	ID           uuid.UUID                 `json:"id"`
+	ClientID     uuid.UUID                 `json:"client_id"`
+	EmployeeID   uuid.UUID                 `json:"employee_id"`
+	StartDate    time.Time                 `json:"start_date"`
+	Role         domain.ClientInvolvedRole `json:"role"`
+	EmployeeName string                    `json:"employee_name"`
+	CreatedAt    time.Time                 `json:"created_at"`
+}
+
+type involvedEmployeeRoleResponse struct {
+	Role        domain.ClientInvolvedRole `json:"role"`
+	Label       string                    `json:"label"`
+	Description string                    `json:"description"`
 }
 
 type listAssignedEmployeesRequest struct {
@@ -2284,9 +2296,9 @@ type listAssignedEmployeesRequest struct {
 }
 
 type updateAssignedEmployeeRequest struct {
-	EmployeeID *uuid.UUID `json:"employee_id"`
-	StartDate  time.Time  `json:"start_date"`
-	Role       *string    `json:"role"`
+	EmployeeID *uuid.UUID                `json:"employee_id"`
+	StartDate  time.Time                 `json:"start_date"`
+	Role       *domain.ClientInvolvedRole `json:"role" binding:"omitempty,oneof=coordinator primary_counselor secondary_counselor behavioral_scientist case_manager specialist other"`
 }
 
 type deleteAssignedEmployeeResponse struct {
@@ -2302,6 +2314,18 @@ func toDomainCreateAssignedEmployeeParams(req createAssignedEmployeeRequest, cli
 	}
 }
 
+func toDomainSetCoordinatorParams(req setClientCoordinatorRequest, clientID uuid.UUID) domain.AssignMainCoordinatorParams {
+	startDate := time.Now().UTC().Truncate(24 * time.Hour)
+	if req.StartDate != nil && !req.StartDate.IsZero() {
+		startDate = req.StartDate.UTC().Truncate(24 * time.Hour)
+	}
+	return domain.AssignMainCoordinatorParams{
+		ClientID:   clientID,
+		EmployeeID: req.EmployeeID,
+		StartDate:  startDate,
+	}
+}
+
 func toDomainUpdateAssignedEmployeeParams(req updateAssignedEmployeeRequest, assignmentID uuid.UUID) domain.UpdateAssignedEmployeeParams {
 	return domain.UpdateAssignedEmployeeParams{
 		ID:         assignmentID,
@@ -2312,7 +2336,7 @@ func toDomainUpdateAssignedEmployeeParams(req updateAssignedEmployeeRequest, ass
 }
 
 func toAssignedEmployeeResponse(e domain.AssignedEmployee) assignedEmployeeResponse {
-	employeeName := e.EmployeeFirstName + " " + e.EmployeeLastName
+	employeeName := strings.TrimSpace(e.EmployeeFirstName + " " + e.EmployeeLastName)
 	return assignedEmployeeResponse{
 		ID:           e.ID,
 		ClientID:     e.ClientID,
@@ -2322,6 +2346,18 @@ func toAssignedEmployeeResponse(e domain.AssignedEmployee) assignedEmployeeRespo
 		EmployeeName: employeeName,
 		CreatedAt:    e.CreatedAt,
 	}
+}
+
+func toInvolvedEmployeeRoleResponses(defs []domain.InvolvedEmployeeRoleDefinition) []involvedEmployeeRoleResponse {
+	res := make([]involvedEmployeeRoleResponse, len(defs))
+	for i, d := range defs {
+		res[i] = involvedEmployeeRoleResponse{
+			Role:        d.Role,
+			Label:       d.Label,
+			Description: d.Description,
+		}
+	}
+	return res
 }
 
 // =====================

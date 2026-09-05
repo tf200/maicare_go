@@ -323,6 +323,25 @@ const docTemplate = `{
                 }
             }
         },
+        "/clients/involved_employees/roles": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "client_network"
+                ],
+                "summary": "List available care roles for involved employees",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/httpapi.Envelope-array_handler_involvedEmployeeRoleResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/clients/location_transfer": {
             "get": {
                 "produces": [
@@ -830,6 +849,92 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/httpapi.Envelope-httpapi_PageResponse-array_handler_clientContractSummaryResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/clients/{id}/coordinator": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "client_network"
+                ],
+                "summary": "Get the main coordinator for a client",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/httpapi.Envelope-handler_assignedEmployeeResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpapi.Envelope-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/httpapi.Envelope-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httpapi.Envelope-any"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "client_network"
+                ],
+                "summary": "Assign or update the main coordinator for a client",
+                "parameters": [
+                    {
+                        "description": "Coordinator assignment data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.setClientCoordinatorRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/httpapi.Envelope-handler_assignedEmployeeResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/httpapi.Envelope-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/httpapi.Envelope-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httpapi.Envelope-any"
                         }
                     }
                 }
@@ -5167,6 +5272,27 @@ const docTemplate = `{
                 "IntakeParticipantsEnumOther"
             ]
         },
+        "domain.ClientInvolvedRole": {
+            "type": "string",
+            "enum": [
+                "coordinator",
+                "primary_counselor",
+                "secondary_counselor",
+                "behavioral_scientist",
+                "case_manager",
+                "specialist",
+                "other"
+            ],
+            "x-enum-varnames": [
+                "ClientInvolvedRoleCoordinator",
+                "ClientInvolvedRolePrimaryCounselor",
+                "ClientInvolvedRoleSecondaryCounselor",
+                "ClientInvolvedRoleBehavioralScientist",
+                "ClientInvolvedRoleCaseManager",
+                "ClientInvolvedRoleSpecialist",
+                "ClientInvolvedRoleOther"
+            ]
+        },
         "domain.CreateEventRequest": {
             "type": "object",
             "required": [
@@ -6000,7 +6126,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "role": {
-                    "type": "string"
+                    "$ref": "#/definitions/domain.ClientInvolvedRole"
                 },
                 "start_date": {
                     "type": "string"
@@ -7126,7 +7252,20 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "role": {
-                    "type": "string"
+                    "enum": [
+                        "coordinator",
+                        "primary_counselor",
+                        "secondary_counselor",
+                        "behavioral_scientist",
+                        "case_manager",
+                        "specialist",
+                        "other"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domain.ClientInvolvedRole"
+                        }
+                    ]
                 },
                 "start_date": {
                     "type": "string"
@@ -9246,6 +9385,20 @@ const docTemplate = `{
                 }
             }
         },
+        "handler.involvedEmployeeRoleResponse": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "role": {
+                    "$ref": "#/definitions/domain.ClientInvolvedRole"
+                }
+            }
+        },
         "handler.listAllIncidentsResponse": {
             "type": "object",
             "properties": {
@@ -10051,6 +10204,20 @@ const docTemplate = `{
                 }
             }
         },
+        "handler.setClientCoordinatorRequest": {
+            "type": "object",
+            "required": [
+                "employee_id"
+            ],
+            "properties": {
+                "employee_id": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                }
+            }
+        },
         "handler.templateItemResponse": {
             "type": "object",
             "properties": {
@@ -10112,7 +10279,20 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "role": {
-                    "type": "string"
+                    "enum": [
+                        "coordinator",
+                        "primary_counselor",
+                        "secondary_counselor",
+                        "behavioral_scientist",
+                        "case_manager",
+                        "specialist",
+                        "other"
+                    ],
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/domain.ClientInvolvedRole"
+                        }
+                    ]
                 },
                 "start_date": {
                     "type": "string"
@@ -11131,6 +11311,26 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/handler.contractTypeResponse"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "httpapi.Envelope-array_handler_involvedEmployeeRoleResponse": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/handler.involvedEmployeeRoleResponse"
                     }
                 },
                 "message": {
