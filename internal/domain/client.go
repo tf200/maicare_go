@@ -12,6 +12,8 @@ import (
 
 var ErrClientNotFound = errors.New("client not found")
 var ErrClientDocumentNotFound = errors.New("client document not found")
+var ErrMainCoordinatorNotFound = errors.New("main coordinator not found")
+var ErrCoordinatorUnavailable = errors.New("selected coordinator is not available")
 var ErrGoalEvaluationNotFound = errors.New("goal evaluation not found")
 var ErrGoalEvaluationOwnedByOther = errors.New("goal evaluation draft belongs to another employee")
 var ErrGoalEvaluationNotDraft = errors.New("goal evaluation is not an editable draft")

@@ -3339,6 +3339,9 @@ func (r *ClientRepository) UpsertMainCoordinator(ctx context.Context, params dom
 
 	err := r.store.ExecActorTx(ctx, func(q *db.Queries) error {
 		if _, err := q.GetActiveEmployeeForCare(ctx, params.EmployeeID); err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				return domain.ErrCoordinatorUnavailable
+			}
 			return fmt.Errorf("selected coordinator is not available: %w", err)
 		}
 
@@ -3362,6 +3365,9 @@ func (r *ClientRepository) GetMainCoordinator(ctx context.Context, clientID uuid
 		return q.GetMainCoordinator(ctx, clientID)
 	})
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, domain.ErrMainCoordinatorNotFound
+		}
 		return nil, err
 	}
 	return toDomainAssignedEmployeeFromCoordinatorRow(row), nil
@@ -3457,13 +3463,32 @@ func (r *ClientRepository) PutClientInCare(ctx context.Context, clientID uuid.UU
 			return fmt.Errorf("selected coordinator is not available: %w", err)
 		}
 
-		coordinatorAssignment, err := q.UpsertMainCoordinator(ctx, db.UpsertMainCoordinatorParams{
-			ClientID:   clientID,
-			EmployeeID: params.CoordinatorEmployeeID,
-			StartDate:  pgtype.Date{Time: careStartDay, Valid: true},
-		})
-		if err != nil {
-			return fmt.Errorf("failed to assign main coordinator: %w", err)
+		coordinatorAssignment, err := q.GetMainCoordinator(ctx, clientID)
+		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+			return fmt.Errorf("failed to get main coordinator: %w", err)
+		}
+
+		coordinatorAssignmentID := coordinatorAssignment.ID
+		if errors.Is(err, pgx.ErrNoRows) {
+			created, err := q.CreateMainCoordinator(ctx, db.CreateMainCoordinatorParams{
+				ClientID:   clientID,
+				EmployeeID: params.CoordinatorEmployeeID,
+				StartDate:  pgtype.Date{Time: careStartDay, Valid: true},
+			})
+			if err != nil {
+				return fmt.Errorf("failed to assign main coordinator: %w", err)
+			}
+			coordinatorAssignmentID = created.ID
+		} else if coordinatorAssignment.EmployeeID != params.CoordinatorEmployeeID {
+			updated, err := q.UpdateAssignedEmployee(ctx, db.UpdateAssignedEmployeeParams{
+				ID:         coordinatorAssignment.ID,
+				EmployeeID: &params.CoordinatorEmployeeID,
+				StartDate:  pgtype.Date{Time: careStartDay, Valid: true},
+			})
+			if err != nil {
+				return fmt.Errorf("failed to update main coordinator: %w", err)
+			}
+			coordinatorAssignmentID = updated.ID
 		}
 
 		placedInCareAt := pgtype.Timestamptz{Valid: false}
@@ -3506,7 +3531,7 @@ func (r *ClientRepository) PutClientInCare(ctx context.Context, clientID uuid.UU
 			CareStartDate:           updatedClient.CareStartDate.Time,
 			PlacedInCareAt:          updatedClient.PlacedInCareAt.Time,
 			NextEvaluationDate:      nil,
-			CoordinatorAssignmentID: coordinatorAssignment.ID,
+			CoordinatorAssignmentID: coordinatorAssignmentID,
 		}
 		if updatedClient.NextEvaluationDate.Valid {
 			t := updatedClient.NextEvaluationDate.Time

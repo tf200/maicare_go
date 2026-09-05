@@ -103,6 +103,7 @@ func RegisterClientRoutes(
 		clientsGroup.GET("/:id/emergency_contacts", auth, requirePermission("CLIENT.EMERGENCY_CONTACT.VIEW"), handler.ListClientEmergencyContacts)
 		clientsGroup.GET("/:id/emergency_contacts/:contact_id", auth, requirePermission("CLIENT.EMERGENCY_CONTACT.VIEW"), handler.GetClientEmergencyContact)
 		clientsGroup.PUT("/:id/emergency_contacts/:contact_id", auth, requirePermission("CLIENT.EMERGENCY_CONTACT.UPDATE"), handler.UpdateClientEmergencyContact)
+		clientsGroup.DELETE("/:id/emergency_contacts/:contact_id", auth, requirePermission("CLIENT.EMERGENCY_CONTACT.DELETE"), handler.DeleteClientEmergencyContact)
 		clientsGroup.PUT("/:id/coordinator", auth, requirePermission("CLIENT.INVOLVED_EMPLOYEE.CREATE"), requirePermission("CLIENT.INVOLVED_EMPLOYEE.UPDATE"), handler.SetMainCoordinator)
 		clientsGroup.GET("/:id/coordinator", auth, requirePermission("CLIENT.INVOLVED_EMPLOYEE.VIEW"), handler.GetMainCoordinator)
 		clientsGroup.POST("/:id/involved_employees", auth, requirePermission("CLIENT.INVOLVED_EMPLOYEE.CREATE"), handler.CreateAssignedEmployee)
@@ -2062,6 +2063,10 @@ func (h *ClientHandler) SetMainCoordinator(ctx *gin.Context) {
 
 	result, err := h.service.SetMainCoordinator(ctx.Request.Context(), clientID, toDomainSetCoordinatorParams(req, clientID))
 	if err != nil {
+		if errors.Is(err, domain.ErrCoordinatorUnavailable) {
+			ctx.JSON(http.StatusBadRequest, httpapi.Fail(domain.ErrCoordinatorUnavailable.Error(), ""))
+			return
+		}
 		ctx.JSON(http.StatusInternalServerError, httpapi.Fail("failed to set main coordinator", ""))
 		return
 	}
@@ -2086,7 +2091,11 @@ func (h *ClientHandler) GetMainCoordinator(ctx *gin.Context) {
 
 	result, err := h.service.GetMainCoordinator(ctx.Request.Context(), clientID)
 	if err != nil {
-		ctx.JSON(http.StatusNotFound, httpapi.Fail("main coordinator not found for client", ""))
+		if errors.Is(err, domain.ErrMainCoordinatorNotFound) {
+			ctx.JSON(http.StatusNotFound, httpapi.Fail("main coordinator not found for client", ""))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, httpapi.Fail("failed to get main coordinator", ""))
 		return
 	}
 
