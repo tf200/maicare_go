@@ -129,6 +129,9 @@ func createCustomUser(ctx context.Context, pool *pgxpool.Pool, store *db.Store, 
 				Password: hashedPassword,
 			})
 		}
+		if _, updateErr := pool.Exec(ctx, "UPDATE custom_user SET is_active = true WHERE id = $1", existingID); updateErr != nil {
+			return nil, fmt.Errorf("failed to activate existing user: %w", updateErr)
+		}
 		return &db.CustomUser{
 			ID:       existingID,
 			Email:    email,
@@ -145,6 +148,7 @@ func createCustomUser(ctx context.Context, pool *pgxpool.Pool, store *db.Store, 
 	user, err := store.CreateUser(ctx, db.CreateUserParams{
 		Email:    email,
 		Password: hashedPassword,
+		IsActive: true,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to create user: %w", err)
