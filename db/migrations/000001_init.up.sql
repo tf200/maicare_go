@@ -5961,3 +5961,23 @@ $$ LANGUAGE sql STABLE;
 
 -- Clean up helper functions if desired, or keep them for future use.
 -- DROP FUNCTION apply_client_rls(TEXT, TEXT);
+
+-- Application runtime role (least-privilege, RLS enforced)
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'maicare_app') THEN
+        CREATE ROLE maicare_app WITH LOGIN PASSWORD 'maicare_app';
+    END IF;
+    EXECUTE format('GRANT CONNECT ON DATABASE %I TO maicare_app', current_database());
+END
+$$;
+
+GRANT USAGE ON SCHEMA public TO maicare_app;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO maicare_app;
+GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA public TO maicare_app;
+GRANT EXECUTE ON ALL ROUTINES IN SCHEMA public TO maicare_app;
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO maicare_app;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT, UPDATE ON SEQUENCES TO maicare_app;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT EXECUTE ON ROUTINES TO maicare_app;
+

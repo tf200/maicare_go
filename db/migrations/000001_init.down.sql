@@ -262,3 +262,15 @@ DROP TYPE IF EXISTS handbook_assignment_event_enum CASCADE;
 DROP TYPE IF EXISTS shift_swap_status_enum CASCADE;
 DROP TYPE IF EXISTS leave_request_status_enum CASCADE;
 DROP TYPE IF EXISTS leave_request_type_enum CASCADE;
+
+-- Revoke permissions and drop runtime application role
+DO $$
+BEGIN
+    IF EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'maicare_app') THEN
+        EXECUTE format('REVOKE CONNECT ON DATABASE %I FROM maicare_app', current_database());
+        DROP OWNED BY maicare_app;
+        DROP ROLE maicare_app;
+    END IF;
+END
+$$;
+
