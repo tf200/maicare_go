@@ -441,9 +441,14 @@ type clientPageClientResponse struct {
 	ID                uuid.UUID                `json:"id"`
 	FirstName         string                   `json:"first_name"`
 	LastName          string                   `json:"last_name"`
+	Identity          bool                     `json:"identity"`
 	Bsn               *string                  `json:"bsn"`
 	BsnVerifiedBy     *uuid.UUID               `json:"bsn_verified_by"`
 	BsnVerifiedByName *string                  `json:"bsn_verified_by_name"`
+	Nationality       *string                  `json:"nationality"`
+	Email             string                   `json:"email"`
+	PhoneNumber       *string                  `json:"phone_number"`
+	SenderID          *uuid.UUID               `json:"sender_id"`
 	FileNumber        string                   `json:"file_number"`
 	Gender            string                   `json:"gender"`
 	DateOfBirth       *time.Time               `json:"date_of_birth"`
@@ -833,9 +838,14 @@ func toGetClientResponse(detail *domain.ClientPageDetail) getClientResponse {
 			ID:                detail.Client.ID,
 			FirstName:         detail.Client.FirstName,
 			LastName:          detail.Client.LastName,
+			Identity:          detail.Client.Identity,
 			Bsn:               detail.Client.Bsn,
 			BsnVerifiedBy:     detail.Client.BsnVerifiedBy,
 			BsnVerifiedByName: detail.Client.BsnVerifiedByName,
+			Nationality:       detail.Client.Nationality,
+			Email:             detail.Client.Email,
+			PhoneNumber:       detail.Client.PhoneNumber,
+			SenderID:          detail.Client.SenderID,
 			FileNumber:        detail.Client.FileNumber,
 			Gender:            detail.Client.Gender,
 			DateOfBirth:       detail.Client.DateOfBirth,

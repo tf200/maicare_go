@@ -236,9 +236,14 @@ type ClientPageClient struct {
 	ID                         uuid.UUID
 	FirstName                  string
 	LastName                   string
+	Identity                   bool
 	Bsn                        *string
 	BsnVerifiedBy              *uuid.UUID
 	BsnVerifiedByName          *string
+	Nationality                *string
+	Email                      string
+	PhoneNumber                *string
+	SenderID                   *uuid.UUID
 	FileNumber                 string
 	Gender                     string
 	DateOfBirth                *time.Time
