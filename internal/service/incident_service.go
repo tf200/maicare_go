@@ -79,7 +79,7 @@ func (s *incidentService) logIncidentListAudit(ctx context.Context, subjectIDs [
 		Result:       "success",
 		SubjectType:  "incident",
 		ClientID:     clientIDString,
-		AccessRule:   strPtr("CLIENT.INCIDENT.VIEW"),
+		AccessRule:   strPtr(domain.PermClientIncidentView.String()),
 		SubjectIDs:   subjectIDs,
 		Details:      map[string]any{"count": len(subjectIDs)},
 	}); err != nil && s.logger != nil {
@@ -100,7 +100,7 @@ func (s *incidentService) CreateIncident(ctx context.Context, params domain.Crea
 	s.logger.LogInfo(ctx, "IncidentService.CreateIncident", "incident created",
 		zap.String("incident_id", incident.ID.String()),
 	)
-	s.logIncidentAudit(ctx, "create", incident.ID.String(), &incident.ClientID, "CLIENT.INCIDENT.CREATE", -1)
+	s.logIncidentAudit(ctx, "create", incident.ID.String(), &incident.ClientID, domain.PermClientIncidentCreate.String(), -1)
 
 	adminUsers, err := s.repo.GetAllAdminUsers(ctx)
 	if err != nil {
@@ -163,7 +163,7 @@ func (s *incidentService) GetIncident(ctx context.Context, id uuid.UUID) (*domai
 		)
 		return nil, err
 	}
-	s.logIncidentAudit(ctx, "read", incident.ID.String(), &incident.ClientID, "CLIENT.INCIDENT.VIEW", -1)
+	s.logIncidentAudit(ctx, "read", incident.ID.String(), &incident.ClientID, domain.PermClientIncidentView.String(), -1)
 	return incident, nil
 }
 
@@ -179,7 +179,7 @@ func (s *incidentService) UpdateIncident(ctx context.Context, params domain.Upda
 	s.logger.LogInfo(ctx, "IncidentService.UpdateIncident", "incident updated",
 		zap.String("incident_id", incident.ID.String()),
 	)
-	s.logIncidentAudit(ctx, "update", incident.ID.String(), &incident.ClientID, "CLIENT.INCIDENT.UPDATE", -1)
+	s.logIncidentAudit(ctx, "update", incident.ID.String(), &incident.ClientID, domain.PermClientIncidentUpdate.String(), -1)
 	return incident, nil
 }
 
@@ -195,7 +195,7 @@ func (s *incidentService) DeleteIncident(ctx context.Context, id uuid.UUID) erro
 	s.logger.LogInfo(ctx, "IncidentService.DeleteIncident", "incident deleted",
 		zap.String("incident_id", id.String()),
 	)
-	s.logIncidentAudit(ctx, "delete", id.String(), &clientID, "CLIENT.INCIDENT.DELETE", -1)
+	s.logIncidentAudit(ctx, "delete", id.String(), &clientID, domain.PermClientIncidentDelete.String(), -1)
 	return nil
 }
 
@@ -247,7 +247,7 @@ func (s *incidentService) GenerateIncidentFile(ctx context.Context, id uuid.UUID
 		)
 		return nil, "", err
 	}
-	s.logIncidentAudit(ctx, "export", incident.ID.String(), &incident.ClientID, "CLIENT.INCIDENT.VIEW", -1)
+	s.logIncidentAudit(ctx, "export", incident.ID.String(), &incident.ClientID, domain.PermClientIncidentView.String(), -1)
 
 	return pdfBytes, fmt.Sprintf("incident_report_%s.pdf", incident.ID.String()), nil
 }
@@ -296,7 +296,7 @@ func (s *incidentService) ConfirmIncident(ctx context.Context, id uuid.UUID, con
 		zap.String("incident_id", id.String()),
 		zap.String("confirmed_by", confirmedByUserID.String()),
 	)
-	s.logIncidentAudit(ctx, "confirm", id.String(), &incident.ClientID, "CLIENT.INCIDENT.CONFIRM", -1)
+	s.logIncidentAudit(ctx, "confirm", id.String(), &incident.ClientID, domain.PermClientIncidentConfirm.String(), -1)
 	return &domain.ConfirmIncidentResult{ID: id, FileUrl: nil}, nil
 }
 
@@ -322,6 +322,6 @@ func (s *incidentService) GetIncidentCounts(ctx context.Context) (*domain.Incide
 		s.logger.LogError(ctx, "IncidentService.GetIncidentCounts", "failed to get incident counts", err)
 		return nil, err
 	}
-	s.logIncidentAudit(ctx, "read", "incident_counts", nil, "CLIENT.INCIDENT.VIEW", -1)
+	s.logIncidentAudit(ctx, "read", "incident_counts", nil, domain.PermClientIncidentView.String(), -1)
 	return counts, nil
 }

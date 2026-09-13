@@ -20,19 +20,19 @@ func RegisterIncidentRoutes(
 ) {
 	// Client-specific incident routes
 	clientsGroup := rg.Group("/clients")
-	clientsGroup.GET("/:id/incidents", auth, requirePermission("CLIENT.VIEW"), requirePermission("CLIENT.INCIDENT.VIEW"), handler.ListClientIncidents)
+	clientsGroup.GET("/:id/incidents", auth, requirePermission("CLIENT.VIEW"), requirePermission(domain.PermClientIncidentView.String()), handler.ListClientIncidents)
 
 	// Top-level incident routes
 	incidentsGroup := rg.Group("/incidents")
 	{
-		incidentsGroup.POST("", auth, requirePermission("CLIENT.INCIDENT.CREATE"), handler.CreateIncident)
-		incidentsGroup.GET("", auth, requirePermission("CLIENT.VIEW"), requirePermission("CLIENT.INCIDENT.VIEW"), handler.ListAllIncidents)
-		incidentsGroup.GET("/counts", auth, requirePermission("CLIENT.INCIDENT.VIEW"), handler.GetIncidentCounts)
-		incidentsGroup.GET("/:incident_id", auth, requirePermission("CLIENT.VIEW"), requirePermission("CLIENT.INCIDENT.VIEW"), handler.GetIncident)
-		incidentsGroup.PUT("/:incident_id", auth, requirePermission("CLIENT.INCIDENT.VIEW"), requirePermission("CLIENT.INCIDENT.UPDATE"), handler.UpdateIncident)
-		incidentsGroup.DELETE("/:incident_id", auth, requirePermission("CLIENT.INCIDENT.VIEW"), requirePermission("CLIENT.INCIDENT.DELETE"), handler.DeleteIncident)
-		incidentsGroup.GET("/:incident_id/file", auth, requirePermission("CLIENT.VIEW"), requirePermission("CLIENT.INCIDENT.VIEW"), handler.GenerateIncidentFile)
-		incidentsGroup.PUT("/:incident_id/confirm", auth, requirePermission("CLIENT.VIEW"), requirePermission("CLIENT.INCIDENT.VIEW"), requirePermission("CLIENT.INCIDENT.CONFIRM"), handler.ConfirmIncident)
+		incidentsGroup.POST("", auth, requirePermission(domain.PermClientIncidentCreate.String()), handler.CreateIncident)
+		incidentsGroup.GET("", auth, requirePermission("CLIENT.VIEW"), requirePermission(domain.PermClientIncidentView.String()), handler.ListAllIncidents)
+		incidentsGroup.GET("/counts", auth, requirePermission(domain.PermClientIncidentView.String()), handler.GetIncidentCounts)
+		incidentsGroup.GET("/:incident_id", auth, requirePermission("CLIENT.VIEW"), requirePermission(domain.PermClientIncidentView.String()), handler.GetIncident)
+		incidentsGroup.PUT("/:incident_id", auth, requirePermission(domain.PermClientIncidentView.String()), requirePermission(domain.PermClientIncidentUpdate.String()), handler.UpdateIncident)
+		incidentsGroup.DELETE("/:incident_id", auth, requirePermission(domain.PermClientIncidentView.String()), requirePermission(domain.PermClientIncidentDelete.String()), handler.DeleteIncident)
+		incidentsGroup.GET("/:incident_id/file", auth, requirePermission("CLIENT.VIEW"), requirePermission(domain.PermClientIncidentView.String()), handler.GenerateIncidentFile)
+		incidentsGroup.PUT("/:incident_id/confirm", auth, requirePermission("CLIENT.VIEW"), requirePermission(domain.PermClientIncidentView.String()), requirePermission(domain.PermClientIncidentConfirm.String()), handler.ConfirmIncident)
 	}
 }
 
