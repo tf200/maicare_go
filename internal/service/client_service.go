@@ -39,27 +39,6 @@ func NewClientService(repository domain.ClientRepository, taskQueue domain.TaskQ
 	}
 }
 
-func (s *ClientService) CreateClient(ctx context.Context, params domain.CreateClientParams) (*domain.Client, error) {
-	client, err := s.repository.CreateClient(ctx, params)
-	if err != nil {
-		if s.logger != nil {
-			s.logger.LogError(ctx, "ClientService.CreateClient", "failed to create client", err,
-				zap.String("first_name", params.FirstName),
-				zap.String("last_name", params.LastName),
-			)
-		}
-		return nil, err
-	}
-
-	if s.logger != nil {
-		s.logger.LogInfo(ctx, "ClientService.CreateClient", "client created successfully",
-			zap.String("client_id", client.ID.String()),
-		)
-	}
-
-	return client, nil
-}
-
 func (s *ClientService) ListClients(ctx context.Context, params domain.ListClientsParams) (*domain.ClientPage, error) {
 	page, err := s.repository.ListClients(ctx, params)
 	if err != nil {

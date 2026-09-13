@@ -22,8 +22,7 @@ func RegisterClientRoutes(
 ) {
 	clientsGroup := rg.Group("/clients")
 	{
-		clientsGroup.POST("", auth, requirePermission("CLIENT.CREATE"), handler.CreateClient)
-		clientsGroup.GET("", auth, requirePermission("CLIENT.VIEW"), handler.ListClients)
+	clientsGroup.GET("", auth, requirePermission("CLIENT.VIEW"), handler.ListClients)
 		clientsGroup.GET("/waiting-list", auth, requirePermission("CLIENT.VIEW"), handler.ListWaitingListClients)
 		clientsGroup.GET("/waiting-list/stats", auth, requirePermission("CLIENT.VIEW"), handler.GetWaitingListStats)
 		clientsGroup.GET("/in-care", auth, requirePermission("CLIENT.VIEW"), handler.ListInCareClients)
@@ -190,37 +189,6 @@ func getEmployeeIDFromContext(ctx *gin.Context) (uuid.UUID, error) {
 		return uuid.Nil, fmt.Errorf("invalid employee ID")
 	}
 	return id, nil
-}
-
-// CreateClient creates a new client
-// @Summary Create a new client
-// @Tags clients
-// @Accept json
-// @Produce json
-// @Param request body createClientRequest true "Client details"
-// @Success 201 {object} httpapi.Envelope[createClientResponse]
-// @Failure 400,404,500 {object} httpapi.Envelope[createClientResponse]
-// @Router /clients [post]
-func (h *ClientHandler) CreateClient(ctx *gin.Context) {
-	var req createClientRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, httpapi.Fail(err.Error(), ""))
-		return
-	}
-
-	params, err := toCreateClientParams(req)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, httpapi.Fail("invalid date of birth format", ""))
-		return
-	}
-
-	client, err := h.service.CreateClient(ctx.Request.Context(), params)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, httpapi.Fail("failed to create client", ""))
-		return
-	}
-
-	ctx.JSON(http.StatusCreated, httpapi.OK(toCreateClientResponse(client), "Client created successfully"))
 }
 
 // ListClients lists clients

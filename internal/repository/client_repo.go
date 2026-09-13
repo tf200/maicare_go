@@ -26,42 +26,6 @@ func NewClientRepository(store *db.Store) domain.ClientRepository {
 	return &ClientRepository{store: store}
 }
 
-func (r *ClientRepository) CreateClient(ctx context.Context, params domain.CreateClientParams) (*domain.Client, error) {
-	client, err := actorQuery(ctx, r.store, func(q *db.Queries) (db.ClientDetail, error) {
-		return q.CreateClientDetails(ctx, db.CreateClientDetailsParams{
-			FirstName:                  params.FirstName,
-			LastName:                   params.LastName,
-			DateOfBirth:                conv.PgDateFromTime(params.DateOfBirth),
-			Identity:                   true,
-			Bsn:                        params.Bsn,
-			BsnVerifiedBy:              params.BsnVerifiedBy,
-			Email:                      params.Email,
-			PhoneNumber:                params.PhoneNumber,
-			CareType:                   db.NullIntakeCareTypeFromPtr(params.CareType),
-			SenderID:                   params.SenderID,
-			LocationID:                 params.LocationID,
-			EducationCurrentlyEnrolled: params.EducationCurrentlyEnrolled,
-			EducationInstitution:       params.EducationInstitution,
-			EducationMentorName:        params.EducationMentorName,
-			EducationMentorPhone:       params.EducationMentorPhone,
-			EducationMentorEmail:       params.EducationMentorEmail,
-			EducationAdditionalNotes:   params.EducationAdditionalNotes,
-			WorkCurrentlyEmployed:      params.WorkCurrentlyEmployed,
-			WorkCurrentEmployer:        params.WorkCurrentEmployer,
-			WorkCurrentEmployerPhone:   params.WorkCurrentEmployerPhone,
-			WorkCurrentEmployerEmail:   params.WorkCurrentEmployerEmail,
-			WorkCurrentPosition:        params.WorkCurrentPosition,
-			WorkStartDate:              conv.PgDateFromTime(params.WorkStartDate),
-			WorkAdditionalNotes:        params.WorkAdditionalNotes,
-		})
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return toDomainClient(client), nil
-}
-
 func (r *ClientRepository) ListClients(ctx context.Context, params domain.ListClientsParams) (*domain.ClientPage, error) {
 	rows, err := actorQuery(ctx, r.store, func(q *db.Queries) ([]db.ListClientDetailsRow, error) {
 		return q.ListClientDetails(ctx, db.ListClientDetailsParams{

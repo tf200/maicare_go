@@ -141,32 +141,6 @@ type InCareClientPage struct {
 	TotalCount int64
 }
 
-type CreateClientParams struct {
-	FirstName                  string
-	LastName                   string
-	DateOfBirth                time.Time
-	Bsn                        *string
-	BsnVerifiedBy              *uuid.UUID
-	Email                      string
-	PhoneNumber                *string
-	CareType                   *string
-	SenderID                   *uuid.UUID
-	LocationID                 *uuid.UUID
-	EducationCurrentlyEnrolled bool
-	EducationInstitution       *string
-	EducationMentorName        *string
-	EducationMentorPhone       *string
-	EducationMentorEmail       *string
-	EducationAdditionalNotes   *string
-	WorkCurrentlyEmployed      bool
-	WorkCurrentEmployer        *string
-	WorkCurrentEmployerPhone   *string
-	WorkCurrentEmployerEmail   *string
-	WorkCurrentPosition        *string
-	WorkStartDate              time.Time
-	WorkAdditionalNotes        *string
-}
-
 type ListClientsParams struct {
 	Limit      int32
 	Offset     int32
@@ -491,7 +465,6 @@ type DeleteClientDocumentResult struct {
 }
 
 type ClientRepository interface {
-	CreateClient(ctx context.Context, params CreateClientParams) (*Client, error)
 	ListClients(ctx context.Context, params ListClientsParams) (*ClientPage, error)
 	ListWaitingListClients(ctx context.Context, params ListWaitingListClientsParams) (*WaitingListClientPage, error)
 	ListInCareClients(ctx context.Context, params ListInCareClientsParams) (*InCareClientPage, error)
@@ -628,7 +601,6 @@ type ListStatusHistoryParams struct {
 }
 
 type ClientService interface {
-	CreateClient(ctx context.Context, params CreateClientParams) (*Client, error)
 	ListClients(ctx context.Context, params ListClientsParams) (*ClientPage, error)
 	ListWaitingListClients(ctx context.Context, params ListWaitingListClientsParams) (*WaitingListClientPage, error)
 	ListInCareClients(ctx context.Context, params ListInCareClientsParams) (*InCareClientPage, error)

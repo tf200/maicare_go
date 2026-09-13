@@ -119,55 +119,6 @@ const docTemplate = `{
                         }
                     }
                 }
-            },
-            "post": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "clients"
-                ],
-                "summary": "Create a new client",
-                "parameters": [
-                    {
-                        "description": "Client details",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/handler.createClientRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/httpapi.Envelope-handler_createClientResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/httpapi.Envelope-handler_createClientResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/httpapi.Envelope-handler_createClientResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/httpapi.Envelope-handler_createClientResponse"
-                        }
-                    }
-                }
             }
         },
         "/clients/counts": {
@@ -6787,6 +6738,9 @@ const docTemplate = `{
                 "education": {
                     "$ref": "#/definitions/handler.clientEducationResponse"
                 },
+                "email": {
+                    "type": "string"
+                },
                 "file_number": {
                     "type": "string"
                 },
@@ -6799,11 +6753,23 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
+                "identity": {
+                    "type": "boolean"
+                },
                 "last_name": {
                     "type": "string"
                 },
                 "location": {
                     "$ref": "#/definitions/handler.clientLocationResponse"
+                },
+                "nationality": {
+                    "type": "string"
+                },
+                "phone_number": {
+                    "type": "string"
+                },
+                "sender_id": {
+                    "type": "string"
                 },
                 "work": {
                     "$ref": "#/definitions/handler.clientWorkResponse"
@@ -7508,290 +7474,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "status": {
-                    "type": "string"
-                }
-            }
-        },
-        "handler.createClientRequest": {
-            "type": "object",
-            "required": [
-                "date_of_birth",
-                "email",
-                "first_name",
-                "gender",
-                "last_name",
-                "phone_number",
-                "sender_id",
-                "source"
-            ],
-            "properties": {
-                "addresses": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/handler.address"
-                    }
-                },
-                "birthplace": {
-                    "type": "string"
-                },
-                "bsn": {
-                    "type": "string"
-                },
-                "bsn_verified_by": {
-                    "type": "string"
-                },
-                "care_type": {
-                    "type": "string",
-                    "enum": [
-                        "protected_living",
-                        "training_center",
-                        "supported_independent_living",
-                        "ambulatory_support",
-                        "other"
-                    ]
-                },
-                "date_of_birth": {
-                    "type": "string"
-                },
-                "departement": {
-                    "type": "string"
-                },
-                "education_additional_notes": {
-                    "type": "string"
-                },
-                "education_currently_enrolled": {
-                    "type": "boolean"
-                },
-                "education_institution": {
-                    "type": "string"
-                },
-                "education_level": {
-                    "type": "string",
-                    "enum": [
-                        "primary",
-                        "secondary",
-                        "higher",
-                        "none"
-                    ]
-                },
-                "education_mentor_email": {
-                    "type": "string"
-                },
-                "education_mentor_name": {
-                    "type": "string"
-                },
-                "education_mentor_phone": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "filenumber": {
-                    "type": "string"
-                },
-                "first_name": {
-                    "type": "string"
-                },
-                "gender": {
-                    "type": "string",
-                    "enum": [
-                        "male",
-                        "female",
-                        "other"
-                    ]
-                },
-                "infix": {
-                    "type": "string"
-                },
-                "last_name": {
-                    "type": "string"
-                },
-                "legal_measure": {
-                    "type": "string"
-                },
-                "living_situation": {
-                    "type": "string",
-                    "enum": [
-                        "home",
-                        "foster_care",
-                        "youth_care_institution",
-                        "other"
-                    ]
-                },
-                "living_situation_notes": {
-                    "type": "string"
-                },
-                "location_id": {
-                    "type": "string"
-                },
-                "nationality": {
-                    "type": "string"
-                },
-                "organization_id": {
-                    "type": "string"
-                },
-                "phone_number": {
-                    "type": "string"
-                },
-                "sender_id": {
-                    "type": "string"
-                },
-                "source": {
-                    "type": "string"
-                },
-                "work_additional_notes": {
-                    "type": "string"
-                },
-                "work_current_employer": {
-                    "type": "string"
-                },
-                "work_current_position": {
-                    "type": "string"
-                },
-                "work_currently_employed": {
-                    "type": "boolean"
-                },
-                "work_employer_email": {
-                    "type": "string"
-                },
-                "work_employer_phone": {
-                    "type": "string"
-                },
-                "work_start_date": {
-                    "type": "string"
-                }
-            }
-        },
-        "handler.createClientResponse": {
-            "type": "object",
-            "properties": {
-                "addresses": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/handler.address"
-                    }
-                },
-                "birthplace": {
-                    "type": "string"
-                },
-                "bsn": {
-                    "type": "string"
-                },
-                "bsn_verified_by": {
-                    "type": "string"
-                },
-                "created": {
-                    "type": "string"
-                },
-                "date_of_birth": {
-                    "type": "string"
-                },
-                "departement": {
-                    "type": "string"
-                },
-                "departure_reason": {
-                    "type": "string"
-                },
-                "departure_report": {
-                    "type": "string"
-                },
-                "education_additional_notes": {
-                    "type": "string"
-                },
-                "education_currently_enrolled": {
-                    "type": "boolean"
-                },
-                "education_institution": {
-                    "type": "string"
-                },
-                "education_level": {
-                    "type": "string"
-                },
-                "education_mentor_email": {
-                    "type": "string"
-                },
-                "education_mentor_name": {
-                    "type": "string"
-                },
-                "education_mentor_phone": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "filenumber": {
-                    "type": "string"
-                },
-                "first_name": {
-                    "type": "string"
-                },
-                "gender": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "identity": {
-                    "type": "boolean"
-                },
-                "infix": {
-                    "type": "string"
-                },
-                "last_name": {
-                    "type": "string"
-                },
-                "legal_measure": {
-                    "type": "string"
-                },
-                "living_situation": {
-                    "type": "string"
-                },
-                "living_situation_notes": {
-                    "type": "string"
-                },
-                "location_id": {
-                    "type": "string"
-                },
-                "nationality": {
-                    "type": "string"
-                },
-                "organization_id": {
-                    "type": "string"
-                },
-                "phone_number": {
-                    "type": "string"
-                },
-                "profile_picture": {
-                    "type": "string"
-                },
-                "sender_id": {
-                    "type": "string"
-                },
-                "source": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "work_additional_notes": {
-                    "type": "string"
-                },
-                "work_current_employer": {
-                    "type": "string"
-                },
-                "work_current_position": {
-                    "type": "string"
-                },
-                "work_currently_employed": {
-                    "type": "boolean"
-                },
-                "work_employer_email": {
-                    "type": "string"
-                },
-                "work_employer_phone": {
-                    "type": "string"
-                },
-                "work_start_date": {
                     "type": "string"
                 }
             }
@@ -11642,23 +11324,6 @@ const docTemplate = `{
                 },
                 "data": {
                     "$ref": "#/definitions/handler.createClientGoalResponse"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "httpapi.Envelope-handler_createClientResponse": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "type": "string"
-                },
-                "data": {
-                    "$ref": "#/definitions/handler.createClientResponse"
                 },
                 "message": {
                     "type": "string"

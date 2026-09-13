@@ -11,46 +11,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// --- Create Client ---
-
-type createClientRequest struct {
-	FirstName                  string     `json:"first_name" binding:"required"`
-	LastName                   string     `json:"last_name" binding:"required"`
-	Email                      string     `json:"email" binding:"required,email"`
-	OrganizationID             *uuid.UUID `json:"organization_id"`
-	LocationID                 *uuid.UUID `json:"location_id"`
-	LegalMeasure               *string    `json:"legal_measure"`
-	Birthplace                 *string    `json:"birthplace"`
-	Departement                *string    `json:"departement"`
-	Gender                     string     `json:"gender" binding:"required,oneof=male female other"`
-	CareType                   *string    `json:"care_type" binding:"omitempty,oneof=protected_living training_center supported_independent_living ambulatory_support other"`
-	Filenumber                 string     `json:"filenumber"`
-	DateOfBirth                string     `json:"date_of_birth" binding:"required"`
-	PhoneNumber                *string    `json:"phone_number" binding:"required"`
-	SenderID                   *uuid.UUID `json:"sender_id" binding:"required"`
-	Infix                      *string    `json:"infix"`
-	Source                     *string    `json:"source" binding:"required"`
-	Nationality                *string    `json:"nationality"`
-	Bsn                        *string    `json:"bsn"`
-	BsnVerifiedBy              *uuid.UUID `json:"bsn_verified_by"`
-	Addresses                  []address  `json:"addresses"`
-	EducationCurrentlyEnrolled bool       `json:"education_currently_enrolled"`
-	EducationInstitution       *string    `json:"education_institution"`
-	EducationMentorName        *string    `json:"education_mentor_name"`
-	EducationMentorPhone       *string    `json:"education_mentor_phone"`
-	EducationMentorEmail       *string    `json:"education_mentor_email"`
-	EducationAdditionalNotes   *string    `json:"education_additional_notes"`
-	EducationLevel             *string    `json:"education_level" binding:"omitempty,oneof=primary secondary higher none"`
-	WorkCurrentlyEmployed      bool       `json:"work_currently_employed"`
-	WorkCurrentEmployer        *string    `json:"work_current_employer"`
-	WorkCurrentEmployerPhone   *string    `json:"work_employer_phone"`
-	WorkCurrentEmployerEmail   *string    `json:"work_employer_email"`
-	WorkCurrentPosition        *string    `json:"work_current_position"`
-	WorkStartDate              time.Time  `json:"work_start_date"`
-	WorkAdditionalNotes        *string    `json:"work_additional_notes"`
-	LivingSituation            *string    `json:"living_situation" binding:"omitempty,oneof=home foster_care youth_care_institution other"`
-	LivingSituationNotes       *string    `json:"living_situation_notes"`
-}
+// --- Shared address ---
 
 type address struct {
 	BelongsTo           *string `json:"belongs_to"`
@@ -60,51 +21,6 @@ type address struct {
 	PostalCode          *string `json:"postal_code"`
 	City                *string `json:"city"`
 	PhoneNumber         *string `json:"phone_number"`
-}
-
-type createClientResponse struct {
-	ID                         uuid.UUID  `json:"id"`
-	FirstName                  string     `json:"first_name"`
-	LastName                   string     `json:"last_name"`
-	DateOfBirth                time.Time  `json:"date_of_birth"`
-	Identity                   bool       `json:"identity"`
-	Status                     string     `json:"status"`
-	Bsn                        *string    `json:"bsn"`
-	BsnVerifiedBy              *uuid.UUID `json:"bsn_verified_by"`
-	Source                     *string    `json:"source"`
-	Birthplace                 *string    `json:"birthplace"`
-	Nationality                *string    `json:"nationality"`
-	Email                      string     `json:"email"`
-	PhoneNumber                *string    `json:"phone_number"`
-	OrganizationID             *uuid.UUID `json:"organization_id"`
-	Departement                *string    `json:"departement"`
-	Gender                     string     `json:"gender"`
-	Filenumber                 string     `json:"filenumber"`
-	ProfilePicture             *string    `json:"profile_picture"`
-	Infix                      *string    `json:"infix"`
-	Created                    time.Time  `json:"created"`
-	SenderID                   *uuid.UUID `json:"sender_id"`
-	LocationID                 *uuid.UUID `json:"location_id"`
-	DepartureReason            *string    `json:"departure_reason"`
-	DepartureReport            *string    `json:"departure_report"`
-	Addresses                  []address  `json:"addresses"`
-	LegalMeasure               *string    `json:"legal_measure"`
-	EducationCurrentlyEnrolled bool       `json:"education_currently_enrolled"`
-	EducationInstitution       *string    `json:"education_institution"`
-	EducationMentorName        *string    `json:"education_mentor_name"`
-	EducationMentorEmail       *string    `json:"education_mentor_email"`
-	EducationMentorPhone       *string    `json:"education_mentor_phone"`
-	EducationAdditionalNotes   *string    `json:"education_additional_notes"`
-	EducationLevel             string     `json:"education_level"`
-	WorkCurrentlyEmployed      bool       `json:"work_currently_employed"`
-	WorkCurrentEmployer        *string    `json:"work_current_employer"`
-	WorkCurrentEmployerPhone   *string    `json:"work_employer_phone"`
-	WorkCurrentEmployerEmail   *string    `json:"work_employer_email"`
-	WorkCurrentPosition        *string    `json:"work_current_position"`
-	WorkStartDate              time.Time  `json:"work_start_date"`
-	WorkAdditionalNotes        *string    `json:"work_additional_notes"`
-	LivingSituation            *string    `json:"living_situation"`
-	LivingSituationNotes       *string    `json:"living_situation_notes"`
 }
 
 // --- List Clients ---
@@ -202,73 +118,6 @@ type getWaitingListStatsResponse struct {
 }
 
 // --- Mappers ---
-
-func toCreateClientParams(req createClientRequest) (domain.CreateClientParams, error) {
-	parsedDateOfBirth, err := time.Parse("2006-01-02", req.DateOfBirth)
-	if err != nil {
-		return domain.CreateClientParams{}, err
-	}
-
-	return domain.CreateClientParams{
-		FirstName:                  req.FirstName,
-		LastName:                   req.LastName,
-		DateOfBirth:                parsedDateOfBirth,
-		Bsn:                        req.Bsn,
-		BsnVerifiedBy:              req.BsnVerifiedBy,
-		Email:                      req.Email,
-		PhoneNumber:                req.PhoneNumber,
-		CareType:                   req.CareType,
-		SenderID:                   req.SenderID,
-		LocationID:                 req.LocationID,
-		EducationCurrentlyEnrolled: req.EducationCurrentlyEnrolled,
-		EducationInstitution:       req.EducationInstitution,
-		EducationMentorName:        req.EducationMentorName,
-		EducationMentorPhone:       req.EducationMentorPhone,
-		EducationMentorEmail:       req.EducationMentorEmail,
-		EducationAdditionalNotes:   req.EducationAdditionalNotes,
-		WorkCurrentlyEmployed:      req.WorkCurrentlyEmployed,
-		WorkCurrentEmployer:        req.WorkCurrentEmployer,
-		WorkCurrentEmployerPhone:   req.WorkCurrentEmployerPhone,
-		WorkCurrentEmployerEmail:   req.WorkCurrentEmployerEmail,
-		WorkCurrentPosition:        req.WorkCurrentPosition,
-		WorkStartDate:              req.WorkStartDate,
-		WorkAdditionalNotes:        req.WorkAdditionalNotes,
-	}, nil
-}
-
-func toCreateClientResponse(client *domain.Client) createClientResponse {
-	return createClientResponse{
-		ID:                         client.ID,
-		FirstName:                  client.FirstName,
-		LastName:                   client.LastName,
-		DateOfBirth:                client.DateOfBirth,
-		Identity:                   client.Identity,
-		Status:                     client.Status,
-		Bsn:                        client.Bsn,
-		BsnVerifiedBy:              client.BsnVerifiedBy,
-		Email:                      client.Email,
-		PhoneNumber:                client.PhoneNumber,
-		Gender:                     client.Gender,
-		Filenumber:                 client.Filenumber,
-		Created:                    client.CreatedAt,
-		SenderID:                   client.SenderID,
-		LocationID:                 client.LocationID,
-		EducationCurrentlyEnrolled: client.EducationCurrentlyEnrolled,
-		EducationInstitution:       client.EducationInstitution,
-		EducationMentorName:        client.EducationMentorName,
-		EducationMentorPhone:       client.EducationMentorPhone,
-		EducationMentorEmail:       client.EducationMentorEmail,
-		EducationAdditionalNotes:   client.EducationAdditionalNotes,
-		EducationLevel:             client.EducationLevel,
-		WorkCurrentlyEmployed:      client.WorkCurrentlyEmployed,
-		WorkCurrentEmployer:        client.WorkCurrentEmployer,
-		WorkCurrentEmployerPhone:   client.WorkCurrentEmployerPhone,
-		WorkCurrentEmployerEmail:   client.WorkCurrentEmployerEmail,
-		WorkCurrentPosition:        client.WorkCurrentPosition,
-		WorkStartDate:              client.WorkStartDate,
-		WorkAdditionalNotes:        client.WorkAdditionalNotes,
-	}
-}
 
 func toListClientsParams(req listClientsRequest) domain.ListClientsParams {
 	params := req.Params()
