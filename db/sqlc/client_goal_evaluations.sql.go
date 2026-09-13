@@ -43,13 +43,16 @@ func (q *Queries) CountRecentSubmittedEvaluationsByEmployee(ctx context.Context,
 }
 
 const countUpcomingEvaluationsForCoordinator = `-- name: CountUpcomingEvaluationsForCoordinator :one
-SELECT COUNT(*)::int8
-FROM assigned_employee ae
-JOIN client_details c ON c.id = ae.client_id
-WHERE ae.employee_id = $1
-  AND ae.role = 'coordinator'
-  AND c.status = 'in_care'
+SELECT COUNT(DISTINCT c.id)::int8
+FROM client_details c
+WHERE c.status = 'in_care'
   AND c.next_evaluation_date IS NOT NULL
+  AND EXISTS (
+    SELECT 1 FROM assigned_employee ae
+    WHERE ae.client_id = c.id
+      AND ae.employee_id = $1
+      AND ae.start_date <= CURRENT_DATE
+  )
 `
 
 func (q *Queries) CountUpcomingEvaluationsForCoordinator(ctx context.Context, employeeID uuid.UUID) (int64, error) {
@@ -204,7 +207,6 @@ SELECT
         FROM assigned_employee ae
         JOIN client_details c ON c.id = ae.client_id
         WHERE ae.employee_id = $1::uuid
-          AND ae.role = 'coordinator'
           AND c.status = 'in_care'
           AND c.next_evaluation_date IS NOT NULL
           AND c.next_evaluation_date <= evaluation_business_date() + 3
@@ -851,12 +853,15 @@ WITH paged_clients AS MATERIALIZED (
         c.first_name AS client_first_name,
         c.last_name AS client_last_name,
         c.next_evaluation_date
-    FROM assigned_employee ae
-    JOIN client_details c ON c.id = ae.client_id
-    WHERE ae.employee_id = $1
-      AND ae.role = 'coordinator'
-      AND c.status = 'in_care'
+    FROM client_details c
+    WHERE c.status = 'in_care'
       AND c.next_evaluation_date IS NOT NULL
+      AND EXISTS (
+        SELECT 1 FROM assigned_employee ae
+        WHERE ae.client_id = c.id
+          AND ae.employee_id = $1
+          AND ae.start_date <= CURRENT_DATE
+      )
     ORDER BY c.next_evaluation_date ASC, c.first_name ASC, c.last_name ASC, c.id ASC
     LIMIT $2 OFFSET $3
 )
