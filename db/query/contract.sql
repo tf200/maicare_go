@@ -2,10 +2,17 @@
 INSERT INTO contract_type (name)
 VALUES
     ($1)
+ON CONFLICT (LOWER(name)) DO NOTHING
 RETURNING *;
 
+-- name: GetContractTypeByName :one
+SELECT *
+FROM contract_type
+WHERE LOWER(name) = LOWER($1)
+LIMIT 1;
+
 -- name: ListContractTypes :many
-SELECT * FROM contract_type;
+SELECT * FROM contract_type ORDER BY LOWER(name), id;
 
 -- name: DeleteContractType :exec
 DELETE FROM contract_type

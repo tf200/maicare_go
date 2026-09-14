@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -10,6 +11,7 @@ import (
 	"maicare_go/pkg/conv"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -27,6 +29,11 @@ func (r *ContractRepository) CreateContractType(ctx context.Context, params doma
 	ct, err := actorQuery(ctx, r.store, func(q *db.Queries) (db.ContractType, error) {
 		return q.CreateContractType(ctx, params.Name)
 	})
+	if errors.Is(err, pgx.ErrNoRows) {
+		ct, err = actorQuery(ctx, r.store, func(q *db.Queries) (db.ContractType, error) {
+			return q.GetContractTypeByName(ctx, params.Name)
+		})
+	}
 	if err != nil {
 		return nil, err
 	}

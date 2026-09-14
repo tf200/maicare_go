@@ -30,6 +30,12 @@ func NewContractService(repository domain.ContractRepository, storage domain.Sto
 // ==================== ContractType ====================
 
 func (s *ContractService) CreateContractType(ctx context.Context, params domain.CreateContractTypeParams) (*domain.CreateContractTypeResult, error) {
+	name, err := normalizeContractTypeName(params.Name)
+	if err != nil {
+		return nil, err
+	}
+	params.Name = name
+
 	ct, err := s.repository.CreateContractType(ctx, params)
 	if err != nil {
 		if s.logger != nil {
@@ -41,6 +47,17 @@ func (s *ContractService) CreateContractType(ctx context.Context, params domain.
 		s.logger.LogInfo(ctx, "ContractService.CreateContractType", "contract type created successfully", zap.String("contract_type_id", ct.ID.String()))
 	}
 	return &domain.CreateContractTypeResult{ID: ct.ID, Name: ct.Name}, nil
+}
+
+func normalizeContractTypeName(name string) (string, error) {
+	name = strings.TrimSpace(name)
+	if name == "" {
+		return "", fmt.Errorf("%w: name is required", domain.ErrInvalidContractTypeName)
+	}
+	if len([]rune(name)) > 100 {
+		return "", fmt.Errorf("%w: name must be 100 characters or fewer", domain.ErrInvalidContractTypeName)
+	}
+	return name, nil
 }
 
 func (s *ContractService) ListContractTypes(ctx context.Context) ([]domain.CreateContractTypeResult, error) {

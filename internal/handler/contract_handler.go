@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"net/http"
 
 	"maicare_go/internal/domain"
@@ -20,7 +21,7 @@ func RegisterContractRoutes(
 	contractTypesGroup := rg.Group("/contract_types")
 	{
 		contractTypesGroup.POST("", auth, requirePermission("CONTRACT_TYPE.CREATE"), handler.CreateContractType)
-		contractTypesGroup.GET("", auth, requirePermission("CONTRACT_TYPE.VIEW"), handler.ListContractTypes)
+		contractTypesGroup.GET("", auth, requirePermission("CONTRACT.VIEW"), handler.ListContractTypes)
 		contractTypesGroup.DELETE("/:id", auth, requirePermission("CONTRACT_TYPE.DELETE"), handler.DeleteContractType)
 	}
 
@@ -67,7 +68,11 @@ func (h *ContractHandler) CreateContractType(ctx *gin.Context) {
 
 	result, err := h.service.CreateContractType(ctx.Request.Context(), domain.CreateContractTypeParams{Name: req.Name})
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, httpapi.Fail("failed to create contract type", err.Error()))
+		status := http.StatusInternalServerError
+		if errors.Is(err, domain.ErrInvalidContractTypeName) {
+			status = http.StatusBadRequest
+		}
+		ctx.JSON(status, httpapi.Fail("failed to create contract type", err.Error()))
 		return
 	}
 

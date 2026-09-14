@@ -145,6 +145,7 @@ const createContractType = `-- name: CreateContractType :one
 INSERT INTO contract_type (name)
 VALUES
     ($1)
+ON CONFLICT (LOWER(name)) DO NOTHING
 RETURNING id, name
 `
 
@@ -411,6 +412,20 @@ func (q *Queries) GetContractAudit(ctx context.Context, contractID uuid.UUID) ([
 	return items, nil
 }
 
+const getContractTypeByName = `-- name: GetContractTypeByName :one
+SELECT id, name
+FROM contract_type
+WHERE LOWER(name) = LOWER($1)
+LIMIT 1
+`
+
+func (q *Queries) GetContractTypeByName(ctx context.Context, lower string) (ContractType, error) {
+	row := q.db.QueryRow(ctx, getContractTypeByName, lower)
+	var i ContractType
+	err := row.Scan(&i.ID, &i.Name)
+	return i, err
+}
+
 const getSenderContracts = `-- name: GetSenderContracts :many
 SELECT id, type_id, status, approved_at, start_date, end_date, reminder_period, vat, price, price_time_unit, hours, hours_type, care_name, care_type, client_id, sender_id, attachment_ids, financing_act, financing_option, departure_reason, departure_report, updated_at, created_at FROM contract
 WHERE sender_id = $1
@@ -674,7 +689,7 @@ func (q *Queries) ListClientSendersForPeriod(ctx context.Context, arg ListClient
 }
 
 const listContractTypes = `-- name: ListContractTypes :many
-SELECT id, name FROM contract_type
+SELECT id, name FROM contract_type ORDER BY LOWER(name), id
 `
 
 func (q *Queries) ListContractTypes(ctx context.Context) ([]ContractType, error) {

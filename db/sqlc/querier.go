@@ -206,6 +206,7 @@ type Querier interface {
 	GetClientSender(ctx context.Context, id uuid.UUID) (Sender, error)
 	GetClientStatusCounts(ctx context.Context) (GetClientStatusCountsRow, error)
 	GetContractAudit(ctx context.Context, contractID uuid.UUID) ([]GetContractAuditRow, error)
+	GetContractTypeByName(ctx context.Context, lower string) (ContractType, error)
 	GetCurrentCycleDraftEvaluationByClientAndEmployee(ctx context.Context, arg GetCurrentCycleDraftEvaluationByClientAndEmployeeParams) (ClientGoalEvaluation, error)
 	GetDepartment(ctx context.Context, id uuid.UUID) (Department, error)
 	GetDepartmentByName(ctx context.Context, name string) (Department, error)

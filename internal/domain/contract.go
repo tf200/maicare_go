@@ -2,10 +2,13 @@ package domain
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
 )
+
+var ErrInvalidContractTypeName = errors.New("invalid contract type name")
 
 // ==================== ContractType ====================
 
