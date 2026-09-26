@@ -274,6 +274,7 @@ func (r *ContractRepository) ListClientContracts(ctx context.Context, params dom
 	result := make([]domain.ClientContractListItem, len(rows))
 	for i, row := range rows {
 		result[i] = domain.ClientContractListItem{
+			ID:              row.ID,
 			StartDate:       row.StartDate.Time,
 			EndDate:         row.EndDate.Time,
 			DaysLeft:        row.DaysLeft,

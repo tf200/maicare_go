@@ -140,6 +140,7 @@ type updateContractStatusResponse struct {
 }
 
 type contractClientListItemResponse struct {
+	ID              uuid.UUID `json:"id"`
 	StartDate       time.Time `json:"start_date"`
 	EndDate         time.Time `json:"end_date"`
 	DaysLeft        int32     `json:"days_left"`
@@ -350,6 +351,7 @@ func toContractClientListItemResponses(items []domain.ClientContractListItem) []
 	result := make([]contractClientListItemResponse, len(items))
 	for i, item := range items {
 		result[i] = contractClientListItemResponse{
+			ID:              item.ID,
 			StartDate:       item.StartDate,
 			EndDate:         item.EndDate,
 			DaysLeft:        item.DaysLeft,

@@ -101,6 +101,7 @@ WHERE c.status = 'approved'
 -- name: ListClientContracts :many
 WITH client_contracts AS (
     SELECT
+            c.id,
             c.start_date,
             c.end_date,
             (c.end_date::date - CURRENT_DATE)::int AS days_left,

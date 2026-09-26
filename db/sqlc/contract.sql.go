@@ -583,6 +583,7 @@ func (q *Queries) ListApprovedContractsForClientSenderInPeriod(ctx context.Conte
 const listClientContracts = `-- name: ListClientContracts :many
 WITH client_contracts AS (
     SELECT
+            c.id,
             c.start_date,
             c.end_date,
             (c.end_date::date - CURRENT_DATE)::int AS days_left,
@@ -596,7 +597,7 @@ WITH client_contracts AS (
 )
 SELECT
     (SELECT COUNT(*) FROM client_contracts) AS total_count,
-    start_date, end_date, days_left, care_name, care_type, financing_act, financing_option, created_at
+    id, start_date, end_date, days_left, care_name, care_type, financing_act, financing_option, created_at
 FROM client_contracts
 ORDER BY created_at DESC
 LIMIT $2
@@ -611,6 +612,7 @@ type ListClientContractsParams struct {
 
 type ListClientContractsRow struct {
 	TotalCount      int64               `json:"total_count"`
+	ID              uuid.UUID           `json:"id"`
 	StartDate       pgtype.Timestamptz  `json:"start_date"`
 	EndDate         pgtype.Timestamptz  `json:"end_date"`
 	DaysLeft        int32               `json:"days_left"`
@@ -632,6 +634,7 @@ func (q *Queries) ListClientContracts(ctx context.Context, arg ListClientContrac
 		var i ListClientContractsRow
 		if err := rows.Scan(
 			&i.TotalCount,
+			&i.ID,
 			&i.StartDate,
 			&i.EndDate,
 			&i.DaysLeft,

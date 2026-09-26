@@ -187,6 +187,7 @@ type ListClientContractsResult struct {
 }
 
 type ClientContractListItem struct {
+	ID              uuid.UUID
 	StartDate       time.Time
 	EndDate         time.Time
 	DaysLeft        int32
