@@ -196,6 +196,29 @@ func (h *InvoiceHandler) ListInvoices(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, httpapi.OK(httpapi.NewPageResponse(ctx, pageReq, items, result.TotalCount), "Invoices retrieved successfully"))
 }
 
+// GetInvoiceStats handles GET /invoices/stats.
+// @Summary Get global invoice KPIs
+// @Tags invoices
+// @Produce json
+// @Success 200 {object} httpapi.Envelope[InvoiceStatsResponseDTO]
+// @Failure 401,403,500 {object} httpapi.Envelope[any]
+// @Router /invoices/stats [get]
+func (h *InvoiceHandler) GetInvoiceStats(ctx *gin.Context) {
+	stats, err := h.service.GetInvoiceStats(ctx.Request.Context())
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, httpapi.Fail("failed to get invoice stats", "STATS_ERROR"))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, httpapi.OK(InvoiceStatsResponseDTO{
+		TotalInvoices:      stats.TotalInvoices,
+		Currency:           stats.Currency,
+		OutstandingBalance: stats.OutstandingBalance,
+		ReceivedPayments:   stats.ReceivedPayments,
+		OverdueAmount:      stats.OverdueAmount,
+	}, "Invoice stats retrieved successfully"))
+}
+
 // GetInvoiceByID handles GET /invoices/:id
 func (h *InvoiceHandler) GetInvoiceByID(ctx *gin.Context) {
 	invoiceID, err := uuid.Parse(ctx.Param("id"))

@@ -751,6 +751,62 @@ func (q *Queries) GetInvoiceSenderID(ctx context.Context, id uuid.UUID) (uuid.UU
 	return sender_id, err
 }
 
+const getInvoiceStats = `-- name: GetInvoiceStats :one
+WITH visible_invoices AS MATERIALIZED (
+    SELECT i.id, i.currency, i.status, i.due_date, i.gross_total_amount
+    FROM invoice i
+    JOIN client_details cd ON cd.id = i.client_id
+),
+eur_invoices AS MATERIALIZED (
+    SELECT
+        v.status,
+        v.due_date,
+        p.paid_total_amount,
+        GREATEST(v.gross_total_amount - p.paid_total_amount, 0)::NUMERIC(20,2) AS balance_due_amount
+    FROM visible_invoices v
+    CROSS JOIN LATERAL (
+        SELECT public.get_invoice_paid_total(v.id) AS paid_total_amount
+    ) p
+    WHERE v.currency = 'EUR'
+)
+SELECT
+    (SELECT COUNT(*)::BIGINT FROM visible_invoices) AS total_invoices,
+    COALESCE((
+        SELECT SUM(balance_due_amount)
+        FROM eur_invoices
+        WHERE status IN ('outstanding', 'partially_paid')
+    ), 0)::NUMERIC(20,2) AS outstanding_balance,
+    COALESCE((
+        SELECT SUM(paid_total_amount)
+        FROM eur_invoices
+        WHERE status IN ('paid', 'partially_paid')
+    ), 0)::NUMERIC(20,2) AS received_payments,
+    COALESCE((
+        SELECT SUM(balance_due_amount)
+        FROM eur_invoices
+        WHERE due_date < CURRENT_DATE AND status NOT IN ('paid', 'canceled')
+    ), 0)::NUMERIC(20,2) AS overdue_amount
+`
+
+type GetInvoiceStatsRow struct {
+	TotalInvoices      int64   `json:"total_invoices"`
+	OutstandingBalance float64 `json:"outstanding_balance"`
+	ReceivedPayments   float64 `json:"received_payments"`
+	OverdueAmount      float64 `json:"overdue_amount"`
+}
+
+func (q *Queries) GetInvoiceStats(ctx context.Context) (GetInvoiceStatsRow, error) {
+	row := q.db.QueryRow(ctx, getInvoiceStats)
+	var i GetInvoiceStatsRow
+	err := row.Scan(
+		&i.TotalInvoices,
+		&i.OutstandingBalance,
+		&i.ReceivedPayments,
+		&i.OverdueAmount,
+	)
+	return i, err
+}
+
 const getPayment = `-- name: GetPayment :one
 SELECT
     iph.id, iph.invoice_id, iph.client_id, iph.payment_method, iph.payment_status, iph.amount, iph.payment_date, iph.payment_reference, iph.notes, iph.recorded_by, iph.created_at, iph.updated_at,

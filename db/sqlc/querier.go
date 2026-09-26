@@ -242,6 +242,7 @@ type Querier interface {
 	GetInvoiceAuditLogs(ctx context.Context, invoiceID uuid.UUID) ([]GetInvoiceAuditLogsRow, error)
 	GetInvoicePaidTotal(ctx context.Context, invoiceID uuid.UUID) (float64, error)
 	GetInvoiceSenderID(ctx context.Context, id uuid.UUID) (uuid.UUID, error)
+	GetInvoiceStats(ctx context.Context) (GetInvoiceStatsRow, error)
 	GetLatestAuditHash(ctx context.Context) (string, error)
 	GetLatestCompletedEvaluationByClient(ctx context.Context, clientID uuid.UUID) (GetLatestCompletedEvaluationByClientRow, error)
 	GetLatestDraftEvaluationByClient(ctx context.Context, clientID uuid.UUID) (GetLatestDraftEvaluationByClientRow, error)

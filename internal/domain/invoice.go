@@ -88,22 +88,22 @@ type InvoiceLine struct {
 }
 
 type InvoiceListItem struct {
-	ID              uuid.UUID
-	InvoiceNumber   string
-	SenderName      string
-	IsOverdue       bool
-	ClientFirstName string
-	ClientLastName  string
+	ID               uuid.UUID
+	InvoiceNumber    string
+	SenderName       string
+	IsOverdue        bool
+	ClientFirstName  string
+	ClientLastName   string
 	ClientFilenumber string
-	Currency        string
-	GrossTotal      float64
-	BalanceDue      float64
-	PaidTotal       float64
-	Status          string
-	IssueDate       time.Time
-	DueDate         time.Time
-	ClientID        uuid.UUID
-	SenderID        uuid.UUID
+	Currency         string
+	GrossTotal       float64
+	BalanceDue       float64
+	PaidTotal        float64
+	Status           string
+	IssueDate        time.Time
+	DueDate          time.Time
+	ClientID         uuid.UUID
+	SenderID         uuid.UUID
 }
 
 type Payment struct {
@@ -159,6 +159,14 @@ type CreateInvoiceLineInput struct {
 	VatRate     float64
 }
 
+type InvoiceStats struct {
+	TotalInvoices      int64
+	Currency           string
+	OutstandingBalance float64
+	ReceivedPayments   float64
+	OverdueAmount      float64
+}
+
 type ListInvoicesParams struct {
 	ClientID        *uuid.UUID
 	SenderID        *uuid.UUID
@@ -189,11 +197,11 @@ type GenerateInvoiceParams struct {
 }
 
 type CreateInvoiceParams struct {
-	ClientID    uuid.UUID
-	InvoiceType string
-	IssueDate   time.Time
-	DueDate     time.Time
-	Lines       []CreateInvoiceLineInput
+	ClientID     uuid.UUID
+	InvoiceType  string
+	IssueDate    time.Time
+	DueDate      time.Time
+	Lines        []CreateInvoiceLineInput
 	ExtraContent []byte
 }
 
@@ -221,6 +229,7 @@ type InvoiceService interface {
 	CreateInvoice(ctx context.Context, params CreateInvoiceParams) (*Invoice, []InvoiceLine, error)
 	GetInvoiceByID(ctx context.Context, invoiceID uuid.UUID) (*Invoice, []InvoiceLine, float64, error)
 	ListInvoices(ctx context.Context, params ListInvoicesParams) (*ListResult[InvoiceListItem], error)
+	GetInvoiceStats(ctx context.Context) (*InvoiceStats, error)
 	UpdateInvoice(ctx context.Context, invoiceID uuid.UUID, params CreateInvoiceParams) (*Invoice, error)
 	DeleteInvoice(ctx context.Context, invoiceID uuid.UUID) error
 

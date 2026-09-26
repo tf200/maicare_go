@@ -398,6 +398,19 @@ definitions:
       work_approval_status:
         type: string
     type: object
+  handler.InvoiceStatsResponseDTO:
+    properties:
+      currency:
+        type: string
+      outstanding_balance:
+        type: number
+      overdue_amount:
+        type: number
+      received_payments:
+        type: number
+      total_invoices:
+        type: integer
+    type: object
   handler.addClientDocumentItem:
     properties:
       attachment_id:
@@ -1653,6 +1666,17 @@ definitions:
       incident_taken_measures:
         type: string
       incident_type:
+        enum:
+        - passing_away
+        - self_harm
+        - violence
+        - fire_water_damage
+        - accident
+        - client_absence
+        - medicines
+        - organization
+        - use_prohibited_substances
+        - other
         type: string
       informed_parties:
         items:
@@ -1663,22 +1687,57 @@ definitions:
       location_id:
         type: string
       needed_consultation:
+        enum:
+        - "no"
+        - not_clear
+        - hospitalization
+        - consult_gp
         type: string
       occurred_at:
         type: string
       physical_injury:
+        enum:
+        - no_injuries
+        - not_noticeable_yet
+        - bruising_swelling
+        - skin_injury
+        - broken_bones
+        - shortness_of_breath
+        - death
+        - other
         type: string
       physical_injury_desc:
         type: string
       psychological_damage:
+        enum:
+        - "no"
+        - not_noticeable_yet
+        - drowsiness
+        - unrest
+        - other
         type: string
       psychological_damage_desc:
         type: string
       recurrence_risk:
+        enum:
+        - very_low
+        - means
+        - high
+        - very_high
         type: string
       reporter_involvement:
+        enum:
+        - directly_involved
+        - witness
+        - found_afterwards
+        - alarmed
         type: string
       severity_of_incident:
+        enum:
+        - near_incident
+        - less_serious
+        - serious
+        - fatal
         type: string
     required:
     - client_id
@@ -3622,6 +3681,17 @@ definitions:
       incident_taken_measures:
         type: string
       incident_type:
+        enum:
+        - passing_away
+        - self_harm
+        - violence
+        - fire_water_damage
+        - accident
+        - client_absence
+        - medicines
+        - organization
+        - use_prohibited_substances
+        - other
         type: string
       informed_parties:
         items:
@@ -3632,22 +3702,57 @@ definitions:
       location_id:
         type: string
       needed_consultation:
+        enum:
+        - "no"
+        - not_clear
+        - hospitalization
+        - consult_gp
         type: string
       occurred_at:
         type: string
       physical_injury:
+        enum:
+        - no_injuries
+        - not_noticeable_yet
+        - bruising_swelling
+        - skin_injury
+        - broken_bones
+        - shortness_of_breath
+        - death
+        - other
         type: string
       physical_injury_desc:
         type: string
       psychological_damage:
+        enum:
+        - "no"
+        - not_noticeable_yet
+        - drowsiness
+        - unrest
+        - other
         type: string
       psychological_damage_desc:
         type: string
       recurrence_risk:
+        enum:
+        - very_low
+        - means
+        - high
+        - very_high
         type: string
       reporter_involvement:
+        enum:
+        - directly_involved
+        - witness
+        - found_afterwards
+        - alarmed
         type: string
       severity_of_incident:
+        enum:
+        - near_incident
+        - less_serious
+        - serious
+        - fatal
         type: string
     type: object
   handler.updateIncidentResponse:
@@ -3933,6 +4038,17 @@ definitions:
         type: string
       data:
         $ref: '#/definitions/domain.ListWorkApprovalQueueResponse'
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  httpapi.Envelope-handler_InvoiceStatsResponseDTO:
+    properties:
+      code:
+        type: string
+      data:
+        $ref: '#/definitions/handler.InvoiceStatsResponseDTO'
       message:
         type: string
       success:
@@ -8287,6 +8403,30 @@ paths:
       summary: Get intake form totals
       tags:
       - intake_forms
+  /invoices/stats:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httpapi.Envelope-handler_InvoiceStatsResponseDTO'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httpapi.Envelope-any'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/httpapi.Envelope-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httpapi.Envelope-any'
+      summary: Get global invoice KPIs
+      tags:
+      - invoices
   /senders:
     get:
       parameters:

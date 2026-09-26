@@ -4721,6 +4721,43 @@ const docTemplate = `{
                 }
             }
         },
+        "/invoices/stats": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "invoices"
+                ],
+                "summary": "Get global invoice KPIs",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/httpapi.Envelope-handler_InvoiceStatsResponseDTO"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/httpapi.Envelope-any"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/httpapi.Envelope-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/httpapi.Envelope-any"
+                        }
+                    }
+                }
+            }
+        },
         "/senders": {
             "get": {
                 "produces": [
@@ -5780,6 +5817,26 @@ const docTemplate = `{
                 },
                 "work_approval_status": {
                     "type": "string"
+                }
+            }
+        },
+        "handler.InvoiceStatsResponseDTO": {
+            "type": "object",
+            "properties": {
+                "currency": {
+                    "type": "string"
+                },
+                "outstanding_balance": {
+                    "type": "number"
+                },
+                "overdue_amount": {
+                    "type": "number"
+                },
+                "received_payments": {
+                    "type": "number"
+                },
+                "total_invoices": {
+                    "type": "integer"
                 }
             }
         },
@@ -7687,7 +7744,19 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "incident_type": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "passing_away",
+                        "self_harm",
+                        "violence",
+                        "fire_water_damage",
+                        "accident",
+                        "client_absence",
+                        "medicines",
+                        "organization",
+                        "use_prohibited_substances",
+                        "other"
+                    ]
                 },
                 "informed_parties": {
                     "type": "array",
@@ -7702,31 +7771,72 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "needed_consultation": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "no",
+                        "not_clear",
+                        "hospitalization",
+                        "consult_gp"
+                    ]
                 },
                 "occurred_at": {
                     "type": "string"
                 },
                 "physical_injury": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "no_injuries",
+                        "not_noticeable_yet",
+                        "bruising_swelling",
+                        "skin_injury",
+                        "broken_bones",
+                        "shortness_of_breath",
+                        "death",
+                        "other"
+                    ]
                 },
                 "physical_injury_desc": {
                     "type": "string"
                 },
                 "psychological_damage": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "no",
+                        "not_noticeable_yet",
+                        "drowsiness",
+                        "unrest",
+                        "other"
+                    ]
                 },
                 "psychological_damage_desc": {
                     "type": "string"
                 },
                 "recurrence_risk": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "very_low",
+                        "means",
+                        "high",
+                        "very_high"
+                    ]
                 },
                 "reporter_involvement": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "directly_involved",
+                        "witness",
+                        "found_afterwards",
+                        "alarmed"
+                    ]
                 },
                 "severity_of_incident": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "near_incident",
+                        "less_serious",
+                        "serious",
+                        "fatal"
+                    ]
                 }
             }
         },
@@ -10633,7 +10743,19 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "incident_type": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "passing_away",
+                        "self_harm",
+                        "violence",
+                        "fire_water_damage",
+                        "accident",
+                        "client_absence",
+                        "medicines",
+                        "organization",
+                        "use_prohibited_substances",
+                        "other"
+                    ]
                 },
                 "informed_parties": {
                     "type": "array",
@@ -10648,31 +10770,72 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "needed_consultation": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "no",
+                        "not_clear",
+                        "hospitalization",
+                        "consult_gp"
+                    ]
                 },
                 "occurred_at": {
                     "type": "string"
                 },
                 "physical_injury": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "no_injuries",
+                        "not_noticeable_yet",
+                        "bruising_swelling",
+                        "skin_injury",
+                        "broken_bones",
+                        "shortness_of_breath",
+                        "death",
+                        "other"
+                    ]
                 },
                 "physical_injury_desc": {
                     "type": "string"
                 },
                 "psychological_damage": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "no",
+                        "not_noticeable_yet",
+                        "drowsiness",
+                        "unrest",
+                        "other"
+                    ]
                 },
                 "psychological_damage_desc": {
                     "type": "string"
                 },
                 "recurrence_risk": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "very_low",
+                        "means",
+                        "high",
+                        "very_high"
+                    ]
                 },
                 "reporter_involvement": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "directly_involved",
+                        "witness",
+                        "found_afterwards",
+                        "alarmed"
+                    ]
                 },
                 "severity_of_incident": {
-                    "type": "string"
+                    "type": "string",
+                    "enum": [
+                        "near_incident",
+                        "less_serious",
+                        "serious",
+                        "fatal"
+                    ]
                 }
             }
         },
@@ -11103,6 +11266,23 @@ const docTemplate = `{
                 },
                 "data": {
                     "$ref": "#/definitions/domain.ListWorkApprovalQueueResponse"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "httpapi.Envelope-handler_InvoiceStatsResponseDTO": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "data": {
+                    "$ref": "#/definitions/handler.InvoiceStatsResponseDTO"
                 },
                 "message": {
                     "type": "string"

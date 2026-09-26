@@ -15,6 +15,7 @@ func RegisterInvoiceRoutes(
 		invoices.POST("", auth, requirePermission("CLIENT.VIEW"), requirePermission("INVOICE.CREATE"), handler.CreateInvoice)
 		invoices.POST("/generate", auth, requirePermission("CLIENT.VIEW"), requirePermission("CONTRACT.VIEW"), requirePermission("INVOICE.CREATE"), handler.GenerateInvoice)
 		invoices.GET("", auth, requirePermission("CLIENT.VIEW"), requirePermission("INVOICE.VIEW"), handler.ListInvoices)
+		invoices.GET("/stats", auth, requirePermission("CLIENT.VIEW"), requirePermission("INVOICE.VIEW"), handler.GetInvoiceStats)
 		invoices.GET("/template_items", auth, requirePermission("INVOICE.VIEW"), handler.GetInvoiceTemplateItems)
 		invoices.GET("/:id", auth, requirePermission("CLIENT.VIEW"), requirePermission("INVOICE.VIEW"), handler.GetInvoiceByID)
 		invoices.PUT("/:id", auth, requirePermission("CLIENT.VIEW"), requirePermission("INVOICE.VIEW"), requirePermission("INVOICE.UPDATE"), handler.UpdateInvoice)

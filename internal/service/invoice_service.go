@@ -435,6 +435,24 @@ func (s *InvoiceService) GetInvoiceByID(ctx context.Context, invoiceID uuid.UUID
 	return &d, lineDTOs, paymentCompletionPrc, nil
 }
 
+// GetInvoiceStats returns global, actor-visible invoice KPIs.
+func (s *InvoiceService) GetInvoiceStats(ctx context.Context) (*domain.InvoiceStats, error) {
+	row, err := actorQuery(ctx, s.store, func(q *db.Queries) (db.GetInvoiceStatsRow, error) {
+		return q.GetInvoiceStats(ctx)
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get invoice stats: %w", err)
+	}
+
+	return &domain.InvoiceStats{
+		TotalInvoices:      row.TotalInvoices,
+		Currency:           "EUR",
+		OutstandingBalance: row.OutstandingBalance,
+		ReceivedPayments:   row.ReceivedPayments,
+		OverdueAmount:      row.OverdueAmount,
+	}, nil
+}
+
 // ==================== List Invoices ====================
 
 func (s *InvoiceService) ListInvoices(ctx context.Context, params domain.ListInvoicesParams) (*domain.ListResult[domain.InvoiceListItem], error) {
