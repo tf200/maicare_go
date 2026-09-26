@@ -12,6 +12,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -96,6 +97,10 @@ func (r *ContractRepository) CreateContract(ctx context.Context, params domain.C
 		})
 	})
 	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "42501" {
+			return nil, fmt.Errorf("%w: %v", domain.ErrContractForbidden, err)
+		}
 		return nil, err
 	}
 	return toDomainContract(contract), nil

@@ -10,6 +10,8 @@ import (
 
 var ErrInvalidContractTypeName = errors.New("invalid contract type name")
 
+var ErrContractForbidden = errors.New("not authorized to access this contract")
+
 // ==================== ContractType ====================
 
 type ContractType struct {

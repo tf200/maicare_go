@@ -140,7 +140,11 @@ func (h *ContractHandler) CreateContract(ctx *gin.Context) {
 
 	result, err := h.service.CreateContract(ctx.Request.Context(), toCreateContractParams(req))
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, httpapi.Fail("failed to create contract", err.Error()))
+		status := http.StatusInternalServerError
+		if errors.Is(err, domain.ErrContractForbidden) {
+			status = http.StatusForbidden
+		}
+		ctx.JSON(status, httpapi.Fail("failed to create contract", err.Error()))
 		return
 	}
 
