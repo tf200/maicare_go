@@ -15,23 +15,23 @@ type createIncidentRequest struct {
 	ClientID                uuid.UUID `json:"client_id" binding:"required"`
 	EmployeeID              uuid.UUID `json:"employee_id"`
 	LocationID              uuid.UUID `json:"location_id"`
-	ReporterInvolvement     string    `json:"reporter_involvement" binding:"required"`
-	InformedParties         []string  `json:"informed_parties"`
+	ReporterInvolvement     string    `json:"reporter_involvement" binding:"required,oneof=directly_involved witness found_afterwards alarmed"`
+	InformedParties         []string  `json:"informed_parties" binding:"omitempty,dive,oneof=parents_guardians care_coordinator referrer healthcare_provider inspectorate police other"`
 	OccurredAt              time.Time `json:"occurred_at"`
-	IncidentType            string    `json:"incident_type" binding:"required"`
-	SeverityOfIncident      string    `json:"severity_of_incident" binding:"required"`
+	IncidentType            string    `json:"incident_type" binding:"required,oneof=passing_away self_harm violence fire_water_damage accident client_absence medicines organization use_prohibited_substances other"`
+	SeverityOfIncident      string    `json:"severity_of_incident" binding:"required,oneof=near_incident less_serious serious fatal"`
 	IncidentExplanation     *string   `json:"incident_explanation"`
-	RecurrenceRisk          string    `json:"recurrence_risk" binding:"required"`
+	RecurrenceRisk          string    `json:"recurrence_risk" binding:"required,oneof=very_low means high very_high"`
 	IncidentPreventSteps    *string   `json:"incident_prevent_steps"`
 	IncidentTakenMeasures   *string   `json:"incident_taken_measures"`
-	CauseCategories         []string  `json:"cause_categories"`
+	CauseCategories         []string  `json:"cause_categories" binding:"omitempty,dive,oneof=technical organizational employee_related client_related external other"`
 	CauseExplanation        *string   `json:"cause_explanation"`
-	PhysicalInjury          string    `json:"physical_injury" binding:"required"`
+	PhysicalInjury          string    `json:"physical_injury" binding:"required,oneof=no_injuries not_noticeable_yet bruising_swelling skin_injury broken_bones shortness_of_breath death other"`
 	PhysicalInjuryDesc      *string   `json:"physical_injury_desc"`
-	PsychologicalDamage     string    `json:"psychological_damage"`
+	PsychologicalDamage     string    `json:"psychological_damage" binding:"omitempty,oneof=no not_noticeable_yet drowsiness unrest other"`
 	PsychologicalDamageDesc *string   `json:"psychological_damage_desc"`
-	NeededConsultation      string    `json:"needed_consultation" binding:"required"`
-	FollowUpActions         []string  `json:"follow_up_actions"`
+	NeededConsultation      string    `json:"needed_consultation" binding:"required,oneof=no not_clear hospitalization consult_gp"`
+	FollowUpActions         []string  `json:"follow_up_actions" binding:"omitempty,dive,oneof=notify_parents_guardians notify_referrer notify_inspectorate medical_consultation care_plan_adjustment team_evaluation other"`
 	FollowUpNotes           *string   `json:"follow_up_notes"`
 	IsEmployeeAbsent        bool      `json:"is_employee_absent"`
 	AdditionalDetails       *string   `json:"additional_details"`
@@ -122,23 +122,23 @@ type updateIncidentRequest struct {
 	ID                      uuid.UUID  `json:"id"`
 	EmployeeID              *uuid.UUID `json:"employee_id"`
 	LocationID              *uuid.UUID `json:"location_id"`
-	ReporterInvolvement     *string    `json:"reporter_involvement"`
-	InformedParties         []string   `json:"informed_parties"`
+	ReporterInvolvement     *string    `json:"reporter_involvement" binding:"omitempty,oneof=directly_involved witness found_afterwards alarmed"`
+	InformedParties         []string   `json:"informed_parties" binding:"omitempty,dive,oneof=parents_guardians care_coordinator referrer healthcare_provider inspectorate police other"`
 	OccurredAt              time.Time  `json:"occurred_at"`
-	IncidentType            *string    `json:"incident_type"`
-	SeverityOfIncident      *string    `json:"severity_of_incident"`
+	IncidentType            *string    `json:"incident_type" binding:"omitempty,oneof=passing_away self_harm violence fire_water_damage accident client_absence medicines organization use_prohibited_substances other"`
+	SeverityOfIncident      *string    `json:"severity_of_incident" binding:"omitempty,oneof=near_incident less_serious serious fatal"`
 	IncidentExplanation     *string    `json:"incident_explanation"`
-	RecurrenceRisk          *string    `json:"recurrence_risk"`
+	RecurrenceRisk          *string    `json:"recurrence_risk" binding:"omitempty,oneof=very_low means high very_high"`
 	IncidentPreventSteps    *string    `json:"incident_prevent_steps"`
 	IncidentTakenMeasures   *string    `json:"incident_taken_measures"`
-	CauseCategories         []string   `json:"cause_categories"`
+	CauseCategories         []string   `json:"cause_categories" binding:"omitempty,dive,oneof=technical organizational employee_related client_related external other"`
 	CauseExplanation        *string    `json:"cause_explanation"`
-	PhysicalInjury          *string    `json:"physical_injury"`
+	PhysicalInjury          *string    `json:"physical_injury" binding:"omitempty,oneof=no_injuries not_noticeable_yet bruising_swelling skin_injury broken_bones shortness_of_breath death other"`
 	PhysicalInjuryDesc      *string    `json:"physical_injury_desc"`
-	PsychologicalDamage     *string    `json:"psychological_damage"`
+	PsychologicalDamage     *string    `json:"psychological_damage" binding:"omitempty,oneof=no not_noticeable_yet drowsiness unrest other"`
 	PsychologicalDamageDesc *string    `json:"psychological_damage_desc"`
-	NeededConsultation      *string    `json:"needed_consultation"`
-	FollowUpActions         []string   `json:"follow_up_actions"`
+	NeededConsultation      *string    `json:"needed_consultation" binding:"omitempty,oneof=no not_clear hospitalization consult_gp"`
+	FollowUpActions         []string   `json:"follow_up_actions" binding:"omitempty,dive,oneof=notify_parents_guardians notify_referrer notify_inspectorate medical_consultation care_plan_adjustment team_evaluation other"`
 	FollowUpNotes           *string    `json:"follow_up_notes"`
 	IsEmployeeAbsent        *bool      `json:"is_employee_absent"`
 	AdditionalDetails       *string    `json:"additional_details"`
