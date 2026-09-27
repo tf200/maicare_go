@@ -40,7 +40,7 @@ type InvoiceLineInputDTO struct {
 	LineType    string     `json:"line_type" binding:"required,oneof=contract manual adjustment"`
 	ContractID  *uuid.UUID `json:"contract_id"`
 	ServiceType string     `json:"service_type" binding:"required"`
-	Description string     `json:"description" binding:"required"`
+	Description string     `json:"description"`
 	PeriodStart time.Time  `json:"period_start" binding:"required"`
 	PeriodEnd   time.Time  `json:"period_end" binding:"required"`
 	Quantity    float64    `json:"quantity" binding:"required,min=0"`
